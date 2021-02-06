@@ -1,0 +1,6 @@
+
+**.idea/*
+**/*.iml
+**/target/*
+**/*.docx
+**/*.DS_Store
