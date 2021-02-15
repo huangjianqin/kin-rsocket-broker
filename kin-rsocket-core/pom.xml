@@ -15,18 +15,22 @@
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-service-common</artifactId>
-            <version>${project.version}</version>
+            <artifactId>kin-framework-java</artifactId>
+            <version>${kin-framework.version}</version>
         </dependency>
 
+        <!-- reactive netty -->
         <dependency>
             <groupId>io.projectreactor.netty</groupId>
             <artifactId>reactor-netty</artifactId>
         </dependency>
+
+        <!-- rsocket -->
         <dependency>
             <groupId>io.rsocket</groupId>
             <artifactId>rsocket-transport-netty</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.rsocket</groupId>
             <artifactId>rsocket-core</artifactId>

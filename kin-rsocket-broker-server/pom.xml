@@ -19,21 +19,39 @@
             <version>${project.version}</version>
         </dependency>
 
+        <!-- reactive web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- cloud event定义 -->
         <dependency>
             <groupId>io.cloudevents</groupId>
             <artifactId>cloudevents-core</artifactId>
             <version>${cloudevents.version}</version>
         </dependency>
+
         <dependency>
             <groupId>io.cloudevents</groupId>
             <artifactId>cloudevents-json-jackson</artifactId>
             <version>${cloudevents.version}</version>
         </dependency>
 
+        <!-- gossip -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <groupId>io.scalecube</groupId>
+            <artifactId>scalecube-cluster</artifactId>
+            <version>${scalecube-cluster.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.scalecube</groupId>
+            <artifactId>scalecube-codec-jackson</artifactId>
+            <version>${scalecube-cluster.version}</version>
+        </dependency>
+
+        <!-- actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -44,22 +62,6 @@
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>${java-jwt.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.scalecube</groupId>
-            <artifactId>scalecube-cluster</artifactId>
-            <version>${scalecube-cluster.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.scalecube</groupId>
-            <artifactId>scalecube-codec-jackson</artifactId>
-            <version>${scalecube-cluster.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.scalecube</groupId>
-            <artifactId>scalecube-cluster-testlib</artifactId>
-            <version>${scalecube-cluster.version}</version>
         </dependency>
     </dependencies>
 </project>

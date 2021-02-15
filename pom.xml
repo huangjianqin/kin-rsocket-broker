@@ -9,7 +9,7 @@
     <modules>
         <module>kin-rsocket-broker-server</module>
         <module>kin-rsocket-core</module>
-        <module>kin-rsocket-service-common</module>
+        <module>kin-rsocket-broker-service</module>
     </modules>
     <packaging>pom</packaging>
 
