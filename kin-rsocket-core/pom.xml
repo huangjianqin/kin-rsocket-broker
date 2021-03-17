@@ -8,7 +8,7 @@
         <version>0.1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-broker-core</artifactId>
+    <artifactId>kin-rsocket-core</artifactId>
     <version>0.1.0.0</version>
     <packaging>jar</packaging>
 
@@ -34,6 +34,19 @@
         <dependency>
             <groupId>io.rsocket</groupId>
             <artifactId>rsocket-core</artifactId>
+        </dependency>
+
+        <!-- cloud event定义 -->
+        <dependency>
+            <groupId>io.cloudevents</groupId>
+            <artifactId>cloudevents-core</artifactId>
+            <version>${cloudevents.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.cloudevents</groupId>
+            <artifactId>cloudevents-json-jackson</artifactId>
+            <version>${cloudevents.version}</version>
         </dependency>
     </dependencies>
 </project>

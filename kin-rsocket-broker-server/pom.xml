@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-broker-core</artifactId>
+            <artifactId>kin-rsocket-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -23,19 +23,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-
-        <!-- cloud event定义 -->
-        <dependency>
-            <groupId>io.cloudevents</groupId>
-            <artifactId>cloudevents-core</artifactId>
-            <version>${cloudevents.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.cloudevents</groupId>
-            <artifactId>cloudevents-json-jackson</artifactId>
-            <version>${cloudevents.version}</version>
         </dependency>
 
         <!-- gossip -->
