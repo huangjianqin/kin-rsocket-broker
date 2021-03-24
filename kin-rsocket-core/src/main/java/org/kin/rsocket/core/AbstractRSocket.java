@@ -1,6 +1,5 @@
 package org.kin.rsocket.core;
 
-import com.sun.istack.internal.NotNull;
 import io.rsocket.RSocket;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
@@ -26,8 +25,7 @@ public class AbstractRSocket implements RSocket {
     }
 
     @Override
-    public @NotNull
-    Mono<Void> onClose() {
+    public Mono<Void> onClose() {
         return onClose;
     }
 

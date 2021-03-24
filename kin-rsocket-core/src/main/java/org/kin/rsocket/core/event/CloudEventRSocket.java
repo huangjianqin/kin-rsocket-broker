@@ -1,7 +1,6 @@
 package org.kin.rsocket.core.event;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.sun.istack.internal.NotNull;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import reactor.core.publisher.Mono;
@@ -60,7 +59,7 @@ public interface CloudEventRSocket extends RSocket {
      * @param payload
      * @return
      */
-    default CloudEventData<JsonNode> extractCloudEventsFromMetadata(@NotNull Payload payload) {
+    default CloudEventData<JsonNode> extractCloudEventsFromMetadata(Payload payload) {
         //todo
 //        String jsonText = null;
 //        byte firstByte = payload.metadata().getByte(0);

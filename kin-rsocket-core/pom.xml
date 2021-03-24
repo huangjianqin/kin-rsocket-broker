@@ -19,6 +19,12 @@
             <version>${kin-framework.version}</version>
         </dependency>
 
+        <!-- reactor -->
+        <dependency>
+            <groupId>io.projectreactor.addons</groupId>
+            <artifactId>reactor-extra</artifactId>
+        </dependency>
+
         <!-- reactive netty -->
         <dependency>
             <groupId>io.projectreactor.netty</groupId>
