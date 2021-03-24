@@ -3,6 +3,7 @@ package org.kin.rsocket.core.event;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.kin.framework.utils.JSON;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
 
@@ -11,7 +12,7 @@ import java.util.Map;
  * @date 2021/3/23
  */
 @SuppressWarnings("unchecked")
-public interface CloudEventSupport<T extends CloudEventSupport<?>> {
+public interface CloudEventSupport<T extends CloudEventSupport<?>> extends Serializable {
     /**
      * 解析cloud event数据
      */
