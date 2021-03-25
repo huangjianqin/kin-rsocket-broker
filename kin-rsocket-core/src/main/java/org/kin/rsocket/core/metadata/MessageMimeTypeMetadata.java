@@ -46,7 +46,7 @@ public class MessageMimeTypeMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageMimeTypeMetadata from(ByteBuf content) {
+    public static MessageMimeTypeMetadata of(ByteBuf content) {
         MessageMimeTypeMetadata metadata = new MessageMimeTypeMetadata();
         metadata.load(content);
         return metadata;

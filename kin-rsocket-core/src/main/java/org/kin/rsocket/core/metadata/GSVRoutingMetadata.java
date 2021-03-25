@@ -72,13 +72,13 @@ public class GSVRoutingMetadata implements MetadataAware {
         return of(group, service, method, version);
     }
 
-    public static GSVRoutingMetadata from(ByteBuf content) {
+    public static GSVRoutingMetadata of(ByteBuf content) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.load(content);
         return metadata;
     }
 
-    public static GSVRoutingMetadata from(String routingKey) {
+    public static GSVRoutingMetadata of(String routingKey) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.parseRoutingKey(routingKey);
         return metadata;

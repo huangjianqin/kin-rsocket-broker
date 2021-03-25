@@ -7,6 +7,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.format.EventFormat;
+import io.cloudevents.core.provider.EventFormatProvider;
+import io.cloudevents.jackson.JsonCloudEventData;
+import io.cloudevents.jackson.JsonFormat;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
@@ -14,10 +19,13 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.checkerframework.checker.units.qual.C;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.core.codec.CodecException;
+import org.kin.rsocket.core.event.CloudEventData;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -25,6 +33,8 @@ import java.util.*;
  * @date 2019-12-28
  */
 public class JSON {
+    /** 负责cloud event <-> json之间的转换 */
+    private static final EventFormat EVENT_FORMAT = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE);
     private static final ObjectMapper PARSER = new ObjectMapper();
 
     static {
@@ -56,7 +66,7 @@ public class JSON {
         try {
             return PARSER.writeValueAsString(obj);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -72,7 +82,7 @@ public class JSON {
         try {
             return PARSER.writeValueAsBytes(obj);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -88,7 +98,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, clazz);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -104,7 +114,7 @@ public class JSON {
         try {
             return PARSER.readValue(bytes, clazz);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -123,7 +133,7 @@ public class JSON {
             JavaType javaType = PARSER.getTypeFactory().constructParametricType(parametrized, parameterClasses);
             return PARSER.readValue(jsonStr, javaType);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -139,7 +149,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, typeReference);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -179,7 +189,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, collectionType);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -197,7 +207,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, mapType);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -217,7 +227,7 @@ public class JSON {
         try {
             return PARSER.readValue((InputStream) new ByteBufInputStream(byteBuf), type);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
         throw new IllegalStateException("encounter unknown error");
     }
@@ -233,7 +243,7 @@ public class JSON {
             return byteBuf;
         } catch (Exception e) {
             ReferenceCountUtil.safeRelease(byteBuf);
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
         throw new IllegalStateException("encounter unknown error");
     }
@@ -245,7 +255,7 @@ public class JSON {
         try {
             PARSER.readerForUpdating(object).readValue((InputStream) new ByteBufInputStream(byteBuf));
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
     }
 
@@ -256,7 +266,7 @@ public class JSON {
         try {
             PARSER.readerForUpdating(object).readValue(text);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
     }
 
@@ -273,8 +283,28 @@ public class JSON {
             }
             return targets;
         } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
+            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
+
         throw new IllegalStateException("encounter unknown error");
+    }
+
+    /**
+     * 将cloud event序列化成json
+     */
+    public static byte[] serialize(CloudEventData<?> event) {
+        return EVENT_FORMAT.serialize(event.getCloudEvent());
+    }
+
+    /**
+     * 从json中反序列化出cloud event
+     */
+    public static CloudEventData<JsonNode> decodeValue(String str) {
+        CloudEvent cloudEvent = EVENT_FORMAT.deserialize(str.getBytes(StandardCharsets.UTF_8));
+        if (cloudEvent.getData() instanceof JsonCloudEventData) {
+            JsonCloudEventData jsonCloudEventData = (JsonCloudEventData) cloudEvent.getData();
+            return new CloudEventData<>(jsonCloudEventData.getNode(), cloudEvent);
+        }
+        return new CloudEventData<>(null, cloudEvent);
     }
 }

@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.kin</groupId>
     <artifactId>kin-rsocket-broker-parent</artifactId>
-    <version>0.1.0.0</version>
+    <version>${revision}</version>
     <modules>
         <module>kin-rsocket-broker-server</module>
         <module>kin-rsocket-core</module>
@@ -21,16 +21,20 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <revision>0.1.0.0</revision>
+
         <kin-framework.version>0.1.0.0</kin-framework.version>
         <jmh.version>1.21</jmh.version>
         <jackson.version>2.10.1</jackson.version>
         <javassist.version>3.25.0-GA</javassist.version>
+        <spring-cloud-release.version>2020.0.2</spring-cloud-release.version>
         <springboot.version>2.3.1.RELEASE</springboot.version>
         <reactor.version>Dysprosium-SR16</reactor.version>
         <rsocket.version>1.1.0</rsocket.version>
         <cloudevents.version>2.0.0.RC2</cloudevents.version>
         <java-jwt.version>3.12.1</java-jwt.version>
         <scalecube-cluster.version>2.6.6</scalecube-cluster.version>
+        <kin-rpc-serialization.version>0.1.0.0</kin-rpc-serialization.version>
     </properties>
 
     <dependencyManagement>
@@ -54,11 +58,19 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-parent</artifactId>
-                <version>${springboot.version}</version>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud-release.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${springboot.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -93,6 +105,34 @@
                         <goals>
                             <goal>jar-no-fork</goal>
                             <goal>test-jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 可自动替换pom中的${revision}值  -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.1.0</version>
+                <configuration>
+                    <!-- 是否更新pom文件，此处还有更高级的用法 -->
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
                         </goals>
                     </execution>
                 </executions>
