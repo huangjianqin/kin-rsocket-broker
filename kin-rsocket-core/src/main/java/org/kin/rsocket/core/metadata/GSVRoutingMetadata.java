@@ -6,6 +6,7 @@ import io.rsocket.metadata.RoutingMetadata;
 import io.rsocket.metadata.TaggingMetadataCodec;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.utils.MurmurHash3;
+import org.kin.rsocket.core.utils.Separator;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,18 +21,6 @@ import java.util.Objects;
  * @date 2021/3/24
  */
 public class GSVRoutingMetadata implements MetadataAware {
-    /** group service version与tags的分隔符 */
-    private static final String SEPARATOR = "?";
-    /** group 分隔符 */
-    private static final String GROUP_SYMBOL = "!";
-    /** version 分隔符 */
-    private static final String VERSION_SYMBOL = ":";
-    /** method 分隔符 */
-    private static final String METHOD_SYMBOL = ".";
-    /** tags 分隔符 */
-    private static final String TAGS_SYMBOL = "&";
-
-
     /** group: region, datacenter, virtual group in datacenter */
     private String group;
     /** service name */
@@ -62,7 +51,7 @@ public class GSVRoutingMetadata implements MetadataAware {
     public static GSVRoutingMetadata of(String group, String serviceMethodKey, String version) {
         String service = "";
         String method = "";
-        int methodSymbolPosition = serviceMethodKey.lastIndexOf(METHOD_SYMBOL);
+        int methodSymbolPosition = serviceMethodKey.lastIndexOf(Separator.SERVICE_METHOD);
         if (methodSymbolPosition > 0) {
             service = serviceMethodKey.substring(0, methodSymbolPosition);
             method = serviceMethodKey.substring(methodSymbolPosition + 1);
@@ -121,24 +110,24 @@ public class GSVRoutingMetadata implements MetadataAware {
     private void parseRoutingKey(String routingKey) {
         String temp = routingKey;
         String tags = null;
-        if (routingKey.contains(SEPARATOR)) {
-            temp = routingKey.substring(0, routingKey.indexOf(SEPARATOR));
-            tags = routingKey.substring(routingKey.indexOf(SEPARATOR) + 1);
+        if (routingKey.contains(Separator.SERVICE_DEF_TAGS)) {
+            temp = routingKey.substring(0, routingKey.indexOf(Separator.SERVICE_DEF_TAGS));
+            tags = routingKey.substring(routingKey.indexOf(Separator.SERVICE_DEF_TAGS) + 1);
         }
         //group parse
-        int groupSymbolPosition = temp.indexOf(GROUP_SYMBOL);
+        int groupSymbolPosition = temp.indexOf(Separator.GROUP_SERVICE);
         if (groupSymbolPosition > 0) {
             this.group = temp.substring(0, groupSymbolPosition);
             temp = temp.substring(groupSymbolPosition + 1);
         }
         //version
-        int versionSymbolPosition = temp.lastIndexOf(VERSION_SYMBOL);
+        int versionSymbolPosition = temp.lastIndexOf(Separator.SERVICE_VERSION);
         if (versionSymbolPosition > 0) {
             this.version = temp.substring(versionSymbolPosition + 1);
             temp = temp.substring(0, versionSymbolPosition);
         }
         //service & method
-        int methodSymbolPosition = temp.lastIndexOf(METHOD_SYMBOL);
+        int methodSymbolPosition = temp.lastIndexOf(Separator.SERVICE_METHOD);
         if (methodSymbolPosition > 0) {
             this.service = temp.substring(0, methodSymbolPosition);
             this.method = temp.substring(methodSymbolPosition + 1);
@@ -146,7 +135,7 @@ public class GSVRoutingMetadata implements MetadataAware {
             this.service = temp;
         }
         if (tags != null) {
-            String[] tagParts = tags.split(TAGS_SYMBOL);
+            String[] tagParts = tags.split(Separator.TAG);
             for (String tagPart : tagParts) {
                 parseTags(tagPart);
             }
@@ -174,25 +163,25 @@ public class GSVRoutingMetadata implements MetadataAware {
         StringBuilder routingBuilder = new StringBuilder();
         //group
         if (group != null && !group.isEmpty()) {
-            routingBuilder.append(group).append(GROUP_SYMBOL);
+            routingBuilder.append(group).append(Separator.GROUP_SERVICE);
         }
         //service
         routingBuilder.append(service);
         //method
         if (method != null && !method.isEmpty()) {
-            routingBuilder.append(METHOD_SYMBOL).append(method);
+            routingBuilder.append(Separator.SERVICE_METHOD).append(method);
         }
         //version
         if (version != null && !version.isEmpty()) {
-            routingBuilder.append(VERSION_SYMBOL).append(version);
+            routingBuilder.append(Separator.SERVICE_VERSION).append(version);
         }
         if (this.sticky || this.endpoint != null) {
-            routingBuilder.append(SEPARATOR);
+            routingBuilder.append(Separator.SERVICE_DEF_TAGS);
             if (this.sticky) {
-                routingBuilder.append("sticky=1").append(TAGS_SYMBOL);
+                routingBuilder.append("sticky=1").append(Separator.TAG);
             }
             if (this.endpoint != null) {
-                routingBuilder.append("e=").append(endpoint).append(TAGS_SYMBOL);
+                routingBuilder.append("e=").append(endpoint).append(Separator.TAG);
             }
         }
         return routingBuilder.toString();

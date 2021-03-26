@@ -1,18 +1,19 @@
 package org.kin.rsocket.core;
 
 import org.kin.rsocket.core.utils.MurmurHash3;
+import org.kin.rsocket.core.utils.Separator;
 
 import java.util.Objects;
 
 /**
  * 服务定位: group, service full name, version
+ * <p>
+ * gsv定义: group!serviceName:version
  *
  * @author huangjianqin
  * @date 2021/2/15
  */
 public class ServiceLocator {
-    public static final String SEPARATOR = "!";
-
     /** service分组 */
     private final String group;
     /** service名 */
@@ -34,13 +35,13 @@ public class ServiceLocator {
         StringBuilder sb = new StringBuilder();
         //group
         if (group != null && !group.isEmpty()) {
-            sb.append(group).append(SEPARATOR);
+            sb.append(group).append(Separator.GROUP_SERVICE);
         }
         //service
         sb.append(service);
         //version
         if (version != null && !version.isEmpty()) {
-            sb.append(SEPARATOR).append(version);
+            sb.append(Separator.SERVICE_VERSION).append(version);
         }
         return sb.toString();
     }
