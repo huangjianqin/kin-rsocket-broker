@@ -33,7 +33,7 @@ public interface CloudEventSupport<T extends CloudEventSupport<?>> extends Seria
     }
 
     default CloudEventData<T> toCloudEvent(URI source) {
-        return RSocketCloudEventBuilder.builder((T) this).withSource(source).build();
+        return CloudEventBuilder.builder((T) this).withSource(source).build();
     }
 }
 

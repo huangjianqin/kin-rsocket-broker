@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.rsocket.metadata;
+package org.kin.rsocket.core.metadata;
 
 import java.util.Arrays;
 import java.util.HashMap;

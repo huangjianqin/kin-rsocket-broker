@@ -1,9 +1,12 @@
-package org.kin.rsocket.core.event;
+package org.kin.rsocket.core.event.application;
+
+import org.kin.rsocket.core.event.CloudEventSupport;
 
 import java.util.UUID;
 
 /**
  * 配置中心配置变化事件
+ * 由broker广播给所有application处理
  *
  * @author huangjianqin
  * @date 2021/3/24

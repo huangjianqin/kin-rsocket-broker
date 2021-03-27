@@ -8,6 +8,10 @@ Kin Rsocket Broker是一款基于RSocket协议的反应式对等通讯系统, �
 
 ## **实现**
 
+### **世界观**
+
+一切皆服务, 包括broker, 一些内置功能是在broker实现rsocket service实现的
+
 ### **模块**
 
 * **kin-roscket-broker-server**: rsocket broker实现

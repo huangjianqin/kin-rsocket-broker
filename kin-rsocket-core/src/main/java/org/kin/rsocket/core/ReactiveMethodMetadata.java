@@ -5,16 +5,14 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.frame.FrameType;
-import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
+import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.MurmurHash3;
+import org.kin.rsocket.core.utils.Separator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * 服务接口方法元数据
@@ -39,17 +37,18 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     private Integer handlerId;
     /** endpoint */
     private String endpoint;
+    /** sticky */
     private boolean sticky;
     /** rsocket frame type */
     private FrameType rsocketFrameType;
     /** parameters encoding type */
-    private RSocketMimeType paramEncoding;
+    private RSocketMimeType dataEncodingType;
     /** accept encoding */
     private RSocketMimeType[] acceptEncodingTypes;
     /** default composite metadata for RSocket, and include routing, encoding & accept encoding */
     private RSocketCompositeMetadata compositeMetadata;
-    /** bytebuf for default composite metadata */
-    private ByteBuf compositeMetadataByteBuf;
+    /** bytebuf for default composite metadata, 直接remote call, 不用每次call时才生成, 提高效率 */
+    private ByteBuf compositeMetadataBytes;
     /** 返回值是否是{@link Mono} */
     private boolean monoChannel = false;
 
@@ -60,63 +59,53 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
                                   String endpoint, boolean sticky, URI origin) {
         super(method);
         this.service = service;
-        this.name = method.getName();
-        this.paramEncoding = dataEncodingType;
+        name = method.getName();
+        this.dataEncodingType = dataEncodingType;
         this.acceptEncodingTypes = acceptEncodingTypes;
         //处理@ServiceMapping注解
         ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
         if (serviceMapping != null) {
             initServiceMapping(serviceMapping);
         }
-        //RSocketRemoteServiceBuilder has higher priority with group,version,endpoint than @ServiceMapping from RSocketRemoteServiceBuilder
+        //RSocketRemoteServiceBuilder设置的group,version,endpoint优先级比@ServiceMapping注解设置的要大
         this.group = group;
         this.version = version;
         this.endpoint = endpoint;
         // sticky from service builder or @ServiceMapping
         this.sticky = sticky | this.sticky;
-        this.fullName = this.service + "." + this.name;
-        this.serviceId = MurmurHash3.hash32(ServiceLocator.serviceId(this.group, this.service, this.version));
-        this.handlerId = MurmurHash3.hash32(service + "." + name);
+        fullName = this.service + Separator.SERVICE_METHOD + this.name;
+        serviceId = MurmurHash3.hash32(ServiceLocator.gsv(this.group, this.service, this.version));
+        handlerId = MurmurHash3.hash32(service + "." + name);
         //byte buffer binary encoding
         if (paramCount == 1) {
             Class<?> parameterType = method.getParameterTypes()[0];
             if (BINARY_CLASS_LIST.contains(parameterType)) {
-                this.paramEncoding = RSocketMimeType.Binary;
+                this.dataEncodingType = RSocketMimeType.Binary;
             }
         }
-        //init composite metadata for invocation
+        //初始化方法调用的元数据
         initCompositeMetadata(origin);
-        //bi direction check: param's type is Flux for 1st param or 2nd param
-        if (paramCount == 1 && REACTIVE_STREAMING_CLASSES.contains(method.getParameterTypes()[0].getCanonicalName())) {
+        //检查第一二个参数是否是Flux
+        if (paramCount == 1 && Flux.class.isAssignableFrom(method.getParameterTypes()[0])) {
             rsocketFrameType = FrameType.REQUEST_CHANNEL;
-        } else if (paramCount == 2 && REACTIVE_STREAMING_CLASSES.contains(method.getParameterTypes()[1].getCanonicalName())) {
+        } else if (paramCount == 2 && Flux.class.isAssignableFrom(method.getParameterTypes()[1])) {
             rsocketFrameType = FrameType.REQUEST_CHANNEL;
         }
         if (rsocketFrameType != null && rsocketFrameType == FrameType.REQUEST_CHANNEL) {
-            if (method.getReturnType().isAssignableFrom(Mono.class)) {
-                this.monoChannel = true;
+            if (Mono.class.isAssignableFrom(returnType)) {
+                monoChannel = true;
             }
         }
-        if (this.rsocketFrameType == null) {
-            assert inferredClassForReturn != null;
-            // fire_and_forget
+        //参数不含Flux
+        if (rsocketFrameType == null) {
             if (returnType.equals(Void.TYPE) || (returnType.equals(Mono.class) && inferredClassForReturn.equals(Void.TYPE))) {
-                this.rsocketFrameType = FrameType.REQUEST_FNF;
-            } else if (returnType.equals(Flux.class) || REACTIVE_STREAMING_CLASSES.contains(returnType.getCanonicalName())) {  // request/stream
-                this.rsocketFrameType = FrameType.REQUEST_STREAM;
-            } else { //request/response
-                this.rsocketFrameType = FrameType.REQUEST_RESPONSE;
+                rsocketFrameType = FrameType.REQUEST_FNF;
+            } else if (Flux.class.isAssignableFrom(returnType)) {
+                rsocketFrameType = FrameType.REQUEST_STREAM;
+            } else {
+                rsocketFrameType = FrameType.REQUEST_RESPONSE;
             }
         }
-        //metrics tags for micrometer
-        if (this.group != null && !this.group.isEmpty()) {
-            metricsTags.add(Tag.of("group", this.group));
-        }
-        if (this.version != null && !this.version.isEmpty()) {
-            metricsTags.add(Tag.of("version", this.version));
-        }
-        metricsTags.add(Tag.of("method", this.name));
-        metricsTags.add(Tag.of("frame", String.valueOf(this.rsocketFrameType.getEncodedType())));
     }
 
     /**
@@ -125,96 +114,102 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     public void initServiceMapping(ServiceMapping serviceMapping) {
         if (!serviceMapping.value().isEmpty()) {
             String serviceName = serviceMapping.value();
-            if (serviceName.contains(".")) {
-                this.service = serviceName.substring(0, serviceName.lastIndexOf('.'));
-                this.name = serviceName.substring(serviceName.lastIndexOf('.') + 1);
+            if (serviceName.contains(Separator.SERVICE_METHOD)) {
+                service = serviceName.substring(0, serviceName.lastIndexOf(Separator.SERVICE_METHOD));
+                name = serviceName.substring(serviceName.lastIndexOf(Separator.SERVICE_METHOD) + 1);
             } else {
-                this.name = serviceName;
+                name = serviceName;
             }
         }
         if (!serviceMapping.group().isEmpty()) {
-            this.group = serviceMapping.group();
+            group = serviceMapping.group();
         }
         if (!serviceMapping.version().isEmpty()) {
-            this.version = serviceMapping.version();
+            version = serviceMapping.version();
         }
         if (!serviceMapping.endpoint().isEmpty()) {
-            this.endpoint = serviceMapping.endpoint();
+            endpoint = serviceMapping.endpoint();
         }
         if (!serviceMapping.paramEncoding().isEmpty()) {
-            this.paramEncoding = RSocketMimeType.getByType(serviceMapping.paramEncoding());
+            dataEncodingType = RSocketMimeType.getByType(serviceMapping.paramEncoding());
         }
         if (!serviceMapping.resultEncoding().isEmpty()) {
             //todo 是否需要支持数组
-            this.acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.getByType(serviceMapping.resultEncoding())};
+            acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.getByType(serviceMapping.resultEncoding())};
         }
-        this.sticky = serviceMapping.sticky();
+        sticky = serviceMapping.sticky();
     }
 
+    /**
+     * 初始化方法调用的元数据
+     */
     public void initCompositeMetadata(URI origin) {
-        //payload routing metadata
-        GSVRoutingMetadata routingMetadata = new GSVRoutingMetadata(group, this.service, this.name, version);
-        routingMetadata.setEndpoint(this.endpoint);
-        routingMetadata.setSticky(this.sticky);
-        //payload binary routing metadata
-        BinaryRoutingMetadata binaryRoutingMetadata = new BinaryRoutingMetadata(this.serviceId, this.handlerId,
-                routingMetadata.assembleRoutingKey().getBytes(StandardCharsets.UTF_8));
-        if (this.sticky) {
-            binaryRoutingMetadata.setSticky(true);
-        }
-        //add param encoding
-        MessageMimeTypeMetadata messageMimeTypeMetadata = new MessageMimeTypeMetadata(this.paramEncoding);
-        //set accepted mimetype
-        MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata = new MessageAcceptMimeTypesMetadata(this.acceptEncodingTypes);
+        //routing metadata
+        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, name, version);
+        routingMetadata.setEndpoint(endpoint);
+        routingMetadata.setSticky(sticky);
+
+        //encoding mime type
+        MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataEncodingType);
+
+        //accepted mimetype
+        MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata = MessageAcceptMimeTypesMetadata.of(acceptEncodingTypes);
+
         //origin metadata
-        OriginMetadata originMetadata = new OriginMetadata(origin);
-        //construct default composite metadata
-        CompositeByteBuf compositeMetadataContent;
-        this.compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
-        //add gsv routing data if endpoint not empty
-        if (endpoint != null && !endpoint.isEmpty()) {
-            this.compositeMetadata.addMetadata(binaryRoutingMetadata);
-            compositeMetadataContent = (CompositeByteBuf) this.compositeMetadata.getContent();
-        } else {
-            compositeMetadataContent = (CompositeByteBuf) this.compositeMetadata.getContent();
-            //add BinaryRoutingMetadata as first
-            compositeMetadataContent.addComponent(true, 0, binaryRoutingMetadata.getHeaderAndContent());
-        }
-        // convert composite bytebuf to bytebuf for performance
-        this.compositeMetadataByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);
-        ReferenceCountUtil.safeRelease(compositeMetadataContent);
+        OriginMetadata originMetadata = OriginMetadata.of(origin);
+
+        //default composite metadata
+        compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
+        CompositeByteBuf compositeMetadataBytes = (CompositeByteBuf) compositeMetadata.getContent();
+
+        //cache
+        this.compositeMetadataBytes = Unpooled.copiedBuffer(compositeMetadataBytes);
+        ReferenceCountUtil.safeRelease(compositeMetadataBytes);
     }
 
-    public String getFullName() {
-        return fullName;
-    }
-
+    //getter
     public String getService() {
         return service;
-    }
-
-    public void setService(String service) {
-        this.service = service;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public Integer getServiceId() {
+        return serviceId;
+    }
+
+    public Integer getHandlerId() {
+        return handlerId;
+    }
+
+    public String getEndpoint() {
+        return endpoint;
+    }
+
+    public boolean isSticky() {
+        return sticky;
     }
 
     public FrameType getRsocketFrameType() {
         return rsocketFrameType;
     }
 
-    public boolean isMonoChannel() {
-        return monoChannel;
-    }
-
-    public RSocketMimeType getParamEncoding() {
-        return paramEncoding;
+    public RSocketMimeType getDataEncodingType() {
+        return dataEncodingType;
     }
 
     public RSocketMimeType[] getAcceptEncodingTypes() {
@@ -222,19 +217,15 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     }
 
     public RSocketCompositeMetadata getCompositeMetadata() {
-        return this.compositeMetadata;
+        return compositeMetadata;
     }
 
-    /**
-     * get default composite metadata ByteBuf for remote call. please use .retainedDuplicate() if necessary
-     *
-     * @return composite metadata ByteBuf
-     */
-    public ByteBuf getCompositeMetadataByteBuf() {
-        return compositeMetadataByteBuf;
+    public ByteBuf getCompositeMetadataBytes() {
+        //防止外部误修改
+        return compositeMetadataBytes.retainedDuplicate();
     }
 
-    public List<Tag> getMetricsTags() {
-        return this.metricsTags;
+    public boolean isMonoChannel() {
+        return monoChannel;
     }
 }

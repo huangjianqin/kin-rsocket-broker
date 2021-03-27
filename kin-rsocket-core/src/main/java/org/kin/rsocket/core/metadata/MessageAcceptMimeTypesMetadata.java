@@ -2,13 +2,12 @@ package org.kin.rsocket.core.metadata;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.rsocket.metadata.WellKnownMimeType;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
+import static org.kin.rsocket.core.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
 
 /**
  * @author huangjianqin

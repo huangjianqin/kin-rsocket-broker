@@ -4,7 +4,7 @@ import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.ServicesExposedEvent;
+import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
 
 import java.net.URI;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.function.Supplier;
  * @author huangjianqin
  * @date 2021/3/23
  */
-public interface RSocketRequesterSupport {
+public interface RequesterSupport {
     /**
      * 原始uri
      */

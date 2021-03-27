@@ -1,12 +1,11 @@
 package org.kin.rsocket.core.event;
 
 import io.cloudevents.CloudEvent;
-import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.data.PojoCloudEventData;
-import io.rsocket.metadata.WellKnownMimeType;
 import org.kin.framework.utils.JSON;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.metadata.WellKnownMimeType;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -18,8 +17,8 @@ import java.util.UUID;
  * @author huangjianqin
  * @date 2021/3/23
  */
-public class RSocketCloudEventBuilder<T> {
-    private final CloudEventBuilder builder = CloudEventBuilder.v1().withDataContentType(WellKnownMimeType.APPLICATION_JSON.getString());
+public class CloudEventBuilder<T> {
+    private final io.cloudevents.core.builder.CloudEventBuilder builder = io.cloudevents.core.builder.CloudEventBuilder.v1().withDataContentType(WellKnownMimeType.APPLICATION_JSON.getString());
     private T data;
     private static URI DEFAULT_SOURCE = URI.create("app://" + NetUtils.getIp() + "/" + "?id=" + RSocketAppContext.ID);
 
@@ -28,8 +27,8 @@ public class RSocketCloudEventBuilder<T> {
      *
      * @param <T> The 'data' type
      */
-    public static <T> RSocketCloudEventBuilder<T> builder() {
-        return new RSocketCloudEventBuilder<>();
+    public static <T> CloudEventBuilder<T> builder() {
+        return new CloudEventBuilder<>();
     }
 
     /**
@@ -39,8 +38,8 @@ public class RSocketCloudEventBuilder<T> {
      * @param <T>  data type
      * @return cloud event builder
      */
-    public static <T> RSocketCloudEventBuilder<T> builder(T data) {
-        RSocketCloudEventBuilder<T> builder = new RSocketCloudEventBuilder<>();
+    public static <T> CloudEventBuilder<T> builder(T data) {
+        CloudEventBuilder<T> builder = new CloudEventBuilder<>();
         builder.data = data;
         builder
                 .withId(UUID.randomUUID().toString())
@@ -51,42 +50,42 @@ public class RSocketCloudEventBuilder<T> {
         return builder;
     }
 
-    public RSocketCloudEventBuilder<T> withId(String id) {
+    public CloudEventBuilder<T> withId(String id) {
         this.builder.withId(id);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withSource(URI source) {
+    public CloudEventBuilder<T> withSource(URI source) {
         this.builder.withSource(source);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withType(String type) {
+    public CloudEventBuilder<T> withType(String type) {
         this.builder.withType(type);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withDataschema(URI dataschema) {
+    public CloudEventBuilder<T> withDataschema(URI dataschema) {
         this.builder.withDataSchema(dataschema);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withDataContentType(String datacontenttype) {
+    public CloudEventBuilder<T> withDataContentType(String datacontenttype) {
         this.builder.withDataContentType(datacontenttype);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withSubject(String subject) {
+    public CloudEventBuilder<T> withSubject(String subject) {
         this.builder.withSubject(subject);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withTime(OffsetDateTime time) {
+    public CloudEventBuilder<T> withTime(OffsetDateTime time) {
         this.builder.withTime(time);
         return this;
     }
 
-    public RSocketCloudEventBuilder<T> withData(T data) {
+    public CloudEventBuilder<T> withData(T data) {
         this.data = data;
         return this;
     }

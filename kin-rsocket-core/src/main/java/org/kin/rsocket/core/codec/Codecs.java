@@ -80,7 +80,7 @@ public final class Codecs {
     /**
      * 根据指定mime type, 对服务接口返回值进行编码
      */
-    public ByteBuf encodingResult(Object result, RSocketMimeType mimeType) {
+    public ByteBuf encodeResult(Object result, RSocketMimeType mimeType) {
         try {
             return mimeType2Codec.get(mimeType).encodeResult(result);
         } catch (Exception e) {

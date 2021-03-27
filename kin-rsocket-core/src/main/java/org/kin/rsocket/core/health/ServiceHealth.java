@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/26
  */
 @FunctionalInterface
-public interface RSocketServiceHealth {
+public interface ServiceHealth {
     int DOWN = -1;
     int UNKNOWN = 0;
     int SERVING = 1;

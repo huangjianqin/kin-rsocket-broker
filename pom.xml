@@ -35,6 +35,7 @@
         <java-jwt.version>3.12.1</java-jwt.version>
         <scalecube-cluster.version>2.6.6</scalecube-cluster.version>
         <kin-rpc-serialization.version>0.1.0.0</kin-rpc-serialization.version>
+        <byte-buddy.version>1.10.18</byte-buddy.version>
     </properties>
 
     <dependencyManagement>

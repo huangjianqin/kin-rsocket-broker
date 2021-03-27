@@ -1,4 +1,6 @@
-package org.kin.rsocket.core.event;
+package org.kin.rsocket.core.event.broker;
+
+import org.kin.rsocket.core.event.CloudEventSupport;
 
 import java.util.Map;
 

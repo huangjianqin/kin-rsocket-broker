@@ -1,7 +1,10 @@
-package org.kin.rsocket.core.event;
+package org.kin.rsocket.core.event.broker;
 
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ServiceLocator;
+import org.kin.rsocket.core.event.CloudEventBuilder;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventSupport;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +29,7 @@ public class ServicesHiddenEvent implements CloudEventSupport<ServicesHiddenEven
         inst.appId = RSocketAppContext.ID;
         inst.services = new HashSet<>(serviceLocators.size());
         inst.services.addAll(serviceLocators);
-        return RSocketCloudEventBuilder
+        return CloudEventBuilder
                 .builder(inst)
                 .build();
     }

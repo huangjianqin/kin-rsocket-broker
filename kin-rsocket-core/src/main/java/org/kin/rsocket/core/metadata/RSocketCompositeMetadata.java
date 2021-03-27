@@ -5,14 +5,13 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataCodec;
-import io.rsocket.metadata.WellKnownMimeType;
 import org.kin.framework.utils.ExceptionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
+import static org.kin.rsocket.core.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
 
 /**
  * @author huangjianqin
