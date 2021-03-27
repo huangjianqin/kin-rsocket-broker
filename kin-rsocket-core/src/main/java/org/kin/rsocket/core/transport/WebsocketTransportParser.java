@@ -4,6 +4,7 @@ import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.ServerTransport;
 import io.rsocket.transport.netty.client.WebsocketClientTransport;
 import io.rsocket.transport.netty.server.WebsocketServerTransport;
+import org.kin.rsocket.core.utils.Schemas;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -15,8 +16,8 @@ import java.util.Optional;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class WebsocketUriHandler implements UriHandler {
-    private static final List<String> SCHEME = Arrays.asList("ws", "wss", "http", "https");
+public final class WebsocketTransportParser implements Uri2TransportParser {
+    private static final List<String> SCHEME = Arrays.asList(Schemas.WS, Schemas.WSS, Schemas.HTTP, Schemas.HTTPS);
 
     @Override
     public Optional<ClientTransport> buildClient(URI uri) {

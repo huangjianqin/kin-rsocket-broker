@@ -6,7 +6,7 @@ import io.rsocket.metadata.RoutingMetadata;
 import io.rsocket.metadata.TaggingMetadataCodec;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.utils.MurmurHash3;
-import org.kin.rsocket.core.utils.Separator;
+import org.kin.rsocket.core.utils.Separators;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -26,7 +26,7 @@ public class GSVRoutingMetadata implements MetadataAware {
     /** service name */
     private String service;
     /** method name */
-    private String method;
+    private String handlerName;
     /** version */
     private String version;
     /** endpoint */
@@ -36,29 +36,29 @@ public class GSVRoutingMetadata implements MetadataAware {
     /** target instance ID */
     private transient Integer targetId;
 
-    public static GSVRoutingMetadata of(String group, String service, String method, String version) {
+    public static GSVRoutingMetadata of(String group, String service, String handlerName, String version) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.group = group;
         metadata.service = service;
-        metadata.method = method;
+        metadata.handlerName = handlerName;
         metadata.version = version;
         return metadata;
     }
 
     /**
-     * @param serviceMethodKey service.method
+     * @param serviceHandlerKey service.handlerName
      */
-    public static GSVRoutingMetadata of(String group, String serviceMethodKey, String version) {
+    public static GSVRoutingMetadata of(String group, String serviceHandlerKey, String version) {
         String service = "";
-        String method = "";
-        int methodSymbolPosition = serviceMethodKey.lastIndexOf(Separator.SERVICE_METHOD);
+        String handlerName = "";
+        int methodSymbolPosition = serviceHandlerKey.lastIndexOf(Separators.SERVICE_HANDLER);
         if (methodSymbolPosition > 0) {
-            service = serviceMethodKey.substring(0, methodSymbolPosition);
-            method = serviceMethodKey.substring(methodSymbolPosition + 1);
+            service = serviceHandlerKey.substring(0, methodSymbolPosition);
+            handlerName = serviceHandlerKey.substring(methodSymbolPosition + 1);
         } else {
-            service = serviceMethodKey;
+            service = serviceHandlerKey;
         }
-        return of(group, service, method, version);
+        return of(group, service, handlerName, version);
     }
 
     public static GSVRoutingMetadata of(ByteBuf content) {
@@ -110,32 +110,32 @@ public class GSVRoutingMetadata implements MetadataAware {
     private void parseRoutingKey(String routingKey) {
         String temp = routingKey;
         String tags = null;
-        if (routingKey.contains(Separator.SERVICE_DEF_TAGS)) {
-            temp = routingKey.substring(0, routingKey.indexOf(Separator.SERVICE_DEF_TAGS));
-            tags = routingKey.substring(routingKey.indexOf(Separator.SERVICE_DEF_TAGS) + 1);
+        if (routingKey.contains(Separators.SERVICE_DEF_TAGS)) {
+            temp = routingKey.substring(0, routingKey.indexOf(Separators.SERVICE_DEF_TAGS));
+            tags = routingKey.substring(routingKey.indexOf(Separators.SERVICE_DEF_TAGS) + 1);
         }
         //group parse
-        int groupSymbolPosition = temp.indexOf(Separator.GROUP_SERVICE);
+        int groupSymbolPosition = temp.indexOf(Separators.GROUP_SERVICE);
         if (groupSymbolPosition > 0) {
             this.group = temp.substring(0, groupSymbolPosition);
             temp = temp.substring(groupSymbolPosition + 1);
         }
         //version
-        int versionSymbolPosition = temp.lastIndexOf(Separator.SERVICE_VERSION);
+        int versionSymbolPosition = temp.lastIndexOf(Separators.SERVICE_VERSION);
         if (versionSymbolPosition > 0) {
             this.version = temp.substring(versionSymbolPosition + 1);
             temp = temp.substring(0, versionSymbolPosition);
         }
         //service & method
-        int methodSymbolPosition = temp.lastIndexOf(Separator.SERVICE_METHOD);
+        int methodSymbolPosition = temp.lastIndexOf(Separators.SERVICE_HANDLER);
         if (methodSymbolPosition > 0) {
             this.service = temp.substring(0, methodSymbolPosition);
-            this.method = temp.substring(methodSymbolPosition + 1);
+            this.handlerName = temp.substring(methodSymbolPosition + 1);
         } else {
             this.service = temp;
         }
         if (tags != null) {
-            String[] tagParts = tags.split(Separator.TAG);
+            String[] tagParts = tags.split(Separators.TAG);
             for (String tagPart : tagParts) {
                 parseTags(tagPart);
             }
@@ -163,25 +163,25 @@ public class GSVRoutingMetadata implements MetadataAware {
         StringBuilder routingBuilder = new StringBuilder();
         //group
         if (group != null && !group.isEmpty()) {
-            routingBuilder.append(group).append(Separator.GROUP_SERVICE);
+            routingBuilder.append(group).append(Separators.GROUP_SERVICE);
         }
         //service
         routingBuilder.append(service);
         //method
-        if (method != null && !method.isEmpty()) {
-            routingBuilder.append(Separator.SERVICE_METHOD).append(method);
+        if (handlerName != null && !handlerName.isEmpty()) {
+            routingBuilder.append(Separators.SERVICE_HANDLER).append(handlerName);
         }
         //version
         if (version != null && !version.isEmpty()) {
-            routingBuilder.append(Separator.SERVICE_VERSION).append(version);
+            routingBuilder.append(Separators.SERVICE_VERSION).append(version);
         }
         if (this.sticky || this.endpoint != null) {
-            routingBuilder.append(Separator.SERVICE_DEF_TAGS);
+            routingBuilder.append(Separators.SERVICE_DEF_TAGS);
             if (this.sticky) {
-                routingBuilder.append("sticky=1").append(Separator.TAG);
+                routingBuilder.append("sticky=1").append(Separators.TAG);
             }
             if (this.endpoint != null) {
-                routingBuilder.append("e=").append(endpoint).append(Separator.TAG);
+                routingBuilder.append("e=").append(endpoint).append(Separators.TAG);
             }
         }
         return routingBuilder.toString();
@@ -229,12 +229,12 @@ public class GSVRoutingMetadata implements MetadataAware {
         this.service = service;
     }
 
-    public String getMethod() {
-        return this.method;
+    public String getHandlerName() {
+        return this.handlerName;
     }
 
-    public void setMethod(String method) {
-        this.method = method;
+    public void setHandlerName(String handlerName) {
+        this.handlerName = handlerName;
     }
 
     public String getVersion() {

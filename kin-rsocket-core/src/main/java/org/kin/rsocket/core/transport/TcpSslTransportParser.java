@@ -11,6 +11,7 @@ import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.ServerTransport;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.transport.netty.server.TcpServerTransport;
+import org.kin.rsocket.core.utils.Schemas;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
@@ -30,15 +31,15 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class TcpSslUriHandler implements UriHandler {
-    private static final List<String> SCHEMES = Arrays.asList("tcps", "tcp+tls", "tls");
+public final class TcpSslTransportParser implements Uri2TransportParser {
+    private static final List<String> SCHEMES = Arrays.asList(Schemas.TCPS, Schemas.TPC_TLS, Schemas.TLS);
     /** 默认密码 */
     private static final String DEFAULT_PASSWORD = "changeit";
     private TrustManagerFactory trustManagerFactory = InsecureTrustManagerFactory.INSTANCE;
     /** 使用的协议 */
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
 
-    public TcpSslUriHandler() {
+    public TcpSslTransportParser() {
         //todo, 路径支持配置?
         File fingerPrints = new File(System.getProperty("user.home") + "/.rsocket/known_finger_prints");
         if (fingerPrints.exists()) {

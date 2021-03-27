@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 通过SPI加载支持的transport, 也就是{@link UriHandler}实现类
+ * 通过SPI加载支持的transport, 也就是{@link Uri2TransportParser}实现类
+ * 主要用于requester 解析uri获得对应的transport
  *
  * @author huangjianqin
  * @date 2021/3/27
@@ -26,10 +27,10 @@ public final class UriTransportRegistry {
     /** 单例 */
     public static final UriTransportRegistry INSTANCE = new UriTransportRegistry();
     /** classpath中UriHandler实现类实例 */
-    private List<UriHandler> handlers;
+    private List<Uri2TransportParser> handlers;
 
     private UriTransportRegistry() {
-        List<UriHandler> extensions = RSocketAppContext.LOADER.getExtensions(UriHandler.class);
+        List<Uri2TransportParser> extensions = RSocketAppContext.LOADER.getExtensions(Uri2TransportParser.class);
         handlers = Collections.unmodifiableList(extensions);
     }
 
@@ -39,7 +40,7 @@ public final class UriTransportRegistry {
     public ClientTransport client(String uriString) {
         URI uri = URI.create(uriString);
 
-        for (UriHandler h : handlers) {
+        for (Uri2TransportParser h : handlers) {
             Optional<ClientTransport> r = h.buildClient(uri);
             if (r.isPresent()) {
                 return r.get();
@@ -55,7 +56,7 @@ public final class UriTransportRegistry {
     public ServerTransport<?> server(String uriString) {
         URI uri = URI.create(uriString);
 
-        for (UriHandler h : handlers) {
+        for (Uri2TransportParser h : handlers) {
             Optional<ServerTransport<?>> r = h.buildServer(uri);
             if (r.isPresent()) {
                 return r.get();

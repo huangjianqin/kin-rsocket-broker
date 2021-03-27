@@ -2,7 +2,7 @@ package org.kin.rsocket.core.event.application;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.utils.Symbol;
+import org.kin.rsocket.core.utils.Symbols;
 
 import java.util.List;
 
@@ -37,7 +37,7 @@ public class UpstreamClusterChangedEvent implements CloudEventSupport<UpstreamCl
      */
     @JsonIgnore
     public boolean isBrokerCluster() {
-        return Symbol.BROKER.equals(interfaceName);
+        return Symbols.BROKER.equals(interfaceName);
     }
 
     //setter && getter

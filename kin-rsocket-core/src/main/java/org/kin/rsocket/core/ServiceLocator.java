@@ -1,7 +1,7 @@
 package org.kin.rsocket.core;
 
 import org.kin.rsocket.core.utils.MurmurHash3;
-import org.kin.rsocket.core.utils.Separator;
+import org.kin.rsocket.core.utils.Separators;
 
 import java.util.Objects;
 
@@ -35,13 +35,13 @@ public class ServiceLocator {
         StringBuilder sb = new StringBuilder();
         //group
         if (group != null && !group.isEmpty()) {
-            sb.append(group).append(Separator.GROUP_SERVICE);
+            sb.append(group).append(Separators.GROUP_SERVICE);
         }
         //service
         sb.append(service);
         //version
         if (version != null && !version.isEmpty()) {
-            sb.append(Separator.SERVICE_VERSION).append(version);
+            sb.append(Separators.SERVICE_VERSION).append(version);
         }
         return sb.toString();
     }

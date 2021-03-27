@@ -17,15 +17,6 @@ import java.util.Set;
 public class RemoteServiceBuilder<T> {
     /** todo 缓存的所有requester proxy, 用于监控 */
     public static final Set<ServiceLocator> CONSUMED_SERVICES = new HashSet<>();
-    public static boolean enhance = true;
-
-    static {
-        try {
-            Class.forName("net.bytebuddy.ByteBuddy");
-        } catch (Exception e) {
-            enhance = false;
-        }
-    }
 
     /** uri */
     private URI sourceUri;
@@ -155,7 +146,7 @@ public class RemoteServiceBuilder<T> {
     }
 
     public T build() {
-        if (enhance) {
+        if (RSocketAppContext.ENHANCE) {
             return buildByteBuddyProxy();
         } else {
             return buildJdkProxy();
@@ -192,10 +183,6 @@ public class RemoteServiceBuilder<T> {
     }
 
     //getter
-    public static boolean isEnhance() {
-        return enhance;
-    }
-
     public URI getSourceUri() {
         return sourceUri;
     }

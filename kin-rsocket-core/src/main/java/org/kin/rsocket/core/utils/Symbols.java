@@ -6,7 +6,7 @@ package org.kin.rsocket.core.utils;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public interface Symbol {
+public interface Symbols {
     /** broker基础服务, 也就是最基本的remote call接口名字是* */
     String BROKER = "*";
 }

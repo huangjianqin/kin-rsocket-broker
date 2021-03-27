@@ -7,7 +7,7 @@ import io.netty.util.ReferenceCountUtil;
 import io.rsocket.frame.FrameType;
 import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.MurmurHash3;
-import org.kin.rsocket.core.utils.Separator;
+import org.kin.rsocket.core.utils.Separators;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,8 +23,8 @@ import java.net.URI;
 public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /** service full name {@link Method#getName()} */
     private String service;
-    /** method handler name */
-    private String name;
+    /** handler name, 默认=method name */
+    private String handlerName;
     /** full name, service and name */
     private String fullName;
     /** service group */
@@ -59,7 +59,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
                                   String endpoint, boolean sticky, URI origin) {
         super(method);
         this.service = service;
-        name = method.getName();
+        handlerName = method.getName();
         this.dataEncodingType = dataEncodingType;
         this.acceptEncodingTypes = acceptEncodingTypes;
         //处理@ServiceMapping注解
@@ -73,9 +73,9 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         this.endpoint = endpoint;
         // sticky from service builder or @ServiceMapping
         this.sticky = sticky | this.sticky;
-        fullName = this.service + Separator.SERVICE_METHOD + this.name;
+        fullName = this.service + Separators.SERVICE_HANDLER + this.handlerName;
         serviceId = MurmurHash3.hash32(ServiceLocator.gsv(this.group, this.service, this.version));
-        handlerId = MurmurHash3.hash32(service + "." + name);
+        handlerId = MurmurHash3.hash32(service + "." + handlerName);
         //byte buffer binary encoding
         if (paramCount == 1) {
             Class<?> parameterType = method.getParameterTypes()[0];
@@ -114,11 +114,11 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     public void initServiceMapping(ServiceMapping serviceMapping) {
         if (!serviceMapping.value().isEmpty()) {
             String serviceName = serviceMapping.value();
-            if (serviceName.contains(Separator.SERVICE_METHOD)) {
-                service = serviceName.substring(0, serviceName.lastIndexOf(Separator.SERVICE_METHOD));
-                name = serviceName.substring(serviceName.lastIndexOf(Separator.SERVICE_METHOD) + 1);
+            if (serviceName.contains(Separators.SERVICE_HANDLER)) {
+                service = serviceName.substring(0, serviceName.lastIndexOf(Separators.SERVICE_HANDLER));
+                handlerName = serviceName.substring(serviceName.lastIndexOf(Separators.SERVICE_HANDLER) + 1);
             } else {
-                name = serviceName;
+                handlerName = serviceName;
             }
         }
         if (!serviceMapping.group().isEmpty()) {
@@ -145,7 +145,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
      */
     public void initCompositeMetadata(URI origin) {
         //routing metadata
-        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, name, version);
+        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handlerName, version);
         routingMetadata.setEndpoint(endpoint);
         routingMetadata.setSticky(sticky);
 
@@ -172,8 +172,8 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         return service;
     }
 
-    public String getName() {
-        return name;
+    public String getHandlerName() {
+        return handlerName;
     }
 
     public String getFullName() {

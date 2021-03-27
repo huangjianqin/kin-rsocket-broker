@@ -15,7 +15,7 @@ import java.util.Optional;
  * @date 2021/3/27
  */
 @SPI
-public interface UriHandler {
+public interface Uri2TransportParser {
     /**
      * 返回适配{@link URI}的{@link ClientTransport}
      */

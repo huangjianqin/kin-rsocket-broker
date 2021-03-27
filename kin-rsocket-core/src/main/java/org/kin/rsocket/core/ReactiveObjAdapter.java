@@ -30,6 +30,8 @@ public final class ReactiveObjAdapter {
             return Mono.from((Publisher) source);
         } else if (source instanceof CompletableFuture) {
             return Mono.fromFuture((CompletableFuture) source);
+        } else if (source instanceof Throwable) {
+            return Mono.error((Throwable) source);
         } else {
             return (Mono<T>) Mono.justOrEmpty(source);
         }

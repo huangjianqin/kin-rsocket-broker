@@ -28,9 +28,9 @@ class ReactiveMethodSupport {
 
     protected ReactiveMethodSupport(Method method) {
         this.method = method;
-        this.paramCount = method.getParameterCount();
-        this.returnType = method.getReturnType();
-        this.inferredClassForReturn = ClassUtils.getInferredClassForGeneric(method.getGenericReturnType());
+        paramCount = method.getParameterCount();
+        returnType = method.getReturnType();
+        inferredClassForReturn = ClassUtils.getInferredClassForGeneric(method.getGenericReturnType());
     }
 
     //getter

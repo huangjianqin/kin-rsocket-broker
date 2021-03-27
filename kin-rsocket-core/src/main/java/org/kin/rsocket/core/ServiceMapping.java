@@ -12,7 +12,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ServiceMapping {
-    /** service mapping value, service or handler name */
+    /** handler name, 默认=method name */
     String value() default "";
 
     /** 所属组 */

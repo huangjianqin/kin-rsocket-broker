@@ -102,7 +102,7 @@ public class RequesterProxy implements InvocationHandler {
     @Override
     @RuntimeType
     public Object invoke(@This Object proxy, @Origin Method method, @AllArguments Object[] args) {
-        if (!RemoteServiceBuilder.isEnhance() && method.isDefault()) {
+        if (!RSocketAppContext.ENHANCE && method.isDefault()) {
             //jdk代理下, 如果是调用default方法, 直接使用句柄掉漆
             try {
                 return MethodHandleUtils.getInterfaceDefaultMethodHandle(method, serviceInterface).bindTo(proxy).invokeWithArguments(args);
