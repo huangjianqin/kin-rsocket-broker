@@ -40,7 +40,7 @@ public class ReactiveMethodInvoker extends ReactiveMethodSupport {
                 CompletableFuture.class.isAssignableFrom(this.returnType)) {
             this.asyncReturn = true;
         }
-        this.binaryReturn = this.inferredClassForReturn != null && BINARY_CLASS_LIST.contains(this.inferredClassForReturn);
+        this.binaryReturn = this.inferredClassForReturn != null && ReactiveMethodSupport.BINARY_CLASS_LIST.contains(this.inferredClassForReturn);
     }
 
     /**

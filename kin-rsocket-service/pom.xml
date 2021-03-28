@@ -17,5 +17,13 @@
             <artifactId>kin-rsocket-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- byte buddy(基于ASM) -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -3,6 +3,7 @@ package org.kin.rsocket.core.metadata;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.rsocket.metadata.WellKnownMimeType;
 
 import java.nio.charset.StandardCharsets;
 

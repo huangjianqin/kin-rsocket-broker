@@ -96,13 +96,5 @@
             <artifactId>spring-cloud-commons</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <!-- byte buddy(基于ASM) -->
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
-            <version>${byte-buddy.version}</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>

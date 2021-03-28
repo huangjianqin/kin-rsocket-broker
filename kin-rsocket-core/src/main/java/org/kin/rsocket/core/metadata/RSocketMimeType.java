@@ -1,5 +1,7 @@
 package org.kin.rsocket.core.metadata;
 
+import io.rsocket.metadata.WellKnownMimeType;
+
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

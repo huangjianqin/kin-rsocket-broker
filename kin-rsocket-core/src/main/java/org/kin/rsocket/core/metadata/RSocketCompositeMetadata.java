@@ -5,13 +5,12 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataCodec;
+import io.rsocket.metadata.WellKnownMimeType;
 import org.kin.framework.utils.ExceptionUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import static org.kin.rsocket.core.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
+import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
 
 /**
  * @author huangjianqin
@@ -34,9 +33,13 @@ public class RSocketCompositeMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static RSocketCompositeMetadata of(MetadataAware... metadataList) {
+    public static RSocketCompositeMetadata of(MetadataAware... metadatas) {
+        return of(Arrays.asList(metadatas));
+    }
+
+    public static RSocketCompositeMetadata of(Collection<MetadataAware> metadatas) {
         RSocketCompositeMetadata metadata = new RSocketCompositeMetadata();
-        for (MetadataAware metadataAware : metadataList) {
+        for (MetadataAware metadataAware : metadatas) {
             metadata.metadataBytesStore.put(metadataAware.getMimeType(), metadataAware.getContent());
             metadata.metadataStore.put(metadataAware.mimeType(), metadataAware);
         }

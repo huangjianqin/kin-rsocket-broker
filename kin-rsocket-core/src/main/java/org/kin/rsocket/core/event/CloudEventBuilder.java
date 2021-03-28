@@ -2,10 +2,10 @@ package org.kin.rsocket.core.event;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.data.PojoCloudEventData;
+import io.rsocket.metadata.WellKnownMimeType;
 import org.kin.framework.utils.JSON;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.metadata.WellKnownMimeType;
 
 import java.net.URI;
 import java.time.OffsetDateTime;

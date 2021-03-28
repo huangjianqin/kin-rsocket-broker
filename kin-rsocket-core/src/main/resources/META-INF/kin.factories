@@ -1,0 +1,12 @@
+org.kin.rsocket.service.transport.Uri2TransportParser=org.kin.rsocket.service.transport.LocalTransportParser \
+                                                org.kin.rsocket.service.transport.TcpSslTransportParser \
+                                                org.kin.rsocket.service.transport.TcpTransportParser \
+                                                org.kin.rsocket.service.transport.WebsocketTransportParser
+org.kin.rsocket.core.codec.Codec=org.kin.rsocket.core.codec.AvroCodec \
+                            org.kin.rsocket.core.codec.BinaryCodec \
+                            org.kin.rsocket.core.codec.AvroCodec \
+                            org.kin.rsocket.core.codec.HessianCodec \
+                            org.kin.rsocket.core.codec.JsonCodec \
+                            org.kin.rsocket.core.codec.KryoCodec \
+                            org.kin.rsocket.core.codec.ProtobufCodec \
+                            org.kin.rsocket.core.codec.TextCodec
