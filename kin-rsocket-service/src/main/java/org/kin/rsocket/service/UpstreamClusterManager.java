@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
+ * 管理broker或者上流服务的rsocket connection
+ *
  * @author huangjianqin
  * @date 2021/3/27
  */

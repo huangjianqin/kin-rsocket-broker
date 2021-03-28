@@ -15,7 +15,7 @@ import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
 import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
-import org.kin.rsocket.core.health.ServiceHealth;
+import org.kin.rsocket.core.health.HealthChecker;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -114,7 +114,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         urisFactory.subscribe(this::refreshRSockets);
         //health check composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
-                GSVRoutingMetadata.of(null, ServiceHealth.class.getCanonicalName(), "check", null),
+                GSVRoutingMetadata.of(null, HealthChecker.class.getCanonicalName(), "check", null),
                 MessageMimeTypeMetadata.of(RSocketMimeType.Java_Object));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.healthCheckCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);

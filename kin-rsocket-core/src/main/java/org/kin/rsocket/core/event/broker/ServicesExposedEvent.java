@@ -23,11 +23,9 @@ public class ServicesExposedEvent implements CloudEventSupport<ServicesExposedEv
     /** exposed services */
     private Set<ServiceLocator> services = new HashSet<>();
 
-    public static CloudEventData<ServicesExposedEvent> toCloudEvent(Collection<ServiceLocator> serviceLocators) {
+    public static CloudEventData<ServicesExposedEvent> of(Collection<ServiceLocator> serviceLocators) {
         ServicesExposedEvent servicesExposedEvent = new ServicesExposedEvent();
-        for (ServiceLocator serviceLocator : serviceLocators) {
-            servicesExposedEvent.addService(serviceLocator);
-        }
+        servicesExposedEvent.services.addAll(serviceLocators);
         servicesExposedEvent.setAppId(RSocketAppContext.ID);
         return CloudEventBuilder
                 .builder(servicesExposedEvent)
@@ -49,9 +47,5 @@ public class ServicesExposedEvent implements CloudEventSupport<ServicesExposedEv
 
     public void setServices(Set<ServiceLocator> services) {
         this.services = services;
-    }
-
-    public void addService(ServiceLocator serviceLocator) {
-        this.services.add(serviceLocator);
     }
 }

@@ -13,8 +13,8 @@ public enum AppStatus {
     CONNECTED(0, "Connected"),
     /** app service Serving */
     SERVING(1, "Serving"),
-    /** app service OutOfService */
-    OUT_OF_SERVICE(2, "OutOfService"),
+    /** app service Down, 即out of service */
+    DOWN(2, "Down"),
     ;
 
     public static final AppStatus[] values = values();

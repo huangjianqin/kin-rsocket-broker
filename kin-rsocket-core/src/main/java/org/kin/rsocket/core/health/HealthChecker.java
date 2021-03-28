@@ -9,9 +9,12 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/26
  */
 @FunctionalInterface
-public interface ServiceHealth {
+public interface HealthChecker {
+    /** 下线 */
     int DOWN = -1;
+    /** 未知 */
     int UNKNOWN = 0;
+    /** 正在服务中 */
     int SERVING = 1;
 
     /**

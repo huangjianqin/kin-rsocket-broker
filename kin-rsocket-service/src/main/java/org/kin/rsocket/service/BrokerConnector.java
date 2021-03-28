@@ -15,7 +15,7 @@ import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
 import org.kin.rsocket.core.event.broker.ServicesHiddenEvent;
-import org.kin.rsocket.core.health.ServiceHealth;
+import org.kin.rsocket.core.health.HealthChecker;
 import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
@@ -62,8 +62,8 @@ public class BrokerConnector implements Closeable {
         eventProcessor = TopicProcessor.<CloudEventData<?>>builder().name("cloud-events-processor").build();
         serviceRegistry = new DefaultServiceRegistry();
         // add health check
-        serviceRegistry.addProvider("", ServiceHealth.class.getCanonicalName(), "",
-                ServiceHealth.class, (ServiceHealth) serviceName -> Mono.just(1));
+        serviceRegistry.addProvider("", HealthChecker.class.getCanonicalName(), "",
+                HealthChecker.class, (HealthChecker) serviceName -> Mono.just(1));
         requesterSupport = new SimpleRequesterSupport(jwtToken);
         eventConsumers = new CloudEventConsumers(eventProcessor);
 
@@ -182,7 +182,7 @@ public class BrokerConnector implements Closeable {
             if (!allServices.isEmpty()) {
                 return () -> allServices.stream()
                         //过滤掉local service
-                        .filter(serviceName -> !serviceName.equals(ServiceHealth.class.getCanonicalName()))
+                        .filter(serviceName -> !serviceName.equals(HealthChecker.class.getCanonicalName()))
                         .map(serviceName -> new ServiceLocator("", serviceName, ""))
                         .collect(Collectors.toSet());
             }
@@ -202,7 +202,7 @@ public class BrokerConnector implements Closeable {
                 if (serviceLocators.isEmpty()) {
                     return null;
                 }
-                return ServicesExposedEvent.toCloudEvent(serviceLocators);
+                return ServicesExposedEvent.of(serviceLocators);
             };
         }
 

@@ -32,8 +32,8 @@ import java.util.Map;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class ResponderBinder implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger(ResponderBinder.class);
+public class RSocketBinder implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(RSocketBinder.class);
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
 
     /** bind的schema */
@@ -121,6 +121,8 @@ public class ResponderBinder implements Closeable {
                         .subscribe();
                 responders.add(disposable);
                 log.info("Succeed to start RSocket Responder on " + schema + "://" + host + ":" + port);
+
+                RSocketAppContext.rsocketPorts = schemas;
             }
         }
     }
@@ -148,46 +150,54 @@ public class ResponderBinder implements Closeable {
     }
 
     //------------------------------------------------------------------------------------------------------------
-    public static class Builder {
-        private ResponderBinder binder = new ResponderBinder();
+    public static Builder builder() {
+        return new Builder();
+    }
 
-        public ResponderBinder.Builder host(String host) {
+    public static class Builder {
+        private RSocketBinder binder = new RSocketBinder();
+
+        private Builder() {
+
+        }
+
+        public RSocketBinder.Builder host(String host) {
             binder.host = host;
             return this;
         }
 
-        public ResponderBinder.Builder listen(String schema, int port) {
+        public RSocketBinder.Builder listen(String schema, int port) {
             binder.schemas.put(port, schema);
             return this;
         }
 
-        public ResponderBinder.Builder sslContext(Certificate certificate, PrivateKey privateKey) {
+        public RSocketBinder.Builder sslContext(Certificate certificate, PrivateKey privateKey) {
             binder.certificate = certificate;
             binder.privateKey = privateKey;
             return this;
         }
 
-        public ResponderBinder.Builder addResponderInterceptor(RSocketInterceptor interceptor) {
+        public RSocketBinder.Builder addResponderInterceptor(RSocketInterceptor interceptor) {
             binder.responderInterceptors.add(interceptor);
             return this;
         }
 
-        public ResponderBinder.Builder addSocketAcceptorInterceptor(SocketAcceptorInterceptor interceptor) {
+        public RSocketBinder.Builder addSocketAcceptorInterceptor(SocketAcceptorInterceptor interceptor) {
             binder.acceptorInterceptors.add(interceptor);
             return this;
         }
 
-        public ResponderBinder.Builder addConnectionInterceptor(DuplexConnectionInterceptor interceptor) {
+        public RSocketBinder.Builder addConnectionInterceptor(DuplexConnectionInterceptor interceptor) {
             binder.connectionInterceptors.add(interceptor);
             return this;
         }
 
-        public ResponderBinder.Builder acceptor(SocketAcceptor acceptor) {
+        public RSocketBinder.Builder acceptor(SocketAcceptor acceptor) {
             binder.acceptor = acceptor;
             return this;
         }
 
-        public ResponderBinder build() {
+        public RSocketBinder build() {
             return binder;
         }
     }

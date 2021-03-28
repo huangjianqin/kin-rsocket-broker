@@ -155,4 +155,12 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     public String getServiceId() {
         return ServiceLocator.gsv(group, serviceName, version);
     }
+
+    public List<String> getUris() {
+        return lastUris;
+    }
+
+    public LoadBalanceRequester getLoadBalanceRequester() {
+        return loadBalanceRequester;
+    }
 }

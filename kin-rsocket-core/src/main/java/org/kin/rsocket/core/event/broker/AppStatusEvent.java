@@ -33,8 +33,8 @@ public class AppStatusEvent implements CloudEventSupport<AppStatusEvent> {
         return of(id, AppStatus.SERVING);
     }
 
-    public static AppStatusEvent outOfService(String id) {
-        return of(id, AppStatus.OUT_OF_SERVICE);
+    public static AppStatusEvent down(String id) {
+        return of(id, AppStatus.DOWN);
     }
 
 

@@ -1,4 +1,4 @@
-package org.kin.rsocket.broker.server;
+package org.kin.rsocket.broker;
 
 import org.springframework.boot.SpringApplication;
 

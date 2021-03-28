@@ -14,12 +14,15 @@ import java.util.Objects;
  * @date 2021/2/15
  */
 public class ServiceLocator {
+    private static final String[] EMPTY_TAGS = new String[0];
+
     /** service分组 */
     private final String group;
     /** service名 */
     private final String service;
     /** service版本 */
     private final String version;
+    private final String[] tags;
 
     /** 服务唯一标识(str) */
     private final String gsv;
@@ -52,14 +55,30 @@ public class ServiceLocator {
     public static Integer serviceHashCode(String routingKey) {
         return MurmurHash3.hash32(routingKey);
     }
-    //----------------------------------------------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------------------------------------------
     public ServiceLocator(String group, String service, String version) {
+        this(group, service, version, EMPTY_TAGS);
+    }
+
+    public ServiceLocator(String group, String service, String version, String[] tags) {
         this.group = group;
         this.service = service;
         this.version = version;
+        this.tags = tags;
         this.gsv = gsv(group, service, version);
         this.id = MurmurHash3.hash32(this.gsv);
+    }
+
+    public boolean hasTag(String tag) {
+        if (this.tags != null && this.tags.length > 0) {
+            for (String s : tags) {
+                if (s.equalsIgnoreCase(tag)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     //setter && getter
@@ -73,6 +92,10 @@ public class ServiceLocator {
 
     public String getVersion() {
         return version;
+    }
+
+    public String[] getTags() {
+        return tags;
     }
 
     public String getGsv() {

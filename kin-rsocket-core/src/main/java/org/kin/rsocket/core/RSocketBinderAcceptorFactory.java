@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/27
  */
 @FunctionalInterface
-public interface ResponderAcceptorFactory extends SocketAcceptor {
+public interface RSocketBinderAcceptorFactory extends SocketAcceptor {
     /**
      * 返回responder rsocket server的acceptor
      */
