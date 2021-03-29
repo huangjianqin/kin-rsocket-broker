@@ -17,6 +17,4 @@ public interface Separators {
     String SERVICE_DEF_TAGS = "?";
     /** tags item 分隔符 */
     String TAG = "&";
-    /** cache name:key */
-    String CACHE_NAME_KEY = ":";
 }

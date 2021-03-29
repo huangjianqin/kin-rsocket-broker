@@ -4,7 +4,6 @@ import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.event.application.CacheInvalidEvent;
-import org.kin.rsocket.core.utils.Separators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -39,7 +38,7 @@ public class InvalidCacheEventConsumer implements CloudEventConsumer {
         if (Objects.nonNull(event) && Objects.nonNull(cacheManager)) {
             event.getKeys().forEach(key -> {
                 //cache name:key
-                String[] parts = key.split(Separators.CACHE_NAME_KEY, 2);
+                String[] parts = key.split(":", 2);
 
                 Cache cache = cacheManager.getCache(parts[0]);
                 if (cache != null) {

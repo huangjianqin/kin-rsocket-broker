@@ -18,17 +18,10 @@ public abstract class AbstractRSocketFilter {
     }
 
     /**
-     * 开启filter
+     * 开启/下线 filter
      */
-    public void enable() {
-        this.enabled = true;
-    }
-
-    /**
-     * 禁用filter
-     */
-    public void disable() {
-        this.enabled = true;
+    public void updateEnable(boolean enable) {
+        this.enabled = enable;
     }
 
     /**

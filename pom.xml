@@ -7,10 +7,11 @@
     <artifactId>kin-rsocket-broker-parent</artifactId>
     <version>${revision}</version>
     <modules>
-        <module>kin-rsocket-broker-server</module>
+        <module>kin-rsocket-broker</module>
         <module>kin-rsocket-core</module>
         <module>kin-rsocket-service</module>
         <module>kin-rsocket-example</module>
+        <module>kin-rsocket-broker-gossip</module>
     </modules>
     <packaging>pom</packaging>
 

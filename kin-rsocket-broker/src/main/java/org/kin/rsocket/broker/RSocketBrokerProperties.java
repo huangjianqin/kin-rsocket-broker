@@ -11,17 +11,21 @@ import java.util.List;
  * @date 2021/2/15
  */
 @ConfigurationProperties(prefix = "kin.rsocket.broker")
-public class KinRSocketBrokerServerProperties {
+public class RSocketBrokerProperties {
     /** 监听端口 */
     private int port = 9999;
     /** topology: gossip, k8s, standalone */
     private String topology;
     /** 是否需要权限校验 */
     private boolean authRequired = true;
+    /**
+     * external domain for requester from external: the requester can not access broker's internal ip
+     */
+    private String externalDomain;
     /** ssl信息 */
     @NestedConfigurationProperty
     private RSocketSSL ssl;
-    /** upstream broker server url */
+    /** upstream broker url */
     private List<String> upstreamBrokers = Collections.emptyList();
     /** upstream token */
     private String upstreamToken;
@@ -40,6 +44,14 @@ public class KinRSocketBrokerServerProperties {
 
     public void setAuthRequired(boolean authRequired) {
         this.authRequired = authRequired;
+    }
+
+    public String getExternalDomain() {
+        return externalDomain;
+    }
+
+    public void setExternalDomain(String externalDomain) {
+        this.externalDomain = externalDomain;
     }
 
     public String getTopology() {
@@ -77,7 +89,7 @@ public class KinRSocketBrokerServerProperties {
     //-----------------------------------------------------------------------------------------------------------------
     public static class RSocketSSL {
         /**
-         *
+         * todo
          */
         private boolean enabled = false;
         /**

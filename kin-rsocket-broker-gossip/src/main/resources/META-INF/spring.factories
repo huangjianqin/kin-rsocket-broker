@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipAutoConfiguration

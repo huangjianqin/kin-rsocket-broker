@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
  * @date 2021/2/15
  */
 @Configuration
-@EnableConfigurationProperties(KinRSocketBrokerServerProperties.class)
-public class KinRSocketBrokerServerAutoConfiguration {
+@EnableConfigurationProperties(RSocketBrokerProperties.class)
+public class RSocketBrokerAutoConfiguration {
 
 }
