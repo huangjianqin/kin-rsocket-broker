@@ -51,6 +51,7 @@ public class RSocketAutoConfiguration {
         return TopicProcessor.<CloudEventData<?>>builder().name("cloud-events-processor").build();
     }
 
+    //----------------------------cloud event consumers----------------------------
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
@@ -62,7 +63,6 @@ public class RSocketAutoConfiguration {
         return consumers;
     }
 
-    //----------------------------自定义CloudEventConsumer----------------------------
     @Bean
     public UpstreamClusterChangedEventConsumer upstreamClusterChangedEventConsumer(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return new UpstreamClusterChangedEventConsumer(upstreamClusterManager);
@@ -101,9 +101,10 @@ public class RSocketAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(RequesterSupport.class)
     public RequesterSupport requesterSupport(@Autowired Environment environment,
+                                             @Autowired ApplicationContext applicationContext,
                                              @Autowired SocketAcceptor socketAcceptor,
                                              @Autowired ObjectProvider<RequesterSupportBuilderCustomizer> customizers) {
-        RequesterSupportBuilder builder = RequesterSupportBuilder.builder(config, environment, socketAcceptor);
+        RequesterSupportBuilder builder = RequesterSupportBuilder.builder(config, environment, applicationContext, socketAcceptor);
         customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
         return builder.build();
     }

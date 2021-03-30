@@ -1,5 +1,7 @@
 package org.kin.rsocket.core;
 
+import org.kin.rsocket.core.domain.ReactiveServiceInfo;
+
 import java.util.Set;
 
 /**
@@ -58,4 +60,9 @@ public interface ReactiveServiceRegistry {
      * 是否包含指定method invoker
      */
     boolean containsHandler(Integer handlerId);
+
+    /**
+     * 用于后台访问服务接口具体信息, 以json序列化
+     */
+    ReactiveServiceInfo getReactiveServiceInfoByName(String serviceName);
 }

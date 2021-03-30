@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.broker.Responder;
+import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.broker.ServiceRouter;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,9 +26,9 @@ public class AppQueryController {
     @GetMapping("/{appName}")
     public Flux<Map<String, Object>> query(@PathVariable(name = "appName") String appName) {
         List<Map<String, Object>> apps = new ArrayList<>();
-        Collection<Responder> responders = serviceRouter.getByAppName(appName);
+        Collection<ServiceResponder> responders = serviceRouter.getByAppName(appName);
         if (CollectionUtils.isNonEmpty(responders)) {
-            for (Responder handler : responders) {
+            for (ServiceResponder handler : responders) {
                 Map<String, Object> app = new HashMap<>();
                 AppMetadata appMetadata = handler.getAppMetadata();
                 app.put("ip", appMetadata.getIp());

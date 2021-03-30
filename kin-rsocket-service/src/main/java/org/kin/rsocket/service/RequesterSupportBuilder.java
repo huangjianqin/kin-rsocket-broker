@@ -3,6 +3,7 @@ package org.kin.rsocket.service;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import org.kin.rsocket.core.RequesterSupport;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 
 import java.util.ArrayList;
@@ -24,8 +25,9 @@ public final class RequesterSupportBuilder {
 
     public static RequesterSupportBuilder builder(RSocketServiceProperties config,
                                                   Environment env,
+                                                  ApplicationContext applicationContext,
                                                   SocketAcceptor socketAcceptor) {
-        return builder(new DefaultRequesterSupport(config, env, socketAcceptor));
+        return builder(new DefaultRequesterSupport(config, env, applicationContext, socketAcceptor));
     }
 
 

@@ -4,6 +4,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
+import io.rsocket.SocketAcceptor;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
 import org.kin.rsocket.broker.cluster.RSocketBroker;
@@ -60,11 +61,11 @@ public class ServiceRouter {
     private final RSocket upstreamRSocket;
 
     /** key -> hash(app instance UUID), value -> 对应responder */
-    private final Map<Integer, Responder> instanceId2Responder = new ConcurrentHashMap<>();
+    private final Map<Integer, ServiceResponder> instanceId2Responder = new ConcurrentHashMap<>();
     /** key -> app instance UUID, value -> 对应responder */
-    private final Map<String, Responder> uuid2Responder = new ConcurrentHashMap<>();
+    private final Map<String, ServiceResponder> uuid2Responder = new ConcurrentHashMap<>();
     /** key -> app name, value -> responder list */
-    private final ListMultimap<String, Responder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
+    private final ListMultimap<String, ServiceResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
 
     public ServiceRouter(ReactiveServiceRegistry serviceRegistry,
                          RSocketFilterChain filterChain,
@@ -94,7 +95,14 @@ public class ServiceRouter {
     /**
      * 返回broker端口 responder acceptor
      */
-    public Mono<RSocket> acceptor(final ConnectionSetupPayload setupPayload, final RSocket requesterSocket) {
+    public SocketAcceptor acceptor() {
+        return this::acceptor;
+    }
+
+    /**
+     * service responder acceptor逻辑
+     */
+    private Mono<RSocket> acceptor(ConnectionSetupPayload setupPayload, RSocket requesterSocket) {
         //parse setup payload
         RSocketCompositeMetadata compositeMetadata = null;
         AppMetadata appMetadata = null;
@@ -137,7 +145,7 @@ public class ServiceRouter {
                     }
                 } else {
                     //illegal application id, appID should be UUID
-                    errorMsg = String.format("'%' is not legal application ID, please supply legal UUID as Application ID", appId == null ? "" : appId);
+                    errorMsg = String.format("'%s' is not legal application ID, please supply legal UUID as Application ID", appId == null ? "" : appId);
                 }
             }
             if (errorMsg == null) {
@@ -163,7 +171,7 @@ public class ServiceRouter {
         }
         //create responder
         try {
-            Responder responder = new Responder(setupPayload, compositeMetadata, appMetadata, principal,
+            ServiceResponder responder = new ServiceResponder(setupPayload, compositeMetadata, appMetadata, principal,
                     requesterSocket, routeTable, eventProcessor, this,
                     serviceMeshInspector, upstreamRSocket, rsocketFilterChain, serviceRegistry);
             responder.onClose()
@@ -183,7 +191,7 @@ public class ServiceRouter {
     /**
      * 注册downstream信息
      */
-    private void registerResponder(Responder responder) {
+    private void registerResponder(ServiceResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
         uuid2Responder.put(appMetadata.getUuid(), responder);
         instanceId2Responder.put(responder.getId(), responder);
@@ -198,9 +206,9 @@ public class ServiceRouter {
     }
 
     /**
-     * {@link Responder} disposed时触发的逻辑
+     * {@link ServiceResponder} disposed时触发的逻辑
      */
-    private void onResponderDisposed(Responder responder) {
+    private void onResponderDisposed(ServiceResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
         uuid2Responder.remove(responder.getUuid());
         instanceId2Responder.remove(responder.getId());
@@ -218,30 +226,30 @@ public class ServiceRouter {
     }
 
     /**
-     * 获取所有已注册的{@link Responder}
+     * 获取所有已注册的{@link ServiceResponder}
      */
-    public Collection<Responder> getAllResponders() {
+    public Collection<ServiceResponder> getAllResponders() {
         return uuid2Responder.values();
     }
 
     /**
-     * 根据app name 获取所有已注册的{@link Responder}
+     * 根据app name 获取所有已注册的{@link ServiceResponder}
      */
-    public Collection<Responder> getByAppName(String appName) {
+    public Collection<ServiceResponder> getByAppName(String appName) {
         return appResponders.get(appName);
     }
 
     /**
-     * 根据app uuid 获取已注册的{@link Responder}
+     * 根据app uuid 获取已注册的{@link ServiceResponder}
      */
-    public Responder getByUUID(String uuid) {
+    public ServiceResponder getByUUID(String uuid) {
         return uuid2Responder.get(uuid);
     }
 
     /**
-     * 根据app instanceId 获取所有已注册的{@link Responder}
+     * 根据app instanceId 获取所有已注册的{@link ServiceResponder}
      */
-    public Responder getByInstanceId(Integer instanceId) {
+    public ServiceResponder getByInstanceId(Integer instanceId) {
         return instanceId2Responder.get(instanceId);
     }
 
@@ -276,7 +284,7 @@ public class ServiceRouter {
      * 向指定uuid的app广播cloud event
      */
     public Mono<Void> send(String uuid, CloudEventData<?> cloudEvent) {
-        Responder responder = uuid2Responder.get(uuid);
+        ServiceResponder responder = uuid2Responder.get(uuid);
         if (responder != null) {
             return responder.fireCloudEvent(cloudEvent);
         } else {

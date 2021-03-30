@@ -2,7 +2,7 @@ package org.kin.rsocket.broker.event;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.broker.Responder;
+import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.broker.ServiceRouter;
 import org.kin.rsocket.broker.config.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
@@ -50,7 +50,7 @@ public class AppStatusEventConsumer implements CloudEventConsumer, Closeable, Di
         AppStatusEvent appStatusEvent = CloudEventSupport.unwrapData(cloudEvent, AppStatusEvent.class);
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
         if (appStatusEvent != null && appStatusEvent.getId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            Responder responder = serviceRouter.getByUUID(appStatusEvent.getId());
+            ServiceResponder responder = serviceRouter.getByUUID(appStatusEvent.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
                 if (appStatusEvent.getStatus().equals(AppStatus.CONNECTED)) {  //app connected

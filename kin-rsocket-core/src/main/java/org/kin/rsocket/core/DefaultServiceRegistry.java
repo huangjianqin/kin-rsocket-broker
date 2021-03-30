@@ -1,14 +1,17 @@
 package org.kin.rsocket.core;
 
+import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.core.domain.ReactiveMethodInfo;
+import org.kin.rsocket.core.domain.ReactiveMethodParameterInfo;
+import org.kin.rsocket.core.domain.ReactiveServiceInfo;
 import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.util.*;
 
 /**
  * todo 后续考虑增加返回服务接口信息方法, 参考阿里ReactiveServiceInterface
@@ -21,6 +24,8 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     private final Map<String, Object> serviceName2Provider = new HashMap<>();
     /** key -> hash(serviceName.method), value -> service method invoker */
     private final Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>();
+    /** key -> service name, value -> reactive service info */
+    protected Map<String, ReactiveServiceInfo> serviceName2Info = new HashMap<>();
 
     public DefaultServiceRegistry() {
         addProvider("", ReactiveServiceRegistry.class.getCanonicalName(), "", ReactiveServiceRegistry.class, this);
@@ -47,8 +52,8 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     }
 
     @Override
-    public void addProvider(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
-        for (Method method : serviceInterface.getMethods()) {
+    public void addProvider(String group, String serviceName, String version, Class<?> interfaceClass, Object provider) {
+        for (Method method : interfaceClass.getMethods()) {
             if (!method.isDefault()) {
                 String handlerName = method.getName();
                 //解析ServiceMapping注解, 看看是否自定义method(handler) name
@@ -62,8 +67,78 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
 
                 serviceName2Provider.put(serviceName, provider);
                 handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
+                serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass));
             }
         }
+    }
+
+    /**
+     * 创建reactive service信息, 用于后台访问服务接口具体信息, 以json序列化
+     */
+    private ReactiveServiceInfo newReactiveServiceInfo(String group, String serviceName,
+                                                       String version, Class<?> interfaceClass) {
+        ReactiveServiceInfo serviceInfo = new ReactiveServiceInfo();
+        serviceInfo.setGroup(group);
+        serviceInfo.setVersion(version);
+        if (interfaceClass.getPackage() != null) {
+            serviceInfo.setNamespace(interfaceClass.getPackage().getName());
+        }
+        serviceInfo.setName(interfaceClass.getName());
+        serviceInfo.setServiceName(serviceName);
+        Deprecated interfaceDeprecated = interfaceClass.getAnnotation(Deprecated.class);
+        if (interfaceDeprecated != null) {
+            serviceInfo.setDeprecated(true);
+        }
+
+        List<ReactiveMethodInfo> methodInfos = new ArrayList<>(8);
+        for (Method method : interfaceClass.getMethods()) {
+            if (method.isDefault() || Modifier.isStatic(method.getModifiers())) {
+                //过滤掉default 和 static 方法
+                continue;
+            }
+
+            methodInfos.add(newReactiveMethodInfo(method));
+        }
+        serviceInfo.setOperations(methodInfos);
+
+        return serviceInfo;
+    }
+
+    /**
+     * 创建reactive service method信息
+     */
+    private ReactiveMethodInfo newReactiveMethodInfo(Method method) {
+        ReactiveMethodInfo methodInfo = new ReactiveMethodInfo();
+        Deprecated methodDeprecated = method.getAnnotation(Deprecated.class);
+        if (methodDeprecated != null) {
+            methodInfo.setDeprecated(true);
+        }
+        methodInfo.setName(method.getName());
+        methodInfo.setReturnType(method.getReturnType().getCanonicalName());
+        methodInfo.setReturnInferredType(ClassUtils.getInferredClassForGeneric(method.getGenericReturnType()).getCanonicalName());
+
+        List<ReactiveMethodParameterInfo> parameterInfos = new ArrayList<>(4);
+        for (Parameter parameter : method.getParameters()) {
+
+        }
+        methodInfo.setParameters(parameterInfos);
+
+        return methodInfo;
+    }
+
+    /**
+     * 创建reactive service parameter信息
+     */
+    private ReactiveMethodParameterInfo newReactiveMethodParameterInfo(Parameter parameter) {
+        ReactiveMethodParameterInfo parameterInfo = new ReactiveMethodParameterInfo();
+        parameterInfo.setName(parameter.getName());
+        parameterInfo.setType(parameter.getType().getCanonicalName());
+        String inferredType = ClassUtils.getInferredClassForGeneric(parameter.getParameterizedType()).getCanonicalName();
+        if (!parameterInfo.getType().equals(inferredType)) {
+            parameterInfo.setInferredType(inferredType);
+        }
+
+        return parameterInfo;
     }
 
     @Override
@@ -79,6 +154,7 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
                 String key = serviceName + "." + handlerName;
 
                 handlerId2Invoker.remove(MurmurHash3.hash32(key));
+                serviceName2Info.remove(serviceName);
             }
         }
     }
@@ -96,5 +172,10 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     @Override
     public boolean containsHandler(Integer handlerId) {
         return handlerId2Invoker.containsKey(handlerId);
+    }
+
+    @Override
+    public ReactiveServiceInfo getReactiveServiceInfoByName(String serviceName) {
+        return serviceName2Info.get(serviceName);
     }
 }

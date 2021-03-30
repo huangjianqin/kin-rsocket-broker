@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
-import org.kin.rsocket.broker.Responder;
+import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.broker.ServiceRouteTable;
 import org.kin.rsocket.broker.ServiceRouter;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
@@ -63,10 +63,10 @@ public class ServiceQueryController {
         //todo 不带group和版本号可以???
         Integer instanceId = routeTable.getInstanceId(new ServiceLocator(group, serviceName, version).getId());
         if (instanceId != null) {
-            Responder brokerResponderHandler = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder brokerResponderHandler = serviceRouter.getByInstanceId(instanceId);
             if (brokerResponderHandler != null) {
                 GSVRoutingMetadata routingMetadata =
-                        GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".findServiceByFullName", "");
+                        GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
                 ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"" + serviceName + "\"]").getBytes(StandardCharsets.UTF_8));
                 return brokerResponderHandler.getPeerRsocket()

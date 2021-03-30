@@ -26,7 +26,7 @@ import reactor.extra.processor.TopicProcessor;
 
 /**
  * broker间rsocket connection建立创建的Responder
- * 代码与{@link Responder}有点类似, 看看能不能抽象一下
+ * 代码与{@link ServiceResponder}有点类似, 看看能不能抽象一下
  *
  * @author huangjianqin
  * @date 2021/3/30
@@ -42,12 +42,12 @@ public class BrokerResponder extends AbstractRSocket {
     private final TopicProcessor<CloudEventData<?>> eventProcessor;
 
     public BrokerResponder(ServiceRouteTable serviceRoutingSelector,
-                           ServiceRouter handlerRegistry,
+                           ServiceRouter serviceRouter,
                            RSocketFilterChain filterChain,
                            TopicProcessor<CloudEventData<?>> eventProcessor) {
         this.routeTable = serviceRoutingSelector;
         this.filterChain = filterChain;
-        this.serviceRouter = handlerRegistry;
+        this.serviceRouter = serviceRouter;
         this.eventProcessor = eventProcessor;
 
         this.upstreamBrokerMetadata = new AppMetadata();
@@ -149,7 +149,7 @@ public class BrokerResponder extends AbstractRSocket {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
             Integer serviceId = routingMetaData.id();
-            Responder targetResponder = null;
+            ServiceResponder targetResponder = null;
             RSocket rsocket = null;
             Exception error = null;
             String endpoint = routingMetaData.getEndpoint();
@@ -183,13 +183,13 @@ public class BrokerResponder extends AbstractRSocket {
     /**
      * todo
      */
-    private Responder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
+    private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
             return serviceRouter.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
         for (Integer instanceId : routeTable.getAllInstanceIds(serviceId)) {
-            Responder responder = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
             if (responder != null) {
                 if (responder.getAppTagsHashCodeSet().contains(endpointHashCode)) {
                     return responder;

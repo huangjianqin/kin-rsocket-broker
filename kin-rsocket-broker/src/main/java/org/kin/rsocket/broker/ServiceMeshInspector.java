@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Service mesh inspector implementation
+ * service mesh 拦截器, 用于校验认证是否通过
  *
  * @author huangjianqin
  * @date 2021/3/30

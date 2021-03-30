@@ -15,9 +15,7 @@ import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthChecker;
 import org.kin.rsocket.core.metadata.*;
 import org.springframework.aop.support.AopUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
@@ -39,7 +37,7 @@ import java.util.stream.Collectors;
  * @date 2021/3/28
  */
 @SuppressWarnings("ConstantConditions")
-public class DefaultRequesterSupport implements RequesterSupport, ApplicationContextAware {
+public class DefaultRequesterSupport implements RequesterSupport {
     /** spring config */
     protected final Environment env;
     /** spring rsocket config */
@@ -59,13 +57,16 @@ public class DefaultRequesterSupport implements RequesterSupport, ApplicationCon
 
     public DefaultRequesterSupport(RSocketServiceProperties config,
                                    Environment env,
+                                   ApplicationContext applicationContext,
                                    SocketAcceptor socketAcceptor) {
         this.config = config;
         this.env = env;
+        this.applicationContext = applicationContext;
+        this.socketAcceptor = socketAcceptor;
+
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name"));
         //todo 配置同一
         this.jwtToken = env.getProperty("rsocket.jwt-token", "").toCharArray();
-        this.socketAcceptor = socketAcceptor;
     }
 
     @Override
@@ -224,11 +225,6 @@ public class DefaultRequesterSupport implements RequesterSupport, ApplicationCon
     @Override
     public List<RSocketInterceptor> requesterInterceptors() {
         return requesterInterceptors;
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
     }
 
     public void addRequesterInterceptor(RSocketInterceptor interceptor) {

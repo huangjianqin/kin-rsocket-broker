@@ -42,11 +42,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * service <- broker responder
+ *
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class Responder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
-    private static final Logger log = LoggerFactory.getLogger(Responder.class);
+public class ServiceResponder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
+    private static final Logger log = LoggerFactory.getLogger(ServiceResponder.class);
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;
     /** app metadata */
@@ -87,18 +89,18 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
     private AppStatus appStatus = AppStatus.CONNECTED;
 
     //TODO 构造器优化
-    public Responder(ConnectionSetupPayload setupPayload,
-                     RSocketCompositeMetadata compositeMetadata,
-                     AppMetadata appMetadata,
-                     RSocketAppPrincipal principal,
-                     RSocket peerRsocket,
-                     ServiceRouteTable routingSelector,
-                     TopicProcessor<CloudEventData<?>> eventProcessor,
-                     ServiceRouter handlerRegistry,
-                     ServiceMeshInspector serviceMeshInspector,
-                     RSocket upstreamRSocket,
-                     RSocketFilterChain filterChain,
-                     ReactiveServiceRegistry serviceRegistry
+    public ServiceResponder(ConnectionSetupPayload setupPayload,
+                            RSocketCompositeMetadata compositeMetadata,
+                            AppMetadata appMetadata,
+                            RSocketAppPrincipal principal,
+                            RSocket peerRsocket,
+                            ServiceRouteTable routingSelector,
+                            TopicProcessor<CloudEventData<?>> eventProcessor,
+                            ServiceRouter handlerRegistry,
+                            ServiceMeshInspector serviceMeshInspector,
+                            RSocket upstreamRSocket,
+                            RSocketFilterChain filterChain,
+                            ReactiveServiceRegistry serviceRegistry
     ) {
         super(serviceRegistry);
         this.upstreamRSocket = upstreamRSocket;
@@ -395,7 +397,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
             Exception error = null;
             //sticky session responder
             boolean sticky = routingMetaData.isSticky();
-            Responder targetResponder = findStickyHandler(sticky, serviceId);
+            ServiceResponder targetResponder = findStickyHandler(sticky, serviceId);
             // responder from sticky services
             if (targetResponder != null) {
                 rsocket = targetResponder.peerRsocket;
@@ -443,13 +445,13 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
     /**
      * todo
      */
-    private Responder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
+    private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
             return serviceRouter.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
         for (Integer instanceId : routeTable.getAllInstanceIds(serviceId)) {
-            Responder responder = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
             if (responder != null) {
                 if (responder.appTagsHashCodeSet.contains(endpointHashCode)) {
                     return responder;
@@ -467,7 +469,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
     /**
      * todo
      */
-    private Responder findStickyHandler(boolean sticky, Integer serviceId) {
+    private ServiceResponder findStickyHandler(boolean sticky, Integer serviceId) {
         // todo 算法更新，如一致性hash算法，或者取余操作
         if (sticky && stickyServices.containsKey(serviceId)) {
             return serviceRouter.getByInstanceId(stickyServices.get(serviceId));
