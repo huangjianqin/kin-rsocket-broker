@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.ServiceMapping;
+import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.metadata.RSocketMimeType;
 import org.kin.rsocket.service.utils.ByteBuddyUtils;
 

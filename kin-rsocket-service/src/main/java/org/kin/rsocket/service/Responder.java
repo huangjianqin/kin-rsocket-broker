@@ -7,6 +7,7 @@ import io.rsocket.RSocket;
 import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
+import org.kin.rsocket.core.ResponderRsocket;
 import org.kin.rsocket.core.ResponderSupport;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
@@ -48,7 +49,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
         this.comboOnClose = Mono.first(super.onClose(), requester.onClose());
 
         //解析composite metadata
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(setupPayload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
         if (compositeMetadata.contains(RSocketMimeType.Application)) {
             AppMetadata appMetadata = AppMetadata.of(compositeMetadata.getMetadata(RSocketMimeType.Application));
             //from remote requester
@@ -91,7 +92,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
 
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(payload);
@@ -107,7 +108,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
 
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(payload);
@@ -133,7 +134,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
 
     @Override
     public Flux<Payload> requestStream(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(payload);
@@ -147,8 +148,8 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
         return localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
     }
 
-    public Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
+    private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(signal);

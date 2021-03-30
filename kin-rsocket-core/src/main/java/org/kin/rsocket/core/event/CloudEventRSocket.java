@@ -72,7 +72,7 @@ public interface CloudEventRSocket extends RSocket {
             jsonText = payload.getMetadataUtf8();
         } else {
             //composite metadata
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             if (compositeMetadata.contains(RSocketMimeType.CloudEventsJson)) {
                 jsonText = compositeMetadata.getMetadataBytes(RSocketMimeType.CloudEventsJson).toString(StandardCharsets.UTF_8);
             }

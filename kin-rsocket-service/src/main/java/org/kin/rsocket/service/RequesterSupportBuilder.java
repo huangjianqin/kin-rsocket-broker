@@ -2,6 +2,7 @@ package org.kin.rsocket.service;
 
 import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
+import org.kin.rsocket.core.RequesterSupport;
 import org.springframework.core.env.Environment;
 
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker.services;
 
+import org.kin.rsocket.broker.ServiceRouteTable;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.health.HealthChecker;
@@ -12,13 +13,11 @@ import reactor.core.publisher.Mono;
  */
 @RSocketService(serviceInterface = HealthChecker.class)
 public class HealthService implements HealthChecker {
-    /**
-     *
-     */
-    private ServiceRoutingSelector routingSelector;
+    /** 服务实例路由表 */
+    private ServiceRouteTable routeTable;
 
-    public HealthService(ServiceRoutingSelector routingSelector) {
-        this.routingSelector = routingSelector;
+    public HealthService(ServiceRouteTable routeTable) {
+        this.routeTable = routeTable;
     }
 
     @Override
@@ -28,7 +27,7 @@ public class HealthService implements HealthChecker {
             return Mono.just(AppStatus.SERVING.getId());
         }
 
-        return Flux.fromIterable(routingSelector.findAllServices())
+        return Flux.fromIterable(routeTable.getAllServices())
                 .any(serviceLocator -> serviceLocator.getService().equals(serviceName))
                 .map(result -> result ? AppStatus.SERVING.getId() : AppStatus.DOWN.getId());
     }

@@ -19,7 +19,7 @@ public class ServiceRegistryMetadata implements MetadataAware {
     /** subscribed services */
     private Set<ServiceLocator> subscribed = new HashSet<>();
 
-    public static ServiceRegistryMetadata from(ByteBuf content) {
+    public static ServiceRegistryMetadata of(ByteBuf content) {
         ServiceRegistryMetadata temp = new ServiceRegistryMetadata();
         temp.load(content);
         return temp;

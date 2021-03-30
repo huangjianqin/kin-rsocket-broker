@@ -1,4 +1,4 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.core;
 
 import io.rsocket.RSocket;
 import org.kin.rsocket.core.event.CloudEventData;

@@ -5,6 +5,8 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.service.event.CloudEvent2ApplicationEventConsumer;
+import org.kin.rsocket.service.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
 import org.kin.rsocket.service.health.HealthService;
 import org.springframework.beans.factory.ObjectProvider;

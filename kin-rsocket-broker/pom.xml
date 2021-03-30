@@ -36,5 +36,11 @@
             <artifactId>java-jwt</artifactId>
             <version>${java-jwt.version}</version>
         </dependency>
+
+        <!-- spring -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-commons</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package org.kin.rsocket.service.transport;
+package org.kin.rsocket.core.transport;
 
 import javax.net.ssl.X509TrustManager;
 import java.security.MessageDigest;

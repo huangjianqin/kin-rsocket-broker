@@ -1,4 +1,4 @@
-package org.kin.rsocket.service.event;
+package org.kin.rsocket.core.event.broker;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.kin.rsocket.core.event.CloudEventSupport;

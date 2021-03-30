@@ -25,12 +25,7 @@ public class RSocketFilterChain extends AbstractRSocketFilter {
     }
 
     @Override
-    public void enable() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void disable() {
+    public void updateEnable(boolean enable) {
         throw new UnsupportedOperationException();
     }
 

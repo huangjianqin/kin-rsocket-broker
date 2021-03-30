@@ -1,4 +1,4 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.core;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -10,7 +10,6 @@ import io.rsocket.exceptions.ConnectionErrorException;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.core.AbstractRSocket;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
@@ -20,7 +19,7 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.metadata.RSocketMimeType;
-import org.kin.rsocket.service.transport.UriTransportRegistry;
+import org.kin.rsocket.core.transport.UriTransportRegistry;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,10 +55,10 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     private static final Predicate<? super Throwable> CONNECTION_ERROR_PREDICATE =
             e -> e instanceof ClosedChannelException || e instanceof ConnectionErrorException || e instanceof ConnectException;
     /** 刷新uri时连接失败, 则1分钟内尝试12重连, 间隔5s */
-    private static final int retryCount = 12;
+    private static final int RETRY_COUNT = 12;
 
     /** load balance rule */
-    private Selector selector;
+    private final Selector selector;
     /** service id */
     private final String serviceId;
     /** 上次刷新的rsocket uris */
@@ -414,7 +413,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     private void tryToReconnect(String rsocketUri, Throwable error) {
         //try to reconnect every 5 seconds in 1 minute if connection error
         if (CONNECTION_ERROR_PREDICATE.test(error)) {
-            Flux.range(1, retryCount)
+            Flux.range(1, RETRY_COUNT)
                     .delayElements(Duration.ofSeconds(5))
                     .filter(id -> activeRSockets.isEmpty() || !activeRSockets.containsKey(rsocketUri))
                     .subscribe(count -> {

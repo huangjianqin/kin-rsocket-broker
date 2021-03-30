@@ -8,6 +8,7 @@ import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketService;
+import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
@@ -62,6 +63,7 @@ public class DefaultRequesterSupport implements RequesterSupport, ApplicationCon
         this.config = config;
         this.env = env;
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name"));
+        //todo 配置同一
         this.jwtToken = env.getProperty("rsocket.jwt-token", "").toCharArray();
         this.socketAcceptor = socketAcceptor;
     }

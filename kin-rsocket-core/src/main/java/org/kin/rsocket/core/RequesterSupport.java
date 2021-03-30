@@ -1,9 +1,8 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.core;
 
 import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
 

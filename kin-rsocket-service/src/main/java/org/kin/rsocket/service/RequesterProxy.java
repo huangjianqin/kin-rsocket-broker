@@ -14,10 +14,7 @@ import net.bytebuddy.implementation.bind.annotation.This;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.MethodHandleUtils;
 import org.kin.framework.utils.StringUtils;
-import org.kin.rsocket.core.MutableContext;
-import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ReactiveMethodMetadata;
-import org.kin.rsocket.core.ReactiveObjAdapter;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.codec.Codecs;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -151,7 +148,7 @@ public class RequesterProxy implements InvocationHandler {
             //handle return
             Flux<Object> fluxReturn = payloads.concatMap(payload -> {
                 try {
-                    RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+                    RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
                     return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(extractPayloadDataMimeType(compositeMetadata, encodingType), payload.data(), finalMethodMetadata.getInferredClassForReturn()));
                 } catch (Exception e) {
                     return Flux.error(e);
@@ -177,7 +174,7 @@ public class RequesterProxy implements InvocationHandler {
 
                 Mono<Object> result = payloadMono.handle((payload, sink) -> {
                     try {
-                        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+                        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
                         Object obj = Codecs.INSTANCE.decodeResult(extractPayloadDataMimeType(compositeMetadata, encodingType), payload.data(), finalMethodMetadata.getInferredClassForReturn());
                         if (obj != null) {
                             sink.next(obj);
@@ -197,7 +194,7 @@ public class RequesterProxy implements InvocationHandler {
                 Flux<Payload> flux = rsocket.requestStream(ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes()));
                 Flux<Object> result = flux.concatMap((payload) -> {
                     try {
-                        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+                        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
                         return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(extractPayloadDataMimeType(compositeMetadata, encodingType), payload.data(), finalMethodMetadata.getInferredClassForReturn()));
                     } catch (Exception e) {
                         return Mono.error(e);

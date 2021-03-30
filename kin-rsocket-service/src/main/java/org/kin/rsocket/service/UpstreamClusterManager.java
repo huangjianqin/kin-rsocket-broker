@@ -1,6 +1,8 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.Closeable;
+import org.kin.rsocket.core.RequesterSupport;
+import org.kin.rsocket.core.UpstreamCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package org.kin.rsocket.service.transport;
+package org.kin.rsocket.core.transport;
 
 import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.ServerTransport;

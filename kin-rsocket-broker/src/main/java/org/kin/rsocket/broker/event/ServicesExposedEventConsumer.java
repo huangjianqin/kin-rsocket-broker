@@ -1,0 +1,42 @@
+package org.kin.rsocket.broker.event;
+
+import org.kin.rsocket.broker.Responder;
+import org.kin.rsocket.broker.ServiceRouter;
+import org.kin.rsocket.core.ServiceLocator;
+import org.kin.rsocket.core.domain.AppStatus;
+import org.kin.rsocket.core.event.CloudEventConsumer;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventSupport;
+import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import reactor.core.publisher.Mono;
+
+import java.util.Set;
+
+/**
+ * @author huangjianqin
+ * @date 2021/3/30
+ */
+public class ServicesExposedEventConsumer implements CloudEventConsumer {
+    @Autowired
+    private ServiceRouter serviceRouter;
+
+    @Override
+    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
+        return ServicesExposedEvent.class.getCanonicalName().equalsIgnoreCase(cloudEvent.getAttributes().getType());
+    }
+
+    @Override
+    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
+        ServicesExposedEvent servicesExposedEvent = CloudEventSupport.unwrapData(cloudEvent, ServicesExposedEvent.class);
+        if (servicesExposedEvent != null && servicesExposedEvent.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
+            Responder responder = serviceRouter.getByUUID(servicesExposedEvent.getAppId());
+            if (responder != null) {
+                Set<ServiceLocator> serviceLocators = servicesExposedEvent.getServices();
+                responder.setAppStatus(AppStatus.SERVING);
+                responder.registerServices(serviceLocators);
+            }
+        }
+        return Mono.empty();
+    }
+}

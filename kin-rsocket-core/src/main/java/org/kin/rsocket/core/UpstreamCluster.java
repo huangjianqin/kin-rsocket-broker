@@ -1,11 +1,11 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.core;
 
 import io.rsocket.Payload;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
+import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +41,20 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     /** 上次刷新的uris */
     private volatile List<String> lastUris;
     private volatile boolean stopped;
+
+    /**
+     * broker upstream cluster
+     */
+    public static UpstreamCluster brokerUpstreamCluster(RequesterSupport requesterSupport) {
+        return brokerUpstreamCluster(requesterSupport, Collections.emptyList());
+    }
+
+    /**
+     * broker upstream cluster
+     */
+    public static UpstreamCluster brokerUpstreamCluster(RequesterSupport requesterSupport, List<String> uris) {
+        return new UpstreamCluster("", Symbols.BROKER, "", requesterSupport, uris);
+    }
 
     public UpstreamCluster(String group,
                            String serviceName,
@@ -148,7 +162,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
         stopped = true;
         urisProcessor.onComplete();
         loadBalanceRequester.dispose();
-        log.info("Succeed to disconnect from the broker");
+        log.info("Succeed to disconnect from the ".concat(ServiceLocator.gsv(group, serviceName, version)));
     }
 
     //getter

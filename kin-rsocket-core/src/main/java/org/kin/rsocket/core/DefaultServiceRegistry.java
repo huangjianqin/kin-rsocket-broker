@@ -22,6 +22,10 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     /** key -> hash(serviceName.method), value -> service method invoker */
     private final Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>();
 
+    public DefaultServiceRegistry() {
+        addProvider("", ReactiveServiceRegistry.class.getCanonicalName(), "", ReactiveServiceRegistry.class, this);
+    }
+
     @Override
     public boolean contains(Integer serviceId) {
         return handlerId2Invoker.containsKey(serviceId);

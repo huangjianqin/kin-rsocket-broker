@@ -1,4 +1,4 @@
-package org.kin.rsocket.service.transport;
+package org.kin.rsocket.core.transport;
 
 import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContext;

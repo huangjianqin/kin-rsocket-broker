@@ -25,7 +25,7 @@ public class RSocketCompositeMetadata implements MetadataAware {
     /** key -> {@link RSocketMimeType}, value -> 对应mime type 的{@link MetadataAware}实现类 */
     private final Map<RSocketMimeType, MetadataAware> metadataStore = new HashMap<>(4);
 
-    public static RSocketCompositeMetadata from(ByteBuf content) {
+    public static RSocketCompositeMetadata of(ByteBuf content) {
         RSocketCompositeMetadata metadata = new RSocketCompositeMetadata();
         if (content.isReadable()) {
             metadata.load(content);
