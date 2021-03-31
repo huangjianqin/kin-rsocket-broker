@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: rsocket-broker
+server:
+  port: 9998
+
+kin:
+  rsocket:
+    broker:
+      port: 9999
+      topology: standalone
+      auth-required: false
+
+# management
+management:
+  server:
+    port: 9997
+  endpoints:
+    web:
+      exposure:
+        include: *
+      health:
+        show-details: always
+      shutdown:
+        enabled: true
+  metrics:
+    enable:
+      http: false
+  trace:
+    http:
+      enabled: false
+
+# logging
+logging:
+  level:
+    root: info

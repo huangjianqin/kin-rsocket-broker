@@ -1,9 +1,9 @@
 package org.kin.rsocket.service.event;
 
+import org.kin.rsocket.core.event.CacheInvalidEvent;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.application.CacheInvalidEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;

@@ -19,39 +19,39 @@ import java.util.Collections;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public class DefaultBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager {
+public class DefaultBrokerManager extends AbstractBrokerManager implements BrokerManager {
     private static final Logger log = LoggerFactory.getLogger(DefaultBrokerManager.class);
     /** 本机broker */
-    private RSocketBroker localBroker;
+    private Broker localBroker;
     @Autowired
     private RSocketBrokerProperties brokerConfig;
 
     @PostConstruct
     public void init() {
         String localIp = NetUtils.getIp();
-        this.localBroker = RSocketBroker.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
+        this.localBroker = Broker.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         log.info("start standalone cluster");
     }
 
     @Override
-    public Flux<Collection<RSocketBroker>> brokersChangedFlux() {
+    public Flux<Collection<Broker>> brokersChangedFlux() {
         //单机, 不存在变化broker
         return Flux.empty();
     }
 
     @Override
-    public RSocketBroker localBroker() {
+    public Broker localBroker() {
         return localBroker;
     }
 
     @Override
-    public Collection<RSocketBroker> all() {
+    public Collection<Broker> all() {
         return Collections.singleton(localBroker);
     }
 
     @Override
-    public Mono<RSocketBroker> getBroker(String ip) {
+    public Mono<Broker> getBroker(String ip) {
         return Mono.just(localBroker);
     }
 
@@ -67,7 +67,7 @@ public class DefaultBrokerManager extends AbstractRSocketBrokerManager implement
 
     @Override
     public void close() {
-
+        //do nothing
     }
 
     @Override

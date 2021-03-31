@@ -17,7 +17,7 @@ public class RSocketBrokerProperties {
     /** topology: gossip, k8s, standalone */
     private String topology;
     /** 是否需要权限校验 */
-    private boolean authRequired = true;
+    private boolean auth = true;
     /**
      * external domain for requester from external: the requester can not access broker's internal ip
      */
@@ -38,12 +38,12 @@ public class RSocketBrokerProperties {
         this.port = port;
     }
 
-    public boolean isAuthRequired() {
-        return authRequired;
+    public boolean isAuth() {
+        return auth;
     }
 
-    public void setAuthRequired(boolean authRequired) {
-        this.authRequired = authRequired;
+    public void setAuth(boolean auth) {
+        this.auth = auth;
     }
 
     public String getExternalDomain() {

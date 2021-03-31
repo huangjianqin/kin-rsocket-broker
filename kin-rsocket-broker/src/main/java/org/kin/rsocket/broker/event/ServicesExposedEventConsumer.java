@@ -7,7 +7,7 @@ import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
+import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
@@ -28,11 +28,11 @@ public class ServicesExposedEventConsumer implements CloudEventConsumer {
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        ServicesExposedEvent servicesExposedEvent = CloudEventSupport.unwrapData(cloudEvent, ServicesExposedEvent.class);
-        if (servicesExposedEvent != null && servicesExposedEvent.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceRouter.getByUUID(servicesExposedEvent.getAppId());
+        ServicesExposedEvent event = CloudEventSupport.unwrapData(cloudEvent, ServicesExposedEvent.class);
+        if (event != null && event.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
+            ServiceResponder responder = serviceRouter.getByUUID(event.getAppId());
             if (responder != null) {
-                Set<ServiceLocator> serviceLocators = servicesExposedEvent.getServices();
+                Set<ServiceLocator> serviceLocators = event.getServices();
                 responder.setAppStatus(AppStatus.SERVING);
                 responder.registerServices(serviceLocators);
             }

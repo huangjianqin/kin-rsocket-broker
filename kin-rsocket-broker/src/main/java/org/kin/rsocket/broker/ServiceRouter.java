@@ -7,19 +7,18 @@ import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
-import org.kin.rsocket.broker.cluster.RSocketBroker;
-import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.broker.security.AuthenticationService;
-import org.kin.rsocket.broker.security.JwtPrincipal;
-import org.kin.rsocket.broker.security.RSocketAppPrincipal;
+import org.kin.rsocket.auth.AuthenticationService;
+import org.kin.rsocket.auth.JwtPrincipal;
+import org.kin.rsocket.auth.RSocketAppPrincipal;
+import org.kin.rsocket.broker.cluster.Broker;
+import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RSocketFilterChain;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.domain.AppStatus;
+import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.broker.AppStatusEvent;
-import org.kin.rsocket.core.event.broker.UpstreamClusterChangedEvent;
+import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -55,7 +54,7 @@ public class ServiceRouter {
     private final TopicProcessor<CloudEventData<?>> eventProcessor;
     private final TopicProcessor<String> notificationProcessor;
     private final AuthenticationService authenticationService;
-    private final RSocketBrokerManager brokerManager;
+    private final BrokerManager brokerManager;
     private final ServiceMeshInspector serviceMeshInspector;
     private final boolean authRequired;
     private final RSocket upstreamRSocket;
@@ -73,7 +72,7 @@ public class ServiceRouter {
                          TopicProcessor<CloudEventData<?>> eventProcessor,
                          TopicProcessor<String> notificationProcessor,
                          AuthenticationService authenticationService,
-                         RSocketBrokerManager brokerManager,
+                         BrokerManager brokerManager,
                          ServiceMeshInspector serviceMeshInspector,
                          boolean authRequired,
                          RSocket upstreamRSocket) {
@@ -304,17 +303,17 @@ public class ServiceRouter {
     /**
      * 创建upstream broker变化的cloud event
      */
-    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedEvent(Collection<RSocketBroker> rsocketBrokers, String topology) {
+    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedEvent(Collection<Broker> rsocketBrokers, String topology) {
         List<String> uris;
         if (Topologys.INTERNET.equals(topology)) {
             uris = rsocketBrokers.stream()
                     .filter(rsocketBroker -> rsocketBroker.isActive() && rsocketBroker.getExternalDomain() != null)
-                    .map(RSocketBroker::getAliasUrl)
+                    .map(Broker::getAliasUrl)
                     .collect(Collectors.toList());
         } else {
             uris = rsocketBrokers.stream()
-                    .filter(RSocketBroker::isActive)
-                    .map(RSocketBroker::getUrl)
+                    .filter(Broker::isActive)
+                    .map(Broker::getUrl)
                     .collect(Collectors.toList());
         }
 
@@ -334,9 +333,9 @@ public class ServiceRouter {
     /**
      *
      */
-    private Flux<Void> broadcastClusterTopology(Collection<RSocketBroker> rSocketBrokers) {
-        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(rSocketBrokers, "intranet");
-        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(rSocketBrokers, "internet");
+    private Flux<Void> broadcastClusterTopology(Collection<Broker> brokers) {
+        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokers, "intranet");
+        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(brokers, "internet");
         return Flux.fromIterable(getAllResponders()).flatMap(responder -> {
             String topology = responder.getAppMetadata().getTopology();
             Mono<Void> fireEvent;

@@ -12,9 +12,9 @@ import org.kin.framework.event.HandleEvent;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
-import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
-import org.kin.rsocket.broker.cluster.RSocketBroker;
-import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
+import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
+import org.kin.rsocket.broker.cluster.Broker;
+import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
@@ -38,9 +38,9 @@ import java.util.stream.Collectors;
  * @date 2021/3/29
  */
 @HandleEvent
-public class GossipBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, ClusterMessageHandler, DisposableBean {
+public class GossipBrokerManager extends AbstractBrokerManager implements BrokerManager, ClusterMessageHandler, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
-    /** 请求新增broker数据(也就是{@link RSocketBroker})的gossip header key */
+    /** 请求新增broker数据(也就是{@link Broker})的gossip header key */
     private static final String BROKER_INFO_HEADER = "brokerInfo";
     /** 通过gossip广播cloud event的gossip header key */
     private static final String CLOUD_EVENT_HEADER = "cloudEvent";
@@ -53,11 +53,11 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     /** gossip cluster */
     private Mono<Cluster> cluster;
     /** 本机broker数据 */
-    private RSocketBroker localBroker;
+    private Broker localBroker;
     /** key -> ip address, value -> rsocket brokers数据 */
-    private final Map<String, RSocketBroker> brokers = new HashMap<>();
+    private final Map<String, Broker> brokers = new HashMap<>();
     /** brokers changes emitter processor */
-    private final EmitterProcessor<Collection<RSocketBroker>> brokersEmitterProcessor = EmitterProcessor.create();
+    private final EmitterProcessor<Collection<Broker>> brokersEmitterProcessor = EmitterProcessor.create();
 
     @PostConstruct
     public void init() {
@@ -75,7 +75,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
                 .start();
         //subscribe and start & join the cluster
         cluster.subscribe();
-        this.localBroker = RSocketBroker.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
+        this.localBroker = Broker.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         brokers.put(localIp, localBroker);
         log.info("start cluster with Gossip support");
@@ -92,22 +92,22 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     }
 
     @Override
-    public Flux<Collection<RSocketBroker>> brokersChangedFlux() {
+    public Flux<Collection<Broker>> brokersChangedFlux() {
         return brokersEmitterProcessor;
     }
 
     @Override
-    public Collection<RSocketBroker> all() {
+    public Collection<Broker> all() {
         return brokers.values();
     }
 
     @Override
-    public RSocketBroker localBroker() {
+    public Broker localBroker() {
         return localBroker;
     }
 
     @Override
-    public Mono<RSocketBroker> getBroker(String ip) {
+    public Mono<Broker> getBroker(String ip) {
         if (brokers.containsKey(ip)) {
             return Mono.just(brokers.get(ip));
         } else {
@@ -161,7 +161,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
 
-    public Mono<RSocketBroker> makeJsonRpcCall(Member member) {
+    public Mono<Broker> makeJsonRpcCall(Member member) {
         String uuid = UUID.randomUUID().toString();
         Message jsonRpcMessage = Message.builder()
                 .correlationId(uuid)
@@ -189,8 +189,8 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         brokersEmitterProcessor.onNext(brokers.values());
     }
 
-    private RSocketBroker memberToBroker(Member member) {
-        RSocketBroker broker = new RSocketBroker();
+    private Broker memberToBroker(Member member) {
+        Broker broker = new Broker();
         broker.setIp(member.address().host());
         return broker;
     }

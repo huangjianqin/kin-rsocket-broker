@@ -18,6 +18,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-auth</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- reactive web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -28,13 +34,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <!--security-->
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>${java-jwt.version}</version>
         </dependency>
 
         <!-- spring -->

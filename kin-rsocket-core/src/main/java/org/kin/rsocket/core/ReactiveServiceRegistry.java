@@ -62,7 +62,7 @@ public interface ReactiveServiceRegistry {
     boolean containsHandler(Integer handlerId);
 
     /**
-     * 用于后台访问服务接口具体信息, 以json序列化
+     * 用于后台访问服务接口具体信息
      */
     ReactiveServiceInfo getReactiveServiceInfoByName(String serviceName);
 }

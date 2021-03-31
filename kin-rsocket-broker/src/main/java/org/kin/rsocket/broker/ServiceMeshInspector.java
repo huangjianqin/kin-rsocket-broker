@@ -1,6 +1,6 @@
 package org.kin.rsocket.broker;
 
-import org.kin.rsocket.broker.security.RSocketAppPrincipal;
+import org.kin.rsocket.auth.RSocketAppPrincipal;
 
 import java.util.HashSet;
 import java.util.Set;

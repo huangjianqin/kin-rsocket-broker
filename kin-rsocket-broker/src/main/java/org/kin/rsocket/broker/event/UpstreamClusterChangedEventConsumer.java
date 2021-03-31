@@ -4,7 +4,7 @@ import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.broker.UpstreamClusterChangedEvent;
+import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +27,11 @@ public class UpstreamClusterChangedEventConsumer implements CloudEventConsumer {
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        UpstreamClusterChangedEvent clusterChangedEvent = CloudEventSupport.unwrapData(cloudEvent, UpstreamClusterChangedEvent.class);
-        if (clusterChangedEvent != null) {
-            brokerUpstreamCluster.refreshUris(clusterChangedEvent.getUris());
+        UpstreamClusterChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, UpstreamClusterChangedEvent.class);
+        if (event != null) {
+            brokerUpstreamCluster.refreshUris(event.getUris());
             //todo UpstreamBroker是否需要修改
-            log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", "UpstreamBroker", String.join(",", clusterChangedEvent.getUris())));
+            log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", "UpstreamBroker", String.join(",", event.getUris())));
         }
         return Mono.empty();
     }

@@ -7,12 +7,7 @@ import org.kin.rsocket.broker.ServiceRouter;
 import org.kin.rsocket.broker.config.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.domain.AppStatus;
-import org.kin.rsocket.core.event.CloudEventBuilder;
-import org.kin.rsocket.core.event.CloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.application.ConfigChangedEvent;
-import org.kin.rsocket.core.event.broker.AppStatusEvent;
+import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,19 +42,19 @@ public class AppStatusEventConsumer implements CloudEventConsumer, Closeable, Di
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        AppStatusEvent appStatusEvent = CloudEventSupport.unwrapData(cloudEvent, AppStatusEvent.class);
+        AppStatusEvent event = CloudEventSupport.unwrapData(cloudEvent, AppStatusEvent.class);
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
-        if (appStatusEvent != null && appStatusEvent.getId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceRouter.getByUUID(appStatusEvent.getId());
+        if (event != null && event.getId().equals(cloudEvent.getAttributes().getSource().getHost())) {
+            ServiceResponder responder = serviceRouter.getByUUID(event.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
-                if (appStatusEvent.getStatus().equals(AppStatus.CONNECTED)) {  //app connected
+                if (event.getStatus().equals(AppStatus.CONNECTED)) {  //app connected
                     listenConfChange(appMetadata);
-                } else if (appStatusEvent.getStatus().equals(AppStatus.SERVING)) {  //app serving
+                } else if (event.getStatus().equals(AppStatus.SERVING)) {  //app serving
                     responder.registerPublishedServices();
-                } else if (appStatusEvent.getStatus().equals(AppStatus.DOWN)) { //app out of service
+                } else if (event.getStatus().equals(AppStatus.DOWN)) { //app out of service
                     responder.unregisterPublishedServices();
-                } else if (appStatusEvent.getStatus().equals(AppStatus.STOPPED)) {
+                } else if (event.getStatus().equals(AppStatus.STOPPED)) {
                     responder.unregisterPublishedServices();
                     responder.setAppStatus(AppStatus.STOPPED);
                 }

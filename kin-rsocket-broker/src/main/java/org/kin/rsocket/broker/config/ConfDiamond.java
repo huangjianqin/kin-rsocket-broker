@@ -11,6 +11,9 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/29
  */
 public interface ConfDiamond {
+    /** group和key分隔符 */
+    String GROUP_KEY_SEPARATOR = ":";
+
     /** 获取已有的配置组 */
     Flux<String> getGroups();
 

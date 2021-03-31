@@ -20,8 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RSocketService(serviceInterface = ConfDiamond.class)
 public class MemoryStorageConfDiamond implements ConfDiamond {
     private static Logger log = LoggerFactory.getLogger(MemoryStorageConfDiamond.class);
-    /** group和key分隔符 */
-    private static final String GROUP_KEY_SEPARATOR = ":";
 
     /** app name, 也就是group */
     private final Set<String> appNames = new ConcurrentHashSet<>();

@@ -16,6 +16,7 @@
             <groupId>org.kin</groupId>
             <artifactId>kin-rsocket-broker</artifactId>
             <version>${project.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- gossip -->

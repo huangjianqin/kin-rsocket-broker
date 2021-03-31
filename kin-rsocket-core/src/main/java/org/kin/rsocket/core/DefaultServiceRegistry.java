@@ -73,7 +73,7 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     }
 
     /**
-     * 创建reactive service信息, 用于后台访问服务接口具体信息, 以json序列化
+     * 创建reactive service信息, 用于后台访问服务接口具体信息
      */
     private ReactiveServiceInfo newReactiveServiceInfo(String group, String serviceName,
                                                        String version, Class<?> interfaceClass) {

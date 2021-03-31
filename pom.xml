@@ -12,6 +12,10 @@
         <module>kin-rsocket-service</module>
         <module>kin-rsocket-example</module>
         <module>kin-rsocket-broker-gossip</module>
+        <module>spring-cloud-starter-kin-rsocket-broker-registry-client</module>
+        <module>spring-cloud-starter-kin-rsocket-broker-conf-client</module>
+        <module>spring-cloud-starter-kin-rsocket-broker-gateway-http</module>
+        <module>kin-rsocket-auth</module>
     </modules>
     <packaging>pom</packaging>
 
@@ -37,6 +41,7 @@
         <scalecube-cluster.version>2.6.6</scalecube-cluster.version>
         <kin-rpc-serialization.version>0.1.0.0</kin-rpc-serialization.version>
         <byte-buddy.version>1.10.18</byte-buddy.version>
+        <guava.version>30.1-jre</guava.version>
     </properties>
 
     <dependencyManagement>

@@ -5,7 +5,7 @@ import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.broker.UpstreamClusterChangedEvent;
+import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

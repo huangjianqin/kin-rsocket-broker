@@ -158,10 +158,10 @@ public class RSocketAutoConfiguration {
      * broker health checker
      */
     @Bean
-    @ConditionalOnProperty("rsocket.brokers")
+    @ConditionalOnProperty("kin.rsocket.brokers")
     public HealthIndicator healthIndicator(@Autowired RSocketEndpoint rsocketEndpoint,
                                            @Autowired UpstreamClusterManager upstreamClusterManager,
-                                           @Value("${rsocket.brokers}") String brokers) {
+                                           @Value("${kin.rsocket.upstream-brokers}") String brokers) {
         return new HealthIndicator(rsocketEndpoint, upstreamClusterManager, brokers);
     }
 

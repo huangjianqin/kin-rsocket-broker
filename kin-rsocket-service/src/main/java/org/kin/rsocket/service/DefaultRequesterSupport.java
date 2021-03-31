@@ -11,7 +11,7 @@ import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
+import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthChecker;
 import org.kin.rsocket.core.metadata.*;
 import org.springframework.aop.support.AopUtils;

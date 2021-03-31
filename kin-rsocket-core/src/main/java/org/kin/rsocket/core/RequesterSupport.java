@@ -4,7 +4,7 @@ import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
+import org.kin.rsocket.core.event.ServicesExposedEvent;
 
 import java.net.URI;
 import java.util.List;

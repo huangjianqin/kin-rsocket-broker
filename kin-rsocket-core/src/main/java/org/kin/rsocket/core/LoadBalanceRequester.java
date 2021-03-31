@@ -13,7 +13,7 @@ import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
-import org.kin.rsocket.core.event.broker.ServicesExposedEvent;
+import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthChecker;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;

@@ -1,16 +1,16 @@
 package org.kin.rsocket.broker.controller;
 
 import io.rsocket.exceptions.InvalidException;
+import org.kin.rsocket.auth.AuthenticationService;
+import org.kin.rsocket.auth.JwtPrincipal;
+import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.ServiceRouter;
 import org.kin.rsocket.broker.config.ConfDiamond;
-import org.kin.rsocket.broker.security.AuthenticationService;
-import org.kin.rsocket.broker.security.JwtPrincipal;
-import org.kin.rsocket.broker.security.RSocketAppPrincipal;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.application.ConfigChangedEvent;
+import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -82,7 +82,7 @@ public class ConfigController {
      * 解析jwt认证
      */
     private RSocketAppPrincipal parseAppPrincipal(String jwtToken) {
-        if (brokerConfig.isAuthRequired()) {
+        if (brokerConfig.isAuth()) {
             return authenticationService.auth("Bearer", jwtToken.substring(jwtToken.indexOf(" ") + 1));
         } else {
             return new JwtPrincipal(UUID.randomUUID().toString(), "rsocket-admin",

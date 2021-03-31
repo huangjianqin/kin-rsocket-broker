@@ -6,7 +6,7 @@ import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.broker.ServicesHiddenEvent;
+import org.kin.rsocket.core.event.ServicesHiddenEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
@@ -27,11 +27,11 @@ public class ServicesHiddenEventConsumer implements CloudEventConsumer {
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        ServicesHiddenEvent servicesHiddenEvent = CloudEventSupport.unwrapData(cloudEvent, ServicesHiddenEvent.class);
-        if (servicesHiddenEvent != null && servicesHiddenEvent.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceRouter.getByUUID(servicesHiddenEvent.getAppId());
+        ServicesHiddenEvent event = CloudEventSupport.unwrapData(cloudEvent, ServicesHiddenEvent.class);
+        if (event != null && event.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
+            ServiceResponder responder = serviceRouter.getByUUID(event.getAppId());
             if (responder != null) {
-                Set<ServiceLocator> serviceLocators = servicesHiddenEvent.getServices();
+                Set<ServiceLocator> serviceLocators = event.getServices();
                 responder.unregisterServices(serviceLocators);
             }
         }
