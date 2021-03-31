@@ -9,7 +9,7 @@ kin:
     broker:
       port: 9999
       topology: standalone
-      auth-required: false
+      auth: false
 
 # management
 management:

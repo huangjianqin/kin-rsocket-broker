@@ -231,6 +231,12 @@ public class BrokerConnector implements Closeable {
             appMetadata.setIp(NetUtils.getIp());
             appMetadata.setDevice(appName);
             appMetadata.setBrokers(brokers);
+            appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
+            //web port
+            appMetadata.setWebPort(RSocketAppContext.webPort);
+            //management port
+            appMetadata.setManagementPort(RSocketAppContext.managementPort);
+            appMetadata.setSecure(Objects.nonNull(jwtToken) && jwtToken.length > 0);
             return appMetadata;
         }
     }

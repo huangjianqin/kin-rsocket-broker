@@ -2,6 +2,7 @@ package org.kin.rsocket.core.metadata;
 
 import io.netty.buffer.ByteBuf;
 import org.kin.rsocket.core.utils.JSON;
+import org.kin.rsocket.core.utils.Topologys;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -23,9 +24,9 @@ public class AppMetadata implements MetadataAware {
     private int powerRating = 1;
     /** app name */
     private String name;
-    /** name space */
+    /** name space todo */
     private String nameSpace;
-    /** description */
+    /** description todo */
     private String description;
     /** device information */
     private String device;
@@ -36,20 +37,20 @@ public class AppMetadata implements MetadataAware {
     /** connected brokers */
     private List<String> brokers;
     /** topology, such as intranet or internet */
-    private String topology = "intranet";
+    private String topology = Topologys.INTRANET;
     /** secure or not */
     private boolean secure = false;
     /** web port */
     private int webPort;
     /** management port for Spring Boot actuator */
     private int managementPort;
-    /** sdk and RSocket protocol version */
+    /** sdk and RSocket protocol version todo */
     private String sdk = "Kin-RSocket-0.1.0.0";
-    /** developers, format as email list: xxx <xxx@foobar.com>, yyy <yyy@foobar.com> */
+    /** developers, format as email list: xxx <xxx@foobar.com>, yyy <yyy@foobar.com> todo */
     private String developers;
     /** metadata */
     private Map<String, String> metadata;
-    /** humans.md from classpath */
+    /** humans.md from classpath todo */
     private String humansMd;
     /** connected timestamp */
     private Date connectedAt;

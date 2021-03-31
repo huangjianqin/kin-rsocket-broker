@@ -14,9 +14,9 @@ import java.util.Map;
 public class RSocketServiceProperties {
     /** schema, such as tcp, local */
     private String schema = "tcp";
-    /** listen port, default is 42252, 0 means to disable listen */
-    private Integer port = 0;
-    /** broker url, such tcp://127.0.0.1:42252 */
+    /** listen port, default is 9998`, 0 means to disable listen */
+    private Integer port = 9998;
+    /** broker url, such tcp://127.0.0.1:9999 */
     private List<String> brokers;
     /** topology, intranet or internet */
     private String topology = Topologys.INTRANET;

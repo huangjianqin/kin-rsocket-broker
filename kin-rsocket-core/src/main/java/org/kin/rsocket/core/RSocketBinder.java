@@ -13,6 +13,7 @@ import io.rsocket.transport.local.LocalServerTransport;
 import io.rsocket.transport.netty.server.TcpServerTransport;
 import io.rsocket.transport.netty.server.WebsocketServerTransport;
 import org.kin.framework.Closeable;
+import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.utils.Schemas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +62,10 @@ public class RSocketBinder implements Closeable {
             for (Map.Entry<Integer, String> entry : schemas.entrySet()) {
                 String schema = entry.getValue();
                 int port = entry.getKey();
+                if (!NetUtils.isPortInRange(port)) {
+                    log.warn(String.format("schema '%s' port '%d' is invalid", schema, port));
+                    continue;
+                }
                 ServerTransport<?> transport;
                 if (schema.equals(Schemas.LOCAL)) {
                     transport = LocalServerTransport.create("unittest");
@@ -89,6 +94,7 @@ public class RSocketBinder implements Closeable {
                             ));
                     transport = WebsocketServerTransport.create(httpServer);
                 } else {
+                    log.warn(String.format("unknown schema '%s', just retry to bind with tcp", schema));
                     //回退到默认tcp
                     transport = TcpServerTransport.create(host, port);
                 }

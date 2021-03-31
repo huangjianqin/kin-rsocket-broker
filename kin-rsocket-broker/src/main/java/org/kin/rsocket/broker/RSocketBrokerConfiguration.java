@@ -198,6 +198,9 @@ public class RSocketBrokerConfiguration {
     }
     //----------------------------------------------
 
+    /**
+     * 默认{@link BrokerManager}实现, 可通过maven依赖配置其他starter来使用自定义{@link BrokerManager}实现
+     */
     @Bean
     @ConditionalOnMissingBean(BrokerManager.class)
     public BrokerManager rsocketBrokerManager() {

@@ -14,20 +14,16 @@ import java.util.List;
 public class RSocketBrokerProperties {
     /** 监听端口 */
     private int port = 9999;
-    /** topology: gossip, k8s, standalone */
-    private String topology;
     /** 是否需要权限校验 */
     private boolean auth = true;
-    /**
-     * external domain for requester from external: the requester can not access broker's internal ip
-     */
+    /** external domain for requester from external: the requester can not access broker's internal ip */
     private String externalDomain;
     /** ssl信息 */
     @NestedConfigurationProperty
     private RSocketSSL ssl;
     /** upstream broker url */
     private List<String> upstreamBrokers = Collections.emptyList();
-    /** upstream token */
+    /** upstream token, 目前仅仅支持jwt */
     private String upstreamToken;
 
     public int getPort() {
@@ -52,14 +48,6 @@ public class RSocketBrokerProperties {
 
     public void setExternalDomain(String externalDomain) {
         this.externalDomain = externalDomain;
-    }
-
-    public String getTopology() {
-        return topology;
-    }
-
-    public void setTopology(String topology) {
-        this.topology = topology;
     }
 
     public RSocketSSL getSsl() {
@@ -105,6 +93,7 @@ public class RSocketBrokerProperties {
          */
         private String keyStorePassword = "changeit";
 
+        //setter && getter
         public boolean isEnabled() {
             return enabled;
         }

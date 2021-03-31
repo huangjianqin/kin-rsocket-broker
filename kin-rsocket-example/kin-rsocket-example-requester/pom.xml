@@ -3,16 +3,20 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>kin-rsocket-broker-parent</artifactId>
+        <artifactId>kin-rsocket-example</artifactId>
         <groupId>org.kin</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-example</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>kin-rsocket-example-responder</module>
-        <module>kin-rsocket-example-requester</module>
-    </modules>
+    <artifactId>kin-rsocket-example-requester</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-service</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 
 </project>

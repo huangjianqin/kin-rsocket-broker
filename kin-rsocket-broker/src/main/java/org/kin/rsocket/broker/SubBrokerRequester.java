@@ -6,6 +6,7 @@ import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.NetUtils;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
@@ -35,8 +36,6 @@ public class SubBrokerRequester implements RequesterSupport {
     private final Environment env;
     /** app name */
     private final String appName;
-    /** jwt认证 */
-    private final char[] jwtToken;
     /** 服务实例路由表 */
     private final ServiceRouteTable routeTable;
     /** 服务路由器 */
@@ -55,7 +54,6 @@ public class SubBrokerRequester implements RequesterSupport {
         this.env = env;
         //todo 配置同一
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name", "unknown-app"));
-        this.jwtToken = env.getProperty("rsocket.jwt-token", "").toCharArray();
         this.routeTable = routeTable;
         this.serviceRouter = serviceRouter;
         this.filterChain = filterChain;
@@ -77,8 +75,8 @@ public class SubBrokerRequester implements RequesterSupport {
             metadataAwares.add(getAppMetadata());
 
             // authentication
-            if (this.jwtToken != null && this.jwtToken.length > 0) {
-                metadataAwares.add(BearerTokenMetadata.jwt(this.jwtToken));
+            if (StringUtils.isNotBlank(brokerConfig.getUpstreamToken())) {
+                metadataAwares.add(BearerTokenMetadata.jwt(brokerConfig.getUpstreamToken().toCharArray()));
             }
 
             //composite metadata with app metadata
@@ -137,19 +135,17 @@ public class SubBrokerRequester implements RequesterSupport {
         appMetadata.setName(appName);
         appMetadata.setIp(NetUtils.getIp());
         appMetadata.setDevice("SpringBootApp");
-        appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
-        //brokers
+        //upstream brokers
         appMetadata.setBrokers(brokerConfig.getUpstreamBrokers());
-        appMetadata.setTopology(brokerConfig.getTopology());
         appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
         //web port
-        appMetadata.setWebPort(Integer.parseInt(env.getProperty("server.port", "0")));
-        appMetadata.setManagementPort(appMetadata.getWebPort());
+        appMetadata.setWebPort(RSocketAppContext.webPort);
         //management port
-        if (env.getProperty("management.server.port") != null) {
-            appMetadata.setManagementPort(Integer.parseInt(env.getProperty("management.server.port", "0")));
-        }
-        appMetadata.setManagementPort(Integer.parseInt(env.getProperty("management.server.port", "" + appMetadata.getWebPort())));
+        appMetadata.setManagementPort(RSocketAppContext.managementPort);
+        RSocketBrokerProperties.RSocketSSL socketSSL = brokerConfig.getSsl();
+        appMetadata.setSecure(!Objects.isNull(socketSSL) && socketSSL.isEnabled());
+
+        //todo  这个元数据key要不要定义常量
         appMetadata.addMetadata("broker", "true");
         return appMetadata;
     }

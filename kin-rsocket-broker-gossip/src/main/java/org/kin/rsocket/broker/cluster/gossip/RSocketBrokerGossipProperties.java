@@ -9,14 +9,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "kin.rsocket.broker.gossip")
 public class RSocketBrokerGossipProperties {
     /** Gossip listen port */
-    private int gossipPort;
+    private int port;
+    /** gossip node */
+    private String[] seeds;
 
     //setter && getter
-    public int getGossipPort() {
-        return gossipPort;
+    public int getPort() {
+        return port;
     }
 
-    public void setGossipPort(int gossipPort) {
-        this.gossipPort = gossipPort;
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String[] getSeeds() {
+        return seeds;
+    }
+
+    public void setSeeds(String[] seeds) {
+        this.seeds = seeds;
     }
 }

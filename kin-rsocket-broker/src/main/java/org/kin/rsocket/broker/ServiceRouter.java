@@ -334,8 +334,8 @@ public class ServiceRouter {
      *
      */
     private Flux<Void> broadcastClusterTopology(Collection<Broker> brokers) {
-        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokers, "intranet");
-        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(brokers, "internet");
+        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokers, Topologys.INTRANET);
+        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(brokers, Topologys.INTERNET);
         return Flux.fromIterable(getAllResponders()).flatMap(responder -> {
             String topology = responder.getAppMetadata().getTopology();
             Mono<Void> fireEvent;

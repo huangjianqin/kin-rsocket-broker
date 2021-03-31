@@ -5,7 +5,9 @@ import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
+import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RequesterSupport;
@@ -36,7 +38,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "rawtypes"})
 public class DefaultRequesterSupport implements RequesterSupport {
     /** spring config */
     protected final Environment env;
@@ -44,8 +46,6 @@ public class DefaultRequesterSupport implements RequesterSupport {
     protected final RSocketServiceProperties config;
     /** app name */
     protected final String appName;
-    /** jwt加密 */
-    protected final char[] jwtToken;
     /** responder acceptor */
     protected final SocketAcceptor socketAcceptor;
     /** spring application context */
@@ -65,8 +65,6 @@ public class DefaultRequesterSupport implements RequesterSupport {
         this.socketAcceptor = socketAcceptor;
 
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name"));
-        //todo 配置同一
-        this.jwtToken = env.getProperty("rsocket.jwt-token", "").toCharArray();
     }
 
     @Override
@@ -90,8 +88,8 @@ public class DefaultRequesterSupport implements RequesterSupport {
                 metadataAwares.add(serviceRegistryMetadata);
             }
             // authentication
-            if (this.jwtToken != null && this.jwtToken.length > 0) {
-                metadataAwares.add(BearerTokenMetadata.jwt(this.jwtToken));
+            if (StringUtils.isNotBlank(config.getJwtToken())) {
+                metadataAwares.add(BearerTokenMetadata.jwt(config.getJwtToken().toCharArray()));
             }
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(metadataAwares);
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, compositeMetadata.getContent());
@@ -146,35 +144,28 @@ public class DefaultRequesterSupport implements RequesterSupport {
         appMetadata.setName(appName);
         appMetadata.setIp(NetUtils.getIp());
         appMetadata.setDevice("SpringBootApp");
-        appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
         //brokers
         appMetadata.setBrokers(config.getBrokers());
         appMetadata.setTopology(config.getTopology());
+        appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
         //web port
-        appMetadata.setWebPort(Integer.parseInt(env.getProperty("server.port", "0")));
-        appMetadata.setManagementPort(appMetadata.getWebPort());
+        appMetadata.setWebPort(RSocketAppContext.webPort);
         //management port
-        if (env.getProperty("management.server.port") != null) {
-            appMetadata.setManagementPort(Integer.parseInt(env.getProperty("management.server.port")));
-        }
-        if (appMetadata.getWebPort() <= 0) {
-            appMetadata.setWebPort(RSocketAppContext.webPort);
-        }
-        if (appMetadata.getManagementPort() <= 0) {
-            appMetadata.setManagementPort(RSocketAppContext.managementPort);
-        }
-        //labels
-        appMetadata.setMetadata(new HashMap<>());
-        getAllConfigKeyNames().forEach(key -> {
-            if (key.startsWith("rsocket.metadata.")) {
-                String[] parts = key.split("[=:]", 2);
-                appMetadata.getMetadata().put(parts[0].trim().replace("rsocket.metadata.", ""), env.getProperty(key));
-            }
-        });
+        appMetadata.setManagementPort(RSocketAppContext.managementPort);
+        //元数据
+        appMetadata.setMetadata(
+                config.getMetadata().entrySet().stream()
+                        .map(e -> new Tuple<>(
+                                e.getKey().split("[=:]", 2)[0].trim().replace("kin.rsocket.metadata.", ""),
+                                e.getValue()))
+                        .collect(Collectors.toMap(Tuple::first, Tuple::second)));
+        //todo
         //power unit
         if (appMetadata.getMetadata("power-rating") != null) {
             appMetadata.setPowerRating(Integer.parseInt(appMetadata.getMetadata("power-rating")));
         }
+        appMetadata.setSecure(StringUtils.isNotBlank(config.getJwtToken()));
+        //todo 有没有必要将整个文件内容读进内存
         //humans.md
         URL humansMd = this.getClass().getResource("/humans.md");
         if (humansMd != null) {

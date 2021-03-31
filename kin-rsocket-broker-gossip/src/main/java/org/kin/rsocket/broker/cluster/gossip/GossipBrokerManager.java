@@ -30,6 +30,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 基于Gossip的rsocket broker manager
@@ -62,7 +63,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     @PostConstruct
     public void init() {
         String localIp = NetUtils.getIp();
-        int gossipPort = gossipConfig.getGossipPort();
+        int gossipPort = gossipConfig.getPort();
         cluster = new ClusterImpl()
                 .config(clusterConfig -> clusterConfig.externalHost(localIp).externalPort(gossipPort))
                 .membership(membershipConfig -> membershipConfig.seedMembers(seedMembers()).syncInterval(5_000))
@@ -86,8 +87,8 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
      */
     private List<Address> seedMembers() {
         //从upstream broker host获取
-        return brokerConfig.getUpstreamBrokers().stream()
-                .map(host -> Address.create(host, gossipConfig.getGossipPort()))
+        return Stream.of(gossipConfig.getSeeds())
+                .map(host -> Address.create(host, gossipConfig.getPort()))
                 .collect(Collectors.toList());
     }
 
@@ -161,7 +162,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
 
-    public Mono<Broker> makeJsonRpcCall(Member member) {
+    private Mono<Broker> makeJsonRpcCall(Member member) {
         String uuid = UUID.randomUUID().toString();
         Message jsonRpcMessage = Message.builder()
                 .correlationId(uuid)

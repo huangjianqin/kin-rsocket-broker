@@ -7,13 +7,13 @@ Kin Rsocket Broker是一款基于RSocket协议的反应式对等通讯系统, �
 * 交换系统：得益于RSocket, 完全分布式、异构系统整合简单，无论应用什么语言开发、部署在哪里，都可以相互通讯。
 
 ## **实现**
+broker集群目前仅仅支持gossip, 通过maven配置kin-roscket-broker-gossip依赖实现
 
 ### **世界观**
 
 一切皆服务, 包括broker, 一些内置功能是在broker实现rsocket service实现的
 
 ### **模块**
-
 * **kin-roscket-broker**: rsocket broker实现
 * **kin-roscket-broker-gossip**: gossip broker manager实现
 * **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
