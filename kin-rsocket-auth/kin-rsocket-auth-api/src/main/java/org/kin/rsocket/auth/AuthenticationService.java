@@ -8,7 +8,7 @@ public interface AuthenticationService {
     /**
      * 证书校验及缓存证书
      */
-    RSocketAppPrincipal auth(String type, String credentials);
+    RSocketAppPrincipal auth(String credentials);
 
     /**
      * 生成证书

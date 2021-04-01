@@ -2,8 +2,6 @@ package org.kin.rsocket.broker.controller;
 
 import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.auth.AuthenticationService;
-import org.kin.rsocket.auth.JwtPrincipal;
-import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.ServiceRouter;
 import org.kin.rsocket.broker.config.ConfDiamond;
@@ -18,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.UUID;
+import java.util.Objects;
 
 /**
  * todo 一些常量看看需不需要修改
@@ -44,10 +40,9 @@ public class ConfigController {
     public Mono<String> refresh(@PathVariable(name = "appName") String appName,
                                 @RequestParam(name = "ip", required = false) String ip,
                                 @RequestParam(name = "id", required = false) String id,
-                                @RequestHeader(name = HttpHeaders.AUTHORIZATION) String jwtToken,
+                                @RequestHeader(name = HttpHeaders.AUTHORIZATION) String token,
                                 @RequestBody String body) {
-        RSocketAppPrincipal appPrincipal = parseAppPrincipal(jwtToken);
-        if (appPrincipal != null && appPrincipal.getSubject().equalsIgnoreCase("rsocket-admin")) {
+        if (isAuthenticated(token)) {
             //update config for ip or id
             if (ip != null || id != null) {
                 CloudEventData<ConfigChangedEvent> configEvent = CloudEventBuilder.builder(ConfigChangedEvent.of(appName, body))
@@ -66,11 +61,8 @@ public class ConfigController {
     }
 
     @GetMapping("/last/{appName}")
-    public Mono<String> fetch(@PathVariable(name = "appName") String appName, @RequestHeader(name = HttpHeaders.AUTHORIZATION) String jwtToken) {
-        RSocketAppPrincipal appPrincipal = parseAppPrincipal(jwtToken);
-        if (appPrincipal != null &&
-                (appName.equalsIgnoreCase(appPrincipal.getSubject()) ||
-                        appPrincipal.getSubject().equalsIgnoreCase("rsocket-admin"))) {
+    public Mono<String> fetch(@PathVariable(name = "appName") String appName, @RequestHeader(name = HttpHeaders.AUTHORIZATION) String token) {
+        if (isAuthenticated(token)) {
             return confDiamond.get(appName + ":application.properties");
         } else {
             return Mono.error(new InvalidException("Failed to validate JWT token, please supply correct token."));
@@ -78,19 +70,10 @@ public class ConfigController {
     }
 
     /**
-     * todo
-     * 解析jwt认证
+     * 校验认证
      */
-    private RSocketAppPrincipal parseAppPrincipal(String jwtToken) {
-        if (brokerConfig.isAuth()) {
-            return authenticationService.auth("Bearer", jwtToken.substring(jwtToken.indexOf(" ") + 1));
-        } else {
-            return new JwtPrincipal(UUID.randomUUID().toString(), "rsocket-admin",
-                    Collections.singletonList("mock_owner"),
-                    new HashSet<>(Collections.singletonList("admin")),
-                    Collections.emptySet(),
-                    new HashSet<>(Collections.singletonList("default")),
-                    new HashSet<>(Collections.singletonList("1")));
-        }
+    private boolean isAuthenticated(String token) {
+        return !brokerConfig.isAuth() || Objects.nonNull(authenticationService.auth(token));
     }
+
 }

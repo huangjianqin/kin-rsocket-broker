@@ -16,6 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 
 /**
@@ -43,12 +45,12 @@ public class HttpGatewayController {
                                                 @RequestParam(name = "group", required = false, defaultValue = "") String group,
                                                 @RequestParam(name = "version", required = false, defaultValue = "") String version,
                                                 @RequestBody(required = false) ByteBuf body,
-                                                @RequestHeader(name = "Authorization", required = false, defaultValue = "") String authorizationValue) {
+                                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         boolean authenticated;
         if (!authRequired) {
             authenticated = true;
         } else {
-            authenticated = authAuthorizationValue(authorizationValue);
+            authenticated = Objects.nonNull(authenticationService.auth(token));
         }
         if (!authenticated) {
             return Mono.error(new Exception("Failed to validate JWT token, please supply correct token."));
@@ -68,19 +70,4 @@ public class HttpGatewayController {
             return Mono.error(e);
         }
     }
-
-    /**
-     * 校验证书
-     */
-    private boolean authAuthorizationValue(String authorizationValue) {
-        if (authorizationValue == null || authorizationValue.isEmpty()) {
-            return false;
-        }
-        String jwtToken = authorizationValue;
-        if (authorizationValue.contains(" ")) {
-            jwtToken = authorizationValue.substring(authorizationValue.lastIndexOf(" ") + 1);
-        }
-        return authenticationService.auth("jwt", jwtToken) != null;
-    }
-
 }

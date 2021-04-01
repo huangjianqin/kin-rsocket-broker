@@ -1,5 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.service.RSocketAutoConfiguration,\
+org.kin.rsocket.service.RSocketServiceAutoConfiguration,\
 org.kin.rsocket.service.RSocketBinderAutoConfiguration
 org.springframework.boot.diagnostics.FailureAnalyzer=\
 org.kin.rsocket.service.JwtTokenFailureAnalyzer

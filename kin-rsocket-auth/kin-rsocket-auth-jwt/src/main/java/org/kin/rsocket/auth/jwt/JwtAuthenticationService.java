@@ -1,4 +1,4 @@
-package org.kin.rsocket.auth;
+package org.kin.rsocket.auth.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
@@ -7,7 +7,8 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.springframework.util.StreamUtils;
+import org.kin.rsocket.auth.AuthenticationService;
+import org.kin.rsocket.auth.RSocketAppPrincipal;
 
 import java.io.*;
 import java.security.Key;
@@ -18,10 +19,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -32,9 +30,16 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/3/30
  */
 public class JwtAuthenticationService implements AuthenticationService {
-    private static final String iss = "RSocketBroker";
+    private static final String iss = "KinRSocketBroker";
+    /** 公钥文件名 */
+    private static final String PUBLIC_KEY_FILE = "jwt_rsa.pub";
+    /** 私钥文件名 */
+    private static final String PRIVATE_KEY_FILE = "jwt_rsa.key";
+
+    /** 密钥目录 */
+    private final File authDir;
     /** jwt校验算法 */
-    private List<JWTVerifier> verifiers = new ArrayList<>();
+    private final List<JWTVerifier> verifiers = new ArrayList<>();
     /** cache verified principal */
     private Cache<Integer, RSocketAppPrincipal> jwtVerifyCache = CacheBuilder.newBuilder()
             .maximumSize(100_00)
@@ -46,32 +51,39 @@ public class JwtAuthenticationService implements AuthenticationService {
         this(false);
     }
 
+    public JwtAuthenticationService(boolean autoGen) throws Exception {
+        this(autoGen, null);
+    }
+
     /**
      * @param autoGen 是否自动生成RSAKeyPairs
      */
-    public JwtAuthenticationService(boolean autoGen) throws Exception {
-        File rsocketKeysDir = new File(System.getProperty("user.home"), ".rsocket");
-        File publicKeyFile = new File(rsocketKeysDir, "jwt_rsa.pub");
-
-        // generate RSA key pairs automatically
-        if (autoGen && !publicKeyFile.exists()) {
-            if (!rsocketKeysDir.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                rsocketKeysDir.mkdir();
-            }
-            generateRSAKeyPairs(rsocketKeysDir);
+    public JwtAuthenticationService(boolean autoGen, File authDir) throws Exception {
+        this.authDir = authDir;
+        if (!authDir.exists()) {
+            authDir.mkdir();
         }
 
-        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(), null)).withIssuer(iss).build());
+        if (autoGen) {
+            generateRSAKeyPairs(authDir);
+        }
+
+        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(iss).build());
     }
 
     @Override
-    public RSocketAppPrincipal auth(String type, String credentials) {
+    public RSocketAppPrincipal auth(String credentials) {
+        if (Objects.isNull(credentials) || credentials.isEmpty()) {
+            return null;
+        }
+        //bearer jwt_token
+        credentials = credentials.substring(credentials.lastIndexOf(" ") + 1);
+
         int tokenHashCode = credentials.hashCode();
         RSocketAppPrincipal principal = jwtVerifyCache.getIfPresent(tokenHashCode);
         for (JWTVerifier verifier : verifiers) {
             try {
-                principal = new JwtPrincipal(verifier.verify(credentials), credentials);
+                principal = new JwtPrincipal(verifier.verify(credentials));
                 jwtVerifyCache.put(tokenHashCode, principal);
                 break;
             } catch (JWTVerificationException ignore) {
@@ -104,12 +116,15 @@ public class JwtAuthenticationService implements AuthenticationService {
         if (authorities != null && authorities.length > 0) {
             builder = builder.withArrayClaim("authorities", authorities);
         }
-        return builder.sign(Algorithm.RSA256(null, readPrivateKey()));
+
+        return builder.sign(Algorithm.RSA256(null, readPrivateKey(authDir)));
     }
 
-
-    private RSAPrivateKey readPrivateKey() throws Exception {
-        File keyFile = new File(System.getProperty("user.home"), ".rsocket/jwt_rsa.key");
+    /**
+     * 读取私钥
+     */
+    private RSAPrivateKey readPrivateKey(File authDir) throws Exception {
+        File keyFile = new File(authDir, PRIVATE_KEY_FILE);
         try (InputStream inputStream = new FileInputStream(keyFile)) {
             byte[] keyBytes = toBytes(inputStream);
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
@@ -118,8 +133,11 @@ public class JwtAuthenticationService implements AuthenticationService {
 
     }
 
-    private RSAPublicKey readPublicKey() throws Exception {
-        File keyFile = new File(System.getProperty("user.home"), ".rsocket/jwt_rsa.pub");
+    /**
+     * 读取公钥
+     */
+    private RSAPublicKey readPublicKey(File authDir) throws Exception {
+        File keyFile = new File(authDir, PUBLIC_KEY_FILE);
         try (InputStream inputStream = new FileInputStream(keyFile)) {
             byte[] keyBytes = toBytes(inputStream);
             X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
@@ -127,25 +145,45 @@ public class JwtAuthenticationService implements AuthenticationService {
         }
     }
 
+    /**
+     * 将inputStream转换成bytes
+     */
     private byte[] toBytes(InputStream inputStream) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        StreamUtils.copy(inputStream, buffer);
+
+        byte[] bytesCache = new byte[4096];
+        int bytesRead;
+        while ((bytesRead = inputStream.read(bytesCache)) != -1) {
+            buffer.write(bytesCache, 0, bytesRead);
+        }
+        buffer.flush();
+
         byte[] bytes = buffer.toByteArray();
+        //close
         inputStream.close();
         buffer.close();
         return bytes;
     }
 
-    private void generateRSAKeyPairs(File rsocketKeysDir) throws Exception {
+    /**
+     * 自动生成RSAKey公钥和密钥
+     */
+    private void generateRSAKeyPairs(File authDir) throws Exception {
+        File publicKeyFile = new File(authDir, PUBLIC_KEY_FILE);
+        if (publicKeyFile.exists()) {
+            //公钥在就不管了
+            return;
+        }
+
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
         KeyPair keyPair = kpg.generateKeyPair();
         Key pub = keyPair.getPublic();
         Key pvt = keyPair.getPrivate();
-        try (OutputStream out = new FileOutputStream(new File(rsocketKeysDir, "jwt_rsa.key"))) {
+        try (OutputStream out = new FileOutputStream(new File(authDir, PRIVATE_KEY_FILE))) {
             out.write(pvt.getEncoded());
         }
-        try (OutputStream out2 = new FileOutputStream(new File(rsocketKeysDir, "jwt_rsa.pub"))) {
+        try (OutputStream out2 = new FileOutputStream(publicKeyFile)) {
             out2.write(pub.getEncoded());
         }
     }

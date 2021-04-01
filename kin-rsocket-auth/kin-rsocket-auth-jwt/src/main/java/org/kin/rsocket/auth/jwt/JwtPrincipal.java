@@ -1,7 +1,8 @@
-package org.kin.rsocket.auth;
+package org.kin.rsocket.auth.jwt;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.kin.rsocket.auth.RSocketAppPrincipal;
 
 import javax.security.auth.Subject;
 import java.util.*;
@@ -26,7 +27,8 @@ public class JwtPrincipal implements RSocketAppPrincipal {
     /** organizations */
     private Set<String> organizations;
 
-    public JwtPrincipal(DecodedJWT decodedJWT, String credentials) {
+    public JwtPrincipal(DecodedJWT decodedJWT) {
+        this.tokenId = decodedJWT.getClaim("id").asString();
         this.subject = decodedJWT.getSubject();
         this.audience = decodedJWT.getAudience();
         Map<String, Claim> claims = decodedJWT.getClaims();

@@ -51,7 +51,7 @@ public class RSocketApiController {
                                                @RequestParam(name = "version", required = false, defaultValue = "") String version,
                                                @RequestBody(required = false) byte[] body,
                                                @RequestHeader(name = "X-Endpoint", required = false, defaultValue = "") String endpoint,
-                                               @RequestHeader(name = "Authorization", required = false, defaultValue = "") String authorizationValue) {
+                                               @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         try {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
             Integer serviceId = routingMetadata.id();
@@ -64,7 +64,7 @@ public class RSocketApiController {
                 ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
                 if (responder != null) {
                     if (authRequired) {
-                        RSocketAppPrincipal principal = authAuthorizationValue(authorizationValue);
+                        RSocketAppPrincipal principal = authenticationService.auth(token);
                         if (principal == null || !serviceMeshInspector.isAllowed(principal, routingMetadata.gsv(), responder.getPrincipal())) {
                             return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));
                         }
@@ -84,21 +84,6 @@ public class RSocketApiController {
         } catch (Exception e) {
             return Mono.just(error(e.getMessage()));
         }
-    }
-
-    /**
-     * todo
-     * 解析认证信息
-     */
-    private RSocketAppPrincipal authAuthorizationValue(String authorizationValue) {
-        if (authorizationValue == null || authorizationValue.isEmpty()) {
-            return null;
-        }
-        String jwtToken = authorizationValue;
-        if (authorizationValue.contains(" ")) {
-            jwtToken = authorizationValue.substring(authorizationValue.lastIndexOf(" ") + 1);
-        }
-        return authenticationService.auth("jwt", jwtToken);
     }
 
     /**

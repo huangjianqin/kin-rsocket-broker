@@ -8,7 +8,6 @@ import io.rsocket.SocketAcceptor;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
 import org.kin.rsocket.auth.AuthenticationService;
-import org.kin.rsocket.auth.JwtPrincipal;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.Broker;
 import org.kin.rsocket.broker.cluster.BrokerManager;
@@ -112,12 +111,12 @@ public class ServiceRouter {
             compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
             if (!authRequired) {
                 //authentication not required
-                principal = appNameBasedPrincipal("MockApp");
+                principal = RSocketAppPrincipal.DEFAULT;
                 credentials = UUID.randomUUID().toString();
             } else if (compositeMetadata.contains(RSocketMimeType.BearerToken)) {
                 BearerTokenMetadata bearerTokenMetadata = BearerTokenMetadata.of(compositeMetadata.getMetadata(RSocketMimeType.BearerToken));
                 credentials = new String(bearerTokenMetadata.getBearerToken());
-                principal = authenticationService.auth("JWT", credentials);
+                principal = authenticationService.auth(credentials);
             } else {
                 // no jwt token supplied
                 errorMsg = "Failed to accept the connection, please check app info and JWT token";
@@ -356,20 +355,6 @@ public class ServiceRouter {
                 return fireEvent.delayElement(Duration.ofSeconds(30));
             }
         });
-    }
-
-    /**
-     * todo
-     */
-    @SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
-    public JwtPrincipal appNameBasedPrincipal(String appName) {
-        return new JwtPrincipal(UUID.randomUUID().toString(), appName,
-                Arrays.asList("mock_owner"),
-                new HashSet<>(Arrays.asList("admin")),
-                Collections.emptySet(),
-                new HashSet<>(Arrays.asList("default")),
-                new HashSet<>(Arrays.asList("1"))
-        );
     }
 
     /**

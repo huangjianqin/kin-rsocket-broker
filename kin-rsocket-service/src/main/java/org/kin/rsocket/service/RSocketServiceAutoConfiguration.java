@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableConfigurationProperties(RSocketServiceProperties.class)
-public class RSocketAutoConfiguration {
+public class RSocketServiceAutoConfiguration {
     @Autowired
     private ApplicationContext applicationContext;
     @Autowired

@@ -2,7 +2,6 @@ package org.kin.rsocket.broker;
 
 import io.rsocket.RSocket;
 import org.kin.rsocket.auth.AuthenticationService;
-import org.kin.rsocket.auth.JwtAuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.broker.cluster.DefaultBrokerManager;
 import org.kin.rsocket.broker.config.ConfDiamond;
@@ -237,14 +236,6 @@ public class RSocketBrokerConfiguration {
     @Bean
     public DiscoveryService discoveryService() {
         return new BrokerDiscoveryService();
-    }
-
-    /**
-     * 目前只支持jwt
-     */
-    @Bean
-    public AuthenticationService authenticationService() throws Exception {
-        return new JwtAuthenticationService(true);
     }
 
     @Bean

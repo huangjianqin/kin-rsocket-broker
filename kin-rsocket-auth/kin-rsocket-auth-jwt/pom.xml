@@ -3,37 +3,38 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>kin-rsocket-broker-parent</artifactId>
+        <artifactId>kin-rsocket-auth</artifactId>
         <groupId>org.kin</groupId>
         <version>0.1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>spring-cloud-starter-kin-rsocket-broker-gateway-http</artifactId>
+    <artifactId>kin-rsocket-auth-jwt</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-service</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <!-- 默认jwt -->
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-auth-jwt</artifactId>
+            <artifactId>kin-rsocket-auth-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!--security-->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>${java-jwt.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-auth</artifactId>
-            <version>${project.version}</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
     </dependencies>
+
 </project>
