@@ -11,10 +11,10 @@
         <module>kin-rsocket-core</module>
         <module>kin-rsocket-service</module>
         <module>kin-rsocket-example</module>
-        <module>kin-rsocket-broker-gossip</module>
-        <module>spring-cloud-starter-kin-rsocket-broker-registry-client</module>
-        <module>spring-cloud-starter-kin-rsocket-broker-conf-client</module>
-        <module>spring-cloud-starter-kin-rsocket-broker-gateway-http</module>
+        <module>kin-rsocket-broker-gossip-starter</module>
+        <module>kin-rsocket-broker-registry-client-starter</module>
+        <module>kin-rsocket-broker-conf-client-starter</module>
+        <module>kin-rsocket-broker-gateway-http-starter</module>
         <module>kin-rsocket-auth</module>
     </modules>
     <packaging>pom</packaging>
