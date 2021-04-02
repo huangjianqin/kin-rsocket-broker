@@ -60,11 +60,10 @@ public class JwtAuthenticationService implements AuthenticationService {
      */
     public JwtAuthenticationService(boolean autoGen, File authDir) throws Exception {
         this.authDir = authDir;
-        if (!authDir.exists()) {
-            authDir.mkdir();
-        }
-
         if (autoGen) {
+            if (Objects.nonNull(authDir) && !authDir.exists()) {
+                authDir.mkdir();
+            }
             generateRSAKeyPairs(authDir);
         }
 
