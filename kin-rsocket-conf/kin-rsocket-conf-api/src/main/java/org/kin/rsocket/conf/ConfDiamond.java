@@ -1,6 +1,7 @@
-package org.kin.rsocket.broker.config;
+package org.kin.rsocket.conf;
 
 import org.kin.framework.collection.Tuple;
+import org.kin.rsocket.core.RSocketService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -10,6 +11,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/29
  */
+@RSocketService(serviceInterface = ConfDiamond.class)
 public interface ConfDiamond {
     /** group和key分隔符 */
     String GROUP_KEY_SEPARATOR = ":";

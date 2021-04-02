@@ -4,7 +4,7 @@ import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.ServiceRouter;
-import org.kin.rsocket.broker.config.ConfDiamond;
+import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;

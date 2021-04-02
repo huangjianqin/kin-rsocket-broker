@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.broker.config.ConfDiamond;
+import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;

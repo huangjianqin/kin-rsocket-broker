@@ -4,7 +4,7 @@ import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.broker.ServiceRouter;
-import org.kin.rsocket.broker.config.ConfDiamond;
+import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;

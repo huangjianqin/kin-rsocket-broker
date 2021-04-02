@@ -4,8 +4,6 @@ import io.rsocket.RSocket;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.broker.cluster.DefaultBrokerManager;
-import org.kin.rsocket.broker.config.ConfDiamond;
-import org.kin.rsocket.broker.config.MemoryStorageConfDiamond;
 import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
 import org.kin.rsocket.broker.services.HealthService;
@@ -223,16 +221,6 @@ public class RSocketBrokerConfiguration {
     }
 
     //----------------------------------------------services
-
-    /**
-     * 默认基于内存的配置中心实现
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ConfDiamond configurationService() {
-        return new MemoryStorageConfDiamond();
-    }
-
     @Bean
     public DiscoveryService discoveryService() {
         return new BrokerDiscoveryService();
