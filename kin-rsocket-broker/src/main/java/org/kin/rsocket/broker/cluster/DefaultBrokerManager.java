@@ -14,6 +14,7 @@ import reactor.core.publisher.Mono;
 import javax.annotation.PostConstruct;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
@@ -29,7 +30,12 @@ public class DefaultBrokerManager extends AbstractBrokerManager implements Broke
     @PostConstruct
     public void init() {
         String localIp = NetUtils.getIp();
-        this.localBroker = Broker.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
+        String schema = "tcp";
+        RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
+        if (Objects.nonNull(rsocketSSL) && rsocketSSL.isEnabled()) {
+            schema = "tcps";
+        }
+        this.localBroker = Broker.of(RSocketAppContext.ID, schema,
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         log.info("start standalone cluster");
     }

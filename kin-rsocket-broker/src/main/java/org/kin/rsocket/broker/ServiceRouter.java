@@ -13,6 +13,7 @@ import org.kin.rsocket.broker.cluster.Broker;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
+import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.CloudEventBuilder;
@@ -56,7 +57,7 @@ public class ServiceRouter {
     private final BrokerManager brokerManager;
     private final ServiceMeshInspector serviceMeshInspector;
     private final boolean authRequired;
-    private final RSocket upstreamRSocket;
+    private final UpstreamCluster upstreamBrokers;
 
     /** key -> hash(app instance UUID), value -> 对应responder */
     private final Map<Integer, ServiceResponder> instanceId2Responder = new ConcurrentHashMap<>();
@@ -74,7 +75,7 @@ public class ServiceRouter {
                          BrokerManager brokerManager,
                          ServiceMeshInspector serviceMeshInspector,
                          boolean authRequired,
-                         RSocket upstreamRSocket) {
+                         UpstreamCluster upstreamBrokers) {
         this.serviceRegistry = serviceRegistry;
         this.rsocketFilterChain = filterChain;
         this.routeTable = routeTable;
@@ -84,7 +85,7 @@ public class ServiceRouter {
         this.brokerManager = brokerManager;
         this.serviceMeshInspector = serviceMeshInspector;
         this.authRequired = authRequired;
-        this.upstreamRSocket = upstreamRSocket;
+        this.upstreamBrokers = upstreamBrokers;
         if (!brokerManager.isStandAlone()) {
             this.brokerManager.brokersChangedFlux().flatMap(this::broadcastClusterTopology).subscribe();
         }
@@ -171,7 +172,7 @@ public class ServiceRouter {
         try {
             ServiceResponder responder = new ServiceResponder(setupPayload, compositeMetadata, appMetadata, principal,
                     requesterSocket, routeTable, eventProcessor, this,
-                    serviceMeshInspector, upstreamRSocket, rsocketFilterChain, serviceRegistry);
+                    serviceMeshInspector, upstreamBrokers, rsocketFilterChain, serviceRegistry);
             responder.onClose()
                     .doOnTerminate(() -> onResponderDisposed(responder))
                     .subscribeOn(Schedulers.parallel()).subscribe();

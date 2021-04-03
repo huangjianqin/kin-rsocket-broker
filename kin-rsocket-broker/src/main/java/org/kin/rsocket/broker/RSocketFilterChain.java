@@ -11,7 +11,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RSocketFilterChain extends AbstractRSocketFilter {
+public class RSocketFilterChain {
     /** filter列表 */
     private List<AbstractRSocketFilter> filters = Collections.emptyList();
     /** filter列表Flux */
@@ -24,28 +24,15 @@ public class RSocketFilterChain extends AbstractRSocketFilter {
         }
     }
 
-    @Override
-    public void updateEnable(boolean enable) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Mono<Boolean> shouldFilter(RSocketFilterContext exchange) {
-        return Mono.just(true);
-    }
-
-    @Override
+    /**
+     * filter逻辑
+     */
     public Mono<Void> filter(RSocketFilterContext context) {
         return filterFlux
                 .filter(AbstractRSocketFilter::isEnabled)
                 .filterWhen(rsocketFilter -> rsocketFilter.shouldFilter(context))
                 .concatMap(rsocketFilter -> rsocketFilter.filter(context))
                 .then();
-    }
-
-    @Override
-    public String name() {
-        return "rsocket filter chain";
     }
 
     //setter && getter

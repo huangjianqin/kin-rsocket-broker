@@ -16,10 +16,7 @@ import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
-import org.kin.rsocket.core.ReactiveServiceRegistry;
-import org.kin.rsocket.core.ResponderRsocket;
-import org.kin.rsocket.core.ResponderSupport;
-import org.kin.rsocket.core.ServiceLocator;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
@@ -67,7 +64,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     /** peer RSocket: sending or requester RSocket */
     private final RSocket peerRsocket;
     /** upstream broker */
-    private final RSocket upstreamRSocket;
+    private final UpstreamCluster upstreamBrokers;
     /** reactive service routing selector */
     private final ServiceRouteTable routeTable;
     private final ServiceRouter serviceRouter;
@@ -101,12 +98,12 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                             TopicProcessor<CloudEventData<?>> eventProcessor,
                             ServiceRouter handlerRegistry,
                             ServiceMeshInspector serviceMeshInspector,
-                            RSocket upstreamRSocket,
+                            UpstreamCluster upstreamBrokers,
                             RSocketFilterChain filterChain,
                             ReactiveServiceRegistry serviceRegistry
     ) {
         super(serviceRegistry);
-        this.upstreamRSocket = upstreamRSocket;
+        this.upstreamBrokers = upstreamBrokers;
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
         if (dataType != null) {
             this.defaultMessageMimeType = MessageMimeTypeMetadata.of(dataType);
@@ -434,8 +431,8 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             if (rsocket != null) {
                 sink.success(rsocket);
             } else if (error != null) {
-                if (upstreamRSocket != null && error instanceof InvalidException) {
-                    sink.success(upstreamRSocket);
+                if (upstreamBrokers != null && error instanceof InvalidException) {
+                    sink.success(upstreamBrokers);
                 } else {
                     sink.error(error);
                 }

@@ -1,6 +1,5 @@
 package org.kin.rsocket.broker;
 
-import io.rsocket.RSocket;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.broker.cluster.DefaultBrokerManager;
@@ -15,6 +14,7 @@ import org.kin.rsocket.core.event.CloudEventData;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -90,6 +90,7 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(name = "upstreamBrokerCluster", value = UpstreamCluster.class)
     public UpstreamClusterChangedEventConsumer upstreamClusterChangedEventConsumer() {
         return new UpstreamClusterChangedEventConsumer();
     }
@@ -148,7 +149,7 @@ public class RSocketBrokerConfiguration {
                                        @Autowired BrokerManager brokerManager,
                                        @Autowired ServiceMeshInspector serviceMeshInspector,
                                        @Autowired RSocketBrokerProperties properties,
-                                       @Autowired @Qualifier("upstreamBrokerCluster") RSocket upstreamBrokerCluster) {
+                                       @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
         return new ServiceRouter(serviceRegistry, rsocketFilterChain, serviceRouteTable,
                 eventProcessor, notificationProcessor, authenticationService, brokerManager, serviceMeshInspector,
                 properties.isAuth(), upstreamBrokerCluster);
@@ -216,7 +217,7 @@ public class RSocketBrokerConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public RSocket upstreamBrokerCluster(@Autowired SubBrokerRequester subBrokerRequester) {
+    public UpstreamCluster upstreamBrokerCluster(@Autowired SubBrokerRequester subBrokerRequester) {
         return UpstreamCluster.brokerUpstreamCluster(subBrokerRequester, brokerConfig.getUpstreamBrokers());
     }
 
