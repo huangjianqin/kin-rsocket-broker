@@ -39,7 +39,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     /** load balanced RSocket to connect service provider or broker instances */
     private LoadBalanceRequester loadBalanceRequester;
     /** 上次刷新的uris */
-    private volatile List<String> lastUris;
+    private volatile List<String> lastUris = Collections.emptyList();
     private volatile boolean stopped;
 
     /**
@@ -74,10 +74,16 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
         this.requesterSupport = requesterSupport;
 
         this.loadBalanceRequester = LoadBalanceRequester.roundRobin(ServiceLocator.gsv(group, serviceName, version), urisProcessor, requesterSupport);
-
         if (CollectionUtils.isNonEmpty(uris)) {
-            refreshUris(uris);
+            this.lastUris = uris;
         }
+    }
+
+    /**
+     * 建立upstream connection
+     */
+    public void connect() {
+        refreshUris0(lastUris);
     }
 
     /**
@@ -89,10 +95,14 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
                 CollectionUtils.isSame(lastUris, uris)) {
             return;
         }
-        this.lastUris = uris;
+        lastUris = uris;
+        refreshUris0(lastUris);
+    }
+
+    private void refreshUris0(List<String> uris) {
         //refresh uris
         if (!isDisposed()) {
-            urisProcessor.onNext(lastUris);
+            urisProcessor.onNext(uris);
         }
     }
 

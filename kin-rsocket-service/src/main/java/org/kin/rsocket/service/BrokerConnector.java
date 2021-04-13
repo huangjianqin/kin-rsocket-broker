@@ -67,6 +67,7 @@ public class BrokerConnector implements Closeable {
         //init upstream manager
         upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
         upstreamClusterManager.add(null, Symbols.BROKER, null, this.brokers);
+        upstreamClusterManager.connect();
 
         eventConsumers.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
     }

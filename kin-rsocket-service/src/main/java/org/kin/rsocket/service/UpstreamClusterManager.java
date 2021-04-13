@@ -23,9 +23,23 @@ public class UpstreamClusterManager implements Closeable {
     private Map<String, UpstreamCluster> clusters = new HashMap<>();
     /** broker upstream cluster */
     private UpstreamCluster brokerCluster;
+    private volatile boolean inited;
 
     public UpstreamClusterManager(RequesterSupport requesterSupport) {
         this.requesterSupport = requesterSupport;
+    }
+
+    /**
+     * 建立upstream connection
+     */
+    public void connect() {
+        if (inited) {
+            return;
+        }
+        inited = true;
+        for (UpstreamCluster upstreamCluster : clusters.values()) {
+            upstreamCluster.connect();
+        }
     }
 
     /**

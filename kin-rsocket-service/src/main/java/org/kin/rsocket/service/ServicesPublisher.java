@@ -8,7 +8,7 @@ import org.kin.rsocket.core.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.ConfigurableEnvironment;
 
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class ServicesPublisher implements ApplicationListener<ApplicationReadyEvent> {
+public class ServicesPublisher implements ApplicationListener<ApplicationStartedEvent> {
     private static final Logger log = LoggerFactory.getLogger(ServicesPublisher.class);
     @Autowired
     private UpstreamClusterManager upstreamClusterManager;
@@ -29,7 +29,10 @@ public class ServicesPublisher implements ApplicationListener<ApplicationReadyEv
     private RequesterSupport requesterSupport;
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+    public void onApplicationEvent(ApplicationStartedEvent event) {
+        //init upstream cluster manager
+        upstreamClusterManager.connect();
+
         UpstreamCluster brokerCluster = upstreamClusterManager.getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
@@ -46,7 +49,7 @@ public class ServicesPublisher implements ApplicationListener<ApplicationReadyEv
         //broker uris
         String brokerUris = String.join(",", brokerCluster.getUris());
 
-        ConfigurableEnvironment env = applicationReadyEvent.getApplicationContext().getEnvironment();
+        ConfigurableEnvironment env = event.getApplicationContext().getEnvironment();
         int serverPort = Integer.parseInt(env.getProperty("server.port", "0"));
         if (serverPort == 0) {
             //ports update
