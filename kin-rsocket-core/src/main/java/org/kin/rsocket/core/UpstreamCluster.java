@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.ReplayProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.io.Closeable;
 import java.net.URI;
@@ -35,7 +35,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     /** upstream rsocket requester配置 */
     private final RequesterSupport requesterSupport;
     /** upstream uris  processor */
-    private final ReplayProcessor<Collection<String>> urisProcessor = ReplayProcessor.cacheLast();
+    private final Sinks.Many<Collection<String>> urisSink = Sinks.many().replay().latest();
     /** load balanced RSocket to connect service provider or broker instances */
     private LoadBalanceRequester loadBalanceRequester;
     /** 上次刷新的uris */
@@ -73,7 +73,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
         this.version = version;
         this.requesterSupport = requesterSupport;
 
-        this.loadBalanceRequester = LoadBalanceRequester.roundRobin(ServiceLocator.gsv(group, serviceName, version), urisProcessor, requesterSupport);
+        this.loadBalanceRequester = LoadBalanceRequester.roundRobin(ServiceLocator.gsv(group, serviceName, version), urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {
             this.lastUris = uris;
         }
@@ -102,7 +102,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     private void refreshUris0(List<String> uris) {
         //refresh uris
         if (!isDisposed()) {
-            urisProcessor.onNext(uris);
+            urisSink.tryEmitNext(uris);
         }
     }
 
@@ -171,7 +171,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     @Override
     public void close() {
         stopped = true;
-        urisProcessor.onComplete();
+        urisSink.tryEmitComplete();
         loadBalanceRequester.dispose();
         log.info("Succeed to disconnect from the ".concat(ServiceLocator.gsv(group, serviceName, version)));
     }

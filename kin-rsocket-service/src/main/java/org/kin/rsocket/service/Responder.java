@@ -16,7 +16,7 @@ import org.kin.rsocket.core.metadata.*;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 
@@ -35,18 +35,18 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
      * 返回数据给requester时, 如果没有带数据编码类型, 则使用默认的编码类型进行编码
      */
     protected MessageMimeTypeMetadata defaultMessageMimeTypeMetadata = null;
-    protected TopicProcessor<CloudEventData<?>> eventProcessor;
+    protected Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** combo onClose from responder and requester */
     private Mono<Void> comboOnClose;
 
     public Responder(ReactiveServiceRegistry serviceRegistry,
-                     TopicProcessor<CloudEventData<?>> eventProcessor,
+                     Sinks.Many<CloudEventData<?>> cloudEventSink,
                      RSocket requester,
                      ConnectionSetupPayload setupPayload) {
         super(serviceRegistry);
-        this.eventProcessor = eventProcessor;
+        this.cloudEventSink = cloudEventSink;
         this.requester = requester;
-        this.comboOnClose = Mono.first(super.onClose(), requester.onClose());
+        this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 
         //解析composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
@@ -124,7 +124,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
 
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
-        return Mono.fromRunnable(() -> eventProcessor.onNext(cloudEvent));
+        return Mono.fromRunnable(() -> cloudEventSink.tryEmitNext(cloudEvent));
     }
 
     @Override

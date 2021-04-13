@@ -18,7 +18,7 @@ import org.kin.rsocket.core.metadata.MetadataAware;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.springframework.core.env.Environment;
 import reactor.core.publisher.Mono;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 import java.util.*;
@@ -42,15 +42,15 @@ public class SubBrokerRequester implements RequesterSupport {
     private final ServiceRouter serviceRouter;
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
-    /** reactive event processor */
-    private final TopicProcessor<CloudEventData<?>> eventProcessor;
+    /** reactive cloud event flux */
+    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
 
     public SubBrokerRequester(RSocketBrokerProperties brokerConfig,
                               Environment env,
                               ServiceRouteTable routeTable,
                               ServiceRouter serviceRouter,
                               RSocketFilterChain filterChain,
-                              TopicProcessor<CloudEventData<?>> eventProcessor) {
+                              Sinks.Many<CloudEventData<?>> cloudEventSink) {
         this.env = env;
         //todo 配置同一
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name", "unknown-app"));
@@ -58,7 +58,7 @@ public class SubBrokerRequester implements RequesterSupport {
         this.serviceRouter = serviceRouter;
         this.filterChain = filterChain;
         this.brokerConfig = brokerConfig;
-        this.eventProcessor = eventProcessor;
+        this.cloudEventSink = cloudEventSink;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class SubBrokerRequester implements RequesterSupport {
     @Override
     public SocketAcceptor socketAcceptor() {
         return (connectionSetupPayload, rsocket) -> Mono.just(
-                new BrokerResponder(routeTable, serviceRouter, filterChain, eventProcessor));
+                new BrokerResponder(routeTable, serviceRouter, filterChain, cloudEventSink));
     }
 
     @Override

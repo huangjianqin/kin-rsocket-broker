@@ -13,7 +13,7 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
  * @date 2021/3/31
  */
 @Configuration
-public class HttpGatewayConfiguration implements WebFluxConfigurer {
+public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
         configurer.customCodecs().register(new EncoderHttpMessageWriter<>(new ByteBufEncoder()));

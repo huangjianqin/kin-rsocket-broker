@@ -49,12 +49,6 @@
             <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
-        <!-- reactor -->
-        <dependency>
-            <groupId>io.projectreactor.addons</groupId>
-            <artifactId>reactor-extra</artifactId>
-        </dependency>
-
         <!-- rsocket -->
         <dependency>
             <groupId>io.rsocket</groupId>

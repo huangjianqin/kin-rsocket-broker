@@ -22,10 +22,9 @@ import org.kin.rsocket.core.utils.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.EmitterProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -46,10 +45,10 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     /** 通过gossip广播cloud event的gossip header key */
     private static final String CLOUD_EVENT_HEADER = "cloudEvent";
 
-    @Autowired
-    private RSocketBrokerProperties brokerConfig;
-    @Autowired
-    private RSocketBrokerGossipProperties gossipConfig;
+    /** broker配置 */
+    private final RSocketBrokerProperties brokerConfig;
+    /** gossip配置 */
+    private final RSocketBrokerGossipProperties gossipConfig;
 
     /** gossip cluster */
     private Mono<Cluster> cluster;
@@ -58,7 +57,13 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     /** key -> ip address, value -> rsocket brokers数据 */
     private final Map<String, Broker> brokers = new HashMap<>();
     /** brokers changes emitter processor */
-    private final EmitterProcessor<Collection<Broker>> brokersEmitterProcessor = EmitterProcessor.create();
+    private final Sinks.Many<Collection<Broker>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
+
+    public GossipBrokerManager(Sinks.Many<CloudEventData<?>> cloudEventSink, RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
+        super(cloudEventSink);
+        this.brokerConfig = brokerConfig;
+        this.gossipConfig = gossipConfig;
+    }
 
     @PostConstruct
     public void init() {
@@ -94,7 +99,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
 
     @Override
     public Flux<Collection<Broker>> brokersChangedFlux() {
-        return brokersEmitterProcessor;
+        return brokersSink.asFlux();
     }
 
     @Override
@@ -187,7 +192,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
             brokers.remove(brokerIp);
             log.info(String.format("Broker '%s' left from cluster", brokerIp));
         }
-        brokersEmitterProcessor.onNext(brokers.values());
+        brokersSink.tryEmitNext(brokers.values());
     }
 
     private Broker memberToBroker(Member member) {
@@ -199,7 +204,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     @Override
     public void close() {
         cluster.subscribe(Cluster::shutdown);
-        brokersEmitterProcessor.onComplete();
+        brokersSink.tryEmitComplete();
     }
 
     @Override

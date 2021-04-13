@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.annotation.PostConstruct;
 import java.util.Collection;
@@ -26,6 +27,10 @@ public class DefaultBrokerManager extends AbstractBrokerManager implements Broke
     private Broker localBroker;
     @Autowired
     private RSocketBrokerProperties brokerConfig;
+
+    public DefaultBrokerManager(Sinks.Many<CloudEventData<?>> cloudEventSink) {
+        super(cloudEventSink);
+    }
 
     @PostConstruct
     public void init() {

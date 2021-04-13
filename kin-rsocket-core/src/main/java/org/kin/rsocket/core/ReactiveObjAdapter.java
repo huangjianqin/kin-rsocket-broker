@@ -62,14 +62,14 @@ public final class ReactiveObjAdapter {
     /**
      * {@link Mono}带上context
      */
-    public Object fromPublisher(Mono<?> mono, Class<?> returnType, MutableContext mutableContext) {
-        return mono.subscriberContext(mutableContext::putAll);
+    public Object fromPublisher(Mono<?> mono, MutableContext mutableContext) {
+        return mono.contextWrite(c -> mutableContext.putAll(c.readOnly()));
     }
 
     /**
      * {@link Flux}带上context
      */
-    public Object fromPublisher(Flux<?> flux, Class<?> returnType, MutableContext mutableContext) {
-        return flux.subscriberContext(mutableContext::putAll);
+    public Object fromPublisher(Flux<?> flux, MutableContext mutableContext) {
+        return flux.contextWrite(c -> mutableContext.putAll(c.readOnly()));
     }
 }

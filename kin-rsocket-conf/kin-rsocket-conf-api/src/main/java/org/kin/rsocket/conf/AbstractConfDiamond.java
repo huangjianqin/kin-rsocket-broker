@@ -2,7 +2,7 @@ package org.kin.rsocket.conf;
 
 import org.kin.framework.collection.Tuple;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.ReplayProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,14 +13,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractConfDiamond implements ConfDiamond {
     /** watcher */
-    private final Map<String, ReplayProcessor<Tuple<String, String>>> watchNotifications = new ConcurrentHashMap<>();
+    private final Map<String, Sinks.Many<Tuple<String, String>>> watchNotifications = new ConcurrentHashMap<>();
 
     @Override
     public final Flux<Tuple<String, String>> watch(String key) {
         if (!watchNotifications.containsKey(key)) {
             initNotification(key);
         }
-        return Flux.create(sink -> watchNotifications.get(key).subscribe(sink::next));
+        return Flux.create(sink -> watchNotifications.get(key).asFlux().subscribe(sink::next));
     }
 
     /**
@@ -30,7 +30,7 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
         if (!watchNotifications.containsKey(key)) {
             initNotification(key);
         }
-        watchNotifications.get(key).onNext(new Tuple<>(key, value));
+        watchNotifications.get(key).tryEmitNext(new Tuple<>(key, value));
     }
 
     /**
@@ -38,7 +38,7 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
      */
     protected final void onKvRemoved(String key) {
         if (watchNotifications.containsKey(key)) {
-            watchNotifications.get(key).onNext(new Tuple<>(key, ""));
+            watchNotifications.get(key).tryEmitNext(new Tuple<>(key, ""));
         }
     }
 
@@ -46,6 +46,6 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
      * 初始化watcher
      */
     private void initNotification(String key) {
-        watchNotifications.put(key, ReplayProcessor.cacheLast());
+        watchNotifications.put(key, Sinks.many().replay().all());
     }
 }

@@ -153,7 +153,7 @@ public class RequesterProxy implements InvocationHandler {
                 } catch (Exception e) {
                     return Flux.error(e);
                 }
-            }).subscriberContext(mutableContext::putAll);
+            }).contextWrite(c -> mutableContext.putAll(c.readOnly()));
             if (methodMetadata.isMonoChannel()) {
                 return fluxReturn.last();
             } else {
@@ -162,7 +162,6 @@ public class RequesterProxy implements InvocationHandler {
         } else {
             //body content
             ByteBuf bodyBuffer = Codecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
-            Class<?> returnType = method.getReturnType();
             if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
@@ -184,7 +183,7 @@ public class RequesterProxy implements InvocationHandler {
                         sink.error(e);
                     }
                 });
-                return ReactiveObjAdapter.INSTANCE.fromPublisher(result, returnType, mutableContext);
+                return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
                 return rsocket.fireAndForget(ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes()));
@@ -200,7 +199,7 @@ public class RequesterProxy implements InvocationHandler {
                         return Mono.error(e);
                     }
                 });
-                return ReactiveObjAdapter.INSTANCE.fromPublisher(result, returnType, mutableContext);
+                return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else {
                 ReferenceCountUtil.safeRelease(bodyBuffer);
                 return Mono.error(new Exception("Unknown RSocket Frame type: " + methodMetadata.getRsocketFrameType().name()));

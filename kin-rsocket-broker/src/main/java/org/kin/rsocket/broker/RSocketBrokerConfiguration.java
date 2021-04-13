@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -44,16 +44,16 @@ public class RSocketBrokerConfiguration {
      * 接受cloud event的flux
      */
     @Bean
-    public TopicProcessor<CloudEventData<?>> cloudEventProcessor() {
-        return TopicProcessor.<CloudEventData<?>>builder().name("cloud-events-processor").build();
+    public Sinks.Many<CloudEventData<?>> cloudEventSink() {
+        return Sinks.many().multicast().onBackpressureBuffer();
     }
 
     /**
      * 接受tips的flux
      */
     @Bean
-    public TopicProcessor<String> notificationProcessor() {
-        return TopicProcessor.<String>builder().name("notifications-processor").bufferSize(8).build();
+    public Sinks.Many<String> notificationSink() {
+        return Sinks.many().multicast().onBackpressureBuffer(8);
     }
 
     //----------------------------------------------cloud event consumers----------------------------------------------
@@ -62,9 +62,9 @@ public class RSocketBrokerConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean
-    public CloudEventConsumers cloudEventConsumers(@Autowired TopicProcessor<CloudEventData<?>> cloudEventProcessor,
+    public CloudEventConsumers cloudEventConsumers(@Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
                                                    ObjectProvider<CloudEventConsumer> consumers) {
-        CloudEventConsumers cloudEventConsumers = new CloudEventConsumers(cloudEventProcessor);
+        CloudEventConsumers cloudEventConsumers = new CloudEventConsumers(cloudEventSink);
         cloudEventConsumers.addConsumers(consumers.stream().collect(Collectors.toList()));
         return cloudEventConsumers;
     }
@@ -143,15 +143,15 @@ public class RSocketBrokerConfiguration {
     public ServiceRouter serviceRouter(@Autowired ReactiveServiceRegistry serviceRegistry,
                                        @Autowired RSocketFilterChain rsocketFilterChain,
                                        @Autowired ServiceRouteTable serviceRouteTable,
-                                       @Autowired @Qualifier("cloudEventProcessor") TopicProcessor<CloudEventData<?>> eventProcessor,
-                                       @Autowired @Qualifier("notificationProcessor") TopicProcessor<String> notificationProcessor,
+                                       @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
+                                       @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
                                        @Autowired AuthenticationService authenticationService,
                                        @Autowired BrokerManager brokerManager,
                                        @Autowired ServiceMeshInspector serviceMeshInspector,
                                        @Autowired RSocketBrokerProperties properties,
                                        @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
         return new ServiceRouter(serviceRegistry, rsocketFilterChain, serviceRouteTable,
-                eventProcessor, notificationProcessor, authenticationService, brokerManager, serviceMeshInspector,
+                cloudEventSink, notificationSink, authenticationService, brokerManager, serviceMeshInspector,
                 properties.isAuth(), upstreamBrokerCluster);
     }
 
@@ -201,8 +201,8 @@ public class RSocketBrokerConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(BrokerManager.class)
-    public BrokerManager rsocketBrokerManager() {
-        return new DefaultBrokerManager();
+    public BrokerManager rsocketBrokerManager(@Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
+        return new DefaultBrokerManager(cloudEventSink);
     }
 
     @Bean
@@ -211,8 +211,8 @@ public class RSocketBrokerConfiguration {
                                                  @Autowired ServiceRouteTable serviceRouteTable,
                                                  @Autowired ServiceRouter serviceRouter,
                                                  @Autowired RSocketFilterChain filterChain,
-                                                 @Autowired @Qualifier("cloudEventProcessor") TopicProcessor<CloudEventData<?>> eventProcessor) {
-        return new SubBrokerRequester(brokerConfig, env, serviceRouteTable, serviceRouter, filterChain, eventProcessor);
+                                                 @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
+        return new SubBrokerRequester(brokerConfig, env, serviceRouteTable, serviceRouter, filterChain, cloudEventSink);
     }
 
     @Bean

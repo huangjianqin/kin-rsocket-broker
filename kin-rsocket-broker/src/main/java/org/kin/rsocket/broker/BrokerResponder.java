@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 /**
  * broker间rsocket connection建立创建的Responder
@@ -36,17 +36,17 @@ public class BrokerResponder extends AbstractRSocket {
     private final RSocketFilterChain filterChain;
     /** 本broker app metadata todo 为何不从外部getAppMeta获取 */
     private final AppMetadata upstreamBrokerMetadata;
-    /** reactive event processor */
-    private final TopicProcessor<CloudEventData<?>> eventProcessor;
+    /** reactive cloud event sink */
+    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
 
     public BrokerResponder(ServiceRouteTable serviceRoutingSelector,
                            ServiceRouter serviceRouter,
                            RSocketFilterChain filterChain,
-                           TopicProcessor<CloudEventData<?>> eventProcessor) {
+                           Sinks.Many<CloudEventData<?>> cloudEventSink) {
         this.routeTable = serviceRoutingSelector;
         this.filterChain = filterChain;
         this.serviceRouter = serviceRouter;
-        this.eventProcessor = eventProcessor;
+        this.cloudEventSink = cloudEventSink;
 
         this.upstreamBrokerMetadata = new AppMetadata();
         //todo 看看CentralBroker是否需要修改
@@ -129,7 +129,7 @@ public class BrokerResponder extends AbstractRSocket {
                 String type = cloudEvent.getAttributes().getType();
                 if (UpstreamClusterChangedEvent.class.getCanonicalName().equalsIgnoreCase(type)) {
                     //TODO 目前仅仅处理一种cloudevent, 还是说全开放, 会不会有其他异常
-                    eventProcessor.onNext(cloudEvent);
+                    cloudEventSink.tryEmitNext(cloudEvent);
                 }
             }
         } catch (Exception e) {

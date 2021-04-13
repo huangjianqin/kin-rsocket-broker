@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
-import reactor.extra.processor.TopicProcessor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -71,7 +71,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private final ServiceMeshInspector serviceMeshInspector;
     private final Mono<Void> comboOnClose;
     /** reactive event processor */
-    private final TopicProcessor<CloudEventData<?>> eventProcessor;
+    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** UUID from requester side */
     private final String uuid;
     /** remote requester ip */
@@ -95,7 +95,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                             RSocketAppPrincipal principal,
                             RSocket peerRsocket,
                             ServiceRouteTable routingSelector,
-                            TopicProcessor<CloudEventData<?>> eventProcessor,
+                            Sinks.Many<CloudEventData<?>> cloudEventSink,
                             ServiceRouter handlerRegistry,
                             ServiceMeshInspector serviceMeshInspector,
                             UpstreamCluster upstreamBrokers,
@@ -126,7 +126,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         this.principal = principal;
         this.peerRsocket = peerRsocket;
         this.routeTable = routingSelector;
-        this.eventProcessor = eventProcessor;
+        this.cloudEventSink = cloudEventSink;
         this.serviceRouter = handlerRegistry;
         this.serviceMeshInspector = serviceMeshInspector;
         this.filterChain = filterChain;
@@ -141,7 +141,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         //remote ip
         this.remoteIp = getRemoteAddress(peerRsocket);
         //new comboOnClose
-        this.comboOnClose = Mono.first(super.onClose(), peerRsocket.onClose());
+        this.comboOnClose = Mono.firstWithSignal(super.onClose(), peerRsocket.onClose());
         this.comboOnClose.doOnTerminate(() -> {
             unregisterPublishedServices();
             ReferenceCountUtil.release(this.defaultEncodingBytebuf);
@@ -282,7 +282,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
         //todo 要进行event的安全验证，不合法来源的event进行消费，后续还好进行event判断
         if (uuid.equalsIgnoreCase(cloudEvent.getAttributes().getSource().getHost())) {
-            return Mono.fromRunnable(() -> eventProcessor.onNext(cloudEvent));
+            return Mono.fromRunnable(() -> cloudEventSink.tryEmitNext(cloudEvent));
         }
         return Mono.empty();
     }

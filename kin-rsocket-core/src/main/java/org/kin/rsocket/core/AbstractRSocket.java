@@ -1,8 +1,9 @@
 package org.kin.rsocket.core;
 
 import io.rsocket.RSocket;
+import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
+import reactor.core.publisher.Sinks;
 
 /**
  * RSocket通信抽象父类
@@ -12,21 +13,22 @@ import reactor.core.publisher.MonoProcessor;
  */
 public class AbstractRSocket implements RSocket {
     /** close mono, 用于subscribe close信号然后进而额外的逻辑处理 */
-    private final MonoProcessor<Void> onClose = MonoProcessor.create();
+    private final Sinks.One<Void> onClose = Sinks.one();
 
     @Override
     public void dispose() {
-        onClose.onComplete();
+        onClose.tryEmitEmpty();
     }
 
     @Override
     public boolean isDisposed() {
-        return onClose.isDisposed();
+        //todo
+        return onClose.scan(Scannable.Attr.TERMINATED);
     }
 
     @Override
     public Mono<Void> onClose() {
-        return onClose;
+        return onClose.asMono();
     }
 
 }

@@ -4,7 +4,7 @@ import org.kin.framework.Closeable;
 import org.springframework.beans.factory.DisposableBean;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,8 +21,8 @@ public class CloudEventConsumers implements Closeable, DisposableBean {
     /** event topic processor subscribe disposable */
     private final Disposable disposable;
 
-    public CloudEventConsumers(TopicProcessor<CloudEventData<?>> eventProcessor) {
-        disposable = eventProcessor.subscribe(cloudEvent -> {
+    public CloudEventConsumers(Sinks.Many<CloudEventData<?>> cloudEventSink) {
+        disposable = cloudEventSink.asFlux().subscribe(cloudEvent -> {
             Flux.fromIterable(consumers)
                     .filter(consumer -> consumer.shouldAccept(cloudEvent))
                     .flatMap(consumer -> consumer.consume(cloudEvent))

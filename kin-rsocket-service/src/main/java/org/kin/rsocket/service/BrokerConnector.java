@@ -19,7 +19,7 @@ import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 import java.util.*;
@@ -45,7 +45,7 @@ public class BrokerConnector implements Closeable {
     /** 服务注册中心 */
     private final ReactiveServiceRegistry serviceRegistry;
     /** received cloud event source, 用于开发者定义订阅逻辑 */
-    private final TopicProcessor<CloudEventData<?>> eventProcessor;
+    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** requester连接配置 */
     private final SimpleRequesterSupport requesterSupport;
     /** cloud event consumer */
@@ -56,13 +56,13 @@ public class BrokerConnector implements Closeable {
         this.appName = appName;
         this.brokers = brokers;
         this.dataMimeType = dataMimeType;
-        eventProcessor = TopicProcessor.<CloudEventData<?>>builder().name("cloud-events-processor").build();
+        cloudEventSink = Sinks.many().multicast().onBackpressureBuffer();
         serviceRegistry = new DefaultServiceRegistry();
         // add health check
         serviceRegistry.addProvider("", HealthChecker.class.getCanonicalName(), "",
                 HealthChecker.class, (HealthChecker) serviceName -> Mono.just(1));
         requesterSupport = new SimpleRequesterSupport(jwtToken);
-        eventConsumers = new CloudEventConsumers(eventProcessor);
+        eventConsumers = new CloudEventConsumers(cloudEventSink);
 
         //init upstream manager
         upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
@@ -132,7 +132,7 @@ public class BrokerConnector implements Closeable {
      */
     public void dispose() {
         upstreamClusterManager.close();
-        eventProcessor.onComplete();
+        cloudEventSink.tryEmitComplete();
     }
 
     @Override
@@ -208,7 +208,7 @@ public class BrokerConnector implements Closeable {
 
         @Override
         public SocketAcceptor socketAcceptor() {
-            return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, eventProcessor, requester, setupPayload));
+            return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, cloudEventSink, requester, setupPayload));
         }
 
         @Override

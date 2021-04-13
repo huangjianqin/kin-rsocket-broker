@@ -27,7 +27,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import reactor.core.publisher.Mono;
-import reactor.extra.processor.TopicProcessor;
+import reactor.core.publisher.Sinks;
 
 import java.util.stream.Collectors;
 
@@ -51,18 +51,19 @@ public class RSocketServiceAutoConfiguration {
      * 接受cloud event的flux
      */
     @Bean
-    public TopicProcessor<CloudEventData<?>> cloudEventProcessor() {
-        return TopicProcessor.<CloudEventData<?>>builder().name("cloud-events-processor").build();
+    public Sinks.Many<CloudEventData<?>> cloudEventSink() {
+        return Sinks.many().multicast().onBackpressureBuffer();
     }
 
     //----------------------------cloud event consumers----------------------------
+
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean
-    public CloudEventConsumers cloudEventConsumers(@Autowired @Qualifier("cloudEventProcessor") TopicProcessor<CloudEventData<?>> eventProcessor,
+    public CloudEventConsumers cloudEventConsumers(@Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
                                                    ObjectProvider<CloudEventConsumer> customConsumers) {
-        CloudEventConsumers consumers = new CloudEventConsumers(eventProcessor);
+        CloudEventConsumers consumers = new CloudEventConsumers(cloudEventSink);
         consumers.addConsumers(customConsumers.stream().collect(Collectors.toList()));
         return consumers;
     }
@@ -98,8 +99,8 @@ public class RSocketServiceAutoConfiguration {
      */
     @Bean
     public RSocketBinderAcceptorFactory responderAcceptorFactory(@Autowired ReactiveServiceRegistry serviceRegistry,
-                                                                 @Autowired @Qualifier("cloudEventProcessor") TopicProcessor<CloudEventData<?>> eventProcessor) {
-        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, eventProcessor, requester, setupPayload));
+                                                                 @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
+        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, cloudEventSink, requester, setupPayload));
     }
 
     @Bean

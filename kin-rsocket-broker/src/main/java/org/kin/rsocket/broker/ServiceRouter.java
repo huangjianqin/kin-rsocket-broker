@@ -30,8 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
-import reactor.extra.processor.TopicProcessor;
 
 import java.net.URI;
 import java.time.Duration;
@@ -51,8 +51,8 @@ public class ServiceRouter {
     private final RSocketFilterChain rsocketFilterChain;
     private final ReactiveServiceRegistry serviceRegistry;
     private final ServiceRouteTable routeTable;
-    private final TopicProcessor<CloudEventData<?>> eventProcessor;
-    private final TopicProcessor<String> notificationProcessor;
+    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
+    private final Sinks.Many<String> notificationSink;
     private final AuthenticationService authenticationService;
     private final BrokerManager brokerManager;
     private final ServiceMeshInspector serviceMeshInspector;
@@ -69,8 +69,8 @@ public class ServiceRouter {
     public ServiceRouter(ReactiveServiceRegistry serviceRegistry,
                          RSocketFilterChain filterChain,
                          ServiceRouteTable routeTable,
-                         TopicProcessor<CloudEventData<?>> eventProcessor,
-                         TopicProcessor<String> notificationProcessor,
+                         Sinks.Many<CloudEventData<?>> cloudEventSink,
+                         Sinks.Many<String> notificationSink,
                          AuthenticationService authenticationService,
                          BrokerManager brokerManager,
                          ServiceMeshInspector serviceMeshInspector,
@@ -79,8 +79,8 @@ public class ServiceRouter {
         this.serviceRegistry = serviceRegistry;
         this.rsocketFilterChain = filterChain;
         this.routeTable = routeTable;
-        this.eventProcessor = eventProcessor;
-        this.notificationProcessor = notificationProcessor;
+        this.cloudEventSink = cloudEventSink;
+        this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
         this.brokerManager = brokerManager;
         this.serviceMeshInspector = serviceMeshInspector;
@@ -171,7 +171,7 @@ public class ServiceRouter {
         //create responder
         try {
             ServiceResponder responder = new ServiceResponder(setupPayload, compositeMetadata, appMetadata, principal,
-                    requesterSocket, routeTable, eventProcessor, this,
+                    requesterSocket, routeTable, cloudEventSink, this,
                     serviceMeshInspector, upstreamBrokers, rsocketFilterChain, serviceRegistry);
             responder.onClose()
                     .doOnTerminate(() -> onResponderDisposed(responder))
@@ -196,12 +196,12 @@ public class ServiceRouter {
         instanceId2Responder.put(responder.getId(), responder);
         appResponders.put(appMetadata.getName(), responder);
         //广播事件
-        eventProcessor.onNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
+        cloudEventSink.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
             responder.fireCloudEventToPeer(newBrokerClustersChangedEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
         }
-        this.notificationProcessor.onNext(String.format("App '%s' with IP '%s' Online now!", appMetadata.getName(), appMetadata.getIp()));
+        notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Online now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
     /**
@@ -213,8 +213,8 @@ public class ServiceRouter {
         instanceId2Responder.remove(responder.getId());
         appResponders.remove(appMetadata.getName(), responder);
         log.info("Succeed to remove broker handler");
-        eventProcessor.onNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
-        this.notificationProcessor.onNext(String.format("App '%s' with IP '%s' Offline now!", appMetadata.getName(), appMetadata.getIp()));
+        cloudEventSink.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
+        this.notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Offline now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
     /**

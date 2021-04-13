@@ -3,8 +3,6 @@ package org.kin.rsocket.example.controller;
 import org.kin.rsocket.example.User;
 import org.kin.rsocket.example.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +16,7 @@ import reactor.core.publisher.Mono;
  */
 @RestController
 @RequestMapping("/user")
-public class UserController implements ApplicationRunner {
+public class UserController {
     @Autowired
     private UserService userService;
 
@@ -30,14 +28,5 @@ public class UserController implements ApplicationRunner {
     @GetMapping("/{name}")
     public Mono<User> find(@PathVariable(name = "name") String name) {
         return userService.find(name);
-    }
-
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-//        while(true){
-//            findAll().subscribe(System.out::println);
-//            Thread.sleep(2_000);
-////            find("A").subscribe(System.out::println);
-//        }
     }
 }

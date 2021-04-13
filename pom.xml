@@ -48,15 +48,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.projectreactor</groupId>
-                <!-- bom, maven的一个特性, 用于解决依赖冲突, 由依赖提供者维护版本依赖, 使用者不需要再指定版本-->
-                <artifactId>reactor-bom</artifactId>
-                <version>${reactor.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
                 <groupId>io.rsocket</groupId>
                 <!-- bom, maven的一个特性, 用于解决依赖冲突, 由依赖提供者维护版本依赖, 使用者不需要再指定版本-->
                 <artifactId>rsocket-bom</artifactId>
