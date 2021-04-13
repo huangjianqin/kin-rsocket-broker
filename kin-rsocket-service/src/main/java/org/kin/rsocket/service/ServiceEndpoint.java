@@ -8,7 +8,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RoutingEndpoint {
+public class ServiceEndpoint {
     /** group: region, datacenter, virtual group in datacenter */
     private String group;
     /** service name */
@@ -18,11 +18,11 @@ public class RoutingEndpoint {
     /** endpoint uri list */
     private List<String> uris;
 
-    public static RoutingEndpoint of(String group,
+    public static ServiceEndpoint of(String group,
                                      String service,
                                      String version,
                                      List<String> uris) {
-        RoutingEndpoint inst = new RoutingEndpoint();
+        ServiceEndpoint inst = new ServiceEndpoint();
         inst.group = group;
         inst.service = service;
         inst.version = version;

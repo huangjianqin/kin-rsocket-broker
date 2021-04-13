@@ -21,7 +21,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/30
  */
-@RSocketService(serviceInterface = DiscoveryService.class)
+@RSocketService(DiscoveryService.class)
 public class BrokerDiscoveryService implements DiscoveryService {
     @Autowired
     private ServiceRouter serviceRouter;

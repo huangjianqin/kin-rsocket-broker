@@ -12,6 +12,7 @@ import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
+import org.kin.rsocket.core.utils.Symbols;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,14 +63,14 @@ public class OpsController {
     @PostMapping("/cluster/update")
     public Mono<Void> updateUpstream(@RequestBody String uris) {
         UpstreamClusterChangedEvent upstreamClusterChangedEvent =
-                UpstreamClusterChangedEvent.of("", "*", "", Arrays.asList(uris.split(",")));
+                UpstreamClusterChangedEvent.of("", Symbols.BROKER, "", Arrays.asList(uris.split(",")));
 
         CloudEventData<UpstreamClusterChangedEvent> cloudEvent =
                 CloudEventBuilder.builder(upstreamClusterChangedEvent)
                         .withSource(RSocketAppContext.SOURCE)
                         .build();
 
-        return serviceRouter.broadcast("*", cloudEvent);
+        return serviceRouter.broadcast(Symbols.BROKER, cloudEvent);
     }
 
     @PostMapping("/cluster/stopLocalBroker")

@@ -70,8 +70,8 @@ public class RequesterProxy implements InvocationHandler {
      * 默认accept的数据编码类型
      */
     public static RSocketMimeType[] defaultAcceptEncodingTypes() {
-        return new RSocketMimeType[]{RSocketMimeType.Hessian, RSocketMimeType.Java_Object,
-                RSocketMimeType.Json, RSocketMimeType.Protobuf, RSocketMimeType.Avro, RSocketMimeType.CBOR,
+        return new RSocketMimeType[]{RSocketMimeType.Java_Object, RSocketMimeType.Protobuf,
+                RSocketMimeType.Json, RSocketMimeType.Hessian, RSocketMimeType.Avro, RSocketMimeType.CBOR,
                 RSocketMimeType.Text, RSocketMimeType.Binary};
     }
 

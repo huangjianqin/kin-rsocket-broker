@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/29
  */
-@RSocketService(serviceInterface = ConfDiamond.class)
+@RSocketService(ConfDiamond.class)
 public interface ConfDiamond {
     /** group和key分隔符 */
     String GROUP_KEY_SEPARATOR = ":";

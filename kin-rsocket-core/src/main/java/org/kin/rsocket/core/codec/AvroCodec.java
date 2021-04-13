@@ -8,7 +8,7 @@ import org.kin.rsocket.core.metadata.RSocketMimeType;
  * @date 2021/3/26
  */
 public class AvroCodec extends AbstractSerializationCodec {
-    protected AvroCodec() {
+    public AvroCodec() {
         super(new AvroSerialization());
     }
 

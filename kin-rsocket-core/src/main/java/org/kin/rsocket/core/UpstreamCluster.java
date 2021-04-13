@@ -37,7 +37,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
     /** upstream uris  processor */
     private final ReplayProcessor<Collection<String>> urisProcessor = ReplayProcessor.cacheLast();
     /** load balanced RSocket to connect service provider or broker instances */
-    private final LoadBalanceRequester loadBalanceRequester;
+    private LoadBalanceRequester loadBalanceRequester;
     /** 上次刷新的uris */
     private volatile List<String> lastUris;
     private volatile boolean stopped;
@@ -85,12 +85,13 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
      */
     public void refreshUris(List<String> uris) {
         //检查uris是否于上次刷新的一致
-        if (CollectionUtils.isSame(lastUris, uris)) {
+        if (CollectionUtils.isNonEmpty(lastUris) &&
+                CollectionUtils.isSame(lastUris, uris)) {
             return;
         }
         this.lastUris = uris;
         //refresh uris
-        if (isDisposed()) {
+        if (!isDisposed()) {
             urisProcessor.onNext(lastUris);
         }
     }
@@ -99,7 +100,7 @@ public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Clo
      * 是否是broker upstream
      */
     public boolean isBroker() {
-        return serviceName.equals("*");
+        return serviceName.equals(Symbols.BROKER);
     }
 
     @Override

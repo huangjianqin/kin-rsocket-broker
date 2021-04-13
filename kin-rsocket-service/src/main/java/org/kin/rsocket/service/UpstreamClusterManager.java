@@ -54,8 +54,6 @@ public class UpstreamClusterManager implements Closeable {
 
     /**
      * 获取所有upstream cluster
-     *
-     * @return
      */
     public Collection<UpstreamCluster> getAll() {
         return clusters.values();

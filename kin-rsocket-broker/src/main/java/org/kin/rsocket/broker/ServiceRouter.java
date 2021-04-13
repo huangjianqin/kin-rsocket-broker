@@ -320,7 +320,7 @@ public class ServiceRouter {
         UpstreamClusterChangedEvent upstreamClusterChangedEvent = new UpstreamClusterChangedEvent();
         upstreamClusterChangedEvent.setGroup("");
         //仅仅广播broker
-        upstreamClusterChangedEvent.setInterfaceName("*");
+        upstreamClusterChangedEvent.setInterfaceName(Symbols.BROKER);
         upstreamClusterChangedEvent.setVersion("");
         upstreamClusterChangedEvent.setUris(uris);
 
@@ -363,7 +363,7 @@ public class ServiceRouter {
      */
     private Mono<RSocket> returnRejectedRSocket(String errorMsg, RSocket requesterSocket) {
         return Mono.<RSocket>error(new RejectedSetupException(errorMsg)).doFinally((signalType -> {
-            if (requesterSocket.isDisposed()) {
+            if (!requesterSocket.isDisposed()) {
                 requesterSocket.dispose();
             }
         }));

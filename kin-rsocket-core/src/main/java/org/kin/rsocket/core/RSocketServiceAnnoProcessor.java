@@ -50,7 +50,7 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
             String serviceName = rsocketServiceAnno.name();
             if (StringUtils.isBlank(serviceName)) {
                 //default
-                serviceName = rsocketServiceAnno.serviceInterface().getCanonicalName();
+                serviceName = rsocketServiceAnno.value().getCanonicalName();
             }
             String group = rsocketServiceAnno.group();
             if (StringUtils.isBlank(group)) {
@@ -63,7 +63,7 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
                 version = defaultVersion;
             }
             //注册
-            serviceRegistry.addProvider(group, serviceName, version, rsocketServiceAnno.serviceInterface(), bean);
+            serviceRegistry.addProvider(group, serviceName, version, rsocketServiceAnno.value(), bean);
         }
     }
 

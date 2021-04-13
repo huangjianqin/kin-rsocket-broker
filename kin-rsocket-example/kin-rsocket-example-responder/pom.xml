@@ -9,12 +9,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kin-rsocket-example-responder</artifactId>
-    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-service</artifactId>
+            <artifactId>kin-rsocket-example-api</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

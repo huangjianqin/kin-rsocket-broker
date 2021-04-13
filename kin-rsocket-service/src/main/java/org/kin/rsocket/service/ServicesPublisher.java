@@ -32,7 +32,9 @@ public class ServicesPublisher implements ApplicationListener<ApplicationReadyEv
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
         UpstreamCluster brokerCluster = upstreamClusterManager.getBroker();
         if (brokerCluster == null) {
-            log.warn("non rsocket broker cluster found");
+            //没有配置broker可以不用向broker注册暴露的服务
+            //本质上就是直连的方式
+            log.info("rsocket endpoint to endpoint mode!");
             return;
         }
 

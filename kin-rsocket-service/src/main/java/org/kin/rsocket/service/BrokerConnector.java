@@ -179,7 +179,9 @@ public class BrokerConnector implements Closeable {
             if (!allServices.isEmpty()) {
                 return () -> allServices.stream()
                         //过滤掉local service
-                        .filter(serviceName -> !serviceName.equals(HealthChecker.class.getCanonicalName()))
+                        .filter(serviceName -> !serviceName.equals(HealthChecker.class.getCanonicalName())
+                                && !serviceName.equals(ReactiveServiceRegistry.class.getCanonicalName()))
+                        //todo
                         .map(serviceName -> new ServiceLocator("", serviceName, ""))
                         .collect(Collectors.toSet());
             }

@@ -16,7 +16,7 @@ public @interface RSocketService {
      *
      * @return service interface
      */
-    Class<?> serviceInterface();
+    Class<?> value();
 
     /**
      * service name

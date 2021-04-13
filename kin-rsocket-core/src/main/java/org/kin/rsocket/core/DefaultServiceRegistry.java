@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * todo 后续考虑增加返回服务接口信息方法, 参考阿里ReactiveServiceInterface
@@ -49,6 +50,13 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     @Override
     public Set<String> findAllServices() {
         return serviceName2Provider.keySet();
+    }
+
+    @Override
+    public Set<ServiceLocator> findAllServiceLocators() {
+        return serviceName2Info.values().stream()
+                .map(i -> new ServiceLocator(i.getGroup(), i.getServiceName(), i.getVersion()))
+                .collect(Collectors.toSet());
     }
 
     @Override

@@ -8,7 +8,7 @@ import org.kin.rsocket.core.metadata.RSocketMimeType;
  * @date 2021/3/26
  */
 public class JsonCodec extends AbstractSerializationCodec {
-    protected JsonCodec() {
+    public JsonCodec() {
         super(new JsonSerialization());
     }
 

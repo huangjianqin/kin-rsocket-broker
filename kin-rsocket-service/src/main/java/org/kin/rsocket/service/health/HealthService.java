@@ -2,6 +2,7 @@ package org.kin.rsocket.service.health;
 
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.health.HealthChecker;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
@@ -9,16 +10,14 @@ import org.springframework.boot.actuate.health.Status;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 /**
  * @author huangjianqin
  * @date 2021/3/28
  */
-@RSocketService(serviceInterface = HealthChecker.class)
+@RSocketService(HealthChecker.class)
 public class HealthService implements HealthChecker {
     @Autowired
-    private List<ReactiveHealthIndicator> healthIndicators;
+    private ObjectProvider<ReactiveHealthIndicator> healthIndicators;
 
     @Override
     public Mono<Integer> check(String serviceName) {

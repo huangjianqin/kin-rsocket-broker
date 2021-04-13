@@ -13,6 +13,7 @@
     <modules>
         <module>kin-rsocket-example-responder</module>
         <module>kin-rsocket-example-requester</module>
+        <module>kin-rsocket-example-api</module>
     </modules>
 
 </project>

@@ -99,7 +99,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                 }
                 return monoResult
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
-                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType).retainedDuplicate()));
+                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
                 return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
@@ -163,7 +163,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                 RSocketMimeType resultEncodingType = resultEncodingType(messageAcceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 return fluxResult
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
-                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType).retainedDuplicate()));
+                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
@@ -207,7 +207,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                 //result return
                 return ((Flux<?>) result)
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
-                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType).retainedDuplicate()));
+                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
             }

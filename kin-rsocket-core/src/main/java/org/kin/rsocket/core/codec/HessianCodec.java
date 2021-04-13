@@ -8,7 +8,7 @@ import org.kin.rsocket.core.metadata.RSocketMimeType;
  * @date 2021/3/26
  */
 public class HessianCodec extends AbstractSerializationCodec {
-    protected HessianCodec() {
+    public HessianCodec() {
         super(new Hessian2Serialization());
     }
 

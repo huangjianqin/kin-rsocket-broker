@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -53,6 +54,9 @@ public final class Codecs {
      * 根据指定mime type, 对服务接口参数进行编码
      */
     public ByteBuf encodeParams(Object[] args, RSocketMimeType mimeType) {
+        if (CollectionUtils.isEmpty(args)) {
+            return Unpooled.EMPTY_BUFFER;
+        }
         try {
             Codec codec = mimeType2Codec.get(mimeType);
             return codec.encodeParams(args);
@@ -114,7 +118,7 @@ public final class Codecs {
      * 获取默认的MessageMimeTypeMetadata元数据
      */
     public ByteBuf getDefaultCompositeMetadataByteBuf(RSocketMimeType mimeType) {
-        return this.compositeMetadataForMimeTypes.get(mimeType);
+        return this.compositeMetadataForMimeTypes.get(mimeType).retainedDuplicate();
     }
 
     /**

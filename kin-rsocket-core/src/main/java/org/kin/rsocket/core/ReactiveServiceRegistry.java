@@ -37,6 +37,13 @@ public interface ReactiveServiceRegistry {
     Set<String> findAllServices();
 
     /**
+     * 返回所有已注册的服务
+     *
+     * @return 所有已注册的服务
+     */
+    Set<ServiceLocator> findAllServiceLocators();
+
+    /**
      * 注册service
      */
     void addProvider(String group, String serviceName, String version, Class<?> serviceInterface, Object provider);

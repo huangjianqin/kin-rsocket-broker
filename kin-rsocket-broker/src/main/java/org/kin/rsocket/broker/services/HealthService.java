@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/29
  */
-@RSocketService(serviceInterface = HealthChecker.class)
+@RSocketService(HealthChecker.class)
 public class HealthService implements HealthChecker {
     /** 服务实例路由表 */
     private ServiceRouteTable routeTable;

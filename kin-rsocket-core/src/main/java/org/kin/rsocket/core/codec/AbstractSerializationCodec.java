@@ -39,6 +39,7 @@ public abstract class AbstractSerializationCodec implements Codec {
         if (data.readableBytes() > 0) {
             try {
                 byte[] bytes = new byte[data.readableBytes()];
+                data.readBytes(bytes);
                 return serialization.deserialize(bytes, targetClass);
             } catch (IOException | ClassNotFoundException e) {
                 ExceptionUtils.throwExt(e);

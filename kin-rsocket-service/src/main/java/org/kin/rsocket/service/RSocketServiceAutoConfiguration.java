@@ -1,10 +1,12 @@
 package org.kin.rsocket.service;
 
 import io.rsocket.SocketAcceptor;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.service.event.CloudEvent2ApplicationEventConsumer;
 import org.kin.rsocket.service.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
@@ -21,6 +23,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import reactor.core.publisher.Mono;
 import reactor.extra.processor.TopicProcessor;
@@ -101,10 +105,10 @@ public class RSocketServiceAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(RequesterSupport.class)
     public RequesterSupport requesterSupport(@Autowired Environment environment,
-                                             @Autowired ApplicationContext applicationContext,
+                                             @Autowired ReactiveServiceRegistry serviceRegistry,
                                              @Autowired SocketAcceptor socketAcceptor,
                                              @Autowired ObjectProvider<RequesterSupportBuilderCustomizer> customizers) {
-        RequesterSupportBuilder builder = RequesterSupportBuilder.builder(config, environment, applicationContext, socketAcceptor);
+        RequesterSupportBuilder builder = RequesterSupportBuilder.builder(config, environment, serviceRegistry, socketAcceptor);
         customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
         return builder.build();
     }
@@ -123,14 +127,19 @@ public class RSocketServiceAutoConfiguration {
     @Bean(destroyMethod = "close")
     public UpstreamClusterManager upstreamClusterManager(@Autowired RequesterSupport requesterSupport) throws JwtTokenNotFoundException {
         UpstreamClusterManager upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
+        //init
         if (config.getBrokers() != null && !config.getBrokers().isEmpty()) {
             if (config.getJwtToken() == null || config.getJwtToken().isEmpty()) {
-                throw new JwtTokenNotFoundException();
+                try {
+                    throw new JwtTokenNotFoundException();
+                } catch (JwtTokenNotFoundException e) {
+                    ExceptionUtils.throwExt(e);
+                }
             }
-            upstreamClusterManager.add(null, "*", null, config.getBrokers());
+            upstreamClusterManager.add(null, Symbols.BROKER, null, config.getBrokers());
         }
-        if (config.getRoutes() != null && !config.getRoutes().isEmpty()) {
-            for (RoutingEndpoint route : config.getRoutes()) {
+        if (config.getEndpoints() != null && !config.getEndpoints().isEmpty()) {
+            for (ServiceEndpoint route : config.getEndpoints()) {
                 upstreamClusterManager.add(route.getGroup(), route.getService(), route.getVersion(), route.getUris());
             }
         }
@@ -141,6 +150,7 @@ public class RSocketServiceAutoConfiguration {
      * 服务暴露给broker逻辑实现
      */
     @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     public ServicesPublisher servicesPublisher() {
         return new ServicesPublisher();
     }
@@ -161,7 +171,7 @@ public class RSocketServiceAutoConfiguration {
     @ConditionalOnProperty("kin.rsocket.brokers")
     public HealthIndicator healthIndicator(@Autowired RSocketEndpoint rsocketEndpoint,
                                            @Autowired UpstreamClusterManager upstreamClusterManager,
-                                           @Value("${kin.rsocket.upstream-brokers}") String brokers) {
+                                           @Value("${kin.rsocket.brokers}") String brokers) {
         return new HealthIndicator(rsocketEndpoint, upstreamClusterManager, brokers);
     }
 

@@ -8,7 +8,7 @@ import org.kin.rsocket.core.metadata.RSocketMimeType;
  * @date 2021/3/26
  */
 public class KryoCodec extends AbstractSerializationCodec {
-    protected KryoCodec() {
+    public KryoCodec() {
         super(new KryoSerialization());
     }
 

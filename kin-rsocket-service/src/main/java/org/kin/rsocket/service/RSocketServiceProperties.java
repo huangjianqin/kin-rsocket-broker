@@ -3,6 +3,7 @@ package org.kin.rsocket.service;
 import org.kin.rsocket.core.utils.Topologys;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class RSocketServiceProperties {
     /** topology, intranet or internet */
     private String topology = Topologys.INTRANET;
     /** metadata */
-    private Map<String, String> metadata;
+    private Map<String, String> metadata = Collections.emptyMap();
     /** group for exposed service */
     private String group = "";
     /** version for exposed services */
@@ -31,7 +32,7 @@ public class RSocketServiceProperties {
     /** request/response timeout, and default value is 3000 and unit is millisecond */
     private Integer timeout = 3000;
     /** endpoints: interface full name to endpoint url */
-    private List<RoutingEndpoint> routes;
+    private List<ServiceEndpoint> endpoints;
 
     //setter && getter
     public String getSchema() {
@@ -90,12 +91,12 @@ public class RSocketServiceProperties {
         this.topology = topology;
     }
 
-    public List<RoutingEndpoint> getRoutes() {
-        return routes;
+    public List<ServiceEndpoint> getEndpoints() {
+        return endpoints;
     }
 
-    public void setRoutes(List<RoutingEndpoint> routes) {
-        this.routes = routes;
+    public void setEndpoints(List<ServiceEndpoint> endpoints) {
+        this.endpoints = endpoints;
     }
 
     public Map<String, String> getMetadata() {

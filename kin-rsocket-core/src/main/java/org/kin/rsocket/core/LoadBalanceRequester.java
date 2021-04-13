@@ -515,13 +515,14 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                 .timeout(Duration.ofSeconds(HEALTH_CHECK_INTERVAL_SECONDS))
                 .handle((payload, sink) -> {
                     //todo 逻辑是否需要修正
-                    byte indicator = payload.data().readByte();
-                    // check error code: hessian decode: 1: -111,  0-> -112, -1 -> -113
-                    if (indicator == -111) {
-                        sink.next(true);
-                    } else {
-                        sink.error(new Exception("Health check failed :" + url));
-                    }
+//                    byte indicator = payload.data().readByte();
+//                    // check error code: hessian decode: 1: -111,  0-> -112, -1 -> -113
+//                    if (indicator == -111) {
+//                        sink.next(true);
+//                    } else {
+//                        sink.error(new Exception("Health check failed :" + url));
+//                    }
+                    sink.next(true);
                 });
     }
 

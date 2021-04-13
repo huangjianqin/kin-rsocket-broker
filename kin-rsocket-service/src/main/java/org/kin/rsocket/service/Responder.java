@@ -51,7 +51,7 @@ public class Responder extends ResponderSupport implements CloudEventRSocket, Re
         //解析composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
         if (compositeMetadata.contains(RSocketMimeType.Application)) {
-            AppMetadata appMetadata = AppMetadata.of(compositeMetadata.getMetadata(RSocketMimeType.Application));
+            AppMetadata appMetadata = compositeMetadata.getMetadata(RSocketMimeType.Application);
             //from remote requester
             if (!appMetadata.getUuid().equals(RSocketAppContext.ID)) {
                 RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());

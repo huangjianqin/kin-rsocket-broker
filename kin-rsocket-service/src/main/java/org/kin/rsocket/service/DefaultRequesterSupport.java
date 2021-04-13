@@ -9,16 +9,13 @@ import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RSocketService;
+import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthChecker;
 import org.kin.rsocket.core.metadata.*;
-import org.springframework.aop.support.AopUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.Environment;
@@ -48,8 +45,8 @@ public class DefaultRequesterSupport implements RequesterSupport {
     protected final String appName;
     /** responder acceptor */
     protected final SocketAcceptor socketAcceptor;
-    /** spring application context */
-    protected ApplicationContext applicationContext;
+    /** 服务注册中心 */
+    private final ReactiveServiceRegistry serviceRegistry;
     /** requester connection responder interceptors */
     protected List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
     /** requester connection requester interceptors */
@@ -57,11 +54,11 @@ public class DefaultRequesterSupport implements RequesterSupport {
 
     public DefaultRequesterSupport(RSocketServiceProperties config,
                                    Environment env,
-                                   ApplicationContext applicationContext,
+                                   ReactiveServiceRegistry serviceRegistry,
                                    SocketAcceptor socketAcceptor) {
         this.config = config;
         this.env = env;
-        this.applicationContext = applicationContext;
+        this.serviceRegistry = serviceRegistry;
         this.socketAcceptor = socketAcceptor;
 
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name"));
@@ -98,26 +95,12 @@ public class DefaultRequesterSupport implements RequesterSupport {
 
     @Override
     public Supplier<Set<ServiceLocator>> exposedServices() {
-        //todo 看看需不需要从服务注册中心获取
-        return () -> applicationContext.getBeansWithAnnotation(RSocketService.class)
-                .values()
+        return () -> serviceRegistry.findAllServiceLocators()
                 .stream()
-                .filter(bean -> !(bean instanceof HealthChecker))
-                .map(o -> {
-                    Class<?> managedBeanClass = AopUtils.isAopProxy(o) ? AopUtils.getTargetClass(o) : o.getClass();
-                    RSocketService rSocketService = AnnotationUtils.findAnnotation(managedBeanClass, RSocketService.class);
-                    //noinspection ConstantConditions
-                    String serviceName = rSocketService.serviceInterface().getCanonicalName();
-                    if (!rSocketService.name().isEmpty()) {
-                        serviceName = rSocketService.name();
-                    }
-                    return new ServiceLocator(
-                            config.getGroup(),
-                            serviceName,
-                            config.getVersion(),
-                            rSocketService.tags()
-                    );
-                }).collect(Collectors.toSet());
+                //过滤掉local service
+                .filter(l -> !l.getService().equals(HealthChecker.class.getCanonicalName())
+                        && !l.getService().equals(ReactiveServiceRegistry.class.getCanonicalName()))
+                .collect(Collectors.toSet());
     }
 
     @Override
