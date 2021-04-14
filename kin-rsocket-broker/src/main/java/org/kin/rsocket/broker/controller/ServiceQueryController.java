@@ -61,7 +61,7 @@ public class ServiceQueryController {
                                         @PathVariable(name = "serviceName") String serviceName,
                                         @PathVariable(name = "version") String version) {
         //todo 不带group和版本号可以???
-        Integer instanceId = routeTable.getInstanceId(new ServiceLocator(group, serviceName, version).getId());
+        Integer instanceId = routeTable.getInstanceId(ServiceLocator.of(group, serviceName, version).getId());
         if (instanceId != null) {
             ServiceResponder brokerResponderHandler = serviceRouter.getByInstanceId(instanceId);
             if (brokerResponderHandler != null) {

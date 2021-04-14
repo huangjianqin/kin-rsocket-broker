@@ -39,7 +39,7 @@ public class ServiceReferenceBuilder<T> {
     /** 服务接口 */
     private Class<T> serviceInterface;
     /** 数据编码类型 */
-    private RSocketMimeType encodingType = RSocketMimeType.Java_Object;
+    private RSocketMimeType encodingType = RSocketMimeType.Json;
     /** accept 编码类型 */
     private RSocketMimeType acceptEncodingType;
     /** 对应的upstream cluster */
@@ -129,8 +129,6 @@ public class ServiceReferenceBuilder<T> {
 
     /**
      * GraalVM nativeImage support: set encodeType and acceptEncodingType to Json
-     *
-     * @return this
      */
     public ServiceReferenceBuilder<T> nativeImage() {
         this.encodingType = RSocketMimeType.Json;
@@ -150,6 +148,7 @@ public class ServiceReferenceBuilder<T> {
     }
 
     public T build() {
+        CONSUMED_SERVICES.add(ServiceLocator.of(group, service, version));
         if (RSocketAppContext.ENHANCE) {
             return buildByteBuddyProxy();
         } else {
@@ -169,7 +168,6 @@ public class ServiceReferenceBuilder<T> {
      */
     @SuppressWarnings("unchecked")
     private T buildJdkProxy() {
-        CONSUMED_SERVICES.add(new ServiceLocator(group, service, version));
         RequesterProxy proxy = buildRequesterProxy();
         return (T) Proxy.newProxyInstance(
                 serviceInterface.getClassLoader(),
@@ -181,7 +179,6 @@ public class ServiceReferenceBuilder<T> {
      * 构建基于bytebuddy代理的requester proxy
      */
     private T buildByteBuddyProxy() {
-        CONSUMED_SERVICES.add(new ServiceLocator(group, service, version));
         RequesterProxy proxy = buildRequesterProxy();
         return ByteBuddyUtils.build(this.serviceInterface, proxy);
     }

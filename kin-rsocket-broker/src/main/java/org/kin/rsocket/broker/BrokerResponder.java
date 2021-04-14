@@ -146,7 +146,7 @@ public class BrokerResponder extends AbstractRSocket {
     private Mono<RSocket> findDestination(GSVRoutingMetadata routingMetaData) {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
-            Integer serviceId = routingMetaData.id();
+            Integer serviceId = routingMetaData.serviceId();
             ServiceResponder targetResponder = null;
             RSocket rsocket = null;
             Exception error = null;

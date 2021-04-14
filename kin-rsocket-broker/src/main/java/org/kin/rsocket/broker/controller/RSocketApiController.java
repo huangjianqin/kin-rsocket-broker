@@ -54,7 +54,7 @@ public class RSocketApiController {
                                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         try {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
-            Integer serviceId = routingMetadata.id();
+            Integer serviceId = routingMetadata.serviceId();
             Integer instanceId = routeTable.getInstanceId(serviceId);
             if (!endpoint.isEmpty() && endpoint.startsWith("id:")) {
                 //存在endpoint

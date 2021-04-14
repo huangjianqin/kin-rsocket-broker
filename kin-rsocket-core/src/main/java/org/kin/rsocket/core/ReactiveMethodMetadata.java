@@ -111,7 +111,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /**
      * 解析{@link ServiceMapping}注解
      */
-    public void initServiceMapping(ServiceMapping serviceMapping) {
+    private void initServiceMapping(ServiceMapping serviceMapping) {
         if (!serviceMapping.value().isEmpty()) {
             String serviceName = serviceMapping.value();
             if (serviceName.contains(Separators.SERVICE_HANDLER)) {
@@ -143,7 +143,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /**
      * 初始化方法调用的元数据
      */
-    public void initCompositeMetadata(URI origin) {
+    private void initCompositeMetadata(URI origin) {
         //routing metadata
         GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handlerName, version);
         routingMetadata.setEndpoint(endpoint);

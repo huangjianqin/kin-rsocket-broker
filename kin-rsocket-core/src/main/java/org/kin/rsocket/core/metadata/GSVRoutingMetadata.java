@@ -192,7 +192,7 @@ public class GSVRoutingMetadata implements MetadataAware {
      *
      * @return service id
      */
-    public Integer id() {
+    public Integer serviceId() {
         if (Objects.isNull(targetId)) {
             if (group == null && version == null) {
                 targetId = MurmurHash3.hash32(service);
@@ -210,6 +210,15 @@ public class GSVRoutingMetadata implements MetadataAware {
      */
     public String gsv() {
         return ServiceLocator.gsv(group, service, version);
+    }
+
+    /**
+     * 生成handler id
+     *
+     * @return handler id
+     */
+    public Integer handlerId() {
+        return MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handlerName);
     }
 
     //setter && getter

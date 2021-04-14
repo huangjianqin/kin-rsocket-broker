@@ -37,6 +37,6 @@ public class UserServiceImpl implements UserService {
         if (random % 2 == 0) {
             return Mono.just(User.of(name, random));
         }
-        return Mono.empty();
+        return Mono.just(User.of("unknown", random));
     }
 }

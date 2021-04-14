@@ -54,6 +54,12 @@ public class MessageAcceptMimeTypesMetadata implements MetadataAware {
         return metadata;
     }
 
+    public static MessageAcceptMimeTypesMetadata of(ByteBuf content) {
+        MessageAcceptMimeTypesMetadata metadata = new MessageAcceptMimeTypesMetadata();
+        metadata.load(content);
+        return metadata;
+    }
+
     @Override
     public RSocketMimeType mimeType() {
         return RSocketMimeType.MessageAcceptMimeTypes;

@@ -1,9 +1,7 @@
 package org.kin.rsocket.broker;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.DuplexConnection;
@@ -12,7 +10,6 @@ import io.rsocket.RSocket;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
-import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
@@ -36,10 +33,7 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * service <- broker responder
@@ -80,9 +74,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private final Integer id;
 
     /** default message mime type metadata */
-    private MessageMimeTypeMetadata defaultMessageMimeType;
-    /** default data encoding bytebuf */
-    private ByteBuf defaultEncodingBytebuf;
+    private MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
     /** peer services */
     private Set<ServiceLocator> peerServices;
     /** app status */
@@ -106,8 +98,10 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         this.upstreamBrokers = upstreamBrokers;
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
         if (dataType != null) {
-            this.defaultMessageMimeType = MessageMimeTypeMetadata.of(dataType);
-            this.defaultEncodingBytebuf = constructDefaultDataEncoding();
+            this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataType);
+        } else {
+            //todo 如果downstream没有setup默认的编码类型, 则默认json
+            this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
         }
         this.appMetadata = appMetadata;
         this.id = appMetadata.getId();
@@ -132,7 +126,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         this.filterChain = filterChain;
         //publish services metadata
         if (compositeMetadata.contains(RSocketMimeType.ServiceRegistry)) {
-            ServiceRegistryMetadata serviceRegistryMetadata = ServiceRegistryMetadata.of(compositeMetadata.getMetadata(RSocketMimeType.ServiceRegistry));
+            ServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.ServiceRegistry);
             if (CollectionUtils.isNonEmpty(serviceRegistryMetadata.getPublished())) {
                 setPeerServices(serviceRegistryMetadata.getPublished());
                 registerPublishedServices();
@@ -142,10 +136,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         this.remoteIp = getRemoteAddress(peerRsocket);
         //new comboOnClose
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), peerRsocket.onClose());
-        this.comboOnClose.doOnTerminate(() -> {
-            unregisterPublishedServices();
-            ReferenceCountUtil.release(this.defaultEncodingBytebuf);
-        }).subscribeOn(Schedulers.parallel()).subscribe();
+        this.comboOnClose.doOnTerminate(this::unregisterPublishedServices).subscribeOn(Schedulers.parallel()).subscribe();
     }
 
     /** downstream暴露的服务 */
@@ -161,12 +152,17 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         if (gsvRoutingMetadata == null) {
             return Mono.error(new InvalidException("No Routing metadata"));
         }
-        Integer serviceId = gsvRoutingMetadata.id();
-        boolean encodingMetadataIncluded = compositeMetadata.contains(RSocketMimeType.MessageMimeType);
+
+        MessageMimeTypeMetadata messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageMimeType);
+        if (Objects.isNull(messageMimeTypeMetadata)) {
+            messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
+        }
 
         // broker local service call check: don't introduce interceptor, performance consideration
-        if (serviceRegistry.contains(serviceId)) {
-            return localRequestResponse(gsvRoutingMetadata, defaultMessageMimeType, null, payload);
+        if (serviceRegistry.contains(gsvRoutingMetadata.handlerId())) {
+            //todo accept mime type 通过配置实现
+            return localRequestResponse(gsvRoutingMetadata, messageMimeTypeMetadata,
+                    compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
         }
         //request filters
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
@@ -175,13 +171,10 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             destination = filterChain.filter(filterContext).then(destination);
         }
         //call destination
+        MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
         return destination.flatMap(rsocket -> {
             recordServiceInvoke(gsvRoutingMetadata.gsv());
-            if (encodingMetadataIncluded) {
-                return rsocket.requestResponse(payload);
-            } else {
-                return rsocket.requestResponse(payloadWithDataEncoding(payload));
-            }
+            return rsocket.requestResponse(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
         });
     }
 
@@ -192,10 +185,14 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         if (gsvRoutingMetadata == null) {
             return Mono.error(new InvalidException("No Routing metadata"));
         }
-        Integer serviceId = gsvRoutingMetadata.id();
-        boolean encodingMetadataIncluded = compositeMetadata.contains(RSocketMimeType.MessageMimeType);
-        if (serviceRegistry.contains(serviceId)) {
-            return localFireAndForget(gsvRoutingMetadata, defaultMessageMimeType, payload);
+
+        MessageMimeTypeMetadata messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageMimeType);
+        if (Objects.isNull(messageMimeTypeMetadata)) {
+            messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
+        }
+
+        if (serviceRegistry.contains(gsvRoutingMetadata.handlerId())) {
+            return localFireAndForget(gsvRoutingMetadata, messageMimeTypeMetadata, payload);
         }
         //request filters
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
@@ -204,13 +201,10 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             destination = filterChain.filter(filterContext).then(destination);
         }
         //call destination
+        MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
         return destination.flatMap(rsocket -> {
             recordServiceInvoke(gsvRoutingMetadata.gsv());
-            if (encodingMetadataIncluded) {
-                return rsocket.fireAndForget(payload);
-            } else {
-                return rsocket.fireAndForget(payloadWithDataEncoding(payload));
-            }
+            return rsocket.fireAndForget(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
         });
     }
 
@@ -221,23 +215,25 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         if (gsvRoutingMetadata == null) {
             return Flux.error(new InvalidException("No Routing metadata"));
         }
-        Integer serviceId = gsvRoutingMetadata.id();
-        boolean encodingMetadataIncluded = compositeMetadata.contains(RSocketMimeType.MessageMimeType);
-        if (serviceRegistry.contains(serviceId)) {
-            return localRequestStream(gsvRoutingMetadata, defaultMessageMimeType, null, payload);
+
+        MessageMimeTypeMetadata messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageMimeType);
+        if (Objects.isNull(messageMimeTypeMetadata)) {
+            messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
         }
+        if (serviceRegistry.contains(gsvRoutingMetadata.handlerId())) {
+            return localRequestStream(gsvRoutingMetadata, messageMimeTypeMetadata,
+                    compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
+        }
+
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.appMetadata, payload);
             destination = filterChain.filter(filterContext).then(destination);
         }
+        MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
         return destination.flatMapMany(rsocket -> {
             recordServiceInvoke(gsvRoutingMetadata.gsv());
-            if (encodingMetadataIncluded) {
-                return rsocket.requestStream(payload);
-            } else {
-                return rsocket.requestStream(payloadWithDataEncoding(payload));
-            }
+            return rsocket.requestStream(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
         });
     }
 
@@ -370,20 +366,10 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     /**
      * payload with data encoding
      */
-    private Payload payloadWithDataEncoding(Payload payload) {
-        CompositeByteBuf compositeByteBuf = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true, 2, payload.metadata(), this.defaultEncodingBytebuf.retainedDuplicate());
+    private Payload payloadWithDataEncoding(Payload payload, MessageMimeTypeMetadata messageMimeTypeMetadata) {
+        CompositeByteBuf compositeByteBuf = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true, 2,
+                payload.metadata(), MessageMimeTypeMetadata.toByteBuf(messageMimeTypeMetadata));
         return ByteBufPayload.create(payload.data(), compositeByteBuf);
-    }
-
-    /** 构建默认的数据编码 */
-    private ByteBuf constructDefaultDataEncoding() {
-        ByteBuf buf = Unpooled.buffer(5, 5);
-        buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
-        buf.writeByte(0);
-        buf.writeByte(0);
-        buf.writeByte(1);
-        buf.writeByte(defaultMessageMimeType.getMessageMimeType().getId() | 0x80);
-        return buf;
     }
 
     /**
@@ -392,7 +378,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private Mono<RSocket> findDestination(GSVRoutingMetadata routingMetaData) {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
-            Integer serviceId = routingMetaData.id();
+            Integer serviceId = routingMetaData.serviceId();
             RSocket rsocket = null;
             Exception error = null;
             //sticky session responder

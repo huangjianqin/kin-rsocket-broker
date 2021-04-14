@@ -460,7 +460,8 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return rsocketConnector
                     .setupPayload(payload)
                     .metadataMimeType(RSocketMimeType.CompositeMetadata.getType())
-                    .dataMimeType(RSocketMimeType.Java_Object.getType())
+                    //todo  remote responder默认的编码类型
+                    .dataMimeType(RSocketMimeType.Json.getType())
                     .acceptor(requesterSupport.socketAcceptor())
                     .connect(UriTransportRegistry.INSTANCE.client(uri))
                     .doOnError(error -> ReferenceCountUtil.safeRelease(payload));

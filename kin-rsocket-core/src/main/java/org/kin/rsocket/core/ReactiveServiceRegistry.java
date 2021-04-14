@@ -25,9 +25,9 @@ public interface ReactiveServiceRegistry {
     boolean contains(String serviceName);
 
     /**
-     * 是否包含对应serviceId注册信息
+     * 是否包含对应handlerId的注册信息
      */
-    boolean contains(Integer serviceId);
+    boolean contains(Integer handlerId);
 
     /**
      * 返回所有已注册的服务

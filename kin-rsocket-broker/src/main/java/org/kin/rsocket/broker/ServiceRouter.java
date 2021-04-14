@@ -115,7 +115,7 @@ public class ServiceRouter {
                 principal = RSocketAppPrincipal.DEFAULT;
                 credentials = UUID.randomUUID().toString();
             } else if (compositeMetadata.contains(RSocketMimeType.BearerToken)) {
-                BearerTokenMetadata bearerTokenMetadata = BearerTokenMetadata.of(compositeMetadata.getMetadata(RSocketMimeType.BearerToken));
+                BearerTokenMetadata bearerTokenMetadata = compositeMetadata.getMetadata(RSocketMimeType.BearerToken);
                 credentials = new String(bearerTokenMetadata.getBearerToken());
                 principal = authenticationService.auth(credentials);
             } else {
@@ -124,7 +124,7 @@ public class ServiceRouter {
             }
             //validate application information
             if (principal != null && compositeMetadata.contains(RSocketMimeType.Application)) {
-                AppMetadata temp = AppMetadata.of(compositeMetadata.getMetadata(RSocketMimeType.Application));
+                AppMetadata temp = compositeMetadata.getMetadata(RSocketMimeType.Application);
                 //App registration validation: app id: UUID and unique in server
                 if (temp.getUuid() == null || temp.getUuid().isEmpty()) {
                     temp.setUuid(UUID.randomUUID().toString());

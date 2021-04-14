@@ -14,7 +14,7 @@ kin:
 # management
 management:
   server:
-    port: 9997
+    port: 9998
   endpoints:
     web:
       exposure:

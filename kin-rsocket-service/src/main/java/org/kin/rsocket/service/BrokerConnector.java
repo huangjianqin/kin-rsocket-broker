@@ -98,8 +98,8 @@ public class BrokerConnector implements Closeable {
      * 移除服务
      */
     public void removeService(String serviceName, Class<?> serviceInterface) {
-        ServiceLocator targetService = new ServiceLocator("", serviceName, "");
-        CloudEventData<ServicesHiddenEvent> cloudEvent = ServicesHiddenEvent.of(Collections.singletonList(targetService));
+        ServiceLocator targetServiceLocator = ServiceLocator.of(serviceName);
+        CloudEventData<ServicesHiddenEvent> cloudEvent = ServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
         upstreamClusterManager.getBroker().broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     this.serviceRegistry.removeProvider("", serviceName, "", serviceInterface);
@@ -183,7 +183,7 @@ public class BrokerConnector implements Closeable {
                         .filter(serviceName -> !serviceName.equals(HealthChecker.class.getCanonicalName())
                                 && !serviceName.equals(ReactiveServiceRegistry.class.getCanonicalName()))
                         //todo
-                        .map(serviceName -> new ServiceLocator("", serviceName, ""))
+                        .map(ServiceLocator::of)
                         .collect(Collectors.toSet());
             }
             return Collections::emptySet;

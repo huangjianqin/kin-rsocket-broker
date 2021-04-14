@@ -11,89 +11,47 @@ import java.util.stream.Stream;
  * @date 2021/3/24
  */
 public enum RSocketMimeType {
-    /**
-     *
-     */
+    /** json */
     Json("Json", WellKnownMimeType.APPLICATION_JSON),
-    /**
-     *
-     */
+    /** protobuf */
     Protobuf("Protobuf", WellKnownMimeType.APPLICATION_PROTOBUF),
-    /**
-     *
-     */
+    /** avro */
     Avro("Avro", WellKnownMimeType.APPLICATION_AVRO),
-    /**
-     *
-     */
+    /** hessian */
     Hessian("Hessian", WellKnownMimeType.APPLICATION_HESSIAN),
-    /**
-     *
-     */
+    /** text */
     Text("Text", WellKnownMimeType.TEXT_PLAIN),
-    /**
-     *
-     */
+    /** binary */
     Binary("Binary", WellKnownMimeType.APPLICATION_OCTET_STREAM),
-    /**
-     *
-     */
+    /** java对象序列化, 使用kryo */
     Java_Object("JavaObject", WellKnownMimeType.APPLICATION_JAVA_OBJECT),
-    /**
-     *
-     */
+    /** cbor */
     CBOR("CBOR", WellKnownMimeType.APPLICATION_CBOR),
-    /**
-     *
-     */
+    /** json形式的cloud event数据 */
     CloudEventsJson("CloudEventsJson", WellKnownMimeType.APPLICATION_CLOUDEVENTS_JSON),
-    /**
-     *
-     */
+    /** application元数据 */
     Application("Meta-Application", WellKnownMimeType.MESSAGE_RSOCKET_APPLICATION),
-    /**
-     *
-     */
+    /** cache控制元数据 */
     CacheControl("Meta-CacheControl", WellKnownMimeType.MESSAGE_RSOCKET_DATA_CACHE_CONTROL),
-    /**
-     *
-     */
+    /** service注册元数据 */
     ServiceRegistry("Meta-Service-Registry", WellKnownMimeType.MESSAGE_RSOCKET_SERVICE_REGISTRY),
-    /**
-     *
-     */
+    /** token */
     BearerToken("Meta-BearerToken", WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION),
-    /**
-     *
-     */
+    /** trace */
     Tracing("Meta-Tracing", WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN),
-    /**
-     *
-     */
+    /** 路由元数据 */
     Routing("Meta-Routing", WellKnownMimeType.MESSAGE_RSOCKET_ROUTING),
-    /**
-     *
-     */
+    /** 二进制形式的路由元数据 */
     BinaryRouting("Meta-BinaryRouting", WellKnownMimeType.MESSAGE_RSOCKET_BINARY_ROUTING),
-    /**
-     *
-     */
+    /** 消息编码 */
     MessageMimeType("Message-MimeType", WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE),
-    /**
-     *
-     */
+    /** 消息可接受的编码类型 */
     MessageAcceptMimeTypes("Message-Accept-MimeTypes", WellKnownMimeType.MESSAGE_RSOCKET_ACCEPT_MIMETYPES),
-    /**
-     *
-     */
+    /** 混合元数据 */
     CompositeMetadata("Meta-Composite", WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA),
-    /**
-     *
-     */
+    /** message tags */
     MessageTags("Message-Tags", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_TAGS),
-    /**
-     *
-     */
+    /** message origin */
     MessageOrigin("Message-Origin", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_ORIGIN);
 
     /** key -> id, value -> mime type */

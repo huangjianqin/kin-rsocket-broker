@@ -95,7 +95,8 @@ public class RequesterProxy implements InvocationHandler {
         if (acceptEncodingType == null) {
             acceptEncodingTypes = defaultAcceptEncodingTypes();
         } else {
-            acceptEncodingTypes = new RSocketMimeType[]{acceptEncodingType};
+            //todo 数据编码类型默认是可接受的编码类型的第一位
+            acceptEncodingTypes = new RSocketMimeType[]{encodingType, acceptEncodingType};
         }
         timeout = builder.getTimeout();
     }

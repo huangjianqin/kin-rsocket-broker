@@ -29,12 +29,13 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     protected Map<String, ReactiveServiceInfo> serviceName2Info = new HashMap<>();
 
     public DefaultServiceRegistry() {
-        addProvider("", ReactiveServiceRegistry.class.getCanonicalName(), "", ReactiveServiceRegistry.class, this);
+        //todo 为啥要注册自己
+//        addProvider("", ReactiveServiceRegistry.class.getCanonicalName(), "", ReactiveServiceRegistry.class, this);
     }
 
     @Override
-    public boolean contains(Integer serviceId) {
-        return handlerId2Invoker.containsKey(serviceId);
+    public boolean contains(Integer handlerId) {
+        return handlerId2Invoker.containsKey(handlerId);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
     @Override
     public Set<ServiceLocator> findAllServiceLocators() {
         return serviceName2Info.values().stream()
-                .map(i -> new ServiceLocator(i.getGroup(), i.getServiceName(), i.getVersion()))
+                .map(i -> ServiceLocator.of(i.getGroup(), i.getServiceName(), i.getVersion()))
                 .collect(Collectors.toSet());
     }
 
@@ -127,7 +128,7 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
 
         List<ReactiveMethodParameterInfo> parameterInfos = new ArrayList<>(4);
         for (Parameter parameter : method.getParameters()) {
-
+            parameterInfos.add(newReactiveMethodParameterInfo(parameter));
         }
         methodInfo.setParameters(parameterInfos);
 
@@ -159,7 +160,7 @@ public class DefaultServiceRegistry implements ReactiveServiceRegistry {
                 if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
                     handlerName = serviceMapping.value();
                 }
-                String key = serviceName + "." + handlerName;
+                String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
 
                 handlerId2Invoker.remove(MurmurHash3.hash32(key));
                 serviceName2Info.remove(serviceName);

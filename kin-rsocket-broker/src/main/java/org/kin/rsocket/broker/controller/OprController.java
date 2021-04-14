@@ -32,8 +32,8 @@ import java.util.Map;
  * @date 2021/3/31
  */
 @RestController
-@RequestMapping("/ops")
-public class OpsController {
+@RequestMapping("/opr")
+public class OprController {
     @Autowired
     private ServiceRouter serviceRouter;
     @Autowired

@@ -17,17 +17,17 @@ public class ServiceLocator {
     private static final String[] EMPTY_TAGS = new String[0];
 
     /** service分组 */
-    private final String group;
+    private String group;
     /** service名 */
-    private final String service;
+    private String service;
     /** service版本 */
-    private final String version;
-    private final String[] tags;
+    private String version;
+    private String[] tags;
 
     /** 服务唯一标识(str) */
-    private final String gsv;
+    private String gsv;
     /** 服务唯一标识(整型) */
-    private final Integer id;
+    private Integer id;
 
     //----------------------------------------------------------------------------------------------------------------
 
@@ -56,20 +56,26 @@ public class ServiceLocator {
         return MurmurHash3.hash32(routingKey);
     }
 
+    public static ServiceLocator of(String service) {
+        return of("", service, "", EMPTY_TAGS);
+    }
+
+    public static ServiceLocator of(String group, String service, String version) {
+        return of(group, service, version, EMPTY_TAGS);
+    }
+
+    public static ServiceLocator of(String group, String service, String version, String[] tags) {
+        ServiceLocator inst = new ServiceLocator();
+        inst.group = group;
+        inst.service = service;
+        inst.version = version;
+        inst.tags = tags;
+        inst.gsv = gsv(group, service, version);
+        inst.id = MurmurHash3.hash32(inst.gsv);
+        return inst;
+    }
+
     //----------------------------------------------------------------------------------------------------------------
-    public ServiceLocator(String group, String service, String version) {
-        this(group, service, version, EMPTY_TAGS);
-    }
-
-    public ServiceLocator(String group, String service, String version, String[] tags) {
-        this.group = group;
-        this.service = service;
-        this.version = version;
-        this.tags = tags;
-        this.gsv = gsv(group, service, version);
-        this.id = MurmurHash3.hash32(this.gsv);
-    }
-
     public boolean hasTag(String tag) {
         if (this.tags != null && this.tags.length > 0) {
             for (String s : tags) {
@@ -108,8 +114,12 @@ public class ServiceLocator {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ServiceLocator that = (ServiceLocator) o;
         return group.equals(that.group) && service.equals(that.service) && version.equals(that.version);
     }

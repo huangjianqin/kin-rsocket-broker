@@ -52,6 +52,20 @@ public class MessageMimeTypeMetadata implements MetadataAware {
         return metadata;
     }
 
+    /**
+     * 构建编码元数据对应的bytebuf
+     */
+    public static ByteBuf toByteBuf(MessageMimeTypeMetadata metadata) {
+        //todo
+        ByteBuf buf = Unpooled.buffer(5, 5);
+        buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
+        buf.writeByte(0);
+        buf.writeByte(0);
+        buf.writeByte(1);
+        buf.writeByte(metadata.getMessageMimeType().getId() | 0x80);
+        return buf;
+    }
+
     @Override
     public RSocketMimeType mimeType() {
         return RSocketMimeType.MessageMimeType;
