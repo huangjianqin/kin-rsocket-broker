@@ -20,7 +20,7 @@ import java.util.Properties;
  * @author huangjianqin
  * @date 2021/3/31
  */
-public class ConfigChangedEventConsumer implements CloudEventConsumer {
+public final class ConfigChangedEventConsumer implements CloudEventConsumer {
     @Autowired
     private ConfDiamond confDiamond;
 

@@ -23,7 +23,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Closeable, org.kin.framework.Closeable {
+public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Closeable, org.kin.framework.Closeable {
     private static final Logger log = LoggerFactory.getLogger(UpstreamCluster.class);
 
     /** group */

@@ -9,9 +9,10 @@ import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
-import org.kin.rsocket.broker.cluster.Broker;
+import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -22,7 +23,6 @@ import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
 import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.core.utils.Topologys;
@@ -46,8 +46,8 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class ServiceRouter {
-    private static final Logger log = LoggerFactory.getLogger(ServiceRouter.class);
+public final class ServiceResponderManager {
+    private static final Logger log = LoggerFactory.getLogger(ServiceResponderManager.class);
     private final RSocketFilterChain rsocketFilterChain;
     private final ReactiveServiceRegistry serviceRegistry;
     private final ServiceRouteTable routeTable;
@@ -66,16 +66,16 @@ public class ServiceRouter {
     /** key -> app name, value -> responder list */
     private final ListMultimap<String, ServiceResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
 
-    public ServiceRouter(ReactiveServiceRegistry serviceRegistry,
-                         RSocketFilterChain filterChain,
-                         ServiceRouteTable routeTable,
-                         Sinks.Many<CloudEventData<?>> cloudEventSink,
-                         Sinks.Many<String> notificationSink,
-                         AuthenticationService authenticationService,
-                         BrokerManager brokerManager,
-                         ServiceMeshInspector serviceMeshInspector,
-                         boolean authRequired,
-                         UpstreamCluster upstreamBrokers) {
+    public ServiceResponderManager(ReactiveServiceRegistry serviceRegistry,
+                                   RSocketFilterChain filterChain,
+                                   ServiceRouteTable routeTable,
+                                   Sinks.Many<CloudEventData<?>> cloudEventSink,
+                                   Sinks.Many<String> notificationSink,
+                                   AuthenticationService authenticationService,
+                                   BrokerManager brokerManager,
+                                   ServiceMeshInspector serviceMeshInspector,
+                                   boolean authRequired,
+                                   UpstreamCluster upstreamBrokers) {
         this.serviceRegistry = serviceRegistry;
         this.rsocketFilterChain = filterChain;
         this.routeTable = routeTable;
@@ -303,17 +303,17 @@ public class ServiceRouter {
     /**
      * 创建upstream broker变化的cloud event
      */
-    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedEvent(Collection<Broker> rsocketBrokers, String topology) {
+    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedEvent(Collection<BrokerInfo> rsocketBrokerInfos, String topology) {
         List<String> uris;
         if (Topologys.INTERNET.equals(topology)) {
-            uris = rsocketBrokers.stream()
+            uris = rsocketBrokerInfos.stream()
                     .filter(rsocketBroker -> rsocketBroker.isActive() && rsocketBroker.getExternalDomain() != null)
-                    .map(Broker::getAliasUrl)
+                    .map(BrokerInfo::getAliasUrl)
                     .collect(Collectors.toList());
         } else {
-            uris = rsocketBrokers.stream()
-                    .filter(Broker::isActive)
-                    .map(Broker::getUrl)
+            uris = rsocketBrokerInfos.stream()
+                    .filter(BrokerInfo::isActive)
+                    .map(BrokerInfo::getUrl)
                     .collect(Collectors.toList());
         }
 
@@ -333,9 +333,9 @@ public class ServiceRouter {
     /**
      *
      */
-    private Flux<Void> broadcastClusterTopology(Collection<Broker> brokers) {
-        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokers, Topologys.INTRANET);
-        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(brokers, Topologys.INTERNET);
+    private Flux<Void> broadcastClusterTopology(Collection<BrokerInfo> brokerInfos) {
+        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokerInfos, Topologys.INTRANET);
+        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(brokerInfos, Topologys.INTERNET);
         return Flux.fromIterable(getAllResponders()).flatMap(responder -> {
             String topology = responder.getAppMetadata().getTopology();
             Mono<Void> fireEvent;

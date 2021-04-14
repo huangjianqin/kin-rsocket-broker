@@ -8,8 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @date 2021/2/15
  */
 @SpringBootApplication
-public class RSocketBrokerApp {
+public class RSocketBrokerApplication {
     public static void main(String[] args) {
-        SpringApplication.run(RSocketBrokerApp.class, args);
+        SpringApplication.run(RSocketBrokerApplication.class, args);
     }
 }

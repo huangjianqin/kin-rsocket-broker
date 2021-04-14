@@ -1,11 +1,7 @@
 package org.kin.rsocket.service;
 
 import com.google.common.base.Preconditions;
-import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.ServiceMapping;
-import org.kin.rsocket.core.UpstreamCluster;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.service.utils.ByteBuddyUtils;
 
 import java.lang.reflect.Proxy;
@@ -18,7 +14,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class ServiceReferenceBuilder<T> {
+public final class ServiceReferenceBuilder<T> {
     /** todo 缓存的所有requester proxy, 用于监控 */
     public static final Set<ServiceLocator> CONSUMED_SERVICES = new HashSet<>();
 

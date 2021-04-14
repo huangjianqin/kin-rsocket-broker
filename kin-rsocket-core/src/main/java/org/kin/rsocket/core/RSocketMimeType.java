@@ -1,4 +1,4 @@
-package org.kin.rsocket.core.metadata;
+package org.kin.rsocket.core;
 
 import io.rsocket.metadata.WellKnownMimeType;
 

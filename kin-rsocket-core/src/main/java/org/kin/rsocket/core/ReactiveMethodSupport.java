@@ -13,7 +13,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/26
  */
-class ReactiveMethodSupport {
+public class ReactiveMethodSupport {
     /** bytes class */
     public static final List<Class<?>> BINARY_CLASS_LIST = Collections.unmodifiableList(Arrays.asList(ByteBuf.class, ByteBuffer.class, byte[].class));
 

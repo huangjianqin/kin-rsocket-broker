@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.rsocket.metadata.WellKnownMimeType;
+import org.kin.rsocket.core.RSocketMimeType;
 
 import java.nio.charset.StandardCharsets;
 

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class UpstreamClusterChangedEventConsumer implements CloudEventConsumer {
+public final class UpstreamClusterChangedEventConsumer implements CloudEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(UpstreamClusterChangedEventConsumer.class);
     @Autowired
     /** broker upstream cluster */

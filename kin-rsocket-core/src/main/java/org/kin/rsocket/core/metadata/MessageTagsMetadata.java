@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.rsocket.metadata.TaggingMetadata;
 import io.rsocket.metadata.TaggingMetadataCodec;
+import org.kin.rsocket.core.RSocketMimeType;
 
 import java.util.ArrayList;
 import java.util.List;

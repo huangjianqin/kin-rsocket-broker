@@ -140,17 +140,17 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
-    public ServiceRouter serviceRouter(@Autowired ReactiveServiceRegistry serviceRegistry,
-                                       @Autowired RSocketFilterChain rsocketFilterChain,
-                                       @Autowired ServiceRouteTable serviceRouteTable,
-                                       @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
-                                       @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
-                                       @Autowired AuthenticationService authenticationService,
-                                       @Autowired BrokerManager brokerManager,
-                                       @Autowired ServiceMeshInspector serviceMeshInspector,
-                                       @Autowired RSocketBrokerProperties properties,
-                                       @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
-        return new ServiceRouter(serviceRegistry, rsocketFilterChain, serviceRouteTable,
+    public ServiceResponderManager serviceRouter(@Autowired ReactiveServiceRegistry serviceRegistry,
+                                                 @Autowired RSocketFilterChain rsocketFilterChain,
+                                                 @Autowired ServiceRouteTable serviceRouteTable,
+                                                 @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
+                                                 @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
+                                                 @Autowired AuthenticationService authenticationService,
+                                                 @Autowired BrokerManager brokerManager,
+                                                 @Autowired ServiceMeshInspector serviceMeshInspector,
+                                                 @Autowired RSocketBrokerProperties properties,
+                                                 @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
+        return new ServiceResponderManager(serviceRegistry, rsocketFilterChain, serviceRouteTable,
                 cloudEventSink, notificationSink, authenticationService, brokerManager, serviceMeshInspector,
                 properties.isAuth(), upstreamBrokerCluster);
     }
@@ -165,9 +165,9 @@ public class RSocketBrokerConfiguration {
 
     @Bean
     @Order(100)
-    public RSocketBinderBuilderCustomizer defaultRSocketListenerCustomizer(@Autowired ServiceRouter serviceRouter) {
+    public RSocketBinderBuilderCustomizer defaultRSocketListenerCustomizer(@Autowired ServiceResponderManager serviceResponderManager) {
         return builder -> {
-            builder.acceptor(serviceRouter.acceptor());
+            builder.acceptor(serviceResponderManager.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
         };
     }
@@ -209,10 +209,10 @@ public class RSocketBrokerConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public SubBrokerRequester subBrokerRequester(@Autowired Environment env,
                                                  @Autowired ServiceRouteTable serviceRouteTable,
-                                                 @Autowired ServiceRouter serviceRouter,
+                                                 @Autowired ServiceResponderManager serviceResponderManager,
                                                  @Autowired RSocketFilterChain filterChain,
                                                  @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
-        return new SubBrokerRequester(brokerConfig, env, serviceRouteTable, serviceRouter, filterChain, cloudEventSink);
+        return new SubBrokerRequester(brokerConfig, env, serviceRouteTable, serviceResponderManager, filterChain, cloudEventSink);
     }
 
     @Bean

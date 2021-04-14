@@ -7,12 +7,12 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.ServiceMeshInspector;
 import org.kin.rsocket.broker.ServiceResponder;
+import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.broker.ServiceRouteTable;
-import org.kin.rsocket.broker.ServiceRouter;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -36,7 +36,7 @@ public class RSocketApiController {
     @Value("${kin.rsocket.broker.auth}")
     private boolean authRequired;
     @Autowired
-    private ServiceRouter serviceRouter;
+    private ServiceResponderManager serviceResponderManager;
     @Autowired
     private ServiceRouteTable routeTable;
     @Autowired
@@ -61,7 +61,7 @@ public class RSocketApiController {
                 instanceId = Integer.valueOf(endpoint.substring(3).trim());
             }
             if (instanceId != null) {
-                ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
+                ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
                 if (responder != null) {
                     if (authRequired) {
                         RSocketAppPrincipal principal = authenticationService.auth(token);

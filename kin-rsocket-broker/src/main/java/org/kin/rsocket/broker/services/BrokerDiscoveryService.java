@@ -1,12 +1,12 @@
 package org.kin.rsocket.broker.services;
 
 import org.kin.rsocket.broker.ServiceResponder;
+import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.broker.ServiceRouteTable;
-import org.kin.rsocket.broker.ServiceRouter;
+import org.kin.rsocket.broker.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.discovery.DiscoveryService;
-import org.kin.rsocket.core.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ import java.util.List;
 @RSocketService(DiscoveryService.class)
 public class BrokerDiscoveryService implements DiscoveryService {
     @Autowired
-    private ServiceRouter serviceRouter;
+    private ServiceResponderManager serviceResponderManager;
     @Autowired
     private ServiceRouteTable routeTable;
 
@@ -48,7 +48,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
         }
         List<ServiceInstance> serviceInstances = new ArrayList<>();
         for (Integer instanceId : instanceIds) {
-            ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
             if (responder != null) {
                 serviceInstances.add(newServiceInstance(responder));
             }
@@ -60,7 +60,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
      * 通过app name寻找service instances
      */
     private Flux<ServiceInstance> findServicesInstancesByAppName(String appName) {
-        return Flux.fromIterable(serviceRouter.getAllResponders())
+        return Flux.fromIterable(serviceResponderManager.getAllResponders())
                 .filter(responder -> responder.getAppMetadata().getName().equalsIgnoreCase(appName))
                 .filter(responder -> responder.getAppStatus().equals(AppStatus.SERVING))
                 .map(this::newServiceInstance);

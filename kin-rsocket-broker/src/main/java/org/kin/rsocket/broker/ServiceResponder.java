@@ -36,7 +36,8 @@ import java.net.URI;
 import java.util.*;
 
 /**
- * service <- broker responder
+ * service <- broker
+ * broker responder
  *
  * @author huangjianqin
  * @date 2021/3/30
@@ -61,7 +62,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private final UpstreamCluster upstreamBrokers;
     /** reactive service routing selector */
     private final ServiceRouteTable routeTable;
-    private final ServiceRouter serviceRouter;
+    private final ServiceResponderManager serviceResponderManager;
     private final ServiceMeshInspector serviceMeshInspector;
     private final Mono<Void> comboOnClose;
     /** reactive event processor */
@@ -88,7 +89,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                             RSocket peerRsocket,
                             ServiceRouteTable routingSelector,
                             Sinks.Many<CloudEventData<?>> cloudEventSink,
-                            ServiceRouter handlerRegistry,
+                            ServiceResponderManager handlerRegistry,
                             ServiceMeshInspector serviceMeshInspector,
                             UpstreamCluster upstreamBrokers,
                             RSocketFilterChain filterChain,
@@ -121,7 +122,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         this.peerRsocket = peerRsocket;
         this.routeTable = routingSelector;
         this.cloudEventSink = cloudEventSink;
-        this.serviceRouter = handlerRegistry;
+        this.serviceResponderManager = handlerRegistry;
         this.serviceMeshInspector = serviceMeshInspector;
         this.filterChain = filterChain;
         //publish services metadata
@@ -397,7 +398,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                 } else {
                     Integer targetInstanceId = routeTable.getInstanceId(serviceId);
                     if (targetInstanceId != null) {
-                        targetResponder = serviceRouter.getByInstanceId(targetInstanceId);
+                        targetResponder = serviceResponderManager.getByInstanceId(targetInstanceId);
                     } else {
                         error = new InvalidException(String.format("Service not found '%s'", gsv));
                     }
@@ -433,11 +434,11 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
      */
     private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
-            return serviceRouter.getByUUID(endpoint.substring(3));
+            return serviceResponderManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
         for (Integer instanceId : routeTable.getAllInstanceIds(serviceId)) {
-            ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
             if (responder != null) {
                 if (responder.appTagsHashCodeSet.contains(endpointHashCode)) {
                     return responder;
@@ -458,7 +459,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private ServiceResponder findStickyHandler(boolean sticky, Integer serviceId) {
         // todo 算法更新，如一致性hash算法，或者取余操作
         if (sticky && stickyServices.containsKey(serviceId)) {
-            return serviceRouter.getByInstanceId(stickyServices.get(serviceId));
+            return serviceResponderManager.getByInstanceId(stickyServices.get(serviceId));
         }
         return null;
     }

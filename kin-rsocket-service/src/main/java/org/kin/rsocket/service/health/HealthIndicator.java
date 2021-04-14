@@ -1,7 +1,8 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.service.health;
 
 import org.kin.rsocket.core.domain.AppStatus;
-import org.kin.rsocket.core.health.HealthChecker;
+import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.RSocketEndpoint;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import reactor.core.publisher.Mono;
@@ -12,30 +13,25 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class HealthIndicator implements ReactiveHealthIndicator {
+public final class HealthIndicator implements ReactiveHealthIndicator {
     /** health checker */
-    private HealthChecker healthChecker;
+    private final HealthCheck healthCheck;
     /** rsocket service监控信息 */
-    private RSocketEndpoint rsocketEndpoint;
+    private final RSocketEndpoint rsocketEndpoint;
     /** broker uris */
-    private String brokerUris;
+    private final String brokerUris;
 
     public HealthIndicator(RSocketEndpoint rsocketEndpoint,
-                           UpstreamClusterManager upstreamClusterManager,
+                           HealthCheck healthCheck,
                            String brokerUris) {
+        this.healthCheck = healthCheck;
         this.rsocketEndpoint = rsocketEndpoint;
-        this.healthChecker = ServiceReferenceBuilder
-                .requester(HealthChecker.class)
-                //todo 看看编码方式是否需要修改
-                .nativeImage()
-                .upstreamClusterManager(upstreamClusterManager)
-                .build();
         this.brokerUris = brokerUris;
     }
 
     @Override
     public Mono<Health> health() {
-        return healthChecker.check(null)
+        return healthCheck.check(null)
                 .map(result -> {
                             boolean brokerAlive = result != null && result == 1;
                             AppStatus serviceStatus = rsocketEndpoint.getServiceStatus();

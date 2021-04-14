@@ -12,7 +12,7 @@ import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.event.ServicesHiddenEvent;
-import org.kin.rsocket.core.health.HealthChecker;
+import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class BrokerConnector implements Closeable {
+public final class BrokerConnector implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(BrokerConnector.class);
     /** broker uris */
     private final List<String> brokers;
@@ -59,8 +59,8 @@ public class BrokerConnector implements Closeable {
         cloudEventSink = Sinks.many().multicast().onBackpressureBuffer();
         serviceRegistry = new DefaultServiceRegistry();
         // add health check
-        serviceRegistry.addProvider("", HealthChecker.class.getCanonicalName(), "",
-                HealthChecker.class, (HealthChecker) serviceName -> Mono.just(1));
+        serviceRegistry.addProvider("", HealthCheck.class.getCanonicalName(), "",
+                HealthCheck.class, (HealthCheck) serviceName -> Mono.just(1));
         requesterSupport = new SimpleRequesterSupport(jwtToken);
         eventConsumers = new CloudEventConsumers(cloudEventSink);
 
@@ -180,7 +180,7 @@ public class BrokerConnector implements Closeable {
             if (!allServices.isEmpty()) {
                 return () -> allServices.stream()
                         //过滤掉local service
-                        .filter(serviceName -> !serviceName.equals(HealthChecker.class.getCanonicalName())
+                        .filter(serviceName -> !serviceName.equals(HealthCheck.class.getCanonicalName())
                                 && !serviceName.equals(ReactiveServiceRegistry.class.getCanonicalName()))
                         //todo
                         .map(ServiceLocator::of)

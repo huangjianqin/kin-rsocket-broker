@@ -13,7 +13,7 @@ import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
-import org.kin.rsocket.broker.cluster.Broker;
+import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ServiceLocator;
@@ -40,7 +40,7 @@ import java.util.stream.Stream;
 @HandleEvent
 public class GossipBrokerManager extends AbstractBrokerManager implements BrokerManager, ClusterMessageHandler, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
-    /** 请求新增broker数据(也就是{@link Broker})的gossip header key */
+    /** 请求新增broker数据(也就是{@link BrokerInfo})的gossip header key */
     private static final String BROKER_INFO_HEADER = "brokerInfo";
     /** 通过gossip广播cloud event的gossip header key */
     private static final String CLOUD_EVENT_HEADER = "cloudEvent";
@@ -53,11 +53,11 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     /** gossip cluster */
     private Mono<Cluster> cluster;
     /** 本机broker数据 */
-    private Broker localBroker;
+    private BrokerInfo localBrokerInfo;
     /** key -> ip address, value -> rsocket brokers数据 */
-    private final Map<String, Broker> brokers = new HashMap<>();
+    private final Map<String, BrokerInfo> brokers = new HashMap<>();
     /** brokers changes emitter processor */
-    private final Sinks.Many<Collection<Broker>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
+    private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
 
     public GossipBrokerManager(Sinks.Many<CloudEventData<?>> cloudEventSink, RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
         super(cloudEventSink);
@@ -81,9 +81,9 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
                 .start();
         //subscribe and start & join the cluster
         cluster.subscribe();
-        this.localBroker = Broker.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
+        this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
-        brokers.put(localIp, localBroker);
+        brokers.put(localIp, localBrokerInfo);
         log.info("start cluster with Gossip support");
     }
 
@@ -98,22 +98,22 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     }
 
     @Override
-    public Flux<Collection<Broker>> brokersChangedFlux() {
+    public Flux<Collection<BrokerInfo>> brokersChangedFlux() {
         return brokersSink.asFlux();
     }
 
     @Override
-    public Collection<Broker> all() {
+    public Collection<BrokerInfo> all() {
         return brokers.values();
     }
 
     @Override
-    public Broker localBroker() {
-        return localBroker;
+    public BrokerInfo localBroker() {
+        return localBrokerInfo;
     }
 
     @Override
-    public Mono<Broker> getBroker(String ip) {
+    public Mono<BrokerInfo> getBroker(String ip) {
         if (brokers.containsKey(ip)) {
             return Mono.just(brokers.get(ip));
         } else {
@@ -137,7 +137,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
         if (message.header(BROKER_INFO_HEADER) != null) {
             Message replyMessage = Message.builder()
                     .correlationId(message.correlationId())
-                    .data(localBroker)
+                    .data(localBrokerInfo)
                     .build();
             this.cluster.flatMap(cluster -> cluster.send(message.sender(), replyMessage)).subscribe();
         }
@@ -167,7 +167,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
 
-    private Mono<Broker> makeJsonRpcCall(Member member) {
+    private Mono<BrokerInfo> makeJsonRpcCall(Member member) {
         String uuid = UUID.randomUUID().toString();
         Message jsonRpcMessage = Message.builder()
                 .correlationId(uuid)
@@ -195,10 +195,10 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
         brokersSink.tryEmitNext(brokers.values());
     }
 
-    private Broker memberToBroker(Member member) {
-        Broker broker = new Broker();
-        broker.setIp(member.address().host());
-        return broker;
+    private BrokerInfo memberToBroker(Member member) {
+        BrokerInfo brokerInfo = new BrokerInfo();
+        brokerInfo.setIp(member.address().host());
+        return brokerInfo;
     }
 
     @Override

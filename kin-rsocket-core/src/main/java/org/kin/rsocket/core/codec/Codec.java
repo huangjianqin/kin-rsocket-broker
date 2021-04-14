@@ -2,7 +2,7 @@ package org.kin.rsocket.core.codec;
 
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.utils.SPI;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
+import org.kin.rsocket.core.RSocketMimeType;
 
 /**
  * @author huangjianqin

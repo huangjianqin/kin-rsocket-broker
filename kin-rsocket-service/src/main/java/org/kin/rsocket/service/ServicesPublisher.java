@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class ServicesPublisher implements ApplicationListener<ApplicationStartedEvent> {
+final class ServicesPublisher implements ApplicationListener<ApplicationStartedEvent> {
     private static final Logger log = LoggerFactory.getLogger(ServicesPublisher.class);
     @Autowired
     private UpstreamClusterManager upstreamClusterManager;

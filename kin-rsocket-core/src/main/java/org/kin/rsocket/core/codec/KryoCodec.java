@@ -1,7 +1,7 @@
 package org.kin.rsocket.core.codec;
 
 import org.kin.kinrpc.serialization.kryo.KryoSerialization;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
+import org.kin.rsocket.core.RSocketMimeType;
 
 /**
  * @author huangjianqin

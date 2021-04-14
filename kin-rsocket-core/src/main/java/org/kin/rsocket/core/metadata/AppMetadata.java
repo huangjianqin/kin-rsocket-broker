@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.metadata;
 
 import io.netty.buffer.ByteBuf;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.utils.JSON;
 import org.kin.rsocket.core.utils.Topologys;
 

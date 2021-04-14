@@ -5,14 +5,14 @@ import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.exceptions.InvalidException;
-import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ReactiveServiceRegistry;
-import org.kin.rsocket.core.ResponderRsocket;
-import org.kin.rsocket.core.ResponderSupport;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
-import org.kin.rsocket.core.metadata.*;
+import org.kin.rsocket.core.metadata.AppMetadata;
+import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
+import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
+import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,28 +21,28 @@ import reactor.core.publisher.Sinks;
 import java.net.URI;
 
 /**
- * 每个连接的responder
+ * broker/peer service的Responder
  *
  * @author huangjianqin
  * @date 2021/3/28
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-public class Responder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
+final class Responder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
     /** requester from peer */
-    protected RSocket requester;
+    private RSocket requester;
     /**
      * 默认数据编码类型, 从requester setup payload解析而来
      * 返回数据给requester时, 如果没有带数据编码类型, 则使用默认的编码类型进行编码
      */
-    protected MessageMimeTypeMetadata defaultMessageMimeTypeMetadata = null;
-    protected Sinks.Many<CloudEventData<?>> cloudEventSink;
+    private MessageMimeTypeMetadata defaultMessageMimeTypeMetadata = null;
+    private Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** combo onClose from responder and requester */
     private Mono<Void> comboOnClose;
 
-    public Responder(ReactiveServiceRegistry serviceRegistry,
-                     Sinks.Many<CloudEventData<?>> cloudEventSink,
-                     RSocket requester,
-                     ConnectionSetupPayload setupPayload) {
+    Responder(ReactiveServiceRegistry serviceRegistry,
+              Sinks.Many<CloudEventData<?>> cloudEventSink,
+              RSocket requester,
+              ConnectionSetupPayload setupPayload) {
         super(serviceRegistry);
         this.cloudEventSink = cloudEventSink;
         this.requester = requester;

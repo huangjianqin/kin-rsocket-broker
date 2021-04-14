@@ -3,6 +3,7 @@ package org.kin.rsocket.core.metadata;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import org.kin.framework.utils.ClassUtils;
+import org.kin.rsocket.core.RSocketMimeType;
 
 import java.util.Objects;
 

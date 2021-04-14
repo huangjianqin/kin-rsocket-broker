@@ -18,7 +18,7 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class InvalidCacheEventConsumer implements CloudEventConsumer {
+public final class InvalidCacheEventConsumer implements CloudEventConsumer {
     @Autowired(required = false)
     private CacheManager cacheManager;
 

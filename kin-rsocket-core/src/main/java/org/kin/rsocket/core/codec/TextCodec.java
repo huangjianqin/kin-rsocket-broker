@@ -3,7 +3,7 @@ package org.kin.rsocket.core.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
+import org.kin.rsocket.core.RSocketMimeType;
 
 import java.nio.charset.StandardCharsets;
 

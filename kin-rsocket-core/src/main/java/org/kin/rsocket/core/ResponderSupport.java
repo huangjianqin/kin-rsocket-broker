@@ -10,7 +10,6 @@ import org.kin.rsocket.core.codec.Codecs;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageAcceptMimeTypesMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

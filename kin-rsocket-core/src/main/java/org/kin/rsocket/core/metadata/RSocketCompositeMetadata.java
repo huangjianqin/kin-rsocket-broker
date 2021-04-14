@@ -7,6 +7,7 @@ import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataCodec;
 import io.rsocket.metadata.WellKnownMimeType;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.core.RSocketMimeType;
 
 import java.util.*;
 

@@ -6,10 +6,12 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.service.event.CloudEvent2ApplicationEventConsumer;
 import org.kin.rsocket.service.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
+import org.kin.rsocket.service.health.HealthIndicator;
 import org.kin.rsocket.service.health.HealthService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,8 +100,8 @@ public class RSocketServiceAutoConfiguration {
      * responder acceptor factory
      */
     @Bean
-    public RSocketBinderAcceptorFactory responderAcceptorFactory(@Autowired ReactiveServiceRegistry serviceRegistry,
-                                                                 @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
+    public SocketAcceptor responderAcceptorFactory(@Autowired ReactiveServiceRegistry serviceRegistry,
+                                                   @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
         return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, cloudEventSink, requester, setupPayload));
     }
 
@@ -140,8 +142,12 @@ public class RSocketServiceAutoConfiguration {
             upstreamClusterManager.add(null, Symbols.BROKER, null, config.getBrokers());
         }
         if (config.getEndpoints() != null && !config.getEndpoints().isEmpty()) {
-            for (ServiceEndpoint route : config.getEndpoints()) {
-                upstreamClusterManager.add(route.getGroup(), route.getService(), route.getVersion(), route.getUris());
+            for (EndpointProperties endpointProperties : config.getEndpoints()) {
+                upstreamClusterManager.add(
+                        endpointProperties.getGroup(),
+                        endpointProperties.getService(),
+                        endpointProperties.getVersion(),
+                        endpointProperties.getUris());
             }
         }
         return upstreamClusterManager;
@@ -171,9 +177,9 @@ public class RSocketServiceAutoConfiguration {
     @Bean
     @ConditionalOnProperty("kin.rsocket.brokers")
     public HealthIndicator healthIndicator(@Autowired RSocketEndpoint rsocketEndpoint,
-                                           @Autowired UpstreamClusterManager upstreamClusterManager,
+                                           @Autowired @Qualifier("healthCheckRef") HealthCheck healthCheck,
                                            @Value("${kin.rsocket.brokers}") String brokers) {
-        return new HealthIndicator(rsocketEndpoint, upstreamClusterManager, brokers);
+        return new HealthIndicator(rsocketEndpoint, healthCheck, brokers);
     }
 
     /**
@@ -205,5 +211,16 @@ public class RSocketServiceAutoConfiguration {
                 }
             }
         };
+    }
+
+    //----------------------------service reference----------------------------
+    @Bean
+    public HealthCheck healthCheckRef(@Autowired UpstreamClusterManager upstreamClusterManager) {
+        return ServiceReferenceBuilder
+                .requester(HealthCheck.class)
+                //todo 看看编码方式是否需要修改
+                .nativeImage()
+                .upstreamClusterManager(upstreamClusterManager)
+                .build();
     }
 }

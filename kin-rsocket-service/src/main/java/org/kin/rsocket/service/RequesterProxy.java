@@ -18,7 +18,6 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.codec.Codecs;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -39,7 +38,7 @@ import java.util.concurrent.TimeoutException;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RequesterProxy implements InvocationHandler {
+final class RequesterProxy implements InvocationHandler {
     private static final Logger log = LoggerFactory.getLogger(RequesterProxy.class);
     /** 绑定的{@link UpstreamCluster} */
     protected final RSocket rsocket;

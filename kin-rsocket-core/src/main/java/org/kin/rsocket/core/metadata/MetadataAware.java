@@ -2,6 +2,7 @@ package org.kin.rsocket.core.metadata;
 
 import io.netty.buffer.ByteBuf;
 import io.rsocket.metadata.CompositeMetadata;
+import org.kin.rsocket.core.RSocketMimeType;
 
 /**
  * @author huangjianqin

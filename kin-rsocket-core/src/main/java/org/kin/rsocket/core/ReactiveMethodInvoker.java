@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class ReactiveMethodInvoker extends ReactiveMethodSupport {
+class ReactiveMethodInvoker extends ReactiveMethodSupport {
     /** 服务实例代理 */
     private ProxyInvoker<?> invoker;
     /** 方法是否是异步返回 */
@@ -26,7 +26,7 @@ public class ReactiveMethodInvoker extends ReactiveMethodSupport {
     /** 方法参数类型 */
     private Class<?>[] parametersType;
 
-    public ReactiveMethodInvoker(Method method, Object provider) {
+    ReactiveMethodInvoker(Method method, Object provider) {
         super(method);
         if (RSocketAppContext.ENHANCE) {
             this.invoker = Proxys.byteBuddy().enhanceMethod(new MethodDefinition<>(provider, method));
@@ -46,32 +46,32 @@ public class ReactiveMethodInvoker extends ReactiveMethodSupport {
     /**
      * 目标方法调用
      */
-    public Object invoke(Object... args) throws Exception {
+    Object invoke(Object... args) throws Exception {
         return invoker.invoke(args);
     }
 
     //setter && getter
-    public Class<?>[] getParameterTypes() {
+    Class<?>[] getParameterTypes() {
         return this.parametersType;
     }
 
-    public void setParametersType(Class<?>[] parametersType) {
+    void setParametersType(Class<?>[] parametersType) {
         this.parametersType = parametersType;
     }
 
-    public Class<?> getInferredClassForParameter(int paramIndex) {
+    Class<?> getInferredClassForParameter(int paramIndex) {
         return ClassUtils.getInferredClassForGeneric(method.getGenericParameterTypes()[paramIndex]);
     }
 
-    public boolean isAsyncReturn() {
+    boolean isAsyncReturn() {
         return asyncReturn;
     }
 
-    public void setAsyncReturn(boolean asyncReturn) {
+    void setAsyncReturn(boolean asyncReturn) {
         this.asyncReturn = asyncReturn;
     }
 
-    public boolean isBinaryReturn() {
+    boolean isBinaryReturn() {
         return this.binaryReturn;
     }
 }

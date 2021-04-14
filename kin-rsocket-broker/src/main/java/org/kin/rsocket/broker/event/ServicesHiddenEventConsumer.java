@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceRouter;
+import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
@@ -16,9 +16,9 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class ServicesHiddenEventConsumer implements CloudEventConsumer {
+public final class ServicesHiddenEventConsumer implements CloudEventConsumer {
     @Autowired
-    private ServiceRouter serviceRouter;
+    private ServiceResponderManager serviceResponderManager;
 
     @Override
     public boolean shouldAccept(CloudEventData<?> cloudEvent) {
@@ -29,7 +29,7 @@ public class ServicesHiddenEventConsumer implements CloudEventConsumer {
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
         ServicesHiddenEvent event = CloudEventSupport.unwrapData(cloudEvent, ServicesHiddenEvent.class);
         if (event != null && event.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceRouter.getByUUID(event.getAppId());
+            ServiceResponder responder = serviceResponderManager.getByUUID(event.getAppId());
             if (responder != null) {
                 Set<ServiceLocator> serviceLocators = event.getServices();
                 responder.unregisterServices(serviceLocators);

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/31
  */
-public class FilterEnableEventConsumer implements CloudEventConsumer {
+public final class FilterEnableEventConsumer implements CloudEventConsumer {
     @Autowired
     protected ApplicationContext applicationContext;
 

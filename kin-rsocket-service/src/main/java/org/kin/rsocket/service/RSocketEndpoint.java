@@ -3,7 +3,7 @@ package org.kin.rsocket.service;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
-import org.kin.rsocket.core.health.HealthChecker;
+import org.kin.rsocket.core.health.HealthCheck;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @date 2021/3/28
  */
 @Endpoint(id = "rsocket")
-public class RSocketEndpoint {
+public final class RSocketEndpoint {
     private final RSocketServiceProperties config;
     private final RequesterSupport requesterSupport;
     private final UpstreamClusterManager upstreamClusterManager;
@@ -56,7 +56,7 @@ public class RSocketEndpoint {
         if (!ServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
             info.put("subscribed", requesterSupport.subscribedServices().get().stream()
                     //过滤掉自带的服务
-                    .filter(serviceLocator -> !HealthChecker.class.getCanonicalName().equals(serviceLocator.getService()))
+                    .filter(serviceLocator -> !HealthCheck.class.getCanonicalName().equals(serviceLocator.getService()))
                     .collect(Collectors.toList()));
         }
         //service upstream

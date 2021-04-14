@@ -8,7 +8,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class ServiceEndpoint {
+public class EndpointProperties {
     /** group: region, datacenter, virtual group in datacenter */
     private String group;
     /** service name */
@@ -18,11 +18,11 @@ public class ServiceEndpoint {
     /** endpoint uri list */
     private List<String> uris;
 
-    public static ServiceEndpoint of(String group,
-                                     String service,
-                                     String version,
-                                     List<String> uris) {
-        ServiceEndpoint inst = new ServiceEndpoint();
+    public static EndpointProperties of(String group,
+                                        String service,
+                                        String version,
+                                        List<String> uris) {
+        EndpointProperties inst = new EndpointProperties();
         inst.group = group;
         inst.service = service;
         inst.version = version;

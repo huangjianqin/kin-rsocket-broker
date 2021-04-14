@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/26
  */
 @FunctionalInterface
-public interface HealthChecker {
+public interface HealthCheck {
     /** 下线 */
     int DOWN = -1;
     /** 未知 */

@@ -5,14 +5,14 @@ import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.ServiceResponder;
+import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.broker.ServiceRouteTable;
-import org.kin.rsocket.broker.ServiceRouter;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,7 +37,7 @@ public class ServiceQueryController {
     @Autowired
     private ServiceRouteTable routeTable;
     @Autowired
-    private ServiceRouter serviceRouter;
+    private ServiceResponderManager serviceResponderManager;
 
     @GetMapping("/{serviceName}")
     public Flux<Map<String, Object>> query(@PathVariable(name = "serviceName") String serviceName) {
@@ -63,7 +63,7 @@ public class ServiceQueryController {
         //todo 不带group和版本号可以???
         Integer instanceId = routeTable.getInstanceId(ServiceLocator.of(group, serviceName, version).getId());
         if (instanceId != null) {
-            ServiceResponder brokerResponderHandler = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder brokerResponderHandler = serviceResponderManager.getByInstanceId(instanceId);
             if (brokerResponderHandler != null) {
                 GSVRoutingMetadata routingMetadata =
                         GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");

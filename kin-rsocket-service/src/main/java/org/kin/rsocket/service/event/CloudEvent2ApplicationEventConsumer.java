@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class CloudEvent2ApplicationEventConsumer implements CloudEventConsumer {
+public final class CloudEvent2ApplicationEventConsumer implements CloudEventConsumer {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 

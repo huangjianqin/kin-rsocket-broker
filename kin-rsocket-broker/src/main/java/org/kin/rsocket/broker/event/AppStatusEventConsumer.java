@@ -3,7 +3,7 @@ package org.kin.rsocket.broker.event;
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceRouter;
+import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -25,9 +25,9 @@ import java.util.Properties;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class AppStatusEventConsumer implements CloudEventConsumer, Closeable, DisposableBean {
+public final class AppStatusEventConsumer implements CloudEventConsumer, Closeable, DisposableBean {
     @Autowired
-    private ServiceRouter serviceRouter;
+    private ServiceResponderManager serviceResponderManager;
     @Autowired
     private ConfDiamond confDiamond;
     /**
@@ -45,7 +45,7 @@ public class AppStatusEventConsumer implements CloudEventConsumer, Closeable, Di
         AppStatusEvent event = CloudEventSupport.unwrapData(cloudEvent, AppStatusEvent.class);
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
         if (event != null && event.getId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceRouter.getByUUID(event.getId());
+            ServiceResponder responder = serviceResponderManager.getByUUID(event.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
                 if (event.getStatus().equals(AppStatus.CONNECTED)) {  //app connected
@@ -88,7 +88,7 @@ public class AppStatusEventConsumer implements CloudEventConsumer, Closeable, Di
                         CloudEventBuilder.builder(ConfigChangedEvent.of(appName, sw.toString()))
                                 .withSource(RSocketAppContext.SOURCE)
                                 .build();
-                serviceRouter.broadcast(appName, configChangedEvent).subscribe();
+                serviceResponderManager.broadcast(appName, configChangedEvent).subscribe();
             }));
         }
     }

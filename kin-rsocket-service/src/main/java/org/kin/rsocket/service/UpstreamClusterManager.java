@@ -14,7 +14,7 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class UpstreamClusterManager implements Closeable {
+public final class UpstreamClusterManager implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(UpstreamClusterManager.class);
 
     /** upstream requester配置 */

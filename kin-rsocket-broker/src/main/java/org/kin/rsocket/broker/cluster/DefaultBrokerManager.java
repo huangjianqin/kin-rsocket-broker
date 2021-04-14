@@ -21,10 +21,10 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public class DefaultBrokerManager extends AbstractBrokerManager implements BrokerManager {
+public final class DefaultBrokerManager extends AbstractBrokerManager implements BrokerManager {
     private static final Logger log = LoggerFactory.getLogger(DefaultBrokerManager.class);
     /** 本机broker */
-    private Broker localBroker;
+    private BrokerInfo localBrokerInfo;
     @Autowired
     private RSocketBrokerProperties brokerConfig;
 
@@ -40,30 +40,30 @@ public class DefaultBrokerManager extends AbstractBrokerManager implements Broke
         if (Objects.nonNull(rsocketSSL) && rsocketSSL.isEnabled()) {
             schema = "tcps";
         }
-        this.localBroker = Broker.of(RSocketAppContext.ID, schema,
+        this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, schema,
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         log.info("start standalone cluster");
     }
 
     @Override
-    public Flux<Collection<Broker>> brokersChangedFlux() {
+    public Flux<Collection<BrokerInfo>> brokersChangedFlux() {
         //单机, 不存在变化broker
         return Flux.empty();
     }
 
     @Override
-    public Broker localBroker() {
-        return localBroker;
+    public BrokerInfo localBroker() {
+        return localBrokerInfo;
     }
 
     @Override
-    public Collection<Broker> all() {
-        return Collections.singleton(localBroker);
+    public Collection<BrokerInfo> all() {
+        return Collections.singleton(localBrokerInfo);
     }
 
     @Override
-    public Mono<Broker> getBroker(String ip) {
-        return Mono.just(localBroker);
+    public Mono<BrokerInfo> getBroker(String ip) {
+        return Mono.just(localBrokerInfo);
     }
 
     @Override
@@ -85,6 +85,6 @@ public class DefaultBrokerManager extends AbstractBrokerManager implements Broke
     public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
         handleCloudEvent(cloudEvent);
         //返回ip即可
-        return Mono.just(localBroker.getIp());
+        return Mono.just(localBrokerInfo.getIp());
     }
 }

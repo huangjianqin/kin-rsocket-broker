@@ -7,7 +7,7 @@ package org.kin.rsocket.broker.cluster;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public class Broker {
+public final class BrokerInfo {
     /** broker id */
     private String id;
     /** rsocket schema */
@@ -23,10 +23,10 @@ public class Broker {
     /** broker start time */
     private long startedAt;
 
-    public static Broker of(String id, String schema,
-                            String ip, String externalDomain,
-                            int port) {
-        Broker inst = new Broker();
+    public static BrokerInfo of(String id, String schema,
+                                String ip, String externalDomain,
+                                int port) {
+        BrokerInfo inst = new BrokerInfo();
         inst.id = id;
         inst.schema = schema;
         inst.ip = ip;

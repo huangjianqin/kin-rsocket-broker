@@ -8,12 +8,12 @@ import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
 import org.kin.rsocket.core.AbstractRSocket;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.RSocketMimeType;
 import org.kin.rsocket.core.utils.JSON;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -23,16 +23,19 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 /**
- * broker间rsocket connection建立创建的Responder
+ * broker <-> broker
+ * broker responder
+ * <p>
+ * todo
  * 代码与{@link ServiceResponder}有点类似, 看看能不能抽象一下
  *
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class BrokerResponder extends AbstractRSocket {
+final class BrokerResponder extends AbstractRSocket {
     private static final Logger log = LoggerFactory.getLogger(BrokerResponder.class);
     private final ServiceRouteTable routeTable;
-    private final ServiceRouter serviceRouter;
+    private final ServiceResponderManager serviceResponderManager;
     private final RSocketFilterChain filterChain;
     /** 本broker app metadata todo 为何不从外部getAppMeta获取 */
     private final AppMetadata upstreamBrokerMetadata;
@@ -40,19 +43,18 @@ public class BrokerResponder extends AbstractRSocket {
     private final Sinks.Many<CloudEventData<?>> cloudEventSink;
 
     public BrokerResponder(ServiceRouteTable serviceRoutingSelector,
-                           ServiceRouter serviceRouter,
+                           ServiceResponderManager serviceResponderManager,
                            RSocketFilterChain filterChain,
                            Sinks.Many<CloudEventData<?>> cloudEventSink) {
         this.routeTable = serviceRoutingSelector;
         this.filterChain = filterChain;
-        this.serviceRouter = serviceRouter;
+        this.serviceResponderManager = serviceResponderManager;
         this.cloudEventSink = cloudEventSink;
 
         this.upstreamBrokerMetadata = new AppMetadata();
         //todo 看看CentralBroker是否需要修改
         this.upstreamBrokerMetadata.setName("CentralBroker");
     }
-
 
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
@@ -159,7 +161,7 @@ public class BrokerResponder extends AbstractRSocket {
             } else {
                 Integer targetInstanceId = routeTable.getInstanceId(serviceId);
                 if (targetInstanceId != null) {
-                    targetResponder = serviceRouter.getByInstanceId(targetInstanceId);
+                    targetResponder = serviceResponderManager.getByInstanceId(targetInstanceId);
                 } else {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }
@@ -183,11 +185,11 @@ public class BrokerResponder extends AbstractRSocket {
      */
     private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
-            return serviceRouter.getByUUID(endpoint.substring(3));
+            return serviceResponderManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
         for (Integer instanceId : routeTable.getAllInstanceIds(serviceId)) {
-            ServiceResponder responder = serviceRouter.getByInstanceId(instanceId);
+            ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
             if (responder != null) {
                 if (responder.getAppTagsHashCodeSet().contains(endpointHashCode)) {
                     return responder;

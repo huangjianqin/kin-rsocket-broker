@@ -11,7 +11,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RSocketFilterChain {
+final class RSocketFilterChain {
     /** filter列表 */
     private List<AbstractRSocketFilter> filters = Collections.emptyList();
     /** filter列表Flux */

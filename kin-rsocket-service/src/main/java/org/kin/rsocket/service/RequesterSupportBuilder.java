@@ -27,7 +27,10 @@ public final class RequesterSupportBuilder {
                                                   Environment env,
                                                   ReactiveServiceRegistry serviceRegistry,
                                                   SocketAcceptor socketAcceptor) {
-        return builder(new DefaultRequesterSupport(config, env, serviceRegistry, socketAcceptor));
+        return builder(new RequesterSupportImpl(
+                config,
+                env.getProperty("spring.application.name", env.getProperty("application.name")),
+                serviceRegistry, socketAcceptor));
     }
 
 

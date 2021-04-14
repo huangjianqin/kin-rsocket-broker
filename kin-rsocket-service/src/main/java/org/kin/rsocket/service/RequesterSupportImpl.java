@@ -14,12 +14,8 @@ import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ServicesExposedEvent;
-import org.kin.rsocket.core.health.HealthChecker;
+import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.*;
-import org.springframework.core.env.AbstractEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertySource;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -30,38 +26,35 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * RSocket Requester Support implementation: setup payload, published service, token and app info
+ * service端requester配置
  *
  * @author huangjianqin
  * @date 2021/3/28
  */
 @SuppressWarnings({"ConstantConditions", "rawtypes"})
-public class DefaultRequesterSupport implements RequesterSupport {
-    /** spring config */
-    protected final Environment env;
+final class RequesterSupportImpl implements RequesterSupport {
     /** spring rsocket config */
-    protected final RSocketServiceProperties config;
+    private final RSocketServiceProperties config;
     /** app name */
-    protected final String appName;
+    private final String appName;
     /** responder acceptor */
-    protected final SocketAcceptor socketAcceptor;
+    private final SocketAcceptor socketAcceptor;
     /** 服务注册中心 */
     private final ReactiveServiceRegistry serviceRegistry;
     /** requester connection responder interceptors */
-    protected List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
+    private List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
     /** requester connection requester interceptors */
-    protected List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
+    private List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
 
-    public DefaultRequesterSupport(RSocketServiceProperties config,
-                                   Environment env,
-                                   ReactiveServiceRegistry serviceRegistry,
-                                   SocketAcceptor socketAcceptor) {
+    public RequesterSupportImpl(RSocketServiceProperties config,
+                                String appName,
+                                ReactiveServiceRegistry serviceRegistry,
+                                SocketAcceptor socketAcceptor) {
         this.config = config;
-        this.env = env;
         this.serviceRegistry = serviceRegistry;
         this.socketAcceptor = socketAcceptor;
 
-        this.appName = env.getProperty("spring.application.name", env.getProperty("application.name"));
+        this.appName = appName;
     }
 
     @Override
@@ -98,7 +91,7 @@ public class DefaultRequesterSupport implements RequesterSupport {
         return () -> serviceRegistry.findAllServiceLocators()
                 .stream()
                 //过滤掉local service
-                .filter(l -> !l.getService().equals(HealthChecker.class.getCanonicalName())
+                .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName())
                         && !l.getService().equals(ReactiveServiceRegistry.class.getCanonicalName()))
                 .collect(Collectors.toSet());
     }
@@ -164,28 +157,6 @@ public class DefaultRequesterSupport implements RequesterSupport {
         return appMetadata;
     }
 
-    /**
-     * 从{@link Environment}中获取所有配置key
-     * todo 逻辑是否需要优化
-     */
-    private Set<String> getAllConfigKeyNames() {
-        Set<String> allNames = new HashSet<>();
-        for (PropertySource<?> propertySource : ((AbstractEnvironment) env).getPropertySources()) {
-            if (propertySource instanceof EnumerablePropertySource) {
-                Collections.addAll(allNames, ((EnumerablePropertySource) propertySource).getPropertyNames());
-            }
-        }
-
-        Set<String> strNames = new HashSet<>();
-        for (Enumeration<?> e = Collections.enumeration(allNames); e.hasMoreElements(); ) {
-            Object k = e.nextElement();
-            if (k instanceof String) {
-                strNames.add((String) k);
-            }
-        }
-        return strNames;
-    }
-
     @Override
     public SocketAcceptor socketAcceptor() {
         return this.socketAcceptor;
@@ -201,27 +172,27 @@ public class DefaultRequesterSupport implements RequesterSupport {
         return requesterInterceptors;
     }
 
-    public void addRequesterInterceptor(RSocketInterceptor interceptor) {
+    void addRequesterInterceptor(RSocketInterceptor interceptor) {
         this.requesterInterceptors.add(interceptor);
     }
 
-    public void addResponderInterceptor(RSocketInterceptor interceptor) {
+    void addResponderInterceptor(RSocketInterceptor interceptor) {
         this.responderInterceptors.add(interceptor);
     }
 
-    public void addRequesterInterceptors(Collection<RSocketInterceptor> interceptors) {
+    void addRequesterInterceptors(Collection<RSocketInterceptor> interceptors) {
         this.requesterInterceptors.addAll(interceptors);
     }
 
-    public void addResponderInterceptors(Collection<RSocketInterceptor> interceptors) {
+    void addResponderInterceptors(Collection<RSocketInterceptor> interceptors) {
         this.responderInterceptors.addAll(interceptors);
     }
 
-    public void addRequesterInterceptors(RSocketInterceptor... interceptors) {
+    void addRequesterInterceptors(RSocketInterceptor... interceptors) {
         addRequesterInterceptors(Arrays.asList(interceptors));
     }
 
-    public void addResponderInterceptors(RSocketInterceptor... interceptors) {
+    void addResponderInterceptors(RSocketInterceptor... interceptors) {
         addResponderInterceptors(Arrays.asList(interceptors));
     }
 }

@@ -1,7 +1,7 @@
 package org.kin.rsocket.service.health;
 
 import org.kin.rsocket.core.RSocketService;
-import org.kin.rsocket.core.health.HealthChecker;
+import org.kin.rsocket.core.health.HealthCheck;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
@@ -14,8 +14,8 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/28
  */
-@RSocketService(HealthChecker.class)
-public class HealthService implements HealthChecker {
+@RSocketService(HealthCheck.class)
+public final class HealthService implements HealthCheck {
     @Autowired
     private ObjectProvider<ReactiveHealthIndicator> healthIndicators;
 

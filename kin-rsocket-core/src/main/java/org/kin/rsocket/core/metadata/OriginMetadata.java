@@ -2,6 +2,7 @@ package org.kin.rsocket.core.metadata;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import org.kin.rsocket.core.RSocketMimeType;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;

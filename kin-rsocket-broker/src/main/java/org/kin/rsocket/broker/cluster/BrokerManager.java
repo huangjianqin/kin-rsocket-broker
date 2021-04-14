@@ -16,20 +16,20 @@ public interface BrokerManager extends Closeable {
     /**
      * broker信息发生变更时, 会触发subscriber操作(subscribe数据为所有broker信息)
      */
-    Flux<Collection<Broker>> brokersChangedFlux();
+    Flux<Collection<BrokerInfo>> brokersChangedFlux();
 
     /**
      * 本地broker
      */
-    Broker localBroker();
+    BrokerInfo localBroker();
 
     /**
      * 所有broker信息
      */
-    Collection<Broker> all();
+    Collection<BrokerInfo> all();
 
     /** 寻找某ip上的broker */
-    Mono<Broker> getBroker(String ip);
+    Mono<BrokerInfo> getBroker(String ip);
 
     /** todo 获取所有暴露的services */
     Flux<ServiceLocator> getServices(String ip);

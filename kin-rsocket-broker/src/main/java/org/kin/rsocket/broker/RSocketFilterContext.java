@@ -11,7 +11,7 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RSocketFilterContext {
+final class RSocketFilterContext {
     /** request frame type */
     private FrameType frameType;
     /** routing metadata */

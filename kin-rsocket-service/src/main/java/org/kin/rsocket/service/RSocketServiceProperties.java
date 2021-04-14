@@ -32,7 +32,7 @@ public class RSocketServiceProperties {
     /** request/response timeout, and default value is 3000 and unit is millisecond */
     private Integer timeout = 3000;
     /** endpoints: interface full name to endpoint url */
-    private List<ServiceEndpoint> endpoints;
+    private List<EndpointProperties> endpoints;
 
     //setter && getter
     public String getSchema() {
@@ -91,11 +91,11 @@ public class RSocketServiceProperties {
         this.topology = topology;
     }
 
-    public List<ServiceEndpoint> getEndpoints() {
+    public List<EndpointProperties> getEndpoints() {
         return endpoints;
     }
 
-    public void setEndpoints(List<ServiceEndpoint> endpoints) {
+    public void setEndpoints(List<EndpointProperties> endpoints) {
         this.endpoints = endpoints;
     }
 

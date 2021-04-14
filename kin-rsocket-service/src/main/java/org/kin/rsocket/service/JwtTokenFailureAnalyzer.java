@@ -7,7 +7,7 @@ import org.springframework.boot.diagnostics.FailureAnalysis;
  * @author huangjianqin
  * @date 2021/3/31
  */
-public class JwtTokenFailureAnalyzer extends AbstractFailureAnalyzer<JwtTokenNotFoundException> {
+public final class JwtTokenFailureAnalyzer extends AbstractFailureAnalyzer<JwtTokenNotFoundException> {
     @Override
     protected FailureAnalysis analyze(Throwable rootFailure, JwtTokenNotFoundException cause) {
         return new FailureAnalysis(getDescription(cause), getAction(cause), cause);
