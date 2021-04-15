@@ -3,7 +3,7 @@ package org.kin.rsocket.broker.controller;
 import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
-import org.kin.rsocket.broker.ServiceResponderManager;
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventBuilder;
@@ -32,7 +32,7 @@ public class ConfigController {
     @Autowired
     private AuthenticationService authenticationService;
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
+    private ServiceManager serviceManager;
     @Autowired
     private RSocketBrokerProperties brokerConfig;
 
@@ -48,7 +48,7 @@ public class ConfigController {
                 CloudEventData<ConfigChangedEvent> configEvent = CloudEventBuilder.builder(ConfigChangedEvent.of(appName, body))
                         .withSource(RSocketAppContext.SOURCE)
                         .build();
-                return Flux.fromIterable(serviceResponderManager.getByAppName(appName)).filter(handler -> {
+                return Flux.fromIterable(serviceManager.getByAppName(appName)).filter(handler -> {
                     AppMetadata appMetadata = handler.getAppMetadata();
                     return appMetadata.getUuid().equals(id) || appMetadata.getIp().equals(ip);
                 }).flatMap(responder -> responder.fireCloudEventToPeer(configEvent)).then(Mono.just("success"));

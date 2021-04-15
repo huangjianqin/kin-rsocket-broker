@@ -34,21 +34,18 @@ import reactor.core.publisher.Sinks;
  */
 final class BrokerResponder extends AbstractRSocket {
     private static final Logger log = LoggerFactory.getLogger(BrokerResponder.class);
-    private final ServiceRouteTable routeTable;
-    private final ServiceResponderManager serviceResponderManager;
+    private final ServiceManager serviceManager;
     private final RSocketFilterChain filterChain;
     /** 本broker app metadata todo 为何不从外部getAppMeta获取 */
     private final AppMetadata upstreamBrokerMetadata;
     /** reactive cloud event sink */
     private final Sinks.Many<CloudEventData<?>> cloudEventSink;
 
-    public BrokerResponder(ServiceRouteTable serviceRoutingSelector,
-                           ServiceResponderManager serviceResponderManager,
+    public BrokerResponder(ServiceManager serviceManager,
                            RSocketFilterChain filterChain,
                            Sinks.Many<CloudEventData<?>> cloudEventSink) {
-        this.routeTable = serviceRoutingSelector;
         this.filterChain = filterChain;
-        this.serviceResponderManager = serviceResponderManager;
+        this.serviceManager = serviceManager;
         this.cloudEventSink = cloudEventSink;
 
         this.upstreamBrokerMetadata = new AppMetadata();
@@ -159,9 +156,9 @@ final class BrokerResponder extends AbstractRSocket {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                 }
             } else {
-                Integer targetInstanceId = routeTable.getInstanceId(serviceId);
+                Integer targetInstanceId = serviceManager.getInstanceId(serviceId);
                 if (targetInstanceId != null) {
-                    targetResponder = serviceResponderManager.getByInstanceId(targetInstanceId);
+                    targetResponder = serviceManager.getByInstanceId(targetInstanceId);
                 } else {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }
@@ -185,11 +182,11 @@ final class BrokerResponder extends AbstractRSocket {
      */
     private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
-            return serviceResponderManager.getByUUID(endpoint.substring(3));
+            return serviceManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
-        for (Integer instanceId : routeTable.getAllInstanceIds(serviceId)) {
-            ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
+        for (Integer instanceId : serviceManager.getAllInstanceIds(serviceId)) {
+            ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
             if (responder != null) {
                 if (responder.getAppTagsHashCodeSet().contains(endpointHashCode)) {
                     return responder;

@@ -1,8 +1,8 @@
 package org.kin.rsocket.broker.controller;
 
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,12 +21,12 @@ import java.util.*;
 @RequestMapping("/app")
 public class AppQueryController {
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
+    private ServiceManager serviceManager;
 
     @GetMapping("/{appName}")
     public Flux<Map<String, Object>> query(@PathVariable(name = "appName") String appName) {
         List<Map<String, Object>> apps = new ArrayList<>();
-        Collection<ServiceResponder> responders = serviceResponderManager.getByAppName(appName);
+        Collection<ServiceResponder> responders = serviceManager.getByAppName(appName);
         if (CollectionUtils.isNonEmpty(responders)) {
             for (ServiceResponder handler : responders) {
                 Map<String, Object> app = new HashMap<>();

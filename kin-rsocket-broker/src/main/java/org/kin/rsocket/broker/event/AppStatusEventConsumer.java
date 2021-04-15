@@ -2,8 +2,8 @@ package org.kin.rsocket.broker.event;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -27,7 +27,7 @@ import java.util.Properties;
  */
 public final class AppStatusEventConsumer implements CloudEventConsumer, Closeable, DisposableBean {
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
+    private ServiceManager serviceManager;
     @Autowired
     private ConfDiamond confDiamond;
     /**
@@ -45,7 +45,7 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
         AppStatusEvent event = CloudEventSupport.unwrapData(cloudEvent, AppStatusEvent.class);
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
         if (event != null && event.getId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceResponderManager.getByUUID(event.getId());
+            ServiceResponder responder = serviceManager.getByUUID(event.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
                 if (event.getStatus().equals(AppStatus.CONNECTED)) {  //app connected
@@ -88,7 +88,7 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
                         CloudEventBuilder.builder(ConfigChangedEvent.of(appName, sw.toString()))
                                 .withSource(RSocketAppContext.SOURCE)
                                 .build();
-                serviceResponderManager.broadcast(appName, configChangedEvent).subscribe();
+                serviceManager.broadcast(appName, configChangedEvent).subscribe();
             }));
         }
     }

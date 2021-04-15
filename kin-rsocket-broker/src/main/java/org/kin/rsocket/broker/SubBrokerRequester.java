@@ -36,10 +36,8 @@ final class SubBrokerRequester implements RequesterSupport {
     private final Environment env;
     /** app name */
     private final String appName;
-    /** 服务实例路由表 */
-    private final ServiceRouteTable routeTable;
     /** 服务路由器 */
-    private final ServiceResponderManager serviceResponderManager;
+    private final ServiceManager serviceManager;
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
     /** reactive cloud event flux */
@@ -47,15 +45,13 @@ final class SubBrokerRequester implements RequesterSupport {
 
     public SubBrokerRequester(RSocketBrokerProperties brokerConfig,
                               Environment env,
-                              ServiceRouteTable routeTable,
-                              ServiceResponderManager serviceResponderManager,
+                              ServiceManager serviceManager,
                               RSocketFilterChain filterChain,
                               Sinks.Many<CloudEventData<?>> cloudEventSink) {
         this.env = env;
         //todo 配置同一
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name", "unknown-app"));
-        this.routeTable = routeTable;
-        this.serviceResponderManager = serviceResponderManager;
+        this.serviceManager = serviceManager;
         this.filterChain = filterChain;
         this.brokerConfig = brokerConfig;
         this.cloudEventSink = cloudEventSink;
@@ -87,7 +83,7 @@ final class SubBrokerRequester implements RequesterSupport {
 
     @Override
     public Supplier<Set<ServiceLocator>> exposedServices() {
-        return () -> routeTable.getAllServices().stream()
+        return () -> serviceManager.getAllServices().stream()
                 //todo global是啥子
                 .filter(serviceLocator -> serviceLocator.hasTag("global"))
                 .collect(Collectors.toSet());
@@ -114,16 +110,18 @@ final class SubBrokerRequester implements RequesterSupport {
     @Override
     public SocketAcceptor socketAcceptor() {
         return (connectionSetupPayload, rsocket) -> Mono.just(
-                new BrokerResponder(routeTable, serviceResponderManager, filterChain, cloudEventSink));
+                new BrokerResponder(serviceManager, filterChain, cloudEventSink));
     }
 
     @Override
     public List<RSocketInterceptor> responderInterceptors() {
+        //todo
         return Collections.emptyList();
     }
 
     @Override
     public List<RSocketInterceptor> requesterInterceptors() {
+        //todo
         return Collections.emptyList();
     }
 

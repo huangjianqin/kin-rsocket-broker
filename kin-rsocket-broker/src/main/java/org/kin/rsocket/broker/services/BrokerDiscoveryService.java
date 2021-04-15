@@ -1,8 +1,7 @@
 package org.kin.rsocket.broker.services;
 
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
-import org.kin.rsocket.broker.ServiceRouteTable;
 import org.kin.rsocket.broker.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
@@ -24,9 +23,7 @@ import java.util.List;
 @RSocketService(DiscoveryService.class)
 public class BrokerDiscoveryService implements DiscoveryService {
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
-    @Autowired
-    private ServiceRouteTable routeTable;
+    private ServiceManager serviceManager;
 
     @Override
     public Flux<ServiceInstance> getInstances(String serviceId) {
@@ -35,20 +32,20 @@ public class BrokerDiscoveryService implements DiscoveryService {
 
     @Override
     public Flux<String> getAllServices() {
-        return Flux.fromIterable(routeTable.getAllServices()).map(ServiceLocator::getGsv);
+        return Flux.fromIterable(serviceManager.getAllServices()).map(ServiceLocator::getGsv);
     }
 
     /**
      * 寻找service instances
      */
     private Flux<ServiceInstance> findServiceInstances(String routeKey) {
-        Collection<Integer> instanceIds = routeTable.getAllInstanceIds(ServiceLocator.serviceHashCode(routeKey));
+        Collection<Integer> instanceIds = serviceManager.getAllInstanceIds(ServiceLocator.serviceHashCode(routeKey));
         if (instanceIds.isEmpty()) {
             return findServicesInstancesByAppName(routeKey);
         }
         List<ServiceInstance> serviceInstances = new ArrayList<>();
         for (Integer instanceId : instanceIds) {
-            ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
+            ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
             if (responder != null) {
                 serviceInstances.add(newServiceInstance(responder));
             }
@@ -60,7 +57,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
      * 通过app name寻找service instances
      */
     private Flux<ServiceInstance> findServicesInstancesByAppName(String appName) {
-        return Flux.fromIterable(serviceResponderManager.getAllResponders())
+        return Flux.fromIterable(serviceManager.getAllResponders())
                 .filter(responder -> responder.getAppMetadata().getName().equalsIgnoreCase(appName))
                 .filter(responder -> responder.getAppStatus().equals(AppStatus.SERVING))
                 .map(this::newServiceInstance);

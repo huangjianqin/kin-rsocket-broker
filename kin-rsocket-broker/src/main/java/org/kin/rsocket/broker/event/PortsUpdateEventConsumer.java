@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  */
 public final class PortsUpdateEventConsumer implements CloudEventConsumer {
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
+    private ServiceManager serviceManager;
 
     @Override
     public boolean shouldAccept(CloudEventData<?> cloudEvent) {
@@ -27,7 +27,7 @@ public final class PortsUpdateEventConsumer implements CloudEventConsumer {
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
         PortsUpdateEvent event = CloudEventSupport.unwrapData(cloudEvent, PortsUpdateEvent.class);
         if (event != null) {
-            ServiceResponder responder = serviceResponderManager.getByUUID(event.getAppId());
+            ServiceResponder responder = serviceManager.getByUUID(event.getAppId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
                 appMetadata.setWebPort(event.getWebPort());

@@ -4,9 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
-import org.kin.rsocket.broker.ServiceRouteTable;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.ServiceLocator;
@@ -35,17 +34,15 @@ public class ServiceQueryController {
     /** json编码元数据 */
     private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
     @Autowired
-    private ServiceRouteTable routeTable;
-    @Autowired
-    private ServiceResponderManager serviceResponderManager;
+    private ServiceManager serviceManager;
 
     @GetMapping("/{serviceName}")
     public Flux<Map<String, Object>> query(@PathVariable(name = "serviceName") String serviceName) {
-        return Flux.fromIterable(routeTable.getAllServices())
+        return Flux.fromIterable(serviceManager.getAllServices())
                 .filter(locator -> locator.getService().equals(serviceName))
                 .map(locator -> {
                     Map<String, Object> serviceInfo = new HashMap<>();
-                    serviceInfo.put("count", routeTable.countInstanceIds(locator.getId()));
+                    serviceInfo.put("count", serviceManager.countInstanceIds(locator.getId()));
                     if (locator.getGroup() != null) {
                         serviceInfo.put("group", locator.getGroup());
                     }
@@ -61,9 +58,9 @@ public class ServiceQueryController {
                                         @PathVariable(name = "serviceName") String serviceName,
                                         @PathVariable(name = "version") String version) {
         //todo 不带group和版本号可以???
-        Integer instanceId = routeTable.getInstanceId(ServiceLocator.of(group, serviceName, version).getId());
+        Integer instanceId = serviceManager.getInstanceId(ServiceLocator.of(group, serviceName, version).getId());
         if (instanceId != null) {
-            ServiceResponder brokerResponderHandler = serviceResponderManager.getByInstanceId(instanceId);
+            ServiceResponder brokerResponderHandler = serviceManager.getByInstanceId(instanceId);
             if (brokerResponderHandler != null) {
                 GSVRoutingMetadata routingMetadata =
                         GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");

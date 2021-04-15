@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.CloudEventConsumer;
@@ -19,7 +19,7 @@ import java.util.Set;
  */
 public final class ServicesExposedEventConsumer implements CloudEventConsumer {
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
+    private ServiceManager serviceManager;
 
     @Override
     public boolean shouldAccept(CloudEventData<?> cloudEvent) {
@@ -30,7 +30,7 @@ public final class ServicesExposedEventConsumer implements CloudEventConsumer {
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
         ServicesExposedEvent event = CloudEventSupport.unwrapData(cloudEvent, ServicesExposedEvent.class);
         if (event != null && event.getAppId().equals(cloudEvent.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceResponderManager.getByUUID(event.getAppId());
+            ServiceResponder responder = serviceManager.getByUUID(event.getAppId());
             if (responder != null) {
                 Set<ServiceLocator> serviceLocators = event.getServices();
                 responder.setAppStatus(AppStatus.SERVING);

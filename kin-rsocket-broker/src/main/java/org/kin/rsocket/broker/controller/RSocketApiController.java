@@ -5,10 +5,9 @@ import io.netty.buffer.Unpooled;
 import io.rsocket.util.DefaultPayload;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceMeshInspector;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
-import org.kin.rsocket.broker.ServiceRouteTable;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -36,9 +35,7 @@ public class RSocketApiController {
     @Value("${kin.rsocket.broker.auth}")
     private boolean authRequired;
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
-    @Autowired
-    private ServiceRouteTable routeTable;
+    private ServiceManager serviceManager;
     @Autowired
     private ServiceMeshInspector serviceMeshInspector;
     @Autowired
@@ -55,13 +52,13 @@ public class RSocketApiController {
         try {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
             Integer serviceId = routingMetadata.serviceId();
-            Integer instanceId = routeTable.getInstanceId(serviceId);
+            Integer instanceId = serviceManager.getInstanceId(serviceId);
             if (!endpoint.isEmpty() && endpoint.startsWith("id:")) {
                 //存在endpoint
                 instanceId = Integer.valueOf(endpoint.substring(3).trim());
             }
             if (instanceId != null) {
-                ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
+                ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
                 if (responder != null) {
                     if (authRequired) {
                         RSocketAppPrincipal principal = authenticationService.auth(token);

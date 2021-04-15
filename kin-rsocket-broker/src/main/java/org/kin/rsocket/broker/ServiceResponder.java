@@ -60,9 +60,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private final RSocket peerRsocket;
     /** upstream broker */
     private final UpstreamCluster upstreamBrokers;
-    /** reactive service routing selector */
-    private final ServiceRouteTable routeTable;
-    private final ServiceResponderManager serviceResponderManager;
+    private final ServiceManager serviceManager;
     private final ServiceMeshInspector serviceMeshInspector;
     private final Mono<Void> comboOnClose;
     /** reactive event processor */
@@ -87,9 +85,8 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                             AppMetadata appMetadata,
                             RSocketAppPrincipal principal,
                             RSocket peerRsocket,
-                            ServiceRouteTable routingSelector,
                             Sinks.Many<CloudEventData<?>> cloudEventSink,
-                            ServiceResponderManager handlerRegistry,
+                            ServiceManager handlerRegistry,
                             ServiceMeshInspector serviceMeshInspector,
                             UpstreamCluster upstreamBrokers,
                             RSocketFilterChain filterChain,
@@ -120,9 +117,8 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         }
         this.principal = principal;
         this.peerRsocket = peerRsocket;
-        this.routeTable = routingSelector;
         this.cloudEventSink = cloudEventSink;
-        this.serviceResponderManager = handlerRegistry;
+        this.serviceManager = handlerRegistry;
         this.serviceMeshInspector = serviceMeshInspector;
         this.filterChain = filterChain;
         //publish services metadata
@@ -302,9 +298,9 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     /** 注册downstream暴露的服务 */
     public void registerPublishedServices() {
         if (this.peerServices != null && !this.peerServices.isEmpty()) {
-            Set<Integer> serviceIds = routeTable.getServiceIds(appMetadata.getId());
+            Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getId());
             if (serviceIds.isEmpty()) {
-                this.routeTable.register(appMetadata.getId(), appMetadata.getPowerRating(), peerServices);
+                this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), peerServices);
                 this.appStatus = AppStatus.SERVING;
             }
         }
@@ -317,12 +313,12 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         } else {
             this.peerServices.addAll(services);
         }
-        this.routeTable.register(appMetadata.getId(), appMetadata.getPowerRating(), services);
+        this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), services);
     }
 
     /** 注销downstream暴露的服务 */
     public void unregisterPublishedServices() {
-        routeTable.unregister(appMetadata.getId());
+        serviceManager.unregister(appMetadata.getId());
         this.appStatus = AppStatus.DOWN;
     }
 
@@ -332,7 +328,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             this.peerServices.removeAll(services);
         }
         for (ServiceLocator service : services) {
-            this.routeTable.unregister(appMetadata.getId(), service.getId());
+            this.serviceManager.unregister(appMetadata.getId(), service.getId());
         }
     }
 
@@ -396,9 +392,9 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                     }
                 } else {
-                    Integer targetInstanceId = routeTable.getInstanceId(serviceId);
+                    Integer targetInstanceId = serviceManager.getInstanceId(serviceId);
                     if (targetInstanceId != null) {
-                        targetResponder = serviceResponderManager.getByInstanceId(targetInstanceId);
+                        targetResponder = serviceManager.getByInstanceId(targetInstanceId);
                     } else {
                         error = new InvalidException(String.format("Service not found '%s'", gsv));
                     }
@@ -434,11 +430,11 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
      */
     private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
-            return serviceResponderManager.getByUUID(endpoint.substring(3));
+            return serviceManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
-        for (Integer instanceId : routeTable.getAllInstanceIds(serviceId)) {
-            ServiceResponder responder = serviceResponderManager.getByInstanceId(instanceId);
+        for (Integer instanceId : serviceManager.getAllInstanceIds(serviceId)) {
+            ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
             if (responder != null) {
                 if (responder.appTagsHashCodeSet.contains(endpointHashCode)) {
                     return responder;
@@ -459,7 +455,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private ServiceResponder findStickyHandler(boolean sticky, Integer serviceId) {
         // todo 算法更新，如一致性hash算法，或者取余操作
         if (sticky && stickyServices.containsKey(serviceId)) {
-            return serviceResponderManager.getByInstanceId(stickyServices.get(serviceId));
+            return serviceManager.getByInstanceId(stickyServices.get(serviceId));
         }
         return null;
     }

@@ -1,9 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
-import org.kin.rsocket.broker.ServiceResponderManager;
-import org.kin.rsocket.broker.ServiceRouteTable;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
@@ -35,22 +33,18 @@ import java.util.Map;
 @RequestMapping("/opr")
 public class OprController {
     @Autowired
-    private ServiceResponderManager serviceResponderManager;
-    @Autowired
-    private ServiceRouteTable routeTable;
+    private ServiceManager serviceManager;
     @Autowired
     private BrokerManager brokerManager;
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @RequestMapping("/services")
     public Mono<Collection<ServiceLocator>> services() {
-        return Mono.just(routeTable.getAllServices());
+        return Mono.just(serviceManager.getAllServices());
     }
 
     @RequestMapping("/connections")
     public Mono<Map<String, Collection<String>>> connections() {
-        return Flux.fromIterable(serviceResponderManager.getAllResponders())
+        return Flux.fromIterable(serviceManager.getAllResponders())
                 .map(ServiceResponder::getAppMetadata)
                 .collectMultimap(AppMetadata::getName, AppMetadata::getIp);
     }
@@ -70,7 +64,7 @@ public class OprController {
                         .withSource(RSocketAppContext.SOURCE)
                         .build();
 
-        return serviceResponderManager.broadcast(Symbols.BROKER, cloudEvent);
+        return serviceManager.broadcast(Symbols.BROKER, cloudEvent);
     }
 
     @PostMapping("/cluster/stopLocalBroker")
