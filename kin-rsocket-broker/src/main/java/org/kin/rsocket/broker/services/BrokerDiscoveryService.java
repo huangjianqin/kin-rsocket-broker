@@ -39,16 +39,13 @@ public class BrokerDiscoveryService implements DiscoveryService {
      * 寻找service instances
      */
     private Flux<ServiceInstance> findServiceInstances(String routeKey) {
-        Collection<Integer> instanceIds = serviceManager.getAllInstanceIds(ServiceLocator.serviceHashCode(routeKey));
-        if (instanceIds.isEmpty()) {
+        Collection<ServiceResponder> responders = serviceManager.getAllByServiceId(ServiceLocator.serviceHashCode(routeKey));
+        if (responders.isEmpty()) {
             return findServicesInstancesByAppName(routeKey);
         }
-        List<ServiceInstance> serviceInstances = new ArrayList<>();
-        for (Integer instanceId : instanceIds) {
-            ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
-            if (responder != null) {
-                serviceInstances.add(newServiceInstance(responder));
-            }
+        List<ServiceInstance> serviceInstances = new ArrayList<>(responders.size());
+        for (ServiceResponder responder : responders) {
+            serviceInstances.add(newServiceInstance(responder));
         }
         return Flux.fromIterable(serviceInstances);
     }

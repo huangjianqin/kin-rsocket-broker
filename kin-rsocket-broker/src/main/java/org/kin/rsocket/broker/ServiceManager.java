@@ -130,6 +130,7 @@ public final class ServiceManager {
             if (principal != null && compositeMetadata.contains(RSocketMimeType.Application)) {
                 AppMetadata temp = compositeMetadata.getMetadata(RSocketMimeType.Application);
                 //App registration validation: app id: UUID and unique in server
+                //todo 没有uuid是否要拒绝连接
                 if (temp.getUuid() == null || temp.getUuid().isEmpty()) {
                     temp.setUuid(UUID.randomUUID().toString());
                 }
@@ -250,10 +251,22 @@ public final class ServiceManager {
     }
 
     /**
-     * 根据app instanceId 获取所有已注册的{@link ServiceResponder}
+     * 根据app instanceId 获取已注册的{@link ServiceResponder}
      */
     public ServiceResponder getByInstanceId(Integer instanceId) {
         return instanceId2Responder.get(instanceId);
+    }
+
+    /**
+     * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link ServiceResponder}
+     */
+    public ServiceResponder getByServiceId(Integer serviceId) {
+        Integer instanceId = getInstanceId(serviceId);
+        if (Objects.isNull(instanceId)) {
+            return null;
+        }
+
+        return getByInstanceId(instanceId);
     }
 
     /**
@@ -475,6 +488,7 @@ public final class ServiceManager {
         int handlerCount = instanceIds.size();
         if (handlerCount > 1) {
             try {
+                //todo 是否考虑支持多种策略
                 return instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
             } catch (Exception e) {
                 return instanceIds.get(0);
@@ -495,6 +509,16 @@ public final class ServiceManager {
     }
 
     /**
+     * 根据serviceId获取其所有已注册的{@link ServiceResponder}
+     */
+    public Collection<ServiceResponder> getAllByServiceId(Integer serviceId) {
+        return getAllInstanceIds(serviceId).stream()
+                .map(this::getByInstanceId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 统计serviceId对应instanceId数量
      */
     public Integer countInstanceIds(Integer serviceId) {
@@ -504,24 +528,10 @@ public final class ServiceManager {
     }
 
     /**
-     * 统计serviceId对应instanceId数量
-     */
-    public Integer countInstanceIds(String serviceName) {
-        return countInstanceIds(MurmurHash3.hash32(serviceName));
-    }
-
-    /**
      * 获取所有服务数据
      */
     public Collection<ServiceLocator> getAllServices() {
         return services.values();
-    }
-
-    /**
-     * 已注册服务数量
-     */
-    public int countServices() {
-        return services.keySet().size();
     }
 }
 

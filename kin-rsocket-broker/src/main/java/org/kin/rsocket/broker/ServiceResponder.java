@@ -297,6 +297,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
 
     /** 注册downstream暴露的服务 */
     public void registerPublishedServices() {
+        //todo 此处, 是connection setup时注册, registerServices是通过cloudevent注册, 是否考虑仅存一个即可
         if (this.peerServices != null && !this.peerServices.isEmpty()) {
             Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getId());
             if (serviceIds.isEmpty()) {
@@ -392,10 +393,8 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                     }
                 } else {
-                    Integer targetInstanceId = serviceManager.getInstanceId(serviceId);
-                    if (targetInstanceId != null) {
-                        targetResponder = serviceManager.getByInstanceId(targetInstanceId);
-                    } else {
+                    targetResponder = serviceManager.getByServiceId(serviceId);
+                    if (Objects.isNull(targetResponder)) {
                         error = new InvalidException(String.format("Service not found '%s'", gsv));
                     }
                 }
@@ -433,12 +432,9 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             return serviceManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
-        for (Integer instanceId : serviceManager.getAllInstanceIds(serviceId)) {
-            ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
-            if (responder != null) {
-                if (responder.appTagsHashCodeSet.contains(endpointHashCode)) {
-                    return responder;
-                }
+        for (ServiceResponder responder : serviceManager.getAllByServiceId(serviceId)) {
+            if (responder.appTagsHashCodeSet.contains(endpointHashCode)) {
+                return responder;
             }
         }
         return null;

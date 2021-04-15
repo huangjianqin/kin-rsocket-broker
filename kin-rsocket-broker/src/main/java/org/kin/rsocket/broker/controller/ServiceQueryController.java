@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
@@ -58,18 +59,15 @@ public class ServiceQueryController {
                                         @PathVariable(name = "serviceName") String serviceName,
                                         @PathVariable(name = "version") String version) {
         //todo 不带group和版本号可以???
-        Integer instanceId = serviceManager.getInstanceId(ServiceLocator.of(group, serviceName, version).getId());
-        if (instanceId != null) {
-            ServiceResponder brokerResponderHandler = serviceManager.getByInstanceId(instanceId);
-            if (brokerResponderHandler != null) {
-                GSVRoutingMetadata routingMetadata =
-                        GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
-                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
-                ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"" + serviceName + "\"]").getBytes(StandardCharsets.UTF_8));
-                return brokerResponderHandler.getPeerRsocket()
-                        .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
-                        .map(Payload::getDataUtf8);
-            }
+        ServiceResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId());
+        if (Objects.nonNull(brokerResponder)) {
+            GSVRoutingMetadata routingMetadata =
+                    GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
+            ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"" + serviceName + "\"]").getBytes(StandardCharsets.UTF_8));
+            return brokerResponder.getPeerRsocket()
+                    .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
+                    .map(Payload::getDataUtf8);
         }
         return Mono.error(new Exception(String.format("Service not found '%s'", serviceName)));
     }

@@ -22,6 +22,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
+import java.util.Objects;
+
 /**
  * broker <-> broker
  * broker responder
@@ -156,10 +158,8 @@ final class BrokerResponder extends AbstractRSocket {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                 }
             } else {
-                Integer targetInstanceId = serviceManager.getInstanceId(serviceId);
-                if (targetInstanceId != null) {
-                    targetResponder = serviceManager.getByInstanceId(targetInstanceId);
-                } else {
+                targetResponder = serviceManager.getByServiceId(serviceId);
+                if (Objects.isNull(targetResponder)) {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }
             }
@@ -185,12 +185,9 @@ final class BrokerResponder extends AbstractRSocket {
             return serviceManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
-        for (Integer instanceId : serviceManager.getAllInstanceIds(serviceId)) {
-            ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
-            if (responder != null) {
-                if (responder.getAppTagsHashCodeSet().contains(endpointHashCode)) {
-                    return responder;
-                }
+        for (ServiceResponder responder : serviceManager.getAllByServiceId(serviceId)) {
+            if (responder.getAppTagsHashCodeSet().contains(endpointHashCode)) {
+                return responder;
             }
         }
         return null;

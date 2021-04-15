@@ -18,6 +18,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 
 /**
@@ -52,30 +54,31 @@ public class RSocketApiController {
         try {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
             Integer serviceId = routingMetadata.serviceId();
-            Integer instanceId = serviceManager.getInstanceId(serviceId);
+
+            ServiceResponder responder;
             if (!endpoint.isEmpty() && endpoint.startsWith("id:")) {
                 //存在endpoint
-                instanceId = Integer.valueOf(endpoint.substring(3).trim());
+                int instanceId = Integer.parseInt(endpoint.substring(3).trim());
+                responder = serviceManager.getByInstanceId(instanceId);
+            } else {
+                responder = serviceManager.getByServiceId(serviceId);
             }
-            if (instanceId != null) {
-                ServiceResponder responder = serviceManager.getByInstanceId(instanceId);
-                if (responder != null) {
-                    if (authRequired) {
-                        RSocketAppPrincipal principal = authenticationService.auth(token);
-                        if (principal == null || !serviceMeshInspector.isAllowed(principal, routingMetadata.gsv(), responder.getPrincipal())) {
-                            return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));
-                        }
+            if (Objects.nonNull(responder)) {
+                if (authRequired) {
+                    RSocketAppPrincipal principal = authenticationService.auth(token);
+                    if (principal == null || !serviceMeshInspector.isAllowed(principal, routingMetadata.gsv(), responder.getPrincipal())) {
+                        return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));
                     }
-                    RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
-                    ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);
-                    return responder.requestResponse(DefaultPayload.create(bodyBuf, compositeMetadata.getContent()))
-                            .map(payload -> {
-                                HttpHeaders headers = new HttpHeaders();
-                                headers.setContentType(MediaType.APPLICATION_JSON);
-                                headers.setCacheControl(CacheControl.noCache().getHeaderValue());
-                                return new ResponseEntity<>(payload.getDataUtf8(), headers, HttpStatus.OK);
-                            });
                 }
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
+                ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);
+                return responder.requestResponse(DefaultPayload.create(bodyBuf, compositeMetadata.getContent()))
+                        .map(payload -> {
+                            HttpHeaders headers = new HttpHeaders();
+                            headers.setContentType(MediaType.APPLICATION_JSON);
+                            headers.setCacheControl(CacheControl.noCache().getHeaderValue());
+                            return new ResponseEntity<>(payload.getDataUtf8(), headers, HttpStatus.OK);
+                        });
             }
             return Mono.just(error(String.format("Service not found '%s'", routingMetadata.gsv())));
         } catch (Exception e) {
