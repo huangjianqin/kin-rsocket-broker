@@ -5,7 +5,6 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.conf.ConfDiamond;
-import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
@@ -45,9 +44,7 @@ public class ConfigController {
         if (isAuthenticated(token)) {
             //update config for ip or id
             if (ip != null || id != null) {
-                CloudEventData<ConfigChangedEvent> configEvent = CloudEventBuilder.builder(ConfigChangedEvent.of(appName, body))
-                        .withSource(RSocketAppContext.SOURCE)
-                        .build();
+                CloudEventData<ConfigChangedEvent> configEvent = CloudEventBuilder.builder(ConfigChangedEvent.of(appName, body)).build();
                 return Flux.fromIterable(serviceManager.getByAppName(appName)).filter(handler -> {
                     AppMetadata appMetadata = handler.getAppMetadata();
                     return appMetadata.getUuid().equals(id) || appMetadata.getIp().equals(ip);

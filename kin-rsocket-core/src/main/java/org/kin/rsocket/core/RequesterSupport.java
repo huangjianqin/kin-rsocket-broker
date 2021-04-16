@@ -8,6 +8,7 @@ import org.kin.rsocket.core.event.ServicesExposedEvent;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -35,11 +36,6 @@ public interface RequesterSupport {
     Supplier<Set<ServiceLocator>> exposedServices();
 
     /**
-     * @return subscribed services信息
-     */
-    Supplier<Set<ServiceLocator>> subscribedServices();
-
-    /**
      * @return services exposed cloud event
      */
     default Supplier<CloudEventData<ServicesExposedEvent>> servicesExposedEvent() {
@@ -61,10 +57,14 @@ public interface RequesterSupport {
     /**
      * @return rsocket connector responder interceptors
      */
-    List<RSocketInterceptor> responderInterceptors();
+    default List<RSocketInterceptor> responderInterceptors() {
+        return Collections.emptyList();
+    }
 
     /**
      * @return rsocket connector requester interceptors
      */
-    List<RSocketInterceptor> requesterInterceptors();
+    default List<RSocketInterceptor> requesterInterceptors() {
+        return Collections.emptyList();
+    }
 }

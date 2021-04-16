@@ -5,7 +5,6 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.conf.ConfDiamond;
-import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -85,9 +84,7 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
                 }
 
                 CloudEventData<ConfigChangedEvent> configChangedEvent =
-                        CloudEventBuilder.builder(ConfigChangedEvent.of(appName, sw.toString()))
-                                .withSource(RSocketAppContext.SOURCE)
-                                .build();
+                        CloudEventBuilder.builder(ConfigChangedEvent.of(appName, sw.toString())).build();
                 serviceManager.broadcast(appName, configChangedEvent).subscribe();
             }));
         }

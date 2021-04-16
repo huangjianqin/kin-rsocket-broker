@@ -18,9 +18,10 @@ import java.util.UUID;
  * @date 2021/3/23
  */
 public class CloudEventBuilder<T> {
+    private static final URI DEFAULT_SOURCE = URI.create("app://" + NetUtils.getIp() + "/" + "?id=" + RSocketAppContext.ID);
+
     private final io.cloudevents.core.builder.CloudEventBuilder builder = io.cloudevents.core.builder.CloudEventBuilder.v1().withDataContentType(WellKnownMimeType.APPLICATION_JSON.getString());
     private T data;
-    private static URI DEFAULT_SOURCE = URI.create("app://" + NetUtils.getIp() + "/" + "?id=" + RSocketAppContext.ID);
 
     /**
      * Gets a brand new builder instance
@@ -41,51 +42,51 @@ public class CloudEventBuilder<T> {
     public static <T> CloudEventBuilder<T> builder(T data) {
         CloudEventBuilder<T> builder = new CloudEventBuilder<>();
         builder.data = data;
-        builder
-                .withId(UUID.randomUUID().toString())
-                .withDataContentType(WellKnownMimeType.APPLICATION_JSON.getString())
-                .withTime(OffsetDateTime.now())
-                .withType(data.getClass().getCanonicalName())
-                .withSource(DEFAULT_SOURCE);
+        builder.id(UUID.randomUUID().toString())
+                //todo cloud event 编码是json
+                .dataContentType(WellKnownMimeType.APPLICATION_JSON.getString())
+                .time(OffsetDateTime.now())
+                .type(data.getClass().getCanonicalName())
+                .source(DEFAULT_SOURCE);
         return builder;
     }
 
-    public CloudEventBuilder<T> withId(String id) {
+    public CloudEventBuilder<T> id(String id) {
         this.builder.withId(id);
         return this;
     }
 
-    public CloudEventBuilder<T> withSource(URI source) {
+    public CloudEventBuilder<T> source(URI source) {
         this.builder.withSource(source);
         return this;
     }
 
-    public CloudEventBuilder<T> withType(String type) {
+    public CloudEventBuilder<T> type(String type) {
         this.builder.withType(type);
         return this;
     }
 
-    public CloudEventBuilder<T> withDataschema(URI dataschema) {
+    public CloudEventBuilder<T> dataSchema(URI dataschema) {
         this.builder.withDataSchema(dataschema);
         return this;
     }
 
-    public CloudEventBuilder<T> withDataContentType(String datacontenttype) {
+    public CloudEventBuilder<T> dataContentType(String datacontenttype) {
         this.builder.withDataContentType(datacontenttype);
         return this;
     }
 
-    public CloudEventBuilder<T> withSubject(String subject) {
+    public CloudEventBuilder<T> subject(String subject) {
         this.builder.withSubject(subject);
         return this;
     }
 
-    public CloudEventBuilder<T> withTime(OffsetDateTime time) {
+    public CloudEventBuilder<T> time(OffsetDateTime time) {
         this.builder.withTime(time);
         return this;
     }
 
-    public CloudEventBuilder<T> withData(T data) {
+    public CloudEventBuilder<T> data(T data) {
         this.data = data;
         return this;
     }

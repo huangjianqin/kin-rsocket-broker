@@ -212,6 +212,9 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
             }
         } catch (Exception e) {
             error(failCallLog(), e);
+            //release
+            ReferenceCountUtil.safeRelease(signal);
+            payloads.subscribe(ReferenceCountUtil::safeRelease);
             return Flux.error(new InvalidException(failCallTips(e)));
         }
     }
@@ -221,7 +224,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
      * invoke service method
      * 如果遇到异常, 则抛出
      */
-    protected Object invokeServiceMethod(ReactiveMethodInvoker methodInvoker, MessageMimeTypeMetadata dataEncodingMetadata, Payload payload) {
+    private Object invokeServiceMethod(ReactiveMethodInvoker methodInvoker, MessageMimeTypeMetadata dataEncodingMetadata, Payload payload) {
         Object result = null;
         try {
             if (methodInvoker.getParamCount() > 0) {

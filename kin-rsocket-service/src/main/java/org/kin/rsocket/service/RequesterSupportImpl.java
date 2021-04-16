@@ -51,7 +51,6 @@ final class RequesterSupportImpl implements RequesterSupport {
         this.config = config;
         this.serviceRegistry = serviceRegistry;
         this.socketAcceptor = socketAcceptor;
-
         this.appName = appName;
     }
 
@@ -92,11 +91,6 @@ final class RequesterSupportImpl implements RequesterSupport {
                 .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName())
                         && !l.getService().equals(ReactiveServiceRegistry.class.getCanonicalName()))
                 .collect(Collectors.toSet());
-    }
-
-    @Override
-    public Supplier<Set<ServiceLocator>> subscribedServices() {
-        return () -> ServiceReferenceBuilder.CONSUMED_SERVICES;
     }
 
     /** 获取app元数据 */
@@ -151,35 +145,35 @@ final class RequesterSupportImpl implements RequesterSupport {
 
     @Override
     public List<RSocketInterceptor> responderInterceptors() {
-        return this.responderInterceptors;
+        return Collections.unmodifiableList(responderInterceptors);
     }
 
     @Override
     public List<RSocketInterceptor> requesterInterceptors() {
-        return requesterInterceptors;
+        return Collections.unmodifiableList(requesterInterceptors);
     }
 
-    void addRequesterInterceptor(RSocketInterceptor interceptor) {
+    public void addRequesterInterceptor(RSocketInterceptor interceptor) {
         this.requesterInterceptors.add(interceptor);
     }
 
-    void addResponderInterceptor(RSocketInterceptor interceptor) {
+    public void addResponderInterceptor(RSocketInterceptor interceptor) {
         this.responderInterceptors.add(interceptor);
     }
 
-    void addRequesterInterceptors(Collection<RSocketInterceptor> interceptors) {
+    public void addRequesterInterceptors(Collection<RSocketInterceptor> interceptors) {
         this.requesterInterceptors.addAll(interceptors);
     }
 
-    void addResponderInterceptors(Collection<RSocketInterceptor> interceptors) {
+    public void addResponderInterceptors(Collection<RSocketInterceptor> interceptors) {
         this.responderInterceptors.addAll(interceptors);
     }
 
-    void addRequesterInterceptors(RSocketInterceptor... interceptors) {
+    public void addRequesterInterceptors(RSocketInterceptor... interceptors) {
         addRequesterInterceptors(Arrays.asList(interceptors));
     }
 
-    void addResponderInterceptors(RSocketInterceptor... interceptors) {
+    public void addResponderInterceptors(RSocketInterceptor... interceptors) {
         addResponderInterceptors(Arrays.asList(interceptors));
     }
 }

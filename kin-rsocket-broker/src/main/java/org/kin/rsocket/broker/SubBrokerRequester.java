@@ -3,7 +3,6 @@ package org.kin.rsocket.broker;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
-import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
@@ -14,11 +13,13 @@ import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.MetadataAware;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.springframework.core.env.Environment;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -29,8 +30,6 @@ import java.util.stream.Collectors;
 final class SubBrokerRequester implements RequesterSupport {
     /** broker config */
     private final RSocketBrokerProperties brokerConfig;
-    /** spring env */
-    private final Environment env;
     /** app name */
     private final String appName;
     /** 服务路由器 */
@@ -39,12 +38,10 @@ final class SubBrokerRequester implements RequesterSupport {
     private final RSocketFilterChain filterChain;
 
     public SubBrokerRequester(RSocketBrokerProperties brokerConfig,
-                              Environment env,
+                              String appName,
                               ServiceManager serviceManager,
                               RSocketFilterChain filterChain) {
-        this.env = env;
-        //todo 配置同一
-        this.appName = env.getProperty("spring.application.name", env.getProperty("application.name", "unknown-app"));
+        this.appName = appName;
         this.serviceManager = serviceManager;
         this.filterChain = filterChain;
         this.brokerConfig = brokerConfig;
@@ -83,26 +80,9 @@ final class SubBrokerRequester implements RequesterSupport {
     }
 
     @Override
-    public Supplier<Set<ServiceLocator>> subscribedServices() {
-        //todo
-        return Collections::emptySet;
-    }
-    @Override
     public SocketAcceptor socketAcceptor() {
         return (connectionSetupPayload, rsocket) -> Mono.just(
                 new BrokerResponder(serviceManager, filterChain));
-    }
-
-    @Override
-    public List<RSocketInterceptor> responderInterceptors() {
-        //todo
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<RSocketInterceptor> requesterInterceptors() {
-        //todo
-        return Collections.emptyList();
     }
 
     private AppMetadata getAppMetadata() {

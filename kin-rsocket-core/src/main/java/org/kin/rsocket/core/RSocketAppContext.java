@@ -1,11 +1,9 @@
 package org.kin.rsocket.core;
 
 import org.kin.framework.utils.KinServiceLoader;
-import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.event.CloudEventData;
 import reactor.core.publisher.Sinks;
 
-import java.net.URI;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -30,8 +28,6 @@ public class RSocketAppContext {
     public static int managementPort = 0;
     /** key -> rsocket port, value -> rsocket schema */
     public static Map<Integer, String> rsocketPorts;
-    /** identity uri */
-    public static URI SOURCE = URI.create("broker://" + NetUtils.getIp() + "/" + "?id=" + ID);
 
     static {
         Class<?> byteBuddyClass = null;

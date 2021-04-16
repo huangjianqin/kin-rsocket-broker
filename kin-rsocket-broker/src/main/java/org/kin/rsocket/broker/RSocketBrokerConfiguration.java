@@ -2,7 +2,7 @@ package org.kin.rsocket.broker;
 
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
-import org.kin.rsocket.broker.cluster.DefaultBrokerManager;
+import org.kin.rsocket.broker.cluster.StandAloneBrokerManager;
 import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
 import org.kin.rsocket.broker.services.HealthService;
@@ -184,7 +184,7 @@ public class RSocketBrokerConfiguration {
     @Bean
     @ConditionalOnMissingBean(BrokerManager.class)
     public BrokerManager rsocketBrokerManager() {
-        return new DefaultBrokerManager();
+        return new StandAloneBrokerManager();
     }
 
     @Bean
@@ -192,7 +192,8 @@ public class RSocketBrokerConfiguration {
     public SubBrokerRequester subBrokerRequester(@Autowired Environment env,
                                                  @Autowired ServiceManager serviceManager,
                                                  @Autowired RSocketFilterChain filterChain) {
-        return new SubBrokerRequester(brokerConfig, env, serviceManager, filterChain);
+        String appName = env.getProperty("spring.application.name", "unknown");
+        return new SubBrokerRequester(brokerConfig, appName, serviceManager, filterChain);
     }
 
     @Bean

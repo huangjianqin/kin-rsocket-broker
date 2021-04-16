@@ -3,7 +3,6 @@ package org.kin.rsocket.service;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
-import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.NetUtils;
@@ -169,40 +168,17 @@ public final class BrokerConnector implements Closeable {
 
         @Override
         public Supplier<Set<ServiceLocator>> exposedServices() {
-            Set<String> allServices = serviceRegistry.findAllServices();
-            if (!allServices.isEmpty()) {
-                return () -> allServices.stream()
-                        //过滤掉local service
-                        .filter(serviceName -> !serviceName.equals(HealthCheck.class.getCanonicalName())
-                                && !serviceName.equals(ReactiveServiceRegistry.class.getCanonicalName()))
-                        //todo
-                        .map(ServiceLocator::of)
-                        .collect(Collectors.toSet());
-            }
-            return Collections::emptySet;
-        }
-
-        @Override
-        public Supplier<Set<ServiceLocator>> subscribedServices() {
-            //todo
-            return Collections::emptySet;
+            return () -> serviceRegistry.findAllServiceLocators()
+                    .stream()
+                    //过滤掉local service
+                    .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName())
+                            && !l.getService().equals(ReactiveServiceRegistry.class.getCanonicalName()))
+                    .collect(Collectors.toSet());
         }
 
         @Override
         public SocketAcceptor socketAcceptor() {
             return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, requester, setupPayload));
-        }
-
-        @Override
-        public List<RSocketInterceptor> responderInterceptors() {
-            //todo
-            return Collections.emptyList();
-        }
-
-        @Override
-        public List<RSocketInterceptor> requesterInterceptors() {
-            //todo
-            return Collections.emptyList();
         }
 
         /**

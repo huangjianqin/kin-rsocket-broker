@@ -20,8 +20,8 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public final class DefaultBrokerManager extends AbstractBrokerManager implements BrokerManager {
-    private static final Logger log = LoggerFactory.getLogger(DefaultBrokerManager.class);
+public final class StandAloneBrokerManager extends AbstractBrokerManager implements BrokerManager {
+    private static final Logger log = LoggerFactory.getLogger(StandAloneBrokerManager.class);
     /** 本机broker */
     private BrokerInfo localBrokerInfo;
     @Autowired

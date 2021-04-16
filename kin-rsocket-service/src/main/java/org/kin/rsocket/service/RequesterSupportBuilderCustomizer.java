@@ -9,5 +9,5 @@ public interface RequesterSupportBuilderCustomizer {
     /**
      * 自定义额外的requester builder 逻辑
      */
-    void customize(RequesterSupportBuilder builder);
+    void customize(RequesterSupportImpl requesterSupport);
 }

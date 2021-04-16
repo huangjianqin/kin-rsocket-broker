@@ -91,9 +91,10 @@ public class RSocketServiceAutoConfiguration {
                                              @Autowired ReactiveServiceRegistry serviceRegistry,
                                              @Autowired SocketAcceptor socketAcceptor,
                                              @Autowired ObjectProvider<RequesterSupportBuilderCustomizer> customizers) {
-        RequesterSupportBuilder builder = RequesterSupportBuilder.builder(config, environment, serviceRegistry, socketAcceptor);
-        customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
-        return builder.build();
+        String appName = environment.getProperty("spring.application.name", "unknown");
+        RequesterSupportImpl requesterSupport = new RequesterSupportImpl(config, appName, serviceRegistry, socketAcceptor);
+        customizers.orderedStream().forEach((customizer) -> customizer.customize(requesterSupport));
+        return requesterSupport;
     }
 
     /**

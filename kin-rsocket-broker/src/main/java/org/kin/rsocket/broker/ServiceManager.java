@@ -339,8 +339,7 @@ public final class ServiceManager {
         upstreamClusterChangedEvent.setUris(uris);
 
         return CloudEventBuilder.builder(upstreamClusterChangedEvent)
-                .withDataschema(URI.create("rsocket:" + UpstreamClusterChangedEvent.class.getName()))
-                .withSource(RSocketAppContext.SOURCE)
+                .dataSchema(URI.create("rsocket:" + UpstreamClusterChangedEvent.class.getName()))
                 .build();
     }
 
