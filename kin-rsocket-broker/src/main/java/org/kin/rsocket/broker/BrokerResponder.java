@@ -8,6 +8,7 @@ import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
 import org.kin.rsocket.core.AbstractRSocket;
+import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
@@ -20,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.util.Objects;
 
@@ -40,15 +40,11 @@ final class BrokerResponder extends AbstractRSocket {
     private final RSocketFilterChain filterChain;
     /** 本broker app metadata todo 为何不从外部getAppMeta获取 */
     private final AppMetadata upstreamBrokerMetadata;
-    /** reactive cloud event sink */
-    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
 
     public BrokerResponder(ServiceManager serviceManager,
-                           RSocketFilterChain filterChain,
-                           Sinks.Many<CloudEventData<?>> cloudEventSink) {
+                           RSocketFilterChain filterChain) {
         this.filterChain = filterChain;
         this.serviceManager = serviceManager;
-        this.cloudEventSink = cloudEventSink;
 
         this.upstreamBrokerMetadata = new AppMetadata();
         //todo 看看CentralBroker是否需要修改
@@ -130,7 +126,7 @@ final class BrokerResponder extends AbstractRSocket {
                 String type = cloudEvent.getAttributes().getType();
                 if (UpstreamClusterChangedEvent.class.getCanonicalName().equalsIgnoreCase(type)) {
                     //TODO 目前仅仅处理一种cloudevent, 还是说全开放, 会不会有其他异常
-                    cloudEventSink.tryEmitNext(cloudEvent);
+                    RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent);
                 }
             }
         } catch (Exception e) {

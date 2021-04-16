@@ -16,7 +16,6 @@ import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 
@@ -35,16 +34,13 @@ final class Responder extends ResponderSupport implements CloudEventRSocket, Res
      * 返回数据给requester时, 如果没有带数据编码类型, 则使用默认的编码类型进行编码
      */
     private MessageMimeTypeMetadata defaultMessageMimeTypeMetadata = null;
-    private Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** combo onClose from responder and requester */
     private Mono<Void> comboOnClose;
 
     Responder(ReactiveServiceRegistry serviceRegistry,
-              Sinks.Many<CloudEventData<?>> cloudEventSink,
               RSocket requester,
               ConnectionSetupPayload setupPayload) {
         super(serviceRegistry);
-        this.cloudEventSink = cloudEventSink;
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 
@@ -124,7 +120,7 @@ final class Responder extends ResponderSupport implements CloudEventRSocket, Res
 
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
-        return Mono.fromRunnable(() -> cloudEventSink.tryEmitNext(cloudEvent));
+        return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
     }
 
     @Override

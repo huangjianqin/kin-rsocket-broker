@@ -10,7 +10,6 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -41,14 +40,6 @@ public class RSocketBrokerConfiguration {
     private RSocketBrokerProperties brokerConfig;
 
     /**
-     * 接受cloud event的flux
-     */
-    @Bean
-    public Sinks.Many<CloudEventData<?>> cloudEventSink() {
-        return Sinks.many().multicast().onBackpressureBuffer();
-    }
-
-    /**
      * 接受tips的flux
      */
     @Bean
@@ -62,11 +53,9 @@ public class RSocketBrokerConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean
-    public CloudEventConsumers cloudEventConsumers(@Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
-                                                   ObjectProvider<CloudEventConsumer> consumers) {
-        CloudEventConsumers cloudEventConsumers = new CloudEventConsumers(cloudEventSink);
-        cloudEventConsumers.addConsumers(consumers.stream().collect(Collectors.toList()));
-        return cloudEventConsumers;
+    public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
+        CloudEventConsumers.INSTANCE.addConsumers(consumers.stream().collect(Collectors.toList()));
+        return CloudEventConsumers.INSTANCE;
     }
 
     @Bean
@@ -137,14 +126,13 @@ public class RSocketBrokerConfiguration {
     @Bean
     public ServiceManager serviceRouter(@Autowired ReactiveServiceRegistry serviceRegistry,
                                         @Autowired RSocketFilterChain rsocketFilterChain,
-                                        @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
                                         @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
                                         @Autowired AuthenticationService authenticationService,
                                         @Autowired BrokerManager brokerManager,
                                         @Autowired ServiceMeshInspector serviceMeshInspector,
                                         @Autowired RSocketBrokerProperties properties,
                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
-        return new ServiceManager(serviceRegistry, rsocketFilterChain, cloudEventSink,
+        return new ServiceManager(serviceRegistry, rsocketFilterChain,
                 notificationSink, authenticationService, brokerManager, serviceMeshInspector,
                 properties.isAuth(), upstreamBrokerCluster);
     }
@@ -195,17 +183,16 @@ public class RSocketBrokerConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(BrokerManager.class)
-    public BrokerManager rsocketBrokerManager(@Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
-        return new DefaultBrokerManager(cloudEventSink);
+    public BrokerManager rsocketBrokerManager() {
+        return new DefaultBrokerManager();
     }
 
     @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public SubBrokerRequester subBrokerRequester(@Autowired Environment env,
                                                  @Autowired ServiceManager serviceManager,
-                                                 @Autowired RSocketFilterChain filterChain,
-                                                 @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
-        return new SubBrokerRequester(brokerConfig, env, serviceManager, filterChain, cloudEventSink);
+                                                 @Autowired RSocketFilterChain filterChain) {
+        return new SubBrokerRequester(brokerConfig, env, serviceManager, filterChain);
     }
 
     @Bean

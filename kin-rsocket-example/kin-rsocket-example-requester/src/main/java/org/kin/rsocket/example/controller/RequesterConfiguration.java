@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * @date 2021/4/9
  */
 @Configuration
-public class ControllerConfiguration {
+public class RequesterConfiguration {
     @Bean
     public UserService userService(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return ServiceReferenceBuilder

@@ -7,6 +7,7 @@ import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ServicesExposedEvent;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -41,7 +42,16 @@ public interface RequesterSupport {
     /**
      * @return services exposed cloud event
      */
-    Supplier<CloudEventData<ServicesExposedEvent>> servicesExposedEvent();
+    default Supplier<CloudEventData<ServicesExposedEvent>> servicesExposedEvent() {
+        return () -> {
+            Collection<ServiceLocator> serviceLocators = exposedServices().get();
+            if (serviceLocators.isEmpty()) {
+                return null;
+            }
+
+            return ServicesExposedEvent.of(serviceLocators);
+        };
+    }
 
     /**
      * @return rsocket connector acceptor

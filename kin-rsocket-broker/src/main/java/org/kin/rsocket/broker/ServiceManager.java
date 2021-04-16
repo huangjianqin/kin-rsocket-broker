@@ -50,7 +50,6 @@ public final class ServiceManager {
     private static final Logger log = LoggerFactory.getLogger(ServiceManager.class);
     private final RSocketFilterChain rsocketFilterChain;
     private final ReactiveServiceRegistry serviceRegistry;
-    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
     private final Sinks.Many<String> notificationSink;
     private final AuthenticationService authenticationService;
     private final BrokerManager brokerManager;
@@ -74,7 +73,6 @@ public final class ServiceManager {
 
     public ServiceManager(ReactiveServiceRegistry serviceRegistry,
                           RSocketFilterChain filterChain,
-                          Sinks.Many<CloudEventData<?>> cloudEventSink,
                           Sinks.Many<String> notificationSink,
                           AuthenticationService authenticationService,
                           BrokerManager brokerManager,
@@ -83,7 +81,6 @@ public final class ServiceManager {
                           UpstreamCluster upstreamBrokers) {
         this.serviceRegistry = serviceRegistry;
         this.rsocketFilterChain = filterChain;
-        this.cloudEventSink = cloudEventSink;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
         this.brokerManager = brokerManager;
@@ -176,7 +173,7 @@ public final class ServiceManager {
         //create responder
         try {
             ServiceResponder responder = new ServiceResponder(setupPayload, compositeMetadata, appMetadata, principal,
-                    requesterSocket, cloudEventSink, this,
+                    requesterSocket, this,
                     serviceMeshInspector, upstreamBrokers, rsocketFilterChain, serviceRegistry);
             responder.onClose()
                     .doOnTerminate(() -> onResponderDisposed(responder))
@@ -201,7 +198,7 @@ public final class ServiceManager {
         instanceId2Responder.put(responder.getId(), responder);
         appResponders.put(appMetadata.getName(), responder);
         //广播事件
-        cloudEventSink.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
+        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
             responder.fireCloudEventToPeer(newBrokerClustersChangedEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
@@ -218,7 +215,7 @@ public final class ServiceManager {
         instanceId2Responder.remove(responder.getId());
         appResponders.remove(appMetadata.getName(), responder);
         log.info("Succeed to remove broker handler");
-        cloudEventSink.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
+        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
         this.notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Offline now!", appMetadata.getName(), appMetadata.getIp()));
     }
 

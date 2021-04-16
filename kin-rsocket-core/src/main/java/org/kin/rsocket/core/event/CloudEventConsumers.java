@@ -1,10 +1,10 @@
 package org.kin.rsocket.core.event;
 
 import org.kin.framework.Closeable;
+import org.kin.rsocket.core.RSocketAppContext;
 import org.springframework.beans.factory.DisposableBean;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,14 +15,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class CloudEventConsumers implements Closeable, DisposableBean {
+public final class CloudEventConsumers implements Closeable, DisposableBean {
+    public static final CloudEventConsumers INSTANCE = new CloudEventConsumers();
+
     /** cloud event consumers */
     private final List<CloudEventConsumer> consumers = new CopyOnWriteArrayList<>();
     /** event topic processor subscribe disposable */
     private final Disposable disposable;
 
-    public CloudEventConsumers(Sinks.Many<CloudEventData<?>> cloudEventSink) {
-        disposable = cloudEventSink.asFlux().subscribe(cloudEvent -> {
+    public CloudEventConsumers() {
+        disposable = RSocketAppContext.CLOUD_EVENT_SINK.asFlux().subscribe(cloudEvent -> {
             Flux.fromIterable(consumers)
                     .filter(consumer -> consumer.shouldAccept(cloudEvent))
                     .flatMap(consumer -> consumer.consume(cloudEvent))

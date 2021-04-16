@@ -2,6 +2,8 @@ package org.kin.rsocket.core;
 
 import org.kin.framework.utils.KinServiceLoader;
 import org.kin.framework.utils.NetUtils;
+import org.kin.rsocket.core.event.CloudEventData;
+import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 import java.util.Map;
@@ -17,6 +19,9 @@ public class RSocketAppContext {
     public static final String ID = UUID.randomUUID().toString();
     /** spi loader */
     public static final KinServiceLoader LOADER = KinServiceLoader.load();
+    /** 接受cloud event的flux */
+    public static final Sinks.Many<CloudEventData<?>> CLOUD_EVENT_SINK = Sinks.many().multicast().onBackpressureBuffer();
+
     /** 是否支持字节码增强 */
     public static final boolean ENHANCE;
     /** spring web port */

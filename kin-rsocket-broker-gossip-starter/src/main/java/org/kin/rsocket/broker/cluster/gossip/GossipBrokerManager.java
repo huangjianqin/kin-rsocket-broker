@@ -59,8 +59,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     /** brokers changes emitter processor */
     private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
 
-    public GossipBrokerManager(Sinks.Many<CloudEventData<?>> cloudEventSink, RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
-        super(cloudEventSink);
+    public GossipBrokerManager(RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
         this.brokerConfig = brokerConfig;
         this.gossipConfig = gossipConfig;
     }

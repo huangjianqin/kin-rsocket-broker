@@ -10,15 +10,12 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.MetadataAware;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.springframework.core.env.Environment;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 import java.util.*;
@@ -40,21 +37,17 @@ final class SubBrokerRequester implements RequesterSupport {
     private final ServiceManager serviceManager;
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
-    /** reactive cloud event flux */
-    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
 
     public SubBrokerRequester(RSocketBrokerProperties brokerConfig,
                               Environment env,
                               ServiceManager serviceManager,
-                              RSocketFilterChain filterChain,
-                              Sinks.Many<CloudEventData<?>> cloudEventSink) {
+                              RSocketFilterChain filterChain) {
         this.env = env;
         //todo 配置同一
         this.appName = env.getProperty("spring.application.name", env.getProperty("application.name", "unknown-app"));
         this.serviceManager = serviceManager;
         this.filterChain = filterChain;
         this.brokerConfig = brokerConfig;
-        this.cloudEventSink = cloudEventSink;
     }
 
     @Override
@@ -94,23 +87,10 @@ final class SubBrokerRequester implements RequesterSupport {
         //todo
         return Collections::emptySet;
     }
-
-    @Override
-    public Supplier<CloudEventData<ServicesExposedEvent>> servicesExposedEvent() {
-        return () -> {
-            Collection<ServiceLocator> serviceLocators = exposedServices().get();
-            if (serviceLocators.isEmpty()) {
-                return null;
-            }
-
-            return ServicesExposedEvent.of(serviceLocators);
-        };
-    }
-
     @Override
     public SocketAcceptor socketAcceptor() {
         return (connectionSetupPayload, rsocket) -> Mono.just(
-                new BrokerResponder(serviceManager, filterChain, cloudEventSink));
+                new BrokerResponder(serviceManager, filterChain));
     }
 
     @Override

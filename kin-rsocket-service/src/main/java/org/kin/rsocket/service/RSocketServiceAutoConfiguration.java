@@ -5,7 +5,6 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.service.event.CloudEvent2ApplicationEventConsumer;
@@ -21,7 +20,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +27,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.util.stream.Collectors;
 
@@ -41,21 +38,7 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties(RSocketServiceProperties.class)
 public class RSocketServiceAutoConfiguration {
     @Autowired
-    private ApplicationContext applicationContext;
-    @Autowired
     private RSocketServiceProperties config;
-    @Value("${server.port:0}")
-    private int serverPort;
-    @Value("${management.server.port:0}")
-    private int managementServerPort;
-
-    /**
-     * 接受cloud event的flux
-     */
-    @Bean
-    public Sinks.Many<CloudEventData<?>> cloudEventSink() {
-        return Sinks.many().multicast().onBackpressureBuffer();
-    }
 
     //----------------------------cloud event consumers----------------------------
 
@@ -63,11 +46,9 @@ public class RSocketServiceAutoConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean
-    public CloudEventConsumers cloudEventConsumers(@Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink,
-                                                   ObjectProvider<CloudEventConsumer> customConsumers) {
-        CloudEventConsumers consumers = new CloudEventConsumers(cloudEventSink);
-        consumers.addConsumers(customConsumers.stream().collect(Collectors.toList()));
-        return consumers;
+    public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> customConsumers) {
+        CloudEventConsumers.INSTANCE.addConsumers(customConsumers.stream().collect(Collectors.toList()));
+        return CloudEventConsumers.INSTANCE;
     }
 
     @Bean
@@ -100,9 +81,8 @@ public class RSocketServiceAutoConfiguration {
      * responder acceptor factory
      */
     @Bean
-    public SocketAcceptor responderAcceptorFactory(@Autowired ReactiveServiceRegistry serviceRegistry,
-                                                   @Autowired @Qualifier("cloudEventSink") Sinks.Many<CloudEventData<?>> cloudEventSink) {
-        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, cloudEventSink, requester, setupPayload));
+    public SocketAcceptor responderAcceptorFactory(@Autowired ReactiveServiceRegistry serviceRegistry) {
+        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, requester, setupPayload));
     }
 
     @Bean
@@ -153,6 +133,7 @@ public class RSocketServiceAutoConfiguration {
         return upstreamClusterManager;
     }
 
+    //----------------------------spring----------------------------
     /**
      * 服务暴露给broker逻辑实现
      */
@@ -194,19 +175,17 @@ public class RSocketServiceAutoConfiguration {
     /**
      * 用于初始化{@link RSocketAppContext}端口赋值
      */
+    @SuppressWarnings("ConstantConditions")
     @Bean
-    public ApplicationListener<WebServerInitializedEvent> webServerInitializedEventApplicationListener() {
+    public ApplicationListener<WebServerInitializedEvent> webServerInitializedEventApplicationListener(@Autowired Environment environment) {
         return webServerInitializedEvent -> {
             String namespace = webServerInitializedEvent.getApplicationContext().getServerNamespace();
             int listenPort = webServerInitializedEvent.getWebServer().getPort();
             if ("management".equals(namespace)) {
-                this.managementServerPort = listenPort;
                 RSocketAppContext.managementPort = listenPort;
             } else {
-                this.serverPort = listenPort;
                 RSocketAppContext.webPort = listenPort;
-                if (this.managementServerPort == 0) {
-                    this.managementServerPort = listenPort;
+                if (environment.getProperty("management.server.port", Integer.class) == 0) {
                     RSocketAppContext.managementPort = listenPort;
                 }
             }

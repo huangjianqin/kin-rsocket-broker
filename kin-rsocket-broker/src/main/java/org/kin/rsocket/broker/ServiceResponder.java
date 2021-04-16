@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 import java.lang.reflect.Field;
@@ -63,8 +62,6 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     private final ServiceManager serviceManager;
     private final ServiceMeshInspector serviceMeshInspector;
     private final Mono<Void> comboOnClose;
-    /** reactive event processor */
-    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** UUID from requester side */
     private final String uuid;
     /** remote requester ip */
@@ -85,7 +82,6 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                             AppMetadata appMetadata,
                             RSocketAppPrincipal principal,
                             RSocket peerRsocket,
-                            Sinks.Many<CloudEventData<?>> cloudEventSink,
                             ServiceManager handlerRegistry,
                             ServiceMeshInspector serviceMeshInspector,
                             UpstreamCluster upstreamBrokers,
@@ -117,7 +113,6 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         }
         this.principal = principal;
         this.peerRsocket = peerRsocket;
-        this.cloudEventSink = cloudEventSink;
         this.serviceManager = handlerRegistry;
         this.serviceMeshInspector = serviceMeshInspector;
         this.filterChain = filterChain;
@@ -275,7 +270,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
         //todo 要进行event的安全验证，不合法来源的event进行消费，后续还好进行event判断
         if (uuid.equalsIgnoreCase(cloudEvent.getAttributes().getSource().getHost())) {
-            return Mono.fromRunnable(() -> cloudEventSink.tryEmitNext(cloudEvent));
+            return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
         }
         return Mono.empty();
     }

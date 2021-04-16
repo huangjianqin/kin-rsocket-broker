@@ -12,8 +12,6 @@ import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.*;
 
@@ -99,17 +97,6 @@ final class RequesterSupportImpl implements RequesterSupport {
     @Override
     public Supplier<Set<ServiceLocator>> subscribedServices() {
         return () -> ServiceReferenceBuilder.CONSUMED_SERVICES;
-    }
-
-    @Override
-    public Supplier<CloudEventData<ServicesExposedEvent>> servicesExposedEvent() {
-        return () -> {
-            Collection<ServiceLocator> serviceLocators = exposedServices().get();
-            if (serviceLocators.isEmpty()) {
-                return null;
-            }
-            return ServicesExposedEvent.of(serviceLocators);
-        };
     }
 
     /** 获取app元数据 */

@@ -19,7 +19,6 @@ import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 import java.util.*;
@@ -44,32 +43,26 @@ public final class BrokerConnector implements Closeable {
     private final UpstreamClusterManager upstreamClusterManager;
     /** 服务注册中心 */
     private final ReactiveServiceRegistry serviceRegistry;
-    /** received cloud event source, 用于开发者定义订阅逻辑 */
-    private final Sinks.Many<CloudEventData<?>> cloudEventSink;
     /** requester连接配置 */
     private final SimpleRequesterSupport requesterSupport;
-    /** cloud event consumer */
-    private final CloudEventConsumers eventConsumers;
 
     public BrokerConnector(String appName, List<String> brokers,
                            RSocketMimeType dataMimeType, char[] jwtToken) {
         this.appName = appName;
         this.brokers = brokers;
         this.dataMimeType = dataMimeType;
-        cloudEventSink = Sinks.many().multicast().onBackpressureBuffer();
         serviceRegistry = new DefaultServiceRegistry();
         // add health check
         serviceRegistry.addProvider("", HealthCheck.class.getCanonicalName(), "",
                 HealthCheck.class, (HealthCheck) serviceName -> Mono.just(1));
         requesterSupport = new SimpleRequesterSupport(jwtToken);
-        eventConsumers = new CloudEventConsumers(cloudEventSink);
 
         //init upstream manager
         upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
         upstreamClusterManager.add(null, Symbols.BROKER, null, this.brokers);
         upstreamClusterManager.connect();
 
-        eventConsumers.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
+        CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
     }
 
     /**
@@ -132,7 +125,7 @@ public final class BrokerConnector implements Closeable {
      */
     public void dispose() {
         upstreamClusterManager.close();
-        cloudEventSink.tryEmitComplete();
+        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitComplete();
     }
 
     @Override
@@ -196,19 +189,8 @@ public final class BrokerConnector implements Closeable {
         }
 
         @Override
-        public Supplier<CloudEventData<ServicesExposedEvent>> servicesExposedEvent() {
-            return () -> {
-                Collection<ServiceLocator> serviceLocators = exposedServices().get();
-                if (serviceLocators.isEmpty()) {
-                    return null;
-                }
-                return ServicesExposedEvent.of(serviceLocators);
-            };
-        }
-
-        @Override
         public SocketAcceptor socketAcceptor() {
-            return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, cloudEventSink, requester, setupPayload));
+            return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, requester, setupPayload));
         }
 
         @Override
