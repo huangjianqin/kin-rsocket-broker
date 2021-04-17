@@ -1,4 +1,4 @@
-package org.kin.rsocket.spingcloud.gateway.http;
+package org.kin.rsocket.spingcloud.broker.gateway.http;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

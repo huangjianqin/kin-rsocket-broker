@@ -1,4 +1,4 @@
-package org.kin.rsocket.spingcloud.conf.client;
+package org.kin.rsocket.spingcloud.broker.conf.client;
 
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;

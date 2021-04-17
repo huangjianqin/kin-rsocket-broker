@@ -1,7 +1,7 @@
-package org.kin.rsocket.spingcloud.gateway.http;
+package org.kin.rsocket.spingcloud.broker.gateway.http;
 
-import org.kin.rsocket.spingcloud.gateway.http.convert.ByteBufDecoder;
-import org.kin.rsocket.spingcloud.gateway.http.convert.ByteBufEncoder;
+import org.kin.rsocket.spingcloud.broker.gateway.http.convert.ByteBufDecoder;
+import org.kin.rsocket.spingcloud.broker.gateway.http.convert.ByteBufEncoder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.codec.DecoderHttpMessageReader;
 import org.springframework.http.codec.EncoderHttpMessageWriter;

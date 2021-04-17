@@ -1,4 +1,4 @@
-package org.kin.rsocket.spingcloud.gateway.http;
+package org.kin.rsocket.spingcloud.broker.gateway.http;
 
 import io.netty.buffer.ByteBuf;
 import io.rsocket.RSocket;

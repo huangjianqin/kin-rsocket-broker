@@ -1,4 +1,4 @@
-package org.kin.rsocket.broker.cluster.gossip;
+package org.kin.rsocket.springcloud.broker.cluster.gossip;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
