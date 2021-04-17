@@ -1,8 +1,7 @@
-package org.kin.rsocket.service.health;
+package org.kin.rsocket.springcloud.service.health;
 
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.health.HealthCheck;
-import org.kin.rsocket.service.RSocketEndpoint;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import reactor.core.publisher.Mono;

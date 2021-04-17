@@ -1,12 +1,14 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.springcloud.service.health;
 
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.RSocketServiceProperties;
+import org.kin.rsocket.service.ServiceReferenceBuilder;
+import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
-import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -89,7 +91,7 @@ public final class RSocketEndpoint {
     }
 
     @WriteOperation
-    public Mono<String> operate(@Selector String action) {
+    public Mono<String> operate(String action) {
         if ("online".equalsIgnoreCase(action)) {
             this.serviceStatus = AppStatus.SERVING;
             return updateAppStatus(this.serviceStatus).thenReturn("Succeed to register RSocket services on brokers!");

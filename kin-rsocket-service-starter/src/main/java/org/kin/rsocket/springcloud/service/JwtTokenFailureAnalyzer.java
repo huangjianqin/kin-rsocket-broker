@@ -1,5 +1,6 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.springcloud.service;
 
+import org.kin.rsocket.service.JwtTokenNotFoundException;
 import org.springframework.boot.diagnostics.AbstractFailureAnalyzer;
 import org.springframework.boot.diagnostics.FailureAnalysis;
 

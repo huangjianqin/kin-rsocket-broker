@@ -1,4 +1,4 @@
-package org.kin.rsocket.service.health;
+package org.kin.rsocket.springcloud.service.health;
 
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.health.HealthCheck;

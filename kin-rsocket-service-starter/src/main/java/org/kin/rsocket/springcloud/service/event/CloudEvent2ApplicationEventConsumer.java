@@ -1,4 +1,4 @@
-package org.kin.rsocket.service.event;
+package org.kin.rsocket.springcloud.service.event;
 
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;

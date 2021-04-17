@@ -1,4 +1,4 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.springcloud.service;
 
 import org.springframework.context.annotation.Import;
 

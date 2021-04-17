@@ -17,6 +17,7 @@
         <module>kin-rsocket-broker-gateway-http-starter</module>
         <module>kin-rsocket-auth</module>
         <module>kin-rsocket-conf</module>
+        <module>kin-rsocket-service-starter</module>
     </modules>
     <packaging>pom</packaging>
 

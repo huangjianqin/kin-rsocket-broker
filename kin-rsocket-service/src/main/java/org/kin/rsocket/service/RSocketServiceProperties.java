@@ -1,7 +1,6 @@
 package org.kin.rsocket.service;
 
 import org.kin.rsocket.core.utils.Topologys;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,7 +11,6 @@ import java.util.Map;
  * @author huangjianqin
  * @date 2021/3/28
  */
-@ConfigurationProperties(prefix = "kin.rsocket")
 public class RSocketServiceProperties {
     /** schema, such as tcp, local */
     private String schema = "tcp";
