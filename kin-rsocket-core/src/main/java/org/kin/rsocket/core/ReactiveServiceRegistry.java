@@ -102,6 +102,7 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
 
                 ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
 
+                //todo 仅仅用service name???
                 serviceName2Provider.put(serviceName, provider);
                 handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
                 serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass));

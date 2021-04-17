@@ -1,8 +1,10 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.Closeable;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.utils.Symbols;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,6 +67,29 @@ public final class UpstreamClusterManager implements Closeable {
         }
     }
 
+    /**
+     * 解析{@link RSocketServiceProperties}配置并注册创建对应的{@link UpstreamCluster}
+     */
+    public void add(RSocketServiceProperties config) {
+        if (config.getBrokers() != null && !config.getBrokers().isEmpty()) {
+            if (config.getJwtToken() == null || config.getJwtToken().isEmpty()) {
+                try {
+                    throw new JwtTokenNotFoundException();
+                } catch (JwtTokenNotFoundException e) {
+                    ExceptionUtils.throwExt(e);
+                }
+            }
+            add(null, Symbols.BROKER, null, config.getBrokers());
+        }
+        if (config.getEndpoints() != null && !config.getEndpoints().isEmpty()) {
+            for (EndpointProperties endpointProperties : config.getEndpoints()) {
+                add(endpointProperties.getGroup(),
+                        endpointProperties.getService(),
+                        endpointProperties.getVersion(),
+                        endpointProperties.getUris());
+            }
+        }
+    }
 
     /**
      * 获取所有upstream cluster

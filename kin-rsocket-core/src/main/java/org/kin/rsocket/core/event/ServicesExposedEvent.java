@@ -3,6 +3,7 @@ package org.kin.rsocket.core.event;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.ServiceLocator;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,6 +20,10 @@ public class ServicesExposedEvent implements CloudEventSupport<ServicesExposedEv
     private String appId;
     /** exposed services */
     private Set<ServiceLocator> services = new HashSet<>();
+
+    public static CloudEventData<ServicesExposedEvent> of(ServiceLocator... serviceLocators) {
+        return of(Arrays.asList(serviceLocators));
+    }
 
     public static CloudEventData<ServicesExposedEvent> of(Collection<ServiceLocator> serviceLocators) {
         ServicesExposedEvent servicesExposedEvent = new ServicesExposedEvent();

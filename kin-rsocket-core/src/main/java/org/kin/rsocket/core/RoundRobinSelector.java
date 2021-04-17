@@ -13,7 +13,7 @@ public class RoundRobinSelector implements Selector {
     private int counter;
 
     @Override
-    public RSocket apply(List<RSocket> rSockets) {
-        return rSockets.get(counter++ % rSockets.size());
+    public RSocket apply(List<RSocket> rsockets) {
+        return rsockets.get(counter++ % rsockets.size());
     }
 }

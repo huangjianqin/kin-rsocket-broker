@@ -37,7 +37,7 @@ public final class ServiceReferenceBuilder<T> {
     /** 数据编码类型 */
     private RSocketMimeType encodingType = RSocketMimeType.Json;
     /** accept 编码类型 */
-    private RSocketMimeType acceptEncodingType;
+    private RSocketMimeType acceptEncodingType = RSocketMimeType.Json;
     /** 对应的upstream cluster */
     private UpstreamCluster upstreamCluster;
 

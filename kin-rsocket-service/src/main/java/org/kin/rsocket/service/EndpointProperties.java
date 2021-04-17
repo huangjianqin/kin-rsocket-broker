@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,6 +30,56 @@ public class EndpointProperties {
         inst.uris = uris;
         return inst;
     }
+
+    public static EndpointProperties of(String group,
+                                        String service,
+                                        String version,
+                                        String... uris) {
+        return of(group, service, version, Arrays.asList(uris));
+    }
+
+    public static EndpointProperties of(String service, List<String> uris) {
+        return of("", service, "", uris);
+    }
+
+    public static EndpointProperties of(String service, String... uris) {
+        return of("", service, "", Arrays.asList(uris));
+    }
+
+    //----------------------------------------------------------------------------------------------------------------------------------------
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** builder **/
+    public static class Builder {
+        private EndpointProperties endpointProperties = new EndpointProperties();
+
+        public Builder group(String group) {
+            endpointProperties.group = group;
+            return this;
+        }
+
+        public Builder service(String service) {
+            endpointProperties.service = service;
+            return this;
+        }
+
+        public Builder version(String version) {
+            endpointProperties.version = version;
+            return this;
+        }
+
+        public Builder uris(List<String> uris) {
+            endpointProperties.uris = uris;
+            return this;
+        }
+
+        public EndpointProperties build() {
+            return endpointProperties;
+        }
+    }
+
 
     //setter && getter
     public String getGroup() {

@@ -1,12 +1,9 @@
 package org.kin.rsocket.service;
 
-import io.rsocket.SocketAcceptor;
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.health.HealthCheck;
-import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.service.event.CloudEvent2ApplicationEventConsumer;
 import org.kin.rsocket.service.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
@@ -47,10 +44,10 @@ public class RSocketServiceAutoConfiguration {
      */
     @Bean(autowireCandidate = false)
     public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> customConsumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(customConsumers.stream().collect(Collectors.toList()));
         CloudEventConsumers.INSTANCE.addConsumers(upstreamClusterChangedEventConsumer(null));
         CloudEventConsumers.INSTANCE.addConsumers(cloudEvent2ListenerConsumer());
         CloudEventConsumers.INSTANCE.addConsumers(invalidCacheEventConsumer());
+        CloudEventConsumers.INSTANCE.addConsumers(customConsumers.stream().collect(Collectors.toList()));
         return CloudEventConsumers.INSTANCE;
     }
 
@@ -75,7 +72,7 @@ public class RSocketServiceAutoConfiguration {
     public RequesterSupport requesterSupport(@Autowired Environment environment,
                                              @Autowired ObjectProvider<RequesterSupportBuilderCustomizer> customizers) {
         String appName = environment.getProperty("spring.application.name", "unknown");
-        RequesterSupportImpl requesterSupport = new RequesterSupportImpl(config, appName, socketAcceptor());
+        RequesterSupportImpl requesterSupport = new RequesterSupportImpl(config, appName);
         customizers.orderedStream().forEach((customizer) -> customizer.customize(requesterSupport));
         return requesterSupport;
     }
@@ -86,39 +83,11 @@ public class RSocketServiceAutoConfiguration {
     @Bean(destroyMethod = "close")
     public UpstreamClusterManager upstreamClusterManager() {
         UpstreamClusterManager upstreamClusterManager = new UpstreamClusterManager(requesterSupport(null, null));
-        //init
-        if (config.getBrokers() != null && !config.getBrokers().isEmpty()) {
-            if (config.getJwtToken() == null || config.getJwtToken().isEmpty()) {
-                try {
-                    throw new JwtTokenNotFoundException();
-                } catch (JwtTokenNotFoundException e) {
-                    ExceptionUtils.throwExt(e);
-                }
-            }
-            upstreamClusterManager.add(null, Symbols.BROKER, null, config.getBrokers());
-        }
-        if (config.getEndpoints() != null && !config.getEndpoints().isEmpty()) {
-            for (EndpointProperties endpointProperties : config.getEndpoints()) {
-                upstreamClusterManager.add(
-                        endpointProperties.getGroup(),
-                        endpointProperties.getService(),
-                        endpointProperties.getVersion(),
-                        endpointProperties.getUris());
-            }
-        }
+        upstreamClusterManager.add(config);
         return upstreamClusterManager;
     }
 
     //----------------------------rsocket service binder----------------------------
-
-    /**
-     * responder acceptor factory
-     */
-    @Bean(autowireCandidate = false)
-    public SocketAcceptor socketAcceptor() {
-        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(requester, setupPayload));
-    }
-
     @Bean(autowireCandidate = false, initMethod = "start", destroyMethod = "close")
     @ConditionalOnExpression("${kin.rsocket.port:0}!=0")
     public RSocketBinder rsocketListener(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
@@ -132,7 +101,7 @@ public class RSocketServiceAutoConfiguration {
     @ConditionalOnExpression("${kin.rsocket.port:0}!=0")
     public RSocketBinderBuilderCustomizer defaultRSocketBinderBuilderCustomizer() {
         return builder -> {
-            builder.acceptor(socketAcceptor());
+            builder.acceptor((setupPayload, requester) -> Mono.just(new Responder(requester, setupPayload)));
             builder.listen(config.getSchema(), config.getPort());
         };
     }
@@ -189,14 +158,15 @@ public class RSocketServiceAutoConfiguration {
     @Bean
     public ApplicationListener<WebServerInitializedEvent> webServerInitializedEventApplicationListener(@Autowired Environment environment) {
         return webServerInitializedEvent -> {
+            //namespace 是由开发者自定义的
             String namespace = webServerInitializedEvent.getApplicationContext().getServerNamespace();
             int listenPort = webServerInitializedEvent.getWebServer().getPort();
             if ("management".equals(namespace)) {
                 RSocketAppContext.managementPort = listenPort;
             } else {
                 RSocketAppContext.webPort = listenPort;
-                if (!environment.containsProperty("management.server.port")) {
-                    RSocketAppContext.managementPort = listenPort;
+                if (environment.containsProperty("management.server.port")) {
+                    RSocketAppContext.managementPort = environment.getProperty("management.server.port", Integer.class);
                 }
             }
         };

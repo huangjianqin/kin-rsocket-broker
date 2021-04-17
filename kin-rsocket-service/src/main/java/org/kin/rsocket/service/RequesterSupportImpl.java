@@ -12,6 +12,7 @@ import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.*;
+import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -33,18 +34,14 @@ final class RequesterSupportImpl implements RequesterSupport {
     private final RSocketServiceProperties config;
     /** app name */
     private final String appName;
-    /** responder acceptor */
-    private final SocketAcceptor socketAcceptor;
     /** requester connection responder interceptors */
     private List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
     /** requester connection requester interceptors */
     private List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
 
     public RequesterSupportImpl(RSocketServiceProperties config,
-                                String appName,
-                                SocketAcceptor socketAcceptor) {
+                                String appName) {
         this.config = config;
-        this.socketAcceptor = socketAcceptor;
         this.appName = appName;
     }
 
@@ -124,7 +121,7 @@ final class RequesterSupportImpl implements RequesterSupport {
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return this.socketAcceptor;
+        return (setupPayload, requester) -> Mono.just(new Responder(requester, setupPayload));
     }
 
     @Override

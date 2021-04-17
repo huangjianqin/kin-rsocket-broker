@@ -32,12 +32,10 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     private final String serviceName;
     /** version */
     private final String version;
-    /** upstream rsocket requester配置 */
-    private final RequesterSupport requesterSupport;
     /** upstream uris  processor */
     private final Sinks.Many<Collection<String>> urisSink = Sinks.many().replay().latest();
     /** load balanced RSocket to connect service provider or broker instances */
-    private LoadBalanceRequester loadBalanceRequester;
+    private final LoadBalanceRequester loadBalanceRequester;
     /** 上次刷新的uris */
     private volatile List<String> lastUris = Collections.emptyList();
     private volatile boolean stopped;
@@ -71,7 +69,6 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         this.group = group;
         this.serviceName = serviceName;
         this.version = version;
-        this.requesterSupport = requesterSupport;
 
         this.loadBalanceRequester = LoadBalanceRequester.roundRobin(ServiceLocator.gsv(group, serviceName, version), urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {

@@ -437,7 +437,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
      * create connect
      */
     private Mono<RSocket> connect(String uri) {
-        if (LoadBalanceRequester.this.isDisposed()) {
+        if (isDisposed()) {
             throw new IllegalStateException("requester is disposed");
         }
 

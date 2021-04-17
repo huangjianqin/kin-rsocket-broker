@@ -17,9 +17,7 @@ public class RequesterConfiguration {
     public UserService userService(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return ServiceReferenceBuilder
                 .requester(UserService.class)
-                //.sticky(true)
                 .upstreamClusterManager(upstreamClusterManager)
-                //.endpoint("ip:192.168.1.2") //for testing
                 .build();
     }
 }
