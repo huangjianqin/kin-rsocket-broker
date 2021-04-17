@@ -5,6 +5,9 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.domain.ReactiveMethodInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodParameterInfo;
 import org.kin.rsocket.core.domain.ReactiveServiceInfo;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.ServicesExposedEvent;
+import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
 
@@ -25,6 +28,29 @@ import java.util.stream.Collectors;
  */
 public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport {
     public static final ReactiveServiceRegistry INSTANCE = new ReactiveServiceRegistry();
+
+    /**
+     * @return exposed services信息
+     */
+    public static Set<ServiceLocator> exposedServices() {
+        return ReactiveServiceRegistry.INSTANCE.findAllServiceLocators()
+                .stream()
+                //过滤掉local service
+                .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName()))
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * @return services exposed cloud event
+     */
+    public static CloudEventData<ServicesExposedEvent> servicesExposedEvent() {
+        Collection<ServiceLocator> serviceLocators = exposedServices();
+        if (serviceLocators.isEmpty()) {
+            return null;
+        }
+
+        return ServicesExposedEvent.of(serviceLocators);
+    }
 
     /** key -> serviceName, value -> provider, 即service instance */
     private final Map<String, Object> serviceName2Provider = new HashMap<>();

@@ -1,12 +1,15 @@
 package org.kin.rsocket.service;
 
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RequesterSupport;
-import org.kin.rsocket.core.ServiceLocator;
+import org.kin.rsocket.core.RSocketBinderBuilderCustomizer;
 import org.kin.rsocket.core.UpstreamCluster;
-import org.kin.rsocket.core.event.*;
+import org.kin.rsocket.core.event.CloudEventBuilder;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.PortsUpdateEvent;
+import org.kin.rsocket.service.health.HealthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
@@ -24,27 +27,29 @@ import java.util.stream.Collectors;
 final class ServicesPublisher implements ApplicationListener<ApplicationStartedEvent> {
     private static final Logger log = LoggerFactory.getLogger(ServicesPublisher.class);
     @Autowired
-    private UpstreamClusterManager upstreamClusterManager;
+    private RSocketServiceConnector connector;
     @Autowired
-    private RequesterSupport requesterSupport;
+    private ObjectProvider<RSocketBinderBuilderCustomizer> binderBuilderCustomizers;
+    @Autowired
+    private ObjectProvider<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers;
+    @Autowired
+    private HealthService healthService;
 
     @Override
     public void onApplicationEvent(ApplicationStartedEvent event) {
-        //init upstream cluster manager
-        upstreamClusterManager.connect();
+        //connect
+        connector.connect(
+                binderBuilderCustomizers.orderedStream().collect(Collectors.toList()),
+                requesterSupportBuilderCustomizers.orderedStream().collect(Collectors.toList()),
+                healthService);
 
-        UpstreamCluster brokerCluster = upstreamClusterManager.getBroker();
+        UpstreamCluster brokerCluster = connector.getUpstreamClusterManager().getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
             //本质上就是直连的方式
             log.info("rsocket endpoint to endpoint mode!");
             return;
         }
-
-        //rsocket broker cluster logic
-        CloudEventData<AppStatusEvent> appStatusEventCloudEvent = CloudEventBuilder
-                .builder(AppStatusEvent.serving(RSocketAppContext.ID))
-                .build();
 
         //broker uris
         String brokerUris = String.join(",", brokerCluster.getUris());
@@ -69,19 +74,6 @@ final class ServicesPublisher implements ApplicationListener<ApplicationStartedE
             }
         }
 
-        // app status
-        brokerCluster.broadcastCloudEvent(appStatusEventCloudEvent)
-                .doOnSuccess(aVoid -> log.info(String.format("Application connected with RSocket Brokers(%s) successfully", brokerUris)))
-                .subscribe();
-
-        // service exposed
-        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = requesterSupport.servicesExposedEvent();
-        if (servicesExposedEventCloudEvent != null) {
-            brokerCluster.broadcastCloudEvent(servicesExposedEventCloudEvent)
-                    .doOnSuccess(aVoid -> {
-                        String exposedServiceGsvs = requesterSupport.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
-                        log.info(String.format("Services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
-                    }).subscribe();
-        }
+        connector.publishServices();
     }
 }

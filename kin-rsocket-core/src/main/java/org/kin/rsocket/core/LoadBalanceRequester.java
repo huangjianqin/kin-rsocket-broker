@@ -19,6 +19,7 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.transport.UriTransportRegistry;
+import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +107,9 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         this.serviceId = serviceId;
         this.selector = selector;
         this.requesterSupport = requesterSupport;
-        if (!requesterSupport.exposedServices().isEmpty()) {
+        if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceId) ||
+                !ReactiveServiceRegistry.exposedServices().isEmpty()) {
+            //broker 即 provider
             this.isServiceProvider = true;
         }
         urisFactory.subscribe(this::refreshRSockets);
@@ -399,7 +402,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         this.activeRSockets.put(rsocketUri, rsocket);
         this.unhealthyUris.remove(rsocketUri);
         rsocket.onClose().subscribe(aVoid -> onRSocketClosed(rsocketUri, rsocket, null));
-        CloudEventData<ServicesExposedEvent> cloudEvent = requesterSupport.servicesExposedEvent();
+        CloudEventData<ServicesExposedEvent> cloudEvent = ReactiveServiceRegistry.servicesExposedEvent();
         if (cloudEvent != null) {
             Payload payload = cloudEvent2Payload(cloudEvent);
             rsocket.metadataPush(payload).subscribe();

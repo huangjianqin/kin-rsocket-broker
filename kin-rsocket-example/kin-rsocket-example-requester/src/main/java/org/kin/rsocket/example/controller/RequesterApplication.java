@@ -19,8 +19,6 @@ public class RequesterApplication {
         RSocketServiceConnector connector = new RSocketServiceConnector("MockApp", properties);
         connector.connect();
         UserService userService = connector.buildServiceReference(UserService.class);
-
-        Thread.sleep(1_000);
         try {
             userService.findAll().subscribe(System.out::println);
             Thread.sleep(1_000);

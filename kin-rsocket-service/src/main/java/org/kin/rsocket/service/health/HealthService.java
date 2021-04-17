@@ -2,13 +2,13 @@ package org.kin.rsocket.service.health;
 
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.health.HealthCheck;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 /**
  * todo 单机与spring模式需要使用不同的HealthService
@@ -18,8 +18,11 @@ import reactor.core.publisher.Mono;
  */
 @RSocketService(HealthCheck.class)
 public final class HealthService implements HealthCheck {
-    @Autowired
-    private ObjectProvider<ReactiveHealthIndicator> healthIndicators;
+    private final List<ReactiveHealthIndicator> healthIndicators;
+
+    public HealthService(List<ReactiveHealthIndicator> healthIndicators) {
+        this.healthIndicators = healthIndicators;
+    }
 
     @Override
     public Mono<Integer> check(String serviceName) {

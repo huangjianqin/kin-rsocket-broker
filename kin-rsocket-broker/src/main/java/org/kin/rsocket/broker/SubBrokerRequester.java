@@ -8,7 +8,6 @@ import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RequesterSupport;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.MetadataAware;
@@ -19,9 +18,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * @author huangjianqin
@@ -69,14 +66,6 @@ final class SubBrokerRequester implements RequesterSupport {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(metadataAwares);
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, compositeMetadata.getContent());
         };
-    }
-
-    @Override
-    public Set<ServiceLocator> exposedServices() {
-        return serviceManager.getAllServices().stream()
-                //todo global是啥子
-                .filter(serviceLocator -> serviceLocator.hasTag("global"))
-                .collect(Collectors.toSet());
     }
 
     @Override

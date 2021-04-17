@@ -31,20 +31,18 @@ public final class RSocketServiceConnector implements Closeable {
     private RequesterSupport requesterSupport;
     /** rsocket binder */
     private RSocketBinder binder;
-    /** health check */
-    private HealthCheck customHealthCheck;
 
     public RSocketServiceConnector(String appName,
                                    RSocketServiceProperties config) {
-        this(appName, config, null);
-    }
-
-    public RSocketServiceConnector(String appName,
-                                   RSocketServiceProperties config,
-                                   HealthCheck customHealthCheck) {
         this.appName = appName;
         this.config = config;
-        this.customHealthCheck = customHealthCheck;
+
+        //create requester support
+        requesterSupport = new RequesterSupportImpl(config, appName);
+
+        //init upstream manager
+        upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
+        upstreamClusterManager.add(config);
     }
 
     /**
@@ -59,6 +57,15 @@ public final class RSocketServiceConnector implements Closeable {
      */
     public void connect(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
                         List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers) {
+        connect(binderBuilderCustomizers, requesterSupportBuilderCustomizers, null);
+    }
+
+    /**
+     * 初始化, 并创建connection
+     */
+    public void connect(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
+                        List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers,
+                        HealthCheck customHealthCheck) {
         //bind
         if (config.getPort() > 0) {
             RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
@@ -69,22 +76,51 @@ public final class RSocketServiceConnector implements Closeable {
             binder.start();
         }
 
-        requesterSupport = new RequesterSupportImpl(config, appName);
-        RequesterSupportImpl requesterSupport = new RequesterSupportImpl(config, appName);
-        requesterSupportBuilderCustomizers.forEach((customizer) -> customizer.customize(requesterSupport));
+        //custom requester support
+        requesterSupportBuilderCustomizers.forEach((customizer) -> customizer.customize((RequesterSupportImpl) requesterSupport));
 
-        //init upstream manager
-        upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
-        upstreamClusterManager.add(config);
+        //upstream manager init connect
         upstreamClusterManager.connect();
 
         CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
 
-        // add health check
+        //register health check
         if (Objects.isNull(customHealthCheck)) {
-            this.customHealthCheck = new HealthCheckImpl();
+            customHealthCheck = new HealthCheckImpl();
         }
         registerService(HealthCheck.class, customHealthCheck);
+
+        //todo reactor api还没来得及处理建立连接, 程序有可能调用了reference
+        try {
+            Thread.sleep(2_000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 初始化, 然后创建connection, 并向broker暴露服务
+     */
+    public void connectAndPub() {
+        connectAndPub(Collections.emptyList(), Collections.emptyList());
+    }
+
+    /**
+     * 初始化, 然后创建connection, 并向broker暴露服务
+     */
+    public void connectAndPub(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
+                              List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers) {
+        connectAndPub(binderBuilderCustomizers, requesterSupportBuilderCustomizers, null);
+    }
+
+    /**
+     * 初始化, 然后创建connection, 并向broker暴露服务
+     */
+    public void connectAndPub(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
+                              List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers,
+                              HealthCheck customHealthCheck) {
+        connect(binderBuilderCustomizers, requesterSupportBuilderCustomizers, customHealthCheck);
+        publishServices();
     }
 
     /**
@@ -166,7 +202,7 @@ public final class RSocketServiceConnector implements Closeable {
                 .subscribe();
 
         // service exposed
-        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = requesterSupport.servicesExposedEvent();
+        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = ReactiveServiceRegistry.servicesExposedEvent();
         if (servicesExposedEventCloudEvent != null) {
             publishServices(servicesExposedEventCloudEvent);
         }
@@ -180,8 +216,7 @@ public final class RSocketServiceConnector implements Closeable {
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
-
-                    String exposedServiceGsvs = requesterSupport.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
+                    String exposedServiceGsvs = ReactiveServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
                     log.info(String.format("Services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
                 }).subscribe();
     }

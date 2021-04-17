@@ -34,6 +34,13 @@ public class ServiceLocator {
     /**
      * @return gsv标识
      */
+    public static String gsv(String service) {
+        return gsv("", service, "");
+    }
+
+    /**
+     * @return gsv标识
+     */
     public static String gsv(String group, String service, String version) {
         StringBuilder sb = new StringBuilder();
         //group

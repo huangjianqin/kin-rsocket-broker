@@ -9,6 +9,7 @@ import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.*;
@@ -59,7 +60,7 @@ final class RequesterSupportImpl implements RequesterSupport {
             //app metadata
             metadataAwares.add(getAppMetadata());
             //published services
-            Set<ServiceLocator> serviceLocators = exposedServices();
+            Set<ServiceLocator> serviceLocators = ReactiveServiceRegistry.exposedServices();
             if (!serviceLocators.isEmpty()) {
                 ServiceRegistryMetadata serviceRegistryMetadata = new ServiceRegistryMetadata();
                 serviceRegistryMetadata.setPublished(serviceLocators);

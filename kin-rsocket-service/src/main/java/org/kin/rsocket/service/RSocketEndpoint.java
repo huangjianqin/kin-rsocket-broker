@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @Endpoint(id = "rsocket")
 public final class RSocketEndpoint {
     private final RSocketServiceProperties config;
-    private final RequesterSupport requesterSupport;
     private final UpstreamClusterManager upstreamClusterManager;
     private final boolean serviceProvider;
     /** app status */
@@ -32,12 +31,10 @@ public final class RSocketEndpoint {
     private Set<String> offlineServices = new HashSet<>();
 
     public RSocketEndpoint(RSocketServiceProperties config,
-                           UpstreamClusterManager upstreamClusterManager,
-                           RequesterSupport requesterSupport) {
+                           UpstreamClusterManager upstreamClusterManager) {
         this.config = config;
         this.upstreamClusterManager = upstreamClusterManager;
-        this.requesterSupport = requesterSupport;
-        Set<ServiceLocator> exposedServices = requesterSupport.exposedServices();
+        Set<ServiceLocator> exposedServices = ReactiveServiceRegistry.exposedServices();
         if (!exposedServices.isEmpty()) {
             this.serviceProvider = true;
         } else {
@@ -51,7 +48,7 @@ public final class RSocketEndpoint {
         info.put("id", RSocketAppContext.ID);
         info.put("serviceStatus", serviceStatus.getDesc());
         if (this.serviceProvider) {
-            info.put("published", requesterSupport.exposedServices());
+            info.put("published", ReactiveServiceRegistry.exposedServices());
         }
         if (!ServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
             info.put("subscribed", ServiceReferenceBuilder.CONSUMED_SERVICES.stream()
@@ -163,7 +160,7 @@ public final class RSocketEndpoint {
      */
     private ServiceLocator getServiceLocator(String serviceName) {
         ServiceLocator targetService = null;
-        for (ServiceLocator serviceLocator : requesterSupport.exposedServices()) {
+        for (ServiceLocator serviceLocator : ReactiveServiceRegistry.exposedServices()) {
             if (serviceName.equals(serviceLocator.getService())) {
                 targetService = serviceLocator;
                 break;
