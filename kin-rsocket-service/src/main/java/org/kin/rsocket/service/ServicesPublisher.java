@@ -75,11 +75,11 @@ final class ServicesPublisher implements ApplicationListener<ApplicationStartedE
                 .subscribe();
 
         // service exposed
-        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = requesterSupport.servicesExposedEvent().get();
+        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = requesterSupport.servicesExposedEvent();
         if (servicesExposedEventCloudEvent != null) {
             brokerCluster.broadcastCloudEvent(servicesExposedEventCloudEvent)
                     .doOnSuccess(aVoid -> {
-                        String exposedServiceGsvs = requesterSupport.exposedServices().get().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
+                        String exposedServiceGsvs = requesterSupport.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
                         log.info(String.format("Services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
                     }).subscribe();
         }

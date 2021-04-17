@@ -85,10 +85,8 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                             ServiceManager handlerRegistry,
                             ServiceMeshInspector serviceMeshInspector,
                             UpstreamCluster upstreamBrokers,
-                            RSocketFilterChain filterChain,
-                            ReactiveServiceRegistry serviceRegistry
+                            RSocketFilterChain filterChain
     ) {
-        super(serviceRegistry);
         this.upstreamBrokers = upstreamBrokers;
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
         if (dataType != null) {
@@ -151,7 +149,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         }
 
         // broker local service call check: don't introduce interceptor, performance consideration
-        if (serviceRegistry.contains(gsvRoutingMetadata.handlerId())) {
+        if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             //todo accept mime type 通过配置实现
             return localRequestResponse(gsvRoutingMetadata, messageMimeTypeMetadata,
                     compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
@@ -183,7 +181,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
         }
 
-        if (serviceRegistry.contains(gsvRoutingMetadata.handlerId())) {
+        if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             return localFireAndForget(gsvRoutingMetadata, messageMimeTypeMetadata, payload);
         }
         //request filters
@@ -212,7 +210,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         if (Objects.isNull(messageMimeTypeMetadata)) {
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
         }
-        if (serviceRegistry.contains(gsvRoutingMetadata.handlerId())) {
+        if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             return localRequestStream(gsvRoutingMetadata, messageMimeTypeMetadata,
                     compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
         }

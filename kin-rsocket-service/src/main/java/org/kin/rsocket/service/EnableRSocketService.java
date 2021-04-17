@@ -11,6 +11,6 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({RSocketServiceAutoConfiguration.class, RSocketBinderAutoConfiguration.class})
+@Import({RSocketServiceAutoConfiguration.class})
 public @interface EnableRSocketService {
 }

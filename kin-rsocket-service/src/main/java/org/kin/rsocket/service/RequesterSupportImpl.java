@@ -9,10 +9,8 @@ import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ReactiveServiceRegistry;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.*;
 
 import java.io.InputStream;
@@ -37,8 +35,6 @@ final class RequesterSupportImpl implements RequesterSupport {
     private final String appName;
     /** responder acceptor */
     private final SocketAcceptor socketAcceptor;
-    /** 服务注册中心 */
-    private final ReactiveServiceRegistry serviceRegistry;
     /** requester connection responder interceptors */
     private List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
     /** requester connection requester interceptors */
@@ -46,10 +42,8 @@ final class RequesterSupportImpl implements RequesterSupport {
 
     public RequesterSupportImpl(RSocketServiceProperties config,
                                 String appName,
-                                ReactiveServiceRegistry serviceRegistry,
                                 SocketAcceptor socketAcceptor) {
         this.config = config;
-        this.serviceRegistry = serviceRegistry;
         this.socketAcceptor = socketAcceptor;
         this.appName = appName;
     }
@@ -68,7 +62,7 @@ final class RequesterSupportImpl implements RequesterSupport {
             //app metadata
             metadataAwares.add(getAppMetadata());
             //published services
-            Set<ServiceLocator> serviceLocators = exposedServices().get();
+            Set<ServiceLocator> serviceLocators = exposedServices();
             if (!serviceLocators.isEmpty()) {
                 ServiceRegistryMetadata serviceRegistryMetadata = new ServiceRegistryMetadata();
                 serviceRegistryMetadata.setPublished(serviceLocators);
@@ -81,16 +75,6 @@ final class RequesterSupportImpl implements RequesterSupport {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(metadataAwares);
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, compositeMetadata.getContent());
         };
-    }
-
-    @Override
-    public Supplier<Set<ServiceLocator>> exposedServices() {
-        return () -> serviceRegistry.findAllServiceLocators()
-                .stream()
-                //过滤掉local service
-                .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName())
-                        && !l.getService().equals(ReactiveServiceRegistry.class.getCanonicalName()))
-                .collect(Collectors.toSet());
     }
 
     /** 获取app元数据 */

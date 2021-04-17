@@ -13,7 +13,10 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
-import org.kin.rsocket.core.*;
+import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.rsocket.core.ServiceLocator;
+import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.CloudEventBuilder;
@@ -49,7 +52,6 @@ import java.util.stream.Collectors;
 public final class ServiceManager {
     private static final Logger log = LoggerFactory.getLogger(ServiceManager.class);
     private final RSocketFilterChain rsocketFilterChain;
-    private final ReactiveServiceRegistry serviceRegistry;
     private final Sinks.Many<String> notificationSink;
     private final AuthenticationService authenticationService;
     private final BrokerManager brokerManager;
@@ -71,15 +73,13 @@ public final class ServiceManager {
     /** key -> instanceId, value -> list(serviceId) */
     private final SetMultimap<Integer, Integer> instanceId2ServiceIds = MultimapBuilder.hashKeys().linkedHashSetValues().build();
 
-    public ServiceManager(ReactiveServiceRegistry serviceRegistry,
-                          RSocketFilterChain filterChain,
+    public ServiceManager(RSocketFilterChain filterChain,
                           Sinks.Many<String> notificationSink,
                           AuthenticationService authenticationService,
                           BrokerManager brokerManager,
                           ServiceMeshInspector serviceMeshInspector,
                           boolean authRequired,
                           UpstreamCluster upstreamBrokers) {
-        this.serviceRegistry = serviceRegistry;
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
@@ -172,9 +172,10 @@ public final class ServiceManager {
         }
         //create responder
         try {
-            ServiceResponder responder = new ServiceResponder(setupPayload, compositeMetadata, appMetadata, principal,
+            ServiceResponder responder = new ServiceResponder(
+                    setupPayload, compositeMetadata, appMetadata, principal,
                     requesterSocket, this,
-                    serviceMeshInspector, upstreamBrokers, rsocketFilterChain, serviceRegistry);
+                    serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
             responder.onClose()
                     .doOnTerminate(() -> onResponderDisposed(responder))
                     .subscribeOn(Schedulers.parallel()).subscribe();

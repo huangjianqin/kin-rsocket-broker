@@ -107,32 +107,22 @@ public class RSocketBrokerConfiguration {
     }
 
     /**
-     * 默认服务注册中心
-     */
-    @Bean
-    @ConditionalOnMissingBean(ReactiveServiceRegistry.class)
-    public ReactiveServiceRegistry serviceRegistry() {
-        return new DefaultServiceRegistry();
-    }
-
-    /**
      * {@link RSocketService}注解processor
      */
     @Bean
-    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor(@Autowired ReactiveServiceRegistry serviceRegistry) {
-        return new RSocketServiceAnnoProcessor(serviceRegistry);
+    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor() {
+        return new RSocketServiceAnnoProcessor();
     }
 
     @Bean
-    public ServiceManager serviceRouter(@Autowired ReactiveServiceRegistry serviceRegistry,
-                                        @Autowired RSocketFilterChain rsocketFilterChain,
+    public ServiceManager serviceRouter(@Autowired RSocketFilterChain rsocketFilterChain,
                                         @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
                                         @Autowired AuthenticationService authenticationService,
                                         @Autowired BrokerManager brokerManager,
                                         @Autowired ServiceMeshInspector serviceMeshInspector,
                                         @Autowired RSocketBrokerProperties properties,
                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
-        return new ServiceManager(serviceRegistry, rsocketFilterChain,
+        return new ServiceManager(rsocketFilterChain,
                 notificationSink, authenticationService, brokerManager, serviceMeshInspector,
                 properties.isAuth(), upstreamBrokerCluster);
     }

@@ -5,7 +5,10 @@ import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.exceptions.InvalidException;
-import org.kin.rsocket.core.*;
+import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.rsocket.core.ResponderRsocket;
+import org.kin.rsocket.core.ResponderSupport;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
@@ -37,10 +40,7 @@ final class Responder extends ResponderSupport implements CloudEventRSocket, Res
     /** combo onClose from responder and requester */
     private Mono<Void> comboOnClose;
 
-    Responder(ReactiveServiceRegistry serviceRegistry,
-              RSocket requester,
-              ConnectionSetupPayload setupPayload) {
-        super(serviceRegistry);
+    Responder(RSocket requester, ConnectionSetupPayload setupPayload) {
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 

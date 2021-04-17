@@ -14,8 +14,8 @@ import org.kin.rsocket.service.health.HealthIndicator;
 import org.kin.rsocket.service.health.HealthService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -45,72 +45,47 @@ public class RSocketServiceAutoConfiguration {
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean
+    @Bean(autowireCandidate = false)
     public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> customConsumers) {
         CloudEventConsumers.INSTANCE.addConsumers(customConsumers.stream().collect(Collectors.toList()));
+        CloudEventConsumers.INSTANCE.addConsumers(upstreamClusterChangedEventConsumer(null));
+        CloudEventConsumers.INSTANCE.addConsumers(cloudEvent2ListenerConsumer());
+        CloudEventConsumers.INSTANCE.addConsumers(invalidCacheEventConsumer());
         return CloudEventConsumers.INSTANCE;
     }
 
-    @Bean
+    @Bean(autowireCandidate = false)
     public UpstreamClusterChangedEventConsumer upstreamClusterChangedEventConsumer(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return new UpstreamClusterChangedEventConsumer(upstreamClusterManager);
     }
 
-    @Bean
-    public CloudEvent2ApplicationEventConsumer cloudEventToListenerConsumer() {
+    @Bean(autowireCandidate = false)
+    public CloudEvent2ApplicationEventConsumer cloudEvent2ListenerConsumer() {
         return new CloudEvent2ApplicationEventConsumer();
     }
 
-    @Bean
+    @Bean(autowireCandidate = false)
     public InvalidCacheEventConsumer invalidCacheEventConsumer() {
         return new InvalidCacheEventConsumer();
     }
 
     //--------------------------------------------------------------------------------
-
-    /**
-     * 默认服务注册中心
-     */
-    @Bean
-    @ConditionalOnMissingBean(ReactiveServiceRegistry.class)
-    public ReactiveServiceRegistry serviceRegistry() {
-        return new DefaultServiceRegistry();
-    }
-
-    /**
-     * responder acceptor factory
-     */
-    @Bean
-    public SocketAcceptor responderAcceptorFactory(@Autowired ReactiveServiceRegistry serviceRegistry) {
-        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, requester, setupPayload));
-    }
-
     @Bean
     @ConditionalOnMissingBean(RequesterSupport.class)
     public RequesterSupport requesterSupport(@Autowired Environment environment,
-                                             @Autowired ReactiveServiceRegistry serviceRegistry,
-                                             @Autowired SocketAcceptor socketAcceptor,
                                              @Autowired ObjectProvider<RequesterSupportBuilderCustomizer> customizers) {
         String appName = environment.getProperty("spring.application.name", "unknown");
-        RequesterSupportImpl requesterSupport = new RequesterSupportImpl(config, appName, serviceRegistry, socketAcceptor);
+        RequesterSupportImpl requesterSupport = new RequesterSupportImpl(config, appName, socketAcceptor());
         customizers.orderedStream().forEach((customizer) -> customizer.customize(requesterSupport));
         return requesterSupport;
-    }
-
-    /**
-     * {@link RSocketService}注解processor
-     */
-    @Bean
-    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor(@Autowired ReactiveServiceRegistry serviceRegistry) {
-        return new RSocketServiceAnnoProcessor(config.getGroup(), config.getVersion(), serviceRegistry);
     }
 
     /**
      * upstream cluster manager
      */
     @Bean(destroyMethod = "close")
-    public UpstreamClusterManager upstreamClusterManager(@Autowired RequesterSupport requesterSupport) throws JwtTokenNotFoundException {
-        UpstreamClusterManager upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
+    public UpstreamClusterManager upstreamClusterManager() {
+        UpstreamClusterManager upstreamClusterManager = new UpstreamClusterManager(requesterSupport(null, null));
         //init
         if (config.getBrokers() != null && !config.getBrokers().isEmpty()) {
             if (config.getJwtToken() == null || config.getJwtToken().isEmpty()) {
@@ -134,7 +109,44 @@ public class RSocketServiceAutoConfiguration {
         return upstreamClusterManager;
     }
 
+    //----------------------------rsocket service binder----------------------------
+
+    /**
+     * responder acceptor factory
+     */
+    @Bean(autowireCandidate = false)
+    public SocketAcceptor socketAcceptor() {
+        return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(requester, setupPayload));
+    }
+
+    @Bean(autowireCandidate = false, initMethod = "start", destroyMethod = "close")
+    @ConditionalOnExpression("${kin.rsocket.port:0}!=0")
+    public RSocketBinder rsocketListener(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
+        RSocketBinder.Builder builder = RSocketBinder.builder();
+        defaultRSocketBinderBuilderCustomizer().customize(builder);
+        customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
+        return builder.build();
+    }
+
+    @Bean(autowireCandidate = false)
+    @ConditionalOnExpression("${kin.rsocket.port:0}!=0")
+    public RSocketBinderBuilderCustomizer defaultRSocketBinderBuilderCustomizer() {
+        return builder -> {
+            builder.acceptor(socketAcceptor());
+            builder.listen(config.getSchema(), config.getPort());
+        };
+    }
+
     //----------------------------spring----------------------------
+
+    /**
+     * {@link RSocketService}注解processor
+     */
+    @Bean
+    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor() {
+        return new RSocketServiceAnnoProcessor(config.getGroup(), config.getVersion());
+    }
+
     /**
      * 服务暴露给broker逻辑实现
      */
@@ -147,10 +159,9 @@ public class RSocketServiceAutoConfiguration {
     /**
      * 开启actuator监控
      */
-    @Bean
-    public RSocketEndpoint rsocketEndpoint(@Autowired UpstreamClusterManager upstreamClusterManager,
-                                           @Autowired RequesterSupport requesterSupport) {
-        return new RSocketEndpoint(config, upstreamClusterManager, requesterSupport);
+    @Bean(autowireCandidate = false)
+    public RSocketEndpoint rsocketEndpoint() {
+        return new RSocketEndpoint(config, upstreamClusterManager(), requesterSupport(null, null));
     }
 
     /**
@@ -158,16 +169,14 @@ public class RSocketServiceAutoConfiguration {
      */
     @Bean
     @ConditionalOnProperty("kin.rsocket.brokers")
-    public HealthIndicator healthIndicator(@Autowired RSocketEndpoint rsocketEndpoint,
-                                           @Autowired @Qualifier("healthCheckRef") HealthCheck healthCheck,
-                                           @Value("${kin.rsocket.brokers}") String brokers) {
-        return new HealthIndicator(rsocketEndpoint, healthCheck, brokers);
+    public HealthIndicator healthIndicator(@Value("${kin.rsocket.brokers}") String brokers) {
+        return new HealthIndicator(rsocketEndpoint(), healthCheckRef(), brokers);
     }
 
     /**
      * 自带的health checker rsocket service
      */
-    @Bean
+    @Bean(autowireCandidate = false)
     @ConditionalOnMissingBean
     public HealthService healthService() {
         return new HealthService();
@@ -186,7 +195,7 @@ public class RSocketServiceAutoConfiguration {
                 RSocketAppContext.managementPort = listenPort;
             } else {
                 RSocketAppContext.webPort = listenPort;
-                if (environment.getProperty("management.server.port", Integer.class) == 0) {
+                if (!environment.containsProperty("management.server.port")) {
                     RSocketAppContext.managementPort = listenPort;
                 }
             }
@@ -194,13 +203,13 @@ public class RSocketServiceAutoConfiguration {
     }
 
     //----------------------------service reference----------------------------
-    @Bean
-    public HealthCheck healthCheckRef(@Autowired UpstreamClusterManager upstreamClusterManager) {
+    @Bean(autowireCandidate = false)
+    public HealthCheck healthCheckRef() {
         return ServiceReferenceBuilder
                 .requester(HealthCheck.class)
                 //todo 看看编码方式是否需要修改
                 .nativeImage()
-                .upstreamClusterManager(upstreamClusterManager)
+                .upstreamClusterManager(upstreamClusterManager())
                 .build();
     }
 }

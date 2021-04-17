@@ -21,13 +21,6 @@ import reactor.core.publisher.Mono;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class ResponderSupport extends AbstractRSocket implements LoggerOprs {
-    /** 服务注册中心 */
-    protected final ReactiveServiceRegistry serviceRegistry;
-
-    protected ResponderSupport(ReactiveServiceRegistry serviceRegistry) {
-        this.serviceRegistry = serviceRegistry;
-    }
-
     /**
      * 用于log 或者返回异常tips
      *
@@ -63,7 +56,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                                  MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
                                                  Payload payload) {
         try {
-            ReactiveMethodInvoker methodInvoker = serviceRegistry.getInvoker(routing.getService(), routing.getHandlerName());
+            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.isAsyncReturn()) {
@@ -114,7 +107,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
      * 本地调用服务接口方法并针对FireAndForget Frame Type场景定制额外逻辑
      */
     protected Mono<Void> localFireAndForget(GSVRoutingMetadata routing, MessageMimeTypeMetadata dataEncodingMetadata, Payload payload) {
-        ReactiveMethodInvoker methodInvoker = serviceRegistry.getInvoker(routing.getService(), routing.getHandlerName());
+        ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
         if (methodInvoker != null) {
             if (methodInvoker.isAsyncReturn()) {
                 try {
@@ -149,7 +142,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                                MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
                                                Payload payload) {
         try {
-            ReactiveMethodInvoker methodInvoker = serviceRegistry.getInvoker(routing.getService(), routing.getHandlerName());
+            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
             if (methodInvoker != null) {
                 Object result = invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
                 Flux<Object> fluxResult;
@@ -183,7 +176,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                                 MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
                                                 Payload signal, Flux<Payload> payloads) {
         try {
-            ReactiveMethodInvoker methodInvoker = serviceRegistry.getInvoker(routing.getService(), routing.getHandlerName());
+            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {

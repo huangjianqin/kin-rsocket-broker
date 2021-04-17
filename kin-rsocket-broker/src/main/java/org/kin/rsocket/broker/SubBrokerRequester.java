@@ -72,8 +72,8 @@ final class SubBrokerRequester implements RequesterSupport {
     }
 
     @Override
-    public Supplier<Set<ServiceLocator>> exposedServices() {
-        return () -> serviceManager.getAllServices().stream()
+    public Set<ServiceLocator> exposedServices() {
+        return serviceManager.getAllServices().stream()
                 //todo global是啥子
                 .filter(serviceLocator -> serviceLocator.hasTag("global"))
                 .collect(Collectors.toSet());

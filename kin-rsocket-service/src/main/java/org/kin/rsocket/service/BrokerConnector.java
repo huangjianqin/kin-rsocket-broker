@@ -40,8 +40,6 @@ public final class BrokerConnector implements Closeable {
     private final RSocketMimeType dataMimeType;
     /** upstream cluster manager */
     private final UpstreamClusterManager upstreamClusterManager;
-    /** 服务注册中心 */
-    private final ReactiveServiceRegistry serviceRegistry;
     /** requester连接配置 */
     private final SimpleRequesterSupport requesterSupport;
 
@@ -50,9 +48,9 @@ public final class BrokerConnector implements Closeable {
         this.appName = appName;
         this.brokers = brokers;
         this.dataMimeType = dataMimeType;
-        serviceRegistry = new DefaultServiceRegistry();
         // add health check
-        serviceRegistry.addProvider("", HealthCheck.class.getCanonicalName(), "",
+        ReactiveServiceRegistry.INSTANCE.addProvider("", "",
+                //todo health check逻辑修改
                 HealthCheck.class, (HealthCheck) serviceName -> Mono.just(1));
         requesterSupport = new SimpleRequesterSupport(jwtToken);
 
@@ -69,7 +67,7 @@ public final class BrokerConnector implements Closeable {
      * todo 支持多种注册方式
      */
     public BrokerConnector registerService(String serviceName, Class<?> serviceInterface, Object provider) {
-        this.serviceRegistry.addProvider("", serviceName, "", serviceInterface, provider);
+        ReactiveServiceRegistry.INSTANCE.addProvider("", serviceName, "", serviceInterface, provider);
         return this;
     }
 
@@ -77,10 +75,10 @@ public final class BrokerConnector implements Closeable {
      * 发布(暴露)服务
      */
     public void publishServices() {
-        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = requesterSupport.servicesExposedEvent().get();
+        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = requesterSupport.servicesExposedEvent();
         if (servicesExposedEventCloudEvent != null) {
             upstreamClusterManager.getBroker().broadcastCloudEvent(servicesExposedEventCloudEvent).doOnSuccess(aVoid -> {
-                String exposedServices = requesterSupport.exposedServices().get().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
+                String exposedServices = requesterSupport.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
                 log.info(String.format("Services(%s) published on Brokers(%s)!.", exposedServices, brokers));
             }).subscribe();
         }
@@ -94,7 +92,7 @@ public final class BrokerConnector implements Closeable {
         CloudEventData<ServicesHiddenEvent> cloudEvent = ServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
         upstreamClusterManager.getBroker().broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
-                    this.serviceRegistry.removeProvider("", serviceName, "", serviceInterface);
+                    ReactiveServiceRegistry.INSTANCE.removeProvider("", serviceName, "", serviceInterface);
                     log.info(String.format("Services(%s) hide on Brokers(%s)!.", serviceName, brokers));
                 }).subscribe();
     }
@@ -155,7 +153,7 @@ public final class BrokerConnector implements Closeable {
                 if (jwtToken != null && jwtToken.length > 0) {
                     metadataAwares.add(BearerTokenMetadata.jwt(jwtToken));
                 }
-                Set<ServiceLocator> serviceLocators = exposedServices().get();
+                Set<ServiceLocator> serviceLocators = exposedServices();
                 if (!serviceLocators.isEmpty()) {
                     ServiceRegistryMetadata serviceRegistryMetadata = new ServiceRegistryMetadata();
                     serviceRegistryMetadata.setPublished(serviceLocators);
@@ -167,18 +165,8 @@ public final class BrokerConnector implements Closeable {
         }
 
         @Override
-        public Supplier<Set<ServiceLocator>> exposedServices() {
-            return () -> serviceRegistry.findAllServiceLocators()
-                    .stream()
-                    //过滤掉local service
-                    .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName())
-                            && !l.getService().equals(ReactiveServiceRegistry.class.getCanonicalName()))
-                    .collect(Collectors.toSet());
-        }
-
-        @Override
         public SocketAcceptor socketAcceptor() {
-            return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(serviceRegistry, requester, setupPayload));
+            return (setupPayload, requester) -> Mono.fromCallable(() -> new Responder(requester, setupPayload));
         }
 
         /**

@@ -106,7 +106,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         this.serviceId = serviceId;
         this.selector = selector;
         this.requesterSupport = requesterSupport;
-        if (!requesterSupport.exposedServices().get().isEmpty()) {
+        if (!requesterSupport.exposedServices().isEmpty()) {
             this.isServiceProvider = true;
         }
         urisFactory.subscribe(this::refreshRSockets);
@@ -399,7 +399,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         this.activeRSockets.put(rsocketUri, rsocket);
         this.unhealthyUris.remove(rsocketUri);
         rsocket.onClose().subscribe(aVoid -> onRSocketClosed(rsocketUri, rsocket, null));
-        CloudEventData<ServicesExposedEvent> cloudEvent = requesterSupport.servicesExposedEvent().get();
+        CloudEventData<ServicesExposedEvent> cloudEvent = requesterSupport.servicesExposedEvent();
         if (cloudEvent != null) {
             Payload payload = cloudEvent2Payload(cloudEvent);
             rsocket.metadataPush(payload).subscribe();
@@ -462,8 +462,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                     //todo  remote responder默认的编码类型
                     .dataMimeType(RSocketMimeType.Json.getType())
                     .acceptor(requesterSupport.socketAcceptor())
-                    .connect(UriTransportRegistry.INSTANCE.client(uri))
-                    .doOnError(error -> ReferenceCountUtil.safeRelease(payload));
+                    .connect(UriTransportRegistry.INSTANCE.client(uri));
         } catch (Exception e) {
             log.error(String.format("connect '%s' error", uri), e);
             return Mono.error(new ConnectionErrorException(uri));

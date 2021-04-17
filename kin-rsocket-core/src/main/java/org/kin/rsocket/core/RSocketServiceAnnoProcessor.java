@@ -16,17 +16,14 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
     private final String defaultGroup;
     /** 缺省version */
     private final String defaultVersion;
-    /** 服务注册中心 */
-    private final ReactiveServiceRegistry serviceRegistry;
 
-    public RSocketServiceAnnoProcessor(ReactiveServiceRegistry serviceRegistry) {
-        this("", "", serviceRegistry);
+    public RSocketServiceAnnoProcessor() {
+        this("", "");
     }
 
-    public RSocketServiceAnnoProcessor(String defaultGroup, String defaultVersion, ReactiveServiceRegistry serviceRegistry) {
+    public RSocketServiceAnnoProcessor(String defaultGroup, String defaultVersion) {
         this.defaultGroup = defaultGroup;
         this.defaultVersion = defaultVersion;
-        this.serviceRegistry = serviceRegistry;
     }
 
     @Override
@@ -63,7 +60,7 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
                 version = defaultVersion;
             }
             //注册
-            serviceRegistry.addProvider(group, serviceName, version, rsocketServiceAnno.value(), bean);
+            ReactiveServiceRegistry.INSTANCE.addProvider(group, serviceName, version, rsocketServiceAnno.value(), bean);
         }
     }
 

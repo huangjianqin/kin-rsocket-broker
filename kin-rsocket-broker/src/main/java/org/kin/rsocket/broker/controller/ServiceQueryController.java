@@ -7,7 +7,7 @@ import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.ReactiveServiceRegistry;
+import org.kin.rsocket.core.ReactiveServiceInfoSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -62,7 +62,7 @@ public class ServiceQueryController {
         ServiceResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId());
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
-                    GSVRoutingMetadata.of("", ReactiveServiceRegistry.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
+                    GSVRoutingMetadata.of("", ReactiveServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
             ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"" + serviceName + "\"]").getBytes(StandardCharsets.UTF_8));
             return brokerResponder.getPeerRsocket()
