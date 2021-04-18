@@ -13,9 +13,5 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ServiceApplication {
     public static void main(String[] args) throws InterruptedException {
         SpringApplication.run(ServiceApplication.class, args);
-        //todo
-        while (true) {
-            Thread.sleep(2_000);
-        }
     }
 }

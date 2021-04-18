@@ -1,6 +1,5 @@
 package org.kin.rsocket.service;
 
-import org.kin.framework.Closeable;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
@@ -19,14 +18,14 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public final class RSocketServiceConnector implements Closeable {
+public final class RSocketServiceConnector implements UpstreamClusterManager {
     private static final Logger log = LoggerFactory.getLogger(RSocketServiceConnector.class);
     /** app name */
     private final String appName;
     /** 配置 */
     private final RSocketServiceProperties config;
     /** upstream cluster manager */
-    private UpstreamClusterManager upstreamClusterManager;
+    private UpstreamClusterManagerImpl upstreamClusterManager;
     /** requester连接配置 */
     private RequesterSupport requesterSupport;
     /** rsocket binder */
@@ -41,8 +40,8 @@ public final class RSocketServiceConnector implements Closeable {
         requesterSupport = new RequesterSupportImpl(config, appName);
 
         //init upstream manager
-        upstreamClusterManager = new UpstreamClusterManager(requesterSupport);
-        upstreamClusterManager.add(config);
+        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport);
+        add(config);
     }
 
     /**
@@ -79,9 +78,6 @@ public final class RSocketServiceConnector implements Closeable {
         //custom requester support
         requesterSupportBuilderCustomizers.forEach((customizer) -> customizer.customize((RequesterSupportImpl) requesterSupport));
 
-        //upstream manager init connect
-        upstreamClusterManager.connect();
-
         CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
 
         //register health check
@@ -89,13 +85,6 @@ public final class RSocketServiceConnector implements Closeable {
             customHealthCheck = new HealthCheckImpl();
         }
         registerService(HealthCheck.class, customHealthCheck);
-
-        //todo reactor api还没来得及处理建立连接, 程序有可能调用了reference
-        try {
-            Thread.sleep(2_000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -197,7 +186,7 @@ public final class RSocketServiceConnector implements Closeable {
                 .build();
 
         // app status
-        upstreamClusterManager.getBroker().broadcastCloudEvent(appStatusEventCloudEvent)
+        getBroker().broadcastCloudEvent(appStatusEventCloudEvent)
                 .doOnSuccess(aVoid -> log.info(String.format("Application connected with RSocket Brokers(%s) successfully", brokerUris)))
                 .subscribe();
 
@@ -212,7 +201,7 @@ public final class RSocketServiceConnector implements Closeable {
      * 通知broker暴露新服务
      */
     private void publishServices(CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent) {
-        upstreamClusterManager.getBroker().broadcastCloudEvent(servicesExposedEventCloudEvent)
+        getBroker().broadcastCloudEvent(servicesExposedEventCloudEvent)
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
@@ -243,7 +232,7 @@ public final class RSocketServiceConnector implements Closeable {
     public void removeService(String group, String serviceName, String version, Class<?> serviceInterface) {
         ServiceLocator targetServiceLocator = ServiceLocator.of(group, serviceName, version);
         CloudEventData<ServicesHiddenEvent> cloudEvent = ServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
-        upstreamClusterManager.getBroker().broadcastCloudEvent(cloudEvent)
+        getBroker().broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
@@ -251,16 +240,6 @@ public final class RSocketServiceConnector implements Closeable {
                     ReactiveServiceRegistry.INSTANCE.removeProvider(group, serviceName, version, serviceInterface);
                     log.info(String.format("Services(%s) hide on Brokers(%s)!.", serviceName, brokerUris));
                 }).subscribe();
-    }
-
-    /**
-     * 构建服务引用
-     */
-    public <T> T buildServiceReference(Class<T> serviceInterface) {
-        return ServiceReferenceBuilder
-                .requester(serviceInterface)
-                .upstreamClusterManager(upstreamClusterManager)
-                .build();
     }
 
     /**
@@ -316,8 +295,40 @@ public final class RSocketServiceConnector implements Closeable {
         }
     }
 
-    //getter
-    public UpstreamClusterManager getUpstreamClusterManager() {
-        return upstreamClusterManager;
+    //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
+    @Override
+    public void add(String group, String serviceName, String version, List<String> uris) {
+        upstreamClusterManager.add(group, serviceName, version, uris);
     }
+
+    @Override
+    public void add(RSocketServiceProperties config) {
+        upstreamClusterManager.add(config);
+    }
+
+    @Override
+    public Collection<UpstreamCluster> getAll() {
+        return upstreamClusterManager.getAll();
+    }
+
+    @Override
+    public UpstreamCluster get(String serviceId) {
+        return upstreamClusterManager.get(serviceId);
+    }
+
+    @Override
+    public UpstreamCluster getBroker() {
+        return upstreamClusterManager.getBroker();
+    }
+
+    @Override
+    public void refresh(String serviceId, List<String> uris) {
+        upstreamClusterManager.refresh(serviceId, uris);
+    }
+
+    @Override
+    public RequesterSupport getRequesterSupport() {
+        return upstreamClusterManager.getRequesterSupport();
+    }
+    //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
 }

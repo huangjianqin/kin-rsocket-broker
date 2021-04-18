@@ -79,7 +79,7 @@ public class RSocketServiceAutoConfiguration {
      */
     @Bean(autowireCandidate = false)
     public RSocketEndpoint rsocketEndpoint() {
-        return new RSocketEndpoint(config, rsocketServiceConnector(null).getUpstreamClusterManager());
+        return new RSocketEndpoint(config, rsocketServiceConnector(null));
     }
 
     /**
@@ -127,7 +127,7 @@ public class RSocketServiceAutoConfiguration {
                 .requester(HealthCheck.class)
                 //todo 看看编码方式是否需要修改
                 .nativeImage()
-                .upstreamClusterManager(rsocketServiceConnector(null).getUpstreamClusterManager())
+                .upstreamClusterManager(rsocketServiceConnector(null))
                 .build();
     }
 }

@@ -45,7 +45,7 @@ final class ServicesPublisher implements ApplicationListener<ApplicationStartedE
                 requesterSupportBuilderCustomizers.orderedStream().collect(Collectors.toList()),
                 healthService);
 
-        UpstreamCluster brokerCluster = connector.getUpstreamClusterManager().getBroker();
+        UpstreamCluster brokerCluster = connector.getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
             //本质上就是直连的方式

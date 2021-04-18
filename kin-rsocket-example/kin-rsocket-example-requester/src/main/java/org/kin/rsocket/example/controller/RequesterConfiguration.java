@@ -1,8 +1,8 @@
 package org.kin.rsocket.example.controller;
 
 import org.kin.rsocket.example.UserService;
+import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.ServiceReferenceBuilder;
-import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RequesterConfiguration {
     @Bean
-    public UserService userService(@Autowired UpstreamClusterManager upstreamClusterManager) {
+    public UserService userService(@Autowired RSocketServiceConnector connector) {
         return ServiceReferenceBuilder
                 .requester(UserService.class)
-                .upstreamClusterManager(upstreamClusterManager)
+                .upstreamClusterManager(connector)
                 .build();
     }
 }

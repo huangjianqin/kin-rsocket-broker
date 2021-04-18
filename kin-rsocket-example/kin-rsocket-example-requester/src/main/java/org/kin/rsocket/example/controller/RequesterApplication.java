@@ -3,6 +3,7 @@ package org.kin.rsocket.example.controller;
 import org.kin.rsocket.example.UserService;
 import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.RSocketServiceProperties;
+import org.kin.rsocket.service.ServiceReferenceBuilder;
 
 /**
  * @author huangjianqin
@@ -18,7 +19,7 @@ public class RequesterApplication {
                 .build();
         RSocketServiceConnector connector = new RSocketServiceConnector("MockApp", properties);
         connector.connect();
-        UserService userService = connector.buildServiceReference(UserService.class);
+        UserService userService = ServiceReferenceBuilder.requester(UserService.class).upstreamClusterManager(connector).build();
         try {
             userService.findAll().subscribe(System.out::println);
             Thread.sleep(1_000);

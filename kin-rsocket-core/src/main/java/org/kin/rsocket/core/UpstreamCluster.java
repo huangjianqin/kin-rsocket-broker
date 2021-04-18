@@ -72,35 +72,24 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
 
         this.loadBalanceRequester = LoadBalanceRequester.roundRobin(ServiceLocator.gsv(group, serviceName, version), urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {
-            this.lastUris = uris;
+            refreshUris(uris);
         }
-    }
-
-    /**
-     * 建立upstream connection
-     */
-    public void connect() {
-        refreshUris0(lastUris);
     }
 
     /**
      * 刷新upstream rsocket uris
      */
     public void refreshUris(List<String> uris) {
+        if (isDisposed()) {
+            return;
+        }
         //检查uris是否于上次刷新的一致
         if (CollectionUtils.isNonEmpty(lastUris) &&
                 CollectionUtils.isSame(lastUris, uris)) {
             return;
         }
         lastUris = uris;
-        refreshUris0(lastUris);
-    }
-
-    private void refreshUris0(List<String> uris) {
-        //refresh uris
-        if (!isDisposed()) {
-            urisSink.tryEmitNext(uris);
-        }
+        urisSink.tryEmitNext(uris);
     }
 
     /**

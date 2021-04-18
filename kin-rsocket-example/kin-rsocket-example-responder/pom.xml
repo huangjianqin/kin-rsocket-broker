@@ -16,6 +16,12 @@
             <artifactId>kin-rsocket-example-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <!-- reactive web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
