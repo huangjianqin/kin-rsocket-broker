@@ -16,11 +16,12 @@ import java.util.Properties;
 /**
  * broker端{@link org.kin.rsocket.core.event.ConfigChangedEvent}处理
  * 目前仅仅只有gossip支持在broker cluster广播{@link ConfigChangedEvent}
+ * todo
  *
  * @author huangjianqin
  * @date 2021/3/31
  */
-public final class ConfigChangedEventConsumer implements CloudEventConsumer {
+public final class BrokerConfigChangedEventConsumer implements CloudEventConsumer {
     @Autowired
     private ConfDiamond confDiamond;
 
@@ -32,8 +33,6 @@ public final class ConfigChangedEventConsumer implements CloudEventConsumer {
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
         ConfigChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, ConfigChangedEvent.class);
-
-        //todo 是否需要校验app name
 
         Properties confs = new Properties();
         try {

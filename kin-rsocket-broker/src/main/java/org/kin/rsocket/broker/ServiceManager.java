@@ -393,7 +393,7 @@ public final class ServiceManager {
     /**
      * 注册app instance及其服务
      */
-    public void register(Integer instanceId, int powerUnit, Set<ServiceLocator> services) {
+    public void register(Integer instanceId, int powerUnit, Collection<ServiceLocator> services) {
         //todo notification for global service
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();

@@ -64,7 +64,7 @@ public class OprController {
         return serviceManager.broadcast(Symbols.BROKER, cloudEvent);
     }
 
-    @PostMapping("/cluster/stopLocalBroker")
+    @PostMapping("/cluster/stop")
     public Mono<String> stopLocalBroker() {
         brokerManager.close();
         return Mono.just("Succeed to stop local broker from Cluster! Please shutdown app after 15 seconds!");

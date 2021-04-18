@@ -42,19 +42,18 @@ public class RSocketBrokerConfiguration {
     /**
      * 接受tips的flux
      */
-    @Bean
+    @Bean(autowireCandidate = false)
     public Sinks.Many<String> notificationSink() {
         return Sinks.many().multicast().onBackpressureBuffer(8);
     }
 
     //----------------------------------------------cloud event consumers----------------------------------------------
-
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean
+    @Bean(autowireCandidate = false)
     public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers.stream().collect(Collectors.toList()));
+        CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
         return CloudEventConsumers.INSTANCE;
     }
 
@@ -85,8 +84,8 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
-    public ConfigChangedEventConsumer configChangedEventConsumer() {
-        return new ConfigChangedEventConsumer();
+    public BrokerConfigChangedEventConsumer brokerConfigChangedEventConsumer() {
+        return new BrokerConfigChangedEventConsumer();
     }
 
     @Bean
@@ -96,14 +95,9 @@ public class RSocketBrokerConfiguration {
 
     //----------------------------------------------
 
-    @Bean
+    @Bean(autowireCandidate = false)
     public RSocketFilterChain rsocketFilterChain(ObjectProvider<AbstractRSocketFilter> filters) {
         return new RSocketFilterChain(filters.orderedStream().collect(Collectors.toList()));
-    }
-
-    @Bean
-    public ServiceMeshInspector serviceMeshInspector() {
-        return new ServiceMeshInspector(brokerConfig.isAuth());
     }
 
     /**
@@ -115,20 +109,36 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
-    public ServiceManager serviceRouter(@Autowired RSocketFilterChain rsocketFilterChain,
-                                        @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
-                                        @Autowired AuthenticationService authenticationService,
-                                        @Autowired BrokerManager brokerManager,
-                                        @Autowired ServiceMeshInspector serviceMeshInspector,
-                                        @Autowired RSocketBrokerProperties properties,
-                                        @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
-        return new ServiceManager(rsocketFilterChain,
-                notificationSink, authenticationService, brokerManager, serviceMeshInspector,
-                properties.isAuth(), upstreamBrokerCluster);
+    public ServiceMeshInspector serviceMeshInspector() {
+        return new ServiceMeshInspector(brokerConfig.isAuth());
     }
 
+    @Bean
+    public ServiceManager serviceManager(@Autowired AuthenticationService authenticationService,
+                                         @Autowired BrokerManager brokerManager,
+                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
+        return new ServiceManager(
+                rsocketFilterChain(null),
+                notificationSink(),
+                authenticationService,
+                brokerManager,
+                serviceMeshInspector(),
+                brokerConfig.isAuth(),
+                upstreamBrokerCluster);
+    }
+
+    /**
+     * 默认{@link BrokerManager}实现, 可通过maven依赖配置其他starter来使用自定义{@link BrokerManager}实现
+     */
+    @Bean
+    @ConditionalOnMissingBean(BrokerManager.class)
+    public BrokerManager brokerManager() {
+        return new StandAloneBrokerManager();
+    }
+
+
     //----------------------------------------------broker binder相关----------------------------------------------
-    @Bean(initMethod = "start", destroyMethod = "close")
+    @Bean(autowireCandidate = false, initMethod = "start", destroyMethod = "close")
     public RSocketBinder rsocketListener(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
         RSocketBinder.Builder builder = RSocketBinder.builder();
         customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
@@ -149,6 +159,7 @@ public class RSocketBrokerConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.ssl.key-store")
     public RSocketBinderBuilderCustomizer rsocketListenerSSLCustomizer(@Autowired ResourceLoader resourceLoader) {
         return builder -> {
+            //todo
             RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
             if (rsocketSSL != null && rsocketSSL.isEnabled() && rsocketSSL.getKeyStore() != null) {
                 try {
@@ -166,41 +177,30 @@ public class RSocketBrokerConfiguration {
             }
         };
     }
-    //----------------------------------------------
 
-    /**
-     * 默认{@link BrokerManager}实现, 可通过maven依赖配置其他starter来使用自定义{@link BrokerManager}实现
-     */
-    @Bean
-    @ConditionalOnMissingBean(BrokerManager.class)
-    public BrokerManager rsocketBrokerManager() {
-        return new StandAloneBrokerManager();
-    }
-
-    @Bean
+    //----------------------------------------------upstream broker requester相关----------------------------------------------
+    @Bean(autowireCandidate = false)
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public SubBrokerRequester subBrokerRequester(@Autowired Environment env,
-                                                 @Autowired ServiceManager serviceManager,
-                                                 @Autowired RSocketFilterChain filterChain) {
+    public SubBrokerRequester subBrokerRequester(@Autowired Environment env) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new SubBrokerRequester(brokerConfig, appName, serviceManager, filterChain);
+        return new SubBrokerRequester(brokerConfig, appName, serviceManager(null, null, null), rsocketFilterChain(null));
     }
 
-    @Bean
+    @Bean(autowireCandidate = false)
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public UpstreamCluster upstreamBrokerCluster(@Autowired SubBrokerRequester subBrokerRequester) {
-        return UpstreamCluster.brokerUpstreamCluster(subBrokerRequester, brokerConfig.getUpstreamBrokers());
+    public UpstreamCluster upstreamBrokerCluster() {
+        return UpstreamCluster.brokerUpstreamCluster(subBrokerRequester(null), brokerConfig.getUpstreamBrokers());
     }
 
-    //----------------------------------------------services
+    //----------------------------------------------services----------------------------------------------
     @Bean
     public DiscoveryService discoveryService() {
         return new BrokerDiscoveryService();
     }
 
-    @Bean
-    public HealthService healthService(@Autowired ServiceManager serviceManager) {
-        return new HealthService(serviceManager);
+    @Bean(autowireCandidate = false)
+    public HealthService healthService() {
+        return new HealthService();
     }
     //----------------------------------------------
 }

@@ -2,6 +2,7 @@ package org.kin.rsocket.conf.h2;
 
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.conf.AbstractConfDiamond;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.slf4j.Logger;
@@ -11,6 +12,10 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.PreDestroy;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * 基于H2 MVStore
@@ -53,13 +58,42 @@ public class H2StorageConfDiamond extends AbstractConfDiamond {
     }
 
     @Override
+    public Mono<String> findKeyValuesByGroup(String group) {
+        MVMap<String, String> appMap = mvStore.openMap(group);
+        return Mono.just(appMap.entrySet())
+                .map(entries -> {
+                    Properties properties = new Properties();
+                    for (Map.Entry<String, String> entry : entries) {
+                        if (!entry.getKey().startsWith(group.concat(ConfDiamond.GROUP_KEY_SEPARATOR))) {
+                            continue;
+                        }
+                        properties.put(entry.getKey(), entry.getValue());
+                    }
+
+                    try {
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        properties.list(pw);
+
+                        pw.close();
+                        sw.close();
+                        return sw.toString();
+                    } catch (Exception e) {
+                        ExceptionUtils.throwExt(e);
+                    }
+
+                    return "";
+                }).doOnError(e -> log.error(String.format("conf diamond get all confs from app '%s' error", group), e));
+    }
+
+    @Override
     public Mono<Void> put(String key, String value) {
         return Mono.fromRunnable(() -> {
             String[] parts = key.split(ConfDiamond.GROUP_KEY_SEPARATOR, 2);
             if (parts.length == 2) {
                 mvStore.openMap(parts[0]).put(parts[1], value);
                 mvStore.commit();
-                onKvAdd(key, value);
+                onKvAdd(parts[0], key, value);
             }
         });
     }
@@ -71,7 +105,7 @@ public class H2StorageConfDiamond extends AbstractConfDiamond {
             if (parts.length == 2) {
                 mvStore.openMap(parts[0]).remove(parts[1]);
                 mvStore.commit();
-                onKvRemoved(key);
+                onKvRemoved(parts[0], key);
             }
         });
     }

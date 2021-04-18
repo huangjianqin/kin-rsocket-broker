@@ -70,8 +70,7 @@ final class SubBrokerRequester implements RequesterSupport {
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (connectionSetupPayload, rsocket) -> Mono.just(
-                new BrokerResponder(serviceManager, filterChain));
+        return (setupPayload, rsocket) -> Mono.just(new BrokerResponder(serviceManager, filterChain, setupPayload));
     }
 
     private AppMetadata getAppMetadata() {
@@ -81,7 +80,7 @@ final class SubBrokerRequester implements RequesterSupport {
         appMetadata.setUuid(RSocketAppContext.ID);
         appMetadata.setName(appName);
         appMetadata.setIp(NetUtils.getIp());
-        appMetadata.setDevice("SpringBootApp");
+        appMetadata.setDevice("KinRsocketBroker");
         //upstream brokers
         appMetadata.setBrokers(brokerConfig.getUpstreamBrokers());
         appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);

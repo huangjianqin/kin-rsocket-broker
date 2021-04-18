@@ -28,9 +28,22 @@ public final class ServiceReferenceBuilder<T> {
     private String version;
     /** call timeout todo 是否需要支持配置 */
     private Duration timeout = Duration.ofMillis(3000);
-    /** endpoint */
+    /**
+     * endpoint
+     * 形式:
+     * 1. id:XX
+     * 2. uuid:XX
+     * 3. ip:XX
+     * todo
+     */
     private String endpoint;
-    /** sticky session */
+    /**
+     * sticky session
+     * 相当于固定session, 指定service首次请求后, 后面请求都是route到该service instance
+     * 如果该service instance失效, 重新选择一个sticky service instance
+     * 目前仅仅在service mesh校验通过下才允许mark sticky service instance
+     * todo
+     */
     private boolean sticky;
     /** 服务接口 */
     private Class<T> serviceInterface;

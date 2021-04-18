@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * services exposed event: register service on routing table
+ * 包含指定app所暴露的所有service gsv cloud event
  *
  * @author huangjianqin
  * @date 2021/3/23

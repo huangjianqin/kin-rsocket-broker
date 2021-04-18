@@ -3,7 +3,6 @@ package org.kin.rsocket.broker.event;
 import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
@@ -33,7 +32,6 @@ public final class ServicesExposedEventConsumer implements CloudEventConsumer {
             ServiceResponder responder = serviceManager.getByUUID(event.getAppId());
             if (responder != null) {
                 Set<ServiceLocator> serviceLocators = event.getServices();
-                responder.setAppStatus(AppStatus.SERVING);
                 responder.registerServices(serviceLocators);
             }
         }

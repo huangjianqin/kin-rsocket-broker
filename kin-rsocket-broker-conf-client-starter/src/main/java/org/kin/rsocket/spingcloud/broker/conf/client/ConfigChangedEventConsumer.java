@@ -36,9 +36,6 @@ public class ConfigChangedEventConsumer implements CloudEventConsumer {
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        //todo
-        // replyto support
-        // cloudEvent.getExtensions().get("replyto"); rsocket:///REQUEST_FNF/com.xxxx.XxxService#method
         ConfigChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, ConfigChangedEvent.class);
         // validate app name
         if (event != null && applicationName.equalsIgnoreCase(event.getAppName())

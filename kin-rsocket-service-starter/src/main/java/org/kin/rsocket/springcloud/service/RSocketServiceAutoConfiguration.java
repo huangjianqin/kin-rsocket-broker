@@ -3,6 +3,8 @@ package org.kin.rsocket.springcloud.service;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RSocketServiceAnnoProcessor;
+import org.kin.rsocket.core.event.CloudEventConsumer;
+import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.ServiceReferenceBuilder;
@@ -39,12 +41,21 @@ public class RSocketServiceAutoConfiguration {
 
     //----------------------------cloud event consumers----------------------------
 
-    @Bean(autowireCandidate = false)
+    /**
+     * 管理所有{@link CloudEventConsumer}的实例
+     */
+    @Bean
+    public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
+        CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
+        return CloudEventConsumers.INSTANCE;
+    }
+
+    @Bean
     public CloudEvent2ApplicationEventConsumer cloudEvent2ListenerConsumer() {
         return new CloudEvent2ApplicationEventConsumer();
     }
 
-    @Bean(autowireCandidate = false)
+    @Bean
     public InvalidCacheEventConsumer invalidCacheEventConsumer() {
         return new InvalidCacheEventConsumer();
     }

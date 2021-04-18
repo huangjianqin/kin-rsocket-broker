@@ -7,6 +7,7 @@ import io.rsocket.RSocket;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.AbstractRSocket;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketMimeType;
@@ -27,9 +28,6 @@ import java.util.Objects;
 /**
  * broker <-> broker
  * broker responder
- * <p>
- * todo
- * 代码与{@link ServiceResponder}有点类似, 看看能不能抽象一下
  *
  * @author huangjianqin
  * @date 2021/3/30
@@ -38,17 +36,23 @@ final class BrokerResponder extends AbstractRSocket {
     private static final Logger log = LoggerFactory.getLogger(BrokerResponder.class);
     private final ServiceManager serviceManager;
     private final RSocketFilterChain filterChain;
-    /** 本broker app metadata todo 为何不从外部getAppMeta获取 */
+    /** broker reuqester app metadata */
     private final AppMetadata upstreamBrokerMetadata;
 
     public BrokerResponder(ServiceManager serviceManager,
-                           RSocketFilterChain filterChain) {
+                           RSocketFilterChain filterChain,
+                           Payload setupPayload) {
         this.filterChain = filterChain;
         this.serviceManager = serviceManager;
 
-        this.upstreamBrokerMetadata = new AppMetadata();
-        //todo 看看CentralBroker是否需要修改
-        this.upstreamBrokerMetadata.setName("CentralBroker");
+        //解析composite metadata
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
+        if (compositeMetadata.contains(RSocketMimeType.Application)) {
+            upstreamBrokerMetadata = compositeMetadata.getMetadata(RSocketMimeType.Application);
+        } else {
+            upstreamBrokerMetadata = new AppMetadata();
+            upstreamBrokerMetadata.setName("unknown peer broker");
+        }
     }
 
     @Override
@@ -58,12 +62,14 @@ final class BrokerResponder extends AbstractRSocket {
         if (gsvRoutingMetadata == null) {
             return Mono.error(new InvalidException("No Routing metadata"));
         }
+
         //request filters
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
             destination = filterChain.filter(filterContext).then(destination);
         }
+
         //call destination
         return destination.flatMap(rsocket -> rsocket.fireAndForget(payload));
     }
@@ -144,11 +150,12 @@ final class BrokerResponder extends AbstractRSocket {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
             Integer serviceId = routingMetaData.serviceId();
-            ServiceResponder targetResponder = null;
+            ServiceResponder targetResponder;
             RSocket rsocket = null;
             Exception error = null;
+
             String endpoint = routingMetaData.getEndpoint();
-            if (endpoint != null && !endpoint.isEmpty()) {
+            if (StringUtils.isNotBlank(endpoint)) {
                 targetResponder = findDestinationWithEndpoint(endpoint, serviceId);
                 if (targetResponder == null) {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
@@ -159,7 +166,7 @@ final class BrokerResponder extends AbstractRSocket {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }
             }
-            //security check
+
             if (targetResponder != null) {
                 rsocket = targetResponder.getPeerRsocket();
             }
@@ -174,7 +181,7 @@ final class BrokerResponder extends AbstractRSocket {
     }
 
     /**
-     * todo
+     * 根据endpoint属性寻找target service instance
      */
     private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {

@@ -30,16 +30,6 @@ public class RSocketServiceInstance implements ServiceInstance, Serializable {
     /** 元数据 */
     private Map<String, String> metadata = new HashMap<>();
 
-    public static RSocketServiceInstance of(String serviceId, String instanceId, String host, int port) {
-        RSocketServiceInstance serviceInstance = new RSocketServiceInstance();
-        serviceInstance.serviceId = serviceId;
-        serviceInstance.host = host;
-        serviceInstance.port = port;
-        serviceInstance.instanceId = instanceId;
-        serviceInstance.uri = serviceInstance.schema + "://" + host + ":" + port;
-        return serviceInstance;
-    }
-
     @Override
     public String getInstanceId() {
         return this.instanceId;

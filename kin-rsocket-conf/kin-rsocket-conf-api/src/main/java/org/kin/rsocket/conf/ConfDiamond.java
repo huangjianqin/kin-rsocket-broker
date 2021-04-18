@@ -7,6 +7,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * 配置中心接口
+ * key={app name}:{key name}
  *
  * @author huangjianqin
  * @date 2021/3/29
@@ -22,6 +23,9 @@ public interface ConfDiamond {
     /** 寻找指定配置组下所有的配置keys */
     Flux<String> findKeysByGroup(String group);
 
+    /** 寻找指定配置组下所有的配置, 以properties组成str */
+    Mono<String> findKeyValuesByGroup(String group);
+
     /** 更新配置 */
     Mono<Void> put(String key, String value);
 
@@ -31,6 +35,9 @@ public interface ConfDiamond {
     /** 获取配置值 */
     Mono<String> get(String key);
 
-    /** 返回监控配置变化的Flux */
+    /**
+     * 返回监控配置变化的Flux
+     * 当key=group时, 即监控整组配置
+     */
     Flux<Tuple<String, String>> watch(String key);
 }

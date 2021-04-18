@@ -11,7 +11,9 @@ import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
 import io.rsocket.util.ByteBufPayload;
+import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -33,6 +35,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * service <- broker
@@ -41,37 +44,37 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class ServiceResponder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
+public final class ServiceResponder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
     private static final Logger log = LoggerFactory.getLogger(ServiceResponder.class);
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;
     /** app metadata */
     private final AppMetadata appMetadata;
-    /** app tags hashcode hash set, to make routing based on endpoint fast */
-    private final Set<Integer> appTagsHashCodeSet = new HashSet<>();
+    /**
+     * peer service app的id uuid ip以及metedata字段hashcode
+     * 目前用于根据endpoint 快速路由
+     * 不可变
+     * todo
+     */
+    private final Set<Integer> appTagsHashCodeSet;
     /** authorized principal */
     private final RSocketAppPrincipal principal;
     /** sticky services, key -> serviceId, value -> instanceId */
-    private final Map<Integer, Integer> stickyServices = new HashMap<>();
+    private final Map<Integer, Integer> stickyServices = new ConcurrentHashMap<>();
     /** 记录请求过的服务id */
-    private final Set<String> consumedServices = new HashSet<>();
-    /** peer RSocket: sending or requester RSocket */
+    private final Set<String> consumedServices = new ConcurrentHashSet<>();
+    /** peer RSocket, requester RSocket */
     private final RSocket peerRsocket;
     /** upstream broker */
     private final UpstreamCluster upstreamBrokers;
     private final ServiceManager serviceManager;
     private final ServiceMeshInspector serviceMeshInspector;
     private final Mono<Void> comboOnClose;
-    /** UUID from requester side */
-    private final String uuid;
     /** remote requester ip */
     private final String remoteIp;
-    /** app instance id */
-    private final Integer id;
-
     /** default message mime type metadata */
-    private MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
-    /** peer services */
+    private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
+    /** peer RSocket暴露的服务 */
     private Set<ServiceLocator> peerServices;
     /** app status */
     private AppStatus appStatus = AppStatus.CONNECTED;
@@ -89,49 +92,54 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     ) {
         this.upstreamBrokers = upstreamBrokers;
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
+
         if (dataType != null) {
             this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataType);
         } else {
             //todo 如果downstream没有setup默认的编码类型, 则默认json
             this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
         }
+
         this.appMetadata = appMetadata;
-        this.id = appMetadata.getId();
-        this.uuid = appMetadata.getUuid();
         //app tags hashcode set
-        this.appTagsHashCodeSet.add(("id:" + this.id).hashCode());
-        this.appTagsHashCodeSet.add(("uuid:" + this.uuid).hashCode());
+        Set<Integer> appTagsHashCodeSet = new HashSet<>(4);
+        appTagsHashCodeSet.add(("id:" + appMetadata.getId()).hashCode());
+        appTagsHashCodeSet.add(("uuid:" + appMetadata.getUuid()).hashCode());
+
         if (appMetadata.getIp() != null && !appMetadata.getIp().isEmpty()) {
-            this.appTagsHashCodeSet.add(("ip:" + this.appMetadata.getIp()).hashCode());
+            appTagsHashCodeSet.add(("ip:" + this.appMetadata.getIp()).hashCode());
         }
+
         if (appMetadata.getMetadata() != null) {
             for (Map.Entry<String, String> entry : appMetadata.getMetadata().entrySet()) {
-                this.appTagsHashCodeSet.add((entry.getKey() + ":" + entry.getValue()).hashCode());
+                appTagsHashCodeSet.add((entry.getKey() + ":" + entry.getValue()).hashCode());
             }
         }
+        this.appTagsHashCodeSet = Collections.unmodifiableSet(appTagsHashCodeSet);
+
         this.principal = principal;
         this.peerRsocket = peerRsocket;
         this.serviceManager = handlerRegistry;
         this.serviceMeshInspector = serviceMeshInspector;
         this.filterChain = filterChain;
+
         //publish services metadata
+        this.peerServices = new HashSet<>();
         if (compositeMetadata.contains(RSocketMimeType.ServiceRegistry)) {
             ServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.ServiceRegistry);
             if (CollectionUtils.isNonEmpty(serviceRegistryMetadata.getPublished())) {
-                setPeerServices(serviceRegistryMetadata.getPublished());
-                registerPublishedServices();
+                peerServices.addAll(serviceRegistryMetadata.getPublished());
+                publishServices();
             }
         }
+
+
         //remote ip
         this.remoteIp = getRemoteAddress(peerRsocket);
         //new comboOnClose
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), peerRsocket.onClose());
-        this.comboOnClose.doOnTerminate(this::unregisterPublishedServices).subscribeOn(Schedulers.parallel()).subscribe();
-    }
-
-    /** downstream暴露的服务 */
-    private void setPeerServices(Set<ServiceLocator> services) {
-        this.peerServices = services;
+        //todo Schedulers是否需要修改
+        this.comboOnClose.doOnTerminate(this::hideServices).subscribeOn(Schedulers.parallel()).subscribe();
     }
 
     @Override
@@ -148,7 +156,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
         }
 
-        // broker local service call check: don't introduce interceptor, performance consideration
+        // broker local service call
         if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             //todo accept mime type 通过配置实现
             return localRequestResponse(gsvRoutingMetadata, messageMimeTypeMetadata,
@@ -181,9 +189,11 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
         }
 
+        // broker local service call
         if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             return localFireAndForget(gsvRoutingMetadata, messageMimeTypeMetadata, payload);
         }
+
         //request filters
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
         if (this.filterChain.isFiltersPresent()) {
@@ -210,6 +220,8 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         if (Objects.isNull(messageMimeTypeMetadata)) {
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
         }
+
+        // broker local service call
         if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             return localRequestStream(gsvRoutingMetadata, messageMimeTypeMetadata,
                     compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
@@ -267,7 +279,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
         //todo 要进行event的安全验证，不合法来源的event进行消费，后续还好进行event判断
-        if (uuid.equalsIgnoreCase(cloudEvent.getAttributes().getSource().getHost())) {
+        if (appMetadata.getUuid().equalsIgnoreCase(cloudEvent.getAttributes().getSource().getHost())) {
             return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
         }
         return Mono.empty();
@@ -286,72 +298,6 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         } catch (Exception e) {
             return Mono.error(e);
         }
-    }
-
-    /** 注册downstream暴露的服务 */
-    public void registerPublishedServices() {
-        //todo 此处, 是connection setup时注册, registerServices是通过cloudevent注册, 是否考虑仅存一个即可
-        if (this.peerServices != null && !this.peerServices.isEmpty()) {
-            Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getId());
-            if (serviceIds.isEmpty()) {
-                this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), peerServices);
-                this.appStatus = AppStatus.SERVING;
-            }
-        }
-    }
-
-    /** 注册指定服务 */
-    public void registerServices(Set<ServiceLocator> services) {
-        if (this.peerServices == null || this.peerServices.isEmpty()) {
-            this.peerServices = services;
-        } else {
-            this.peerServices.addAll(services);
-        }
-        this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), services);
-    }
-
-    /** 注销downstream暴露的服务 */
-    public void unregisterPublishedServices() {
-        serviceManager.unregister(appMetadata.getId());
-        this.appStatus = AppStatus.DOWN;
-    }
-
-    /** 注销指定服务 */
-    public void unregisterServices(Set<ServiceLocator> services) {
-        if (this.peerServices != null && !this.peerServices.isEmpty()) {
-            this.peerServices.removeAll(services);
-        }
-        for (ServiceLocator service : services) {
-            this.serviceManager.unregister(appMetadata.getId(), service.getId());
-        }
-    }
-
-    /**
-     * 记录请求过的服务id
-     */
-    private void recordServiceInvoke(String serviceId) {
-        consumedServices.add(serviceId);
-    }
-
-    /**
-     * @return downstream publish services only
-     */
-    public boolean isPublishServicesOnly() {
-        return CollectionUtils.isEmpty(consumedServices) && CollectionUtils.isNonEmpty(peerServices);
-    }
-
-    /**
-     * @return downstream consume and publish services
-     */
-    public boolean isConsumeAndPublishServices() {
-        return CollectionUtils.isNonEmpty(consumedServices) && CollectionUtils.isNonEmpty(peerServices);
-    }
-
-    /**
-     * @return downstream consume services
-     */
-    public boolean isConsumeServicesOnly() {
-        return CollectionUtils.isNonEmpty(consumedServices) && CollectionUtils.isEmpty(peerServices);
     }
 
     /**
@@ -374,13 +320,17 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             Exception error = null;
             //sticky session responder
             boolean sticky = routingMetaData.isSticky();
-            ServiceResponder targetResponder = findStickyHandler(sticky, serviceId);
-            // responder from sticky services
+            ServiceResponder targetResponder = null;
+            if (sticky) {
+                // responder from sticky services
+                targetResponder = findStickyServiceInstance(serviceId);
+            }
+
             if (targetResponder != null) {
                 rsocket = targetResponder.peerRsocket;
             } else {
                 String endpoint = routingMetaData.getEndpoint();
-                if (endpoint != null && !endpoint.isEmpty()) {
+                if (StringUtils.isNotBlank(endpoint)) {
                     targetResponder = findDestinationWithEndpoint(endpoint, serviceId);
                     if (targetResponder == null) {
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
@@ -406,6 +356,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
             if (rsocket != null) {
                 sink.success(rsocket);
             } else if (error != null) {
+                //本地找不到, 请求其他broker帮忙处理
                 if (upstreamBrokers != null && error instanceof InvalidException) {
                     sink.success(upstreamBrokers);
                 } else {
@@ -418,7 +369,7 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
     }
 
     /**
-     * todo
+     * 根据endpoint属性寻找target service instance
      */
     private ServiceResponder findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
@@ -433,20 +384,97 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
         return null;
     }
 
+    /**
+     * 寻找sticky service instance
+     */
+    private ServiceResponder findStickyServiceInstance(Integer serviceId) {
+        // todo 算法更新，如一致性hash算法，或者取余操作
+        if (stickyServices.containsKey(serviceId)) {
+            return serviceManager.getByInstanceId(stickyServices.get(serviceId));
+        }
+        return null;
+    }
+
+    /**
+     * 记录请求过的service id
+     */
+    private void recordServiceInvoke(String serviceId) {
+        consumedServices.add(serviceId);
+    }
+
     @Override
     public Mono<Void> onClose() {
         return this.comboOnClose;
     }
 
     /**
-     * todo
+     * 暴露peer rsocket的服务, 并修改该app的服务状态
      */
-    private ServiceResponder findStickyHandler(boolean sticky, Integer serviceId) {
-        // todo 算法更新，如一致性hash算法，或者取余操作
-        if (sticky && stickyServices.containsKey(serviceId)) {
-            return serviceManager.getByInstanceId(stickyServices.get(serviceId));
+    public void publishServices() {
+        //todo 此处, 是connection setup时注册, registerServices是通过cloudevent注册, 是否考虑仅存一个即可
+        if (CollectionUtils.isNonEmpty(this.peerServices)) {
+            Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getId());
+            if (serviceIds.isEmpty()) {
+                this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), peerServices);
+                this.appStatus = AppStatus.SERVING;
+            }
         }
-        return null;
+    }
+
+    /** 注册指定服务 */
+    public void registerServices(Collection<ServiceLocator> services) {
+        this.peerServices.addAll(services);
+        this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), services);
+        this.appStatus = AppStatus.SERVING;
+    }
+
+    /** 注册指定服务 */
+    public void registerServices(ServiceLocator... services) {
+        registerServices(Arrays.asList(services));
+    }
+
+    /**
+     * 隐藏peer rsocket的服务, 并修改该app的服务状态
+     */
+    public void hideServices() {
+        serviceManager.unregister(appMetadata.getId());
+        this.appStatus = AppStatus.DOWN;
+    }
+
+    /** 注销指定服务 */
+    public void unregisterServices(Collection<ServiceLocator> services) {
+        if (this.peerServices != null && !this.peerServices.isEmpty()) {
+            this.peerServices.removeAll(services);
+        }
+        for (ServiceLocator service : services) {
+            this.serviceManager.unregister(appMetadata.getId(), service.getId());
+        }
+    }
+
+    /** 注销指定服务 */
+    public void unregisterServices(ServiceLocator... services) {
+        unregisterServices(Arrays.asList(services));
+    }
+
+    /**
+     * @return downstream publish services only
+     */
+    public boolean isPublishServicesOnly() {
+        return CollectionUtils.isEmpty(consumedServices) && CollectionUtils.isNonEmpty(peerServices);
+    }
+
+    /**
+     * @return downstream consume and publish services
+     */
+    public boolean isConsumeAndPublishServices() {
+        return CollectionUtils.isNonEmpty(consumedServices) && CollectionUtils.isNonEmpty(peerServices);
+    }
+
+    /**
+     * @return downstream consume services
+     */
+    public boolean isConsumeServicesOnly() {
+        return CollectionUtils.isNonEmpty(consumedServices) && CollectionUtils.isEmpty(peerServices);
     }
 
     /** 获取requester ip */
@@ -464,18 +492,18 @@ public class ServiceResponder extends ResponderSupport implements CloudEventRSoc
                 }
             }
         } catch (Exception ignore) {
-
+            //do nothing
         }
-        return null;
+        return "";
     }
 
     //getter
     public String getUuid() {
-        return this.uuid;
+        return appMetadata.getUuid();
     }
 
     public Integer getId() {
-        return id;
+        return appMetadata.getId();
     }
 
 

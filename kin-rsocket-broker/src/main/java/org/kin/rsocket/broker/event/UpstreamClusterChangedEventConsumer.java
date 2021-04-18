@@ -10,13 +10,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 /**
  * @author huangjianqin
  * @date 2021/3/30
  */
 public final class UpstreamClusterChangedEventConsumer implements CloudEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(UpstreamClusterChangedEventConsumer.class);
-    @Autowired
+    @Autowired(required = false)
     /** broker upstream cluster */
     private UpstreamCluster brokerUpstreamCluster;
 
@@ -27,10 +29,9 @@ public final class UpstreamClusterChangedEventConsumer implements CloudEventCons
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        UpstreamClusterChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, UpstreamClusterChangedEvent.class);
-        if (event != null) {
+        if (Objects.nonNull(brokerUpstreamCluster)) {
+            UpstreamClusterChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, UpstreamClusterChangedEvent.class);
             brokerUpstreamCluster.refreshUris(event.getUris());
-            //todo UpstreamBroker是否需要修改
             log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", "UpstreamBroker", String.join(",", event.getUris())));
         }
         return Mono.empty();

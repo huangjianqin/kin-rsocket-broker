@@ -30,7 +30,7 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
     @Autowired
     private ConfDiamond confDiamond;
     /**
-     *
+     * broker配置中心watch listener
      */
     private Map<String, Disposable> listeners = new HashMap<>();
 
@@ -47,14 +47,19 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
             ServiceResponder responder = serviceManager.getByUUID(event.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
-                if (event.getStatus().equals(AppStatus.CONNECTED)) {  //app connected
-                    listenConfChange(appMetadata);
-                } else if (event.getStatus().equals(AppStatus.SERVING)) {  //app serving
-                    responder.registerPublishedServices();
-                } else if (event.getStatus().equals(AppStatus.DOWN)) { //app out of service
-                    responder.unregisterPublishedServices();
+                if (event.getStatus().equals(AppStatus.CONNECTED)) {
+                    //app connected
+                    //todo broker端暂时不监听app配置变化, 转而通过controller控制是否广播配置变化事件
+//                    listenConfChange(appMetadata);
+                } else if (event.getStatus().equals(AppStatus.SERVING)) {
+                    //app serving
+                    responder.publishServices();
+                } else if (event.getStatus().equals(AppStatus.DOWN)) {
+                    //app out of service
+                    responder.hideServices();
                 } else if (event.getStatus().equals(AppStatus.STOPPED)) {
-                    responder.unregisterPublishedServices();
+                    //app stopped
+                    responder.hideServices();
                     responder.setAppStatus(AppStatus.STOPPED);
                 }
             }

@@ -15,7 +15,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.core.env.ConfigurableEnvironment;
 
 import java.util.stream.Collectors;
 
@@ -56,24 +55,20 @@ final class ServicesPublisher implements ApplicationListener<ApplicationStartedE
         //broker uris
         String brokerUris = String.join(",", brokerCluster.getUris());
 
-        ConfigurableEnvironment env = event.getApplicationContext().getEnvironment();
-        int serverPort = Integer.parseInt(env.getProperty("server.port", "0"));
-        if (serverPort == 0) {
-            //ports update
-            if (RSocketAppContext.webPort > 0 || RSocketAppContext.managementPort > 0 || RSocketAppContext.rsocketPorts != null) {
-                PortsUpdateEvent portsUpdateEvent = new PortsUpdateEvent();
-                portsUpdateEvent.setAppId(RSocketAppContext.ID);
-                portsUpdateEvent.setWebPort(RSocketAppContext.webPort);
-                portsUpdateEvent.setManagementPort(RSocketAppContext.managementPort);
-                //todo 验证此时RSocketAppContext.rsocketPorts是否已赋值
-                portsUpdateEvent.setRsocketPorts(RSocketAppContext.rsocketPorts);
-                CloudEventData<PortsUpdateEvent> portsUpdateCloudEvent = CloudEventBuilder
-                        .builder(portsUpdateEvent)
-                        .build();
-                brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent)
-                        .doOnSuccess(aVoid -> log.info(String.format("Application connected with RSocket Brokers(%s) successfully", brokerUris)))
-                        .subscribe();
-            }
+        //ports update
+        if (RSocketAppContext.webPort > 0 || RSocketAppContext.managementPort > 0 || RSocketAppContext.rsocketPorts != null) {
+            PortsUpdateEvent portsUpdateEvent = new PortsUpdateEvent();
+            portsUpdateEvent.setAppId(RSocketAppContext.ID);
+            portsUpdateEvent.setWebPort(RSocketAppContext.webPort);
+            portsUpdateEvent.setManagementPort(RSocketAppContext.managementPort);
+            //todo 验证此时RSocketAppContext.rsocketPorts是否已赋值
+            portsUpdateEvent.setRsocketPorts(RSocketAppContext.rsocketPorts);
+            CloudEventData<PortsUpdateEvent> portsUpdateCloudEvent = CloudEventBuilder
+                    .builder(portsUpdateEvent)
+                    .build();
+            brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent)
+                    .doOnSuccess(aVoid -> log.info(String.format("Application connected with RSocket Brokers(%s) successfully", brokerUris)))
+                    .subscribe();
         }
 
         connector.publishServices();

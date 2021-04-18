@@ -78,7 +78,7 @@ public final class StandAloneBrokerManager extends AbstractBrokerManager impleme
 
     @Override
     public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
-        handleCloudEvent(cloudEvent);
+        //本broker已做处理, 本broker不需要再触发cloud event
         //返回ip即可
         return Mono.just(localBrokerInfo.getIp());
     }

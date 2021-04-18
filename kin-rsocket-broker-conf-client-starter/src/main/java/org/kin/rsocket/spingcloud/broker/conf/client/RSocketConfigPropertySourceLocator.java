@@ -62,6 +62,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
                     } else {
                         log.info(String.format("Failed to fetch config from RSocket Broker for app: '%s'", applicationName));
                     }
+                    //todo
                     confs.setProperty("kin.rsocket.metadata.config", "true");
 
                     this.source = new PropertiesPropertySource("kin-rsocket-broker", confs);

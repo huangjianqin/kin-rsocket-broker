@@ -150,7 +150,7 @@ public class GSVRoutingMetadata implements MetadataAware {
     private void parseTags(String tag) {
         if (tag.startsWith("e=")) {
             this.endpoint = tag.substring(2);
-        } else if (tag.equalsIgnoreCase("sticky=1")) {
+        } else if ("sticky=1".equalsIgnoreCase(tag)) {
             this.sticky = true;
         }
     }

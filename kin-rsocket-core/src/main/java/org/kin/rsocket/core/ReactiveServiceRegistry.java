@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
  * <p>
  * handlerName = 可以是方法名, 也可以是自定义名字
  * handlerId = hash(serviceName.handlerName)
+ * <p>
+ * 一个app仅仅只有一个service name的instance, 不支持不同组多版本在同一jvm上注册
  *
  * @author huangjianqin
  * @date 2021/3/27
@@ -128,7 +130,6 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
 
                 ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
 
-                //todo 仅仅用service name???
                 serviceName2Provider.put(serviceName, provider);
                 handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
                 serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass));
