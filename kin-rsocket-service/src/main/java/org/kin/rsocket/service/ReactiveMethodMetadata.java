@@ -138,7 +138,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
             dataEncodingType = RSocketMimeType.getByType(serviceMapping.paramEncoding());
         }
         if (!serviceMapping.resultEncoding().isEmpty()) {
-            //todo 是否需要支持数组
+            //todo 优化:是否需要支持数组
             acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.getByType(serviceMapping.resultEncoding())};
         }
         sticky = serviceMapping.sticky();

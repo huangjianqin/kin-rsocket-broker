@@ -16,11 +16,13 @@ import java.util.*;
 public class JwtPrincipal implements RSocketAppPrincipal {
     /** token id */
     private String tokenId;
-    /** todo */
+    /** application */
     private String subject;
+    /** 订阅者 */
     private List<String> audience;
     /** 角色 */
     private Set<String> roles;
+    /** 作者 */
     private Set<String> authorities;
     /** accounts */
     private Set<String> serviceAccounts;
@@ -102,8 +104,12 @@ public class JwtPrincipal implements RSocketAppPrincipal {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         JwtPrincipal that = (JwtPrincipal) o;
         return Objects.equals(subject, that.subject);
     }

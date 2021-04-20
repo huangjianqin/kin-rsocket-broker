@@ -15,7 +15,7 @@ import java.util.Set;
  * @date 2021/3/27
  */
 public final class ServiceReferenceBuilder<T> {
-    /** todo 缓存的所有requester proxy, 用于监控 */
+    /** todo 优化:缓存的所有requester proxy, 用于监控 */
     public static final Set<ServiceLocator> CONSUMED_SERVICES = new HashSet<>();
 
     /** uri */
@@ -26,7 +26,7 @@ public final class ServiceReferenceBuilder<T> {
     private String service;
     /** version */
     private String version;
-    /** call timeout todo 是否需要支持配置 */
+    /** call timeout todo 优化:是否需要支持配置 */
     private Duration timeout = Duration.ofMillis(3000);
     /**
      * endpoint
@@ -34,7 +34,6 @@ public final class ServiceReferenceBuilder<T> {
      * 1. id:XX
      * 2. uuid:XX
      * 3. ip:XX
-     * todo
      */
     private String endpoint;
     /**
@@ -42,15 +41,14 @@ public final class ServiceReferenceBuilder<T> {
      * 相当于固定session, 指定service首次请求后, 后面请求都是route到该service instance
      * 如果该service instance失效, 重新选择一个sticky service instance
      * 目前仅仅在service mesh校验通过下才允许mark sticky service instance
-     * todo
      */
     private boolean sticky;
     /** 服务接口 */
     private Class<T> serviceInterface;
     /** 数据编码类型 */
-    private RSocketMimeType encodingType = RSocketMimeType.Json;
+    private RSocketMimeType encodingType = RSocketMimeType.Java_Object;
     /** accept 编码类型 */
-    private RSocketMimeType acceptEncodingType = RSocketMimeType.Json;
+    private RSocketMimeType acceptEncodingType = RSocketMimeType.Java_Object;
     /** 对应的upstream cluster */
     private UpstreamCluster upstreamCluster;
 

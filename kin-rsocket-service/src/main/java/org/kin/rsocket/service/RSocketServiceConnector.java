@@ -283,7 +283,6 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
         public HealthCheckImpl() {
             brokerHealthCheck = ServiceReferenceBuilder
                     .requester(HealthCheck.class)
-                    //todo 看看编码方式是否需要修改
                     .nativeImage()
                     .upstreamClusterManager(upstreamClusterManager)
                     .build();

@@ -12,38 +12,42 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * cloud event默认基于json数据传输
+ * cloud event builder
+ * json编码
  *
  * @author huangjianqin
  * @date 2021/3/23
  */
 public class CloudEventBuilder<T> {
     private static final URI DEFAULT_SOURCE = URI.create("app://" + NetUtils.getIp() + "/" + "?id=" + RSocketAppContext.ID);
-
-    private final io.cloudevents.core.builder.CloudEventBuilder builder = io.cloudevents.core.builder.CloudEventBuilder.v1().withDataContentType(WellKnownMimeType.APPLICATION_JSON.getString());
+    /** 包装的builder */
+    private final io.cloudevents.core.builder.CloudEventBuilder builder =
+            io.cloudevents.core.builder.CloudEventBuilder
+                    .v1()
+                    .withDataContentType(WellKnownMimeType.APPLICATION_JSON.getString());
     private T data;
 
     /**
-     * Gets a brand new builder instance
+     * 空builder
      *
-     * @param <T> The 'data' type
+     * @param <T> cloud event datat type
      */
     public static <T> CloudEventBuilder<T> builder() {
         return new CloudEventBuilder<>();
     }
 
     /**
-     * builder with UUID, application/json, now timestamp, Class full name as type and default sources
+     * 带UUID, application/json, now timestamp, Class full name as type和default sources的builder
      *
      * @param data data
-     * @param <T>  data type
+     * @param <T>  cloud event datat type
      * @return cloud event builder
      */
     public static <T> CloudEventBuilder<T> builder(T data) {
         CloudEventBuilder<T> builder = new CloudEventBuilder<>();
         builder.data = data;
         builder.id(UUID.randomUUID().toString())
-                //todo cloud event 编码是json
+                //目前仅仅只有json编码
                 .dataContentType(WellKnownMimeType.APPLICATION_JSON.getString())
                 .time(OffsetDateTime.now())
                 .type(data.getClass().getCanonicalName())

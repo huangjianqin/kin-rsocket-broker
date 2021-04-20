@@ -17,7 +17,7 @@ import java.util.Properties;
 /**
  * RSocket Config properties source locator from RSocket Broker
  *
- * @author leijuan
+ * @author huangjianqin* @date 2021/4/20
  */
 public class RSocketConfigPropertySourceLocator implements PropertySourceLocator {
     private static final Logger log = LoggerFactory.getLogger(RSocketConfigPropertySourceLocator.class);
@@ -62,7 +62,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
                     } else {
                         log.info(String.format("Failed to fetch config from RSocket Broker for app: '%s'", applicationName));
                     }
-                    //todo
+                    //todo 优化:metadata增加常量字段声明
                     confs.setProperty("kin.rsocket.metadata.config", "true");
 
                     this.source = new PropertiesPropertySource("kin-rsocket-broker", confs);

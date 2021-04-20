@@ -12,7 +12,7 @@ public class ReactiveMethodInfo implements Serializable {
     private static final long serialVersionUID = 4422311675833851700L;
     /** method name */
     private String name;
-    /** 描述, todo 后续通过注解增加 */
+    /** 描述, todo 优化:后续通过注解增加 */
     private String description;
     /** 方法是否弃用 */
     private boolean deprecated;

@@ -21,13 +21,13 @@ public class AppMetadata implements MetadataAware {
     private Integer id;
     /** application uuid, almost uuid */
     private String uuid;
-    /** power rating. big number means bigger power to process requests */
+    /** 权重, 越大, 该服务被路由的概率越大 */
     private int powerRating = 1;
     /** app name */
     private String name;
-    /** name space todo */
+    /** name space */
     private String nameSpace;
-    /** description todo */
+    /** description */
     private String description;
     /** device information */
     private String device;
@@ -45,13 +45,13 @@ public class AppMetadata implements MetadataAware {
     private int webPort;
     /** management port for Spring Boot actuator */
     private int managementPort;
-    /** sdk and RSocket protocol version todo */
+    /** sdk and RSocket protocol version */
     private String sdk = "Kin-RSocket-0.1.0.0";
-    /** developers, format as email list: xxx <xxx@foobar.com>, yyy <yyy@foobar.com> todo */
+    /** developers, format as email list: xxx <xxx@foobar.com>, yyy <yyy@foobar.com> */
     private String developers;
     /** metadata */
     private Map<String, String> metadata;
-    /** humans.md from classpath todo */
+    /** humans.md from classpath todo 优化:有没有必要将整个文件内容读进内存,可以改为每次都请求服务, 但会增加网络流量 */
     private String humansMd;
     /** connected timestamp */
     private Date connectedAt;

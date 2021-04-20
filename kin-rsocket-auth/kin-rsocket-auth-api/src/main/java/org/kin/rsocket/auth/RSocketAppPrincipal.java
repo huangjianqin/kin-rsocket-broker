@@ -62,14 +62,14 @@ public interface RSocketAppPrincipal extends Principal {
     String getTokenId();
 
     /**
-     * todo
+     * application
      *
-     * @return
+     * @return subject
      */
     String getSubject();
 
     /**
-     * @return
+     * @return audience
      */
     List<String> getAudience();
 

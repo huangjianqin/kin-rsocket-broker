@@ -20,7 +20,7 @@ final class MetadataAwares {
 
     static {
         ImmutableBiMap.Builder<RSocketMimeType, Class<? extends MetadataAware>> builder = ImmutableBiMap.builder();
-        //todo 目前先手动注册, 后续考虑优化自动注册关联
+        //todo 优化:目前先手动注册, 后续考虑优化自动注册关联
         builder.put(RSocketMimeType.Application, AppMetadata.class);
         builder.put(RSocketMimeType.CacheControl, CacheControlMetadata.class);
         builder.put(RSocketMimeType.ServiceRegistry, ServiceRegistryMetadata.class);
@@ -32,7 +32,7 @@ final class MetadataAwares {
         builder.put(RSocketMimeType.MessageTags, MessageTagsMetadata.class);
         builder.put(RSocketMimeType.MessageOrigin, OriginMetadata.class);
 
-        //todo Tracing和BinaryRouting mime type未处理
+        //todo 优化:Tracing和BinaryRouting mime type未处理
 
         TYPE_2_METADATA_CLASS = builder.build();
     }

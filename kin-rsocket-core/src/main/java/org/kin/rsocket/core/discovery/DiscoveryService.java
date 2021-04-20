@@ -14,7 +14,7 @@ public interface DiscoveryService {
     /**
      * 指定服务的服务节点实例信息
      *
-     * @param serviceId todo 看springcloud怎么定义
+     * @param serviceId 即app name
      */
     Flux<ServiceInstance> getInstances(String serviceId);
 

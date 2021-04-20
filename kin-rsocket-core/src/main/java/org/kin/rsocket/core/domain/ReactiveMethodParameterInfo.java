@@ -14,9 +14,9 @@ public class ReactiveMethodParameterInfo implements Serializable {
     private String type;
     /** 参数类型中第一个泛型参数实际类型 */
     private String inferredType;
-    /** 描述, todo 后续通过注解增加 */
+    /** 描述, todo 优化:后续通过注解增加 */
     private String description;
-    /** 参数是否必须赋值, todo 后续通过注解增加 */
+    /** 参数是否必须赋值, todo 优化:后续通过注解增加 */
     private boolean required;
 
     //setter && getter

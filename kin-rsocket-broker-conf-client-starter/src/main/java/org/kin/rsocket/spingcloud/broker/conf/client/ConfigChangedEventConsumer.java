@@ -16,7 +16,8 @@ import java.util.Properties;
 /**
  * service端{@link org.kin.rsocket.core.event.ConfigChangedEvent}处理
  *
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<ConfigChangedEvent> {
     private static final Logger log = LoggerFactory.getLogger(ConfigChangedEventConsumer.class);

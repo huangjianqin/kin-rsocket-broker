@@ -1,7 +1,9 @@
 package org.kin.rsocket.broker;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.DuplexConnection;
@@ -10,6 +12,7 @@ import io.rsocket.RSocket;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
+import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
@@ -301,12 +304,28 @@ public final class ServiceResponder extends ResponderSupport implements CloudEve
     }
 
     /**
-     * payload with data encoding
+     * 此处本质上可以在原来的{@link RSocketCompositeMetadata}上添加{@link MessageMimeTypeMetadata},
+     * 然后再调用{@link RSocketCompositeMetadata#getContent()}来获取路由需要的payload, 之所以采用下面这种方式,
+     * 可以减少一点点ByteBuf的内存资源分配和cpu消耗
      */
     private Payload payloadWithDataEncoding(Payload payload, MessageMimeTypeMetadata messageMimeTypeMetadata) {
         CompositeByteBuf compositeByteBuf = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true, 2,
-                payload.metadata(), MessageMimeTypeMetadata.toByteBuf(messageMimeTypeMetadata));
+                payload.metadata(), toMimeAndContentBuffersSlices(messageMimeTypeMetadata));
         return ByteBufPayload.create(payload.data(), compositeByteBuf);
+    }
+
+    /**
+     * 构建{@link io.rsocket.metadata.CompositeMetadata}entry的bytes
+     * 详细编解码过程可以看{@link io.rsocket.metadata.CompositeMetadataCodec#decodeMimeAndContentBuffersSlices}
+     */
+    private static ByteBuf toMimeAndContentBuffersSlices(MessageMimeTypeMetadata metadata) {
+        ByteBuf buf = Unpooled.buffer(5, 5);
+        buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
+        buf.writeByte(0);
+        buf.writeByte(0);
+        buf.writeByte(1);
+        buf.writeByte(metadata.getMessageMimeType().getId() | 0x80);
+        return buf;
     }
 
     /**
@@ -457,21 +476,21 @@ public final class ServiceResponder extends ResponderSupport implements CloudEve
     }
 
     /**
-     * @return downstream publish services only
+     * @return requester publish services only
      */
     public boolean isPublishServicesOnly() {
         return CollectionUtils.isEmpty(consumedServices) && CollectionUtils.isNonEmpty(peerServices);
     }
 
     /**
-     * @return downstream consume and publish services
+     * @return requester consume and publish services
      */
     public boolean isConsumeAndPublishServices() {
         return CollectionUtils.isNonEmpty(consumedServices) && CollectionUtils.isNonEmpty(peerServices);
     }
 
     /**
-     * @return downstream consume services
+     * @return requester consume services
      */
     public boolean isConsumeServicesOnly() {
         return CollectionUtils.isNonEmpty(consumedServices) && CollectionUtils.isEmpty(peerServices);
@@ -505,7 +524,6 @@ public final class ServiceResponder extends ResponderSupport implements CloudEve
     public Integer getId() {
         return appMetadata.getId();
     }
-
 
     public String getRemoteIp() {
         return remoteIp;

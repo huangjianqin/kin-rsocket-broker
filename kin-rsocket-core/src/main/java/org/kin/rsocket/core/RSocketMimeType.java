@@ -25,7 +25,7 @@ public enum RSocketMimeType {
     Binary("Binary", WellKnownMimeType.APPLICATION_OCTET_STREAM),
     /** java对象序列化, 使用kryo */
     Java_Object("JavaObject", WellKnownMimeType.APPLICATION_JAVA_OBJECT),
-    /** cbor */
+    /** cbor, 物联网专用, 编码紧凑, 轻量, 并且兼容JSON */
     CBOR("CBOR", WellKnownMimeType.APPLICATION_CBOR),
     /** json形式的cloud event数据 */
     CloudEventsJson("CloudEventsJson", WellKnownMimeType.APPLICATION_CLOUDEVENTS_JSON),

@@ -34,7 +34,6 @@ public final class Codecs {
     private Codecs() {
         ImmutableMap.Builder<RSocketMimeType, Codec> codecBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<RSocketMimeType, ByteBuf> mimeTypeMetadataBytesBuilder = ImmutableMap.builder();
-        //todo CBOR暂未实现
         //通过spi加载codec实现类
         for (Codec codec : RSocketAppContext.LOADER.getExtensions(Codec.class)) {
             RSocketMimeType mimeType = codec.mimeType();
@@ -101,7 +100,7 @@ public final class Codecs {
             if (data == null || data.readableBytes() == 0) {
                 return null;
             }
-            //todo convert to raw output without decoding
+
             if (targetClass == ByteBuffer.class) {
                 return data.nioBuffer();
             } else if (targetClass == ByteBuf.class) {

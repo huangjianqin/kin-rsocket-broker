@@ -16,7 +16,7 @@ import java.util.Objects;
 
 /**
  * GSV routing metadata, format as tagging routing data
- * todo 可以考虑压缩字符串, 减少网络传输, 但是得考虑接收方是否能将数据解码成可读, 并方便打日志/debug
+ * todo 优化:可以考虑压缩字符串, 减少网络传输, 但是得考虑接收方是否能将数据解码成可读, 并方便打日志/debug
  *
  * @author huangjianqin
  * @date 2021/3/24

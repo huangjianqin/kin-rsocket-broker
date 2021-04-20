@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
  * @date 2021/3/25
  */
 public class OriginMetadata implements MetadataAware {
-    /** todo */
     private URI origin;
 
     public static OriginMetadata of(URI origin) {

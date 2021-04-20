@@ -2,6 +2,7 @@ package org.kin.rsocket.spingcloud.broker.gateway.http;
 
 import org.kin.rsocket.spingcloud.broker.gateway.http.convert.ByteBufDecoder;
 import org.kin.rsocket.spingcloud.broker.gateway.http.convert.ByteBufEncoder;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.codec.DecoderHttpMessageReader;
 import org.springframework.http.codec.EncoderHttpMessageWriter;
@@ -13,6 +14,7 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
  * @date 2021/3/31
  */
 @Configuration
+@EnableConfigurationProperties(RSocketBrokerHttpGatewayProperties.class)
 public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {

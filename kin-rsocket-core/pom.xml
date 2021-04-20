@@ -49,6 +49,12 @@
             <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
+        <!-- 物联网专用, 编码紧凑, 轻量, 并且兼容JSON -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-cbor</artifactId>
+        </dependency>
+
         <!-- rsocket -->
         <dependency>
             <groupId>io.rsocket</groupId>
@@ -88,6 +94,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

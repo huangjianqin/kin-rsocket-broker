@@ -3,8 +3,6 @@ package org.kin.rsocket.core.event;
 import org.kin.rsocket.core.domain.AppStatus;
 
 /**
- * todo 时间处理需要优化
- *
  * @author huangjianqin
  * @date 2021/3/24
  */

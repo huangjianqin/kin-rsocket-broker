@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * authentication service with JWT implementation, please refer https://github.com/auth0/java-jwt
- * todo
+ * todo 学习
  *
  * @author huangjianqin
  * @date 2021/3/30

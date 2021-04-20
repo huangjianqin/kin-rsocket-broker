@@ -9,11 +9,13 @@ import org.kin.rsocket.core.RSocketMimeType;
 import java.nio.charset.StandardCharsets;
 
 /**
+ * todo 优化:是否可优化成不传输未知mimetype, mimeType字段就可以不要了
+ *
  * @author huangjianqin
  * @date 2021/3/25
  */
 public class MessageMimeTypeMetadata implements MetadataAware {
-    /** rsocket mime type id todo 是否可优化成仅仅传输id */
+    /** rsocket mime type id */
     private byte mimeTypeId;
     /** rsocket mime type str */
     private String mimeType;
@@ -25,7 +27,7 @@ public class MessageMimeTypeMetadata implements MetadataAware {
             WellKnownMimeType wellKnownMimeType = WellKnownMimeType.fromString(mimeType);
             metadata.mimeTypeId = wellKnownMimeType.getIdentifier();
         } catch (Exception ignore) {
-
+            //do nothing
         }
 
         return metadata;
@@ -53,20 +55,6 @@ public class MessageMimeTypeMetadata implements MetadataAware {
         return metadata;
     }
 
-    /**
-     * 构建编码元数据对应的bytebuf
-     */
-    public static ByteBuf toByteBuf(MessageMimeTypeMetadata metadata) {
-        //todo
-        ByteBuf buf = Unpooled.buffer(5, 5);
-        buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
-        buf.writeByte(0);
-        buf.writeByte(0);
-        buf.writeByte(1);
-        buf.writeByte(metadata.getMessageMimeType().getId() | 0x80);
-        return buf;
-    }
-
     @Override
     public RSocketMimeType mimeType() {
         return RSocketMimeType.MessageMimeType;
@@ -75,8 +63,10 @@ public class MessageMimeTypeMetadata implements MetadataAware {
     @Override
     public ByteBuf getContent() {
         if (mimeTypeId > 0) {
+            //已知的mimeType第8位都是0, 即小于0x80
             return Unpooled.wrappedBuffer(new byte[]{(byte) (mimeTypeId | 0x80)});
         } else {
+            //unknown mimeType
             byte[] bytes = mimeType.getBytes(StandardCharsets.US_ASCII);
             ByteBuf buffer = PooledByteBufAllocator.DEFAULT.buffer(bytes.length + 1);
             buffer.writeByte(bytes.length);
@@ -92,6 +82,7 @@ public class MessageMimeTypeMetadata implements MetadataAware {
             this.mimeTypeId = (byte) (firstByte & 0x7F);
             this.mimeType = WellKnownMimeType.fromIdentifier(mimeTypeId).getString();
         } else {
+            //unknown mimeType
             byteBuf.readCharSequence(firstByte, StandardCharsets.US_ASCII);
         }
     }
@@ -101,5 +92,15 @@ public class MessageMimeTypeMetadata implements MetadataAware {
      */
     public RSocketMimeType getMessageMimeType() {
         return RSocketMimeType.getByType(this.mimeType);
+    }
+
+    //getter
+    public byte getMimeTypeId() {
+        return mimeTypeId;
+    }
+
+    @Override
+    public String getMimeType() {
+        return mimeType;
     }
 }

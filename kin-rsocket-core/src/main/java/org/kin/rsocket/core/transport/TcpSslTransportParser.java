@@ -40,7 +40,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
 
     public TcpSslTransportParser() {
-        //todo, 路径支持配置?
+        //todo, 优化:路径支持配置?
         File fingerPrints = new File(System.getProperty("user.home") + "/.rsocket/known_finger_prints");
         if (fingerPrints.exists()) {
             List<String> fingerPrintsSha256 = new ArrayList<>();

@@ -20,7 +20,7 @@ public class ReactiveServiceInfo implements Serializable {
     private String group;
     /** version */
     private String version;
-    /** 描述, todo 后续通过注解增加 */
+    /** 描述, todo 优化:后续通过注解增加 */
     private String description;
     /** 接口是否弃用 */
     private boolean deprecated;

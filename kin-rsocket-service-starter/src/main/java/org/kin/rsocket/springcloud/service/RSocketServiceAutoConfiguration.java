@@ -44,7 +44,7 @@ public class RSocketServiceAutoConfiguration {
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean
+    @Bean(autowireCandidate = false, destroyMethod = "close")
     public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
         CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
         return CloudEventConsumers.INSTANCE;

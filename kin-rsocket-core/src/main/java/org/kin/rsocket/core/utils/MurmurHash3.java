@@ -30,20 +30,8 @@ import java.nio.charset.StandardCharsets;
  * @since 1.13
  */
 public final class MurmurHash3 {
-
-    /**
-     * TODO Replace on Java 8 with Long.BYTES.
-     */
     static final int LONG_BYTES = Long.SIZE / Byte.SIZE;
-
-    /**
-     * TODO Replace on Java 8 with Integer.BYTES.
-     */
     static final int INTEGER_BYTES = Integer.SIZE / Byte.SIZE;
-
-    /**
-     * TODO Replace on Java 8 with Short.BYTES.
-     */
     static final int SHORT_BYTES = Short.SIZE / Byte.SIZE;
 
     // from 64-bit linear congruential generator

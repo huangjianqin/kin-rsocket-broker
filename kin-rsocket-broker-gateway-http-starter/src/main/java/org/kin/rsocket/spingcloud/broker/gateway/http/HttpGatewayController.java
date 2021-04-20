@@ -10,7 +10,6 @@ import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +20,8 @@ import java.util.Objects;
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 
 /**
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 @Controller
 public class HttpGatewayController {
@@ -29,9 +29,8 @@ public class HttpGatewayController {
 
     @Autowired
     private AuthenticationService authenticationService;
-    //todo 是否需要修改
-    @Value("${restapi.auth-required}")
-    private boolean authRequired;
+    @Autowired
+    private RSocketBrokerHttpGatewayProperties config;
     /** broker upstream cluster */
     private RSocket rsocket;
 
@@ -47,7 +46,7 @@ public class HttpGatewayController {
                                                 @RequestBody(required = false) ByteBuf body,
                                                 @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         boolean authenticated;
-        if (!authRequired) {
+        if (!config.isRestapiAuth()) {
             authenticated = true;
         } else {
             authenticated = Objects.nonNull(authenticationService.auth(token));

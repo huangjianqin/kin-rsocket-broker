@@ -12,10 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import reactor.core.publisher.Flux;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 /**
  * @author huangjianqin
  * @date 2021/3/30
@@ -27,27 +23,12 @@ public class BrokerDiscoveryService implements DiscoveryService {
 
     @Override
     public Flux<ServiceInstance> getInstances(String serviceId) {
-        return findServiceInstances(serviceId);
+        return findServicesInstancesByAppName(serviceId);
     }
 
     @Override
     public Flux<String> getAllServices() {
         return Flux.fromIterable(serviceManager.getAllServices()).map(ServiceLocator::getGsv);
-    }
-
-    /**
-     * 寻找service instances
-     */
-    private Flux<ServiceInstance> findServiceInstances(String routeKey) {
-        Collection<ServiceResponder> responders = serviceManager.getAllByServiceId(ServiceLocator.serviceHashCode(routeKey));
-        if (responders.isEmpty()) {
-            return findServicesInstancesByAppName(routeKey);
-        }
-        List<ServiceInstance> serviceInstances = new ArrayList<>(responders.size());
-        for (ServiceResponder responder : responders) {
-            serviceInstances.add(newServiceInstance(responder));
-        }
-        return Flux.fromIterable(serviceInstances);
     }
 
     /**
@@ -77,6 +58,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
                 schema = "https";
             }
             serviceInstance.setSchema(schema);
+            //返回web port
             serviceInstance.setUri(schema + "://" + appMetadata.getIp() + ":" + appMetadata.getWebPort());
         }
         serviceInstance.setMetadata(appMetadata.getMetadata());

@@ -15,7 +15,7 @@ public final class ConfigChangedEvent implements CloudEventSupport {
     private String id;
     /** app name */
     private String appName;
-    /** config content, properties格式, todo 后续考虑扩展 */
+    /** config content, properties格式 */
     private String content;
     /** event time(millis) */
     private long time;

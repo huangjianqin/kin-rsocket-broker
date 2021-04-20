@@ -20,9 +20,9 @@ public class AbstractRSocket implements RSocket {
         onClose.tryEmitEmpty();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public boolean isDisposed() {
-        //todo
         return onClose.scan(Scannable.Attr.TERMINATED);
     }
 

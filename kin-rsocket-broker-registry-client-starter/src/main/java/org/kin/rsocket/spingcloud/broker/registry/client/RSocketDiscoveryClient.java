@@ -10,7 +10,8 @@ import reactor.core.publisher.Flux;
 /**
  * RSocket discovery client
  *
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 @EnableDiscoveryClient
 public class RSocketDiscoveryClient implements ReactiveDiscoveryClient {
@@ -31,7 +32,8 @@ public class RSocketDiscoveryClient implements ReactiveDiscoveryClient {
                 .map(rsocketInstance ->
                         new DefaultServiceInstance(
                                 rsocketInstance.getInstanceId(),
-                                rsocketInstance.getServiceId(), rsocketInstance.getHost(),
+                                rsocketInstance.getServiceId(),
+                                rsocketInstance.getHost(),
                                 rsocketInstance.getPort(),
                                 rsocketInstance.isSecure(),
                                 rsocketInstance.getMetadata()));

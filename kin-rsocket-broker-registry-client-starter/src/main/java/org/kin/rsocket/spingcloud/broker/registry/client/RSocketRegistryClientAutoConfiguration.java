@@ -11,7 +11,8 @@ import org.springframework.context.annotation.Configuration;
 /**
  * RSocket registry client auto configuration
  *
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 @Configuration
 public class RSocketRegistryClientAutoConfiguration {

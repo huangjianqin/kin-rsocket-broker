@@ -98,13 +98,13 @@ final class RequesterSupportImpl implements RequesterSupport {
                                 e.getKey().split("[=:]", 2)[0].trim().replace("kin.rsocket.metadata.", ""),
                                 e.getValue()))
                         .collect(Collectors.toMap(Tuple::first, Tuple::second)));
-        //todo
+        //todo 优化:metadata增加常量字段声明
         //power unit
         if (appMetadata.getMetadata("power-rating") != null) {
             appMetadata.setPowerRating(Integer.parseInt(appMetadata.getMetadata("power-rating")));
         }
         appMetadata.setSecure(StringUtils.isNotBlank(config.getJwtToken()));
-        //todo 有没有必要将整个文件内容读进内存
+
         //humans.md
         URL humansMd = this.getClass().getResource("/humans.md");
         if (humansMd != null) {
@@ -114,7 +114,7 @@ final class RequesterSupportImpl implements RequesterSupport {
                 inputStream.close();
                 appMetadata.setHumansMd(new String(bytes, StandardCharsets.UTF_8));
             } catch (Exception ignore) {
-
+                //do nothing
             }
         }
         return appMetadata;

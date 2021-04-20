@@ -16,10 +16,11 @@ import reactor.core.publisher.Flux;
 import java.util.Map;
 
 /**
- * todo
+ * todo 学习
  * ByteBuf encoder
  *
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 public class ByteBufEncoder extends AbstractEncoder<ByteBuf> {
     public ByteBufEncoder() {

@@ -6,7 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * RSocket Broker HTTP Gateway App
  *
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 @SpringBootApplication
 public class RSocketBrokerHttpGatewayApp {

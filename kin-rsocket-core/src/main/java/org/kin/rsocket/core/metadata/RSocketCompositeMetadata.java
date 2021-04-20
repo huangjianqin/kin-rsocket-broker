@@ -40,9 +40,8 @@ public class RSocketCompositeMetadata implements MetadataAware {
 
     public static RSocketCompositeMetadata of(Collection<MetadataAware> metadatas) {
         RSocketCompositeMetadata metadata = new RSocketCompositeMetadata();
-        for (MetadataAware metadataAware : metadatas) {
-            metadata.metadataBytesStore.put(metadataAware.getMimeType(), metadataAware.getContent());
-            metadata.metadataStore.put(metadataAware.mimeType(), metadataAware);
+        for (MetadataAware childMetadata : metadatas) {
+            metadata.addMetadata(childMetadata);
         }
         return metadata;
     }
@@ -90,6 +89,14 @@ public class RSocketCompositeMetadata implements MetadataAware {
                 }
             }
         }
+    }
+
+    /**
+     * 添加metadata
+     */
+    public void addMetadata(MetadataAware metadata) {
+        metadataBytesStore.put(metadata.getMimeType(), metadata.getContent());
+        metadataStore.put(metadata.mimeType(), metadata);
     }
 
     /**

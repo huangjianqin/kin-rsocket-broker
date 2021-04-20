@@ -12,12 +12,15 @@ import java.util.List;
 import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
 
 /**
+ * todo 优化:是否可优化成不传输未知mimetype
+ *
  * @author huangjianqin
  * @date 2021/3/25
  */
 public class MessageAcceptMimeTypesMetadata implements MetadataAware {
-    /** accept的mime type id, 也可能是{@link WellKnownMimeType#UNPARSEABLE_MIME_TYPE} str */
+    /** accept的mime type id, 也可能是{@link WellKnownMimeType#UNPARSEABLE_MIME_TYPE}未知mime type str */
     private List<Object> mimeTypes = new ArrayList<>();
+    /** bytebuf size */
     private int byteBufLength = 0;
 
     public static MessageAcceptMimeTypesMetadata of(String... acceptedMimeTypes) {
@@ -25,7 +28,6 @@ public class MessageAcceptMimeTypesMetadata implements MetadataAware {
         for (String acceptedMimeType : acceptedMimeTypes) {
             WellKnownMimeType wellKnownMimeType = WellKnownMimeType.fromString(acceptedMimeType);
             if (wellKnownMimeType == UNPARSEABLE_MIME_TYPE) {
-                //todo 是否可优化成不传输未知mimetype
                 metadata.mimeTypes.add(acceptedMimeType);
                 metadata.byteBufLength += (acceptedMimeTypes.length + 1);
             } else {
@@ -105,7 +107,7 @@ public class MessageAcceptMimeTypesMetadata implements MetadataAware {
                 byte mimeTypeId = (byte) (firstByte & 0x7F);
                 this.mimeTypes.add(WellKnownMimeType.fromIdentifier(mimeTypeId).getString());
             } else {
-                byteBuf.readCharSequence(firstByte, StandardCharsets.US_ASCII);
+                this.mimeTypes.add(byteBuf.readCharSequence(firstByte, StandardCharsets.US_ASCII));
             }
         }
     }
