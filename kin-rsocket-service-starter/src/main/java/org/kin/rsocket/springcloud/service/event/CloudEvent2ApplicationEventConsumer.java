@@ -2,6 +2,7 @@ package org.kin.rsocket.springcloud.service.event;
 
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Mono;
@@ -23,8 +24,15 @@ public final class CloudEvent2ApplicationEventConsumer implements CloudEventCons
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
+        String className = cloudEvent.getAttributes().getType();
+        Class<?> cloudEventClass;
+        try {
+            cloudEventClass = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException(String.format("unknown cloud event class '%s'", className));
+        }
         return Mono.fromRunnable(() -> {
-            eventPublisher.publishEvent(cloudEvent);
+            eventPublisher.publishEvent(CloudEventSupport.unwrapData(cloudEvent, cloudEventClass));
         });
     }
 }
