@@ -14,7 +14,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/23
  */
-public class ServicesExposedEvent implements CloudEventSupport<ServicesExposedEvent> {
+public class ServicesExposedEvent implements CloudEventSupport {
     private static final long serialVersionUID = 3937855844811039738L;
     /** app UUID */
     private String appId;

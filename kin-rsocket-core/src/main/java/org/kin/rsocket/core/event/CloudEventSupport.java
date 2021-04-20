@@ -12,11 +12,11 @@ import java.util.Map;
  * @date 2021/3/23
  */
 @SuppressWarnings("unchecked")
-public interface CloudEventSupport<T extends CloudEventSupport<?>> extends Serializable {
+public interface CloudEventSupport extends Serializable {
     /**
      * 解析cloud event数据
      */
-    static <T> T unwrapData(CloudEventData<?> cloudEvent, Class<T> targetClass) {
+    static <T extends CloudEventSupport> T unwrapData(CloudEventData<?> cloudEvent, Class<T> targetClass) {
         return cloudEvent.getData().map(data -> {
             try {
                 if (data instanceof ObjectNode || data instanceof Map) {
@@ -27,13 +27,14 @@ public interface CloudEventSupport<T extends CloudEventSupport<?>> extends Seria
                     return JSON.read((String) data, targetClass);
                 }
             } catch (Exception ignore) {
+                //do nothing
             }
             return null;
         }).orElse(null);
     }
 
-    default CloudEventData<T> toCloudEvent(URI source) {
-        return CloudEventBuilder.builder((T) this).source(source).build();
+    default CloudEventData<? extends CloudEventSupport> toCloudEventData(URI source) {
+        return CloudEventBuilder.builder(this).source(source).build();
     }
 }
 

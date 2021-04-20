@@ -22,12 +22,13 @@ public final class CloudEvent2ApplicationEventConsumer implements CloudEventCons
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEvent) {
         String className = cloudEvent.getAttributes().getType();
-        Class<?> cloudEventClass;
+        Class<? extends CloudEventSupport> cloudEventClass;
         try {
-            cloudEventClass = Class.forName(className);
+            cloudEventClass = (Class<? extends CloudEventSupport>) Class.forName(className);
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(String.format("unknown cloud event class '%s'", className));
         }

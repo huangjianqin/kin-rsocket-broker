@@ -14,7 +14,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class ServicesHiddenEvent implements CloudEventSupport<ServicesHiddenEvent> {
+public class ServicesHiddenEvent implements CloudEventSupport {
     private static final long serialVersionUID = -5175763743094581006L;
     /** application id */
     private String appId;

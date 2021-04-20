@@ -9,7 +9,7 @@ import java.util.UUID;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class ConfigChangedEvent implements CloudEventSupport<ConfigChangedEvent> {
+public class ConfigChangedEvent implements CloudEventSupport {
     private static final long serialVersionUID = -8370450054209813536L;
     /** config event logic id */
     private String id;
