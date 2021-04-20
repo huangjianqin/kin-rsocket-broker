@@ -38,6 +38,7 @@ public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<Confi
                 try {
                     confs.load(new StringReader(event.getContent()));
                     log.info("Succeed to receive config: ".concat(confs.toString()));
+                    //refresh environment, @RefreshScope bean, then configuration properties bean
                     contextRefresher.refresh();
                     log.info("Succeed to refresh Application");
                 } catch (Exception e) {
