@@ -2,9 +2,8 @@ package org.kin.rsocket.service.event;
 
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.UpstreamCluster;
-import org.kin.rsocket.core.event.CloudEventConsumer;
+import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.slf4j.Logger;
@@ -15,7 +14,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class UpstreamClusterChangedEventConsumer implements CloudEventConsumer {
+public final class UpstreamClusterChangedEventConsumer extends AbstractCloudEventConsumer<UpstreamClusterChangedEvent> {
     private static final Logger log = LoggerFactory.getLogger(UpstreamClusterChangedEventConsumer.class);
     /** upstream cluster manager */
     private final UpstreamClusterManager upstreamClusterManager;
@@ -25,24 +24,17 @@ public final class UpstreamClusterChangedEventConsumer implements CloudEventCons
     }
 
     @Override
-    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
-        String type = cloudEvent.getAttributes().getType();
-        return UpstreamClusterChangedEvent.class.getCanonicalName().equalsIgnoreCase(type);
+    public Mono<Void> consume(CloudEventData<?> cloudEventData, UpstreamClusterChangedEvent event) {
+        return Mono.fromRunnable(() -> consume0(event));
     }
 
-    @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        return Mono.fromRunnable(() -> consume0(cloudEvent));
-    }
-
-    private void consume0(CloudEventData<?> cloudEvent) {
-        UpstreamClusterChangedEvent clusterChangedEvent = CloudEventSupport.unwrapData(cloudEvent, UpstreamClusterChangedEvent.class);
-        if (clusterChangedEvent != null) {
-            String serviceId = ServiceLocator.gsv(clusterChangedEvent.getGroup(), clusterChangedEvent.getInterfaceName(), clusterChangedEvent.getVersion());
+    private void consume0(UpstreamClusterChangedEvent event) {
+        if (event != null) {
+            String serviceId = ServiceLocator.gsv(event.getGroup(), event.getInterfaceName(), event.getVersion());
             UpstreamCluster upstreamCluster = upstreamClusterManager.get(serviceId);
             if (upstreamCluster != null) {
-                upstreamCluster.refreshUris(clusterChangedEvent.getUris());
-                log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", serviceId, String.join(",", clusterChangedEvent.getUris())));
+                upstreamCluster.refreshUris(event.getUris());
+                log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", serviceId, String.join(",", event.getUris())));
             }
         }
     }

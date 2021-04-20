@@ -6,7 +6,7 @@ import java.util.Map;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class PortsUpdateEvent implements CloudEventSupport {
+public final class PortsUpdateEvent implements CloudEventSupport {
     private static final long serialVersionUID = -285999157134947510L;
     /** application id */
     private String appId;
@@ -48,5 +48,15 @@ public class PortsUpdateEvent implements CloudEventSupport {
 
     public void setManagementPort(int managementPort) {
         this.managementPort = managementPort;
+    }
+
+    @Override
+    public String toString() {
+        return "PortsUpdateEvent{" +
+                "appId='" + appId + '\'' +
+                ", rsocketPorts=" + rsocketPorts +
+                ", webPort=" + webPort +
+                ", managementPort=" + managementPort +
+                '}';
     }
 }

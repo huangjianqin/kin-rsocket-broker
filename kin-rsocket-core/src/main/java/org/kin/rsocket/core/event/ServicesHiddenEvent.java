@@ -14,7 +14,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class ServicesHiddenEvent implements CloudEventSupport {
+public final class ServicesHiddenEvent implements CloudEventSupport {
     private static final long serialVersionUID = -5175763743094581006L;
     /** application id */
     private String appId;
@@ -46,5 +46,13 @@ public class ServicesHiddenEvent implements CloudEventSupport {
 
     public void setServices(Set<ServiceLocator> services) {
         this.services = services;
+    }
+
+    @Override
+    public String toString() {
+        return "ServicesHiddenEvent{" +
+                "appId='" + appId + '\'' +
+                ", services=" + services +
+                '}';
     }
 }

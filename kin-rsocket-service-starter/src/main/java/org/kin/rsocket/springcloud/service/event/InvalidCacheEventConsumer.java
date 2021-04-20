@@ -1,9 +1,8 @@
 package org.kin.rsocket.springcloud.service.event;
 
+import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CacheInvalidEvent;
-import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.CloudEventSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -18,23 +17,19 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public final class InvalidCacheEventConsumer implements CloudEventConsumer {
+public final class InvalidCacheEventConsumer extends AbstractCloudEventConsumer<CacheInvalidEvent> {
     @Autowired(required = false)
     private CacheManager cacheManager;
 
     @Override
-    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
-        String type = cloudEvent.getAttributes().getType();
-        return cacheManager != null && CacheInvalidEvent.class.getCanonicalName().equalsIgnoreCase(type);
+    public Mono<Void> consume(CloudEventData<?> cloudEventData, CacheInvalidEvent event) {
+        if (Objects.isNull(event)) {
+            return Mono.empty();
+        }
+        return Mono.fromRunnable(() -> invalidateSpringCache(event));
     }
 
-    @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        return Mono.fromRunnable(() -> invalidateSpringCache(cloudEvent));
-    }
-
-    private void invalidateSpringCache(CloudEventData<?> cloudEvent) {
-        CacheInvalidEvent event = CloudEventSupport.unwrapData(cloudEvent, CacheInvalidEvent.class);
+    private void invalidateSpringCache(CacheInvalidEvent event) {
         if (Objects.nonNull(event) && Objects.nonNull(cacheManager)) {
             event.getKeys().forEach(key -> {
                 //cache name:key

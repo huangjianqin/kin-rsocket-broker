@@ -8,7 +8,7 @@ import org.kin.rsocket.core.domain.AppStatus;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class AppStatusEvent implements CloudEventSupport {
+public final class AppStatusEvent implements CloudEventSupport {
     private static final long serialVersionUID = -1486554322602641902L;
     /** app UUID */
     private String id;
@@ -54,5 +54,13 @@ public class AppStatusEvent implements CloudEventSupport {
 
     public void setStatus(AppStatus status) {
         this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "AppStatusEvent{" +
+                "id='" + id + '\'' +
+                ", status=" + status +
+                '}';
     }
 }

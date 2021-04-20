@@ -12,7 +12,8 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class UpstreamClusterChangedEvent implements CloudEventSupport {
+public final class UpstreamClusterChangedEvent implements CloudEventSupport {
+    private static final long serialVersionUID = -3263245707339021778L;
     /** 服务接口名 */
     private String interfaceName;
     /** 服务组 */
@@ -70,5 +71,15 @@ public class UpstreamClusterChangedEvent implements CloudEventSupport {
 
     public void setUris(List<String> uris) {
         this.uris = uris;
+    }
+
+    @Override
+    public String toString() {
+        return "UpstreamClusterChangedEvent{" +
+                "interfaceName='" + interfaceName + '\'' +
+                ", group='" + group + '\'' +
+                ", version='" + version + '\'' +
+                ", uris=" + uris +
+                '}';
     }
 }

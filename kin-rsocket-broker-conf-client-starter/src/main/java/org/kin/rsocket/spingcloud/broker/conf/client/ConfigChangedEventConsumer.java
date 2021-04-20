@@ -1,8 +1,7 @@
 package org.kin.rsocket.spingcloud.broker.conf.client;
 
-import org.kin.rsocket.core.event.CloudEventConsumer;
+import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,7 @@ import java.util.Properties;
  *
  * @author leijuan
  */
-public class ConfigChangedEventConsumer implements CloudEventConsumer {
+public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<ConfigChangedEvent> {
     private static final Logger log = LoggerFactory.getLogger(ConfigChangedEventConsumer.class);
 
     @Value("${spring.application.name}")
@@ -30,13 +29,7 @@ public class ConfigChangedEventConsumer implements CloudEventConsumer {
     private RSocketConfigPropertySourceLocator locator;
 
     @Override
-    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
-        return ConfigChangedEvent.class.getCanonicalName().equals(cloudEvent.getAttributes().getType());
-    }
-
-    @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        ConfigChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, ConfigChangedEvent.class);
+    public Mono<Void> consume(CloudEventData<?> cloudEventData, ConfigChangedEvent event) {
         // validate app name
         if (event != null && applicationName.equalsIgnoreCase(event.getAppName())
                 && !locator.getLastContent().equals(event.getContent())) {

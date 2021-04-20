@@ -8,7 +8,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class CacheInvalidEvent implements CloudEventSupport {
+public final class CacheInvalidEvent implements CloudEventSupport {
     private static final long serialVersionUID = 779297386423612211L;
     /** cache keys */
     private List<String> keys;
@@ -26,5 +26,12 @@ public class CacheInvalidEvent implements CloudEventSupport {
 
     public void setKeys(List<String> keys) {
         this.keys = keys;
+    }
+
+    @Override
+    public String toString() {
+        return "CacheInvalidEvent{" +
+                "keys=" + keys +
+                '}';
     }
 }

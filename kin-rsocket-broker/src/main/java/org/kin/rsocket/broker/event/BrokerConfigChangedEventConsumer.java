@@ -2,9 +2,8 @@ package org.kin.rsocket.broker.event;
 
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.conf.ConfDiamond;
-import org.kin.rsocket.core.event.CloudEventConsumer;
+import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
@@ -21,19 +20,12 @@ import java.util.Properties;
  * @author huangjianqin
  * @date 2021/3/31
  */
-public final class BrokerConfigChangedEventConsumer implements CloudEventConsumer {
+public final class BrokerConfigChangedEventConsumer extends AbstractCloudEventConsumer<ConfigChangedEvent> {
     @Autowired
     private ConfDiamond confDiamond;
 
     @Override
-    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
-        return ConfigChangedEvent.class.getCanonicalName().equals(cloudEvent.getAttributes().getType());
-    }
-
-    @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        ConfigChangedEvent event = CloudEventSupport.unwrapData(cloudEvent, ConfigChangedEvent.class);
-
+    public Mono<Void> consume(CloudEventData<?> cloudEventData, ConfigChangedEvent event) {
         Properties confs = new Properties();
         try {
             confs.load(new StringReader(event.getContent()));
@@ -42,7 +34,9 @@ public final class BrokerConfigChangedEventConsumer implements CloudEventConsume
         }
 
         for (String key : confs.stringPropertyNames()) {
-            confDiamond.put(event.getAppName() + ConfDiamond.GROUP_KEY_SEPARATOR + key, confs.getProperty(key)).subscribe();
+            confDiamond.put(event.getAppName() +
+                            ConfDiamond.GROUP_KEY_SEPARATOR + key,
+                    confs.getProperty(key)).subscribe();
         }
 
         return Mono.empty();

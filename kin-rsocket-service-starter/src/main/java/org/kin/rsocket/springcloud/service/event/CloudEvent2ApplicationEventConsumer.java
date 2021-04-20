@@ -18,14 +18,14 @@ public final class CloudEvent2ApplicationEventConsumer implements CloudEventCons
     private ApplicationEventPublisher eventPublisher;
 
     @Override
-    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
+    public boolean shouldAccept(CloudEventData<?> cloudEventData) {
         return true;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        String className = cloudEvent.getAttributes().getType();
+    public Mono<Void> consume(CloudEventData<?> cloudEventData) {
+        String className = cloudEventData.getAttributes().getType();
         Class<? extends CloudEventSupport> cloudEventClass;
         try {
             cloudEventClass = (Class<? extends CloudEventSupport>) Class.forName(className);
@@ -33,7 +33,7 @@ public final class CloudEvent2ApplicationEventConsumer implements CloudEventCons
             throw new IllegalStateException(String.format("unknown cloud event class '%s'", className));
         }
         return Mono.fromRunnable(() -> {
-            eventPublisher.publishEvent(CloudEventSupport.unwrapData(cloudEvent, cloudEventClass));
+            eventPublisher.publishEvent(CloudEventSupport.unwrapData(cloudEventData, cloudEventClass));
         });
     }
 }

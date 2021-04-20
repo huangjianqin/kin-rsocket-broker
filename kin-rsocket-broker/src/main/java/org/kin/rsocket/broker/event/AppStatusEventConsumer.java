@@ -24,7 +24,7 @@ import java.util.Properties;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class AppStatusEventConsumer implements CloudEventConsumer, Closeable, DisposableBean {
+public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> implements Closeable, DisposableBean {
     @Autowired
     private ServiceManager serviceManager;
     @Autowired
@@ -35,15 +35,9 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
     private Map<String, Disposable> listeners = new HashMap<>();
 
     @Override
-    public boolean shouldAccept(CloudEventData<?> cloudEvent) {
-        return AppStatusEvent.class.getCanonicalName().equalsIgnoreCase(cloudEvent.getAttributes().getType());
-    }
-
-    @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEvent) {
-        AppStatusEvent event = CloudEventSupport.unwrapData(cloudEvent, AppStatusEvent.class);
+    public Mono<Void> consume(CloudEventData<?> cloudEventData, AppStatusEvent event) {
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
-        if (event != null && event.getId().equals(cloudEvent.getAttributes().getSource().getHost())) {
+        if (event != null && event.getId().equals(cloudEventData.getAttributes().getSource().getHost())) {
             ServiceResponder responder = serviceManager.getByUUID(event.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();

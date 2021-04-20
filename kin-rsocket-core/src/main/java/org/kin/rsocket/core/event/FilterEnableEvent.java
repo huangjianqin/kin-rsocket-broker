@@ -4,7 +4,7 @@ package org.kin.rsocket.core.event;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public class FilterEnableEvent implements CloudEventSupport {
+public final class FilterEnableEvent implements CloudEventSupport {
     private static final long serialVersionUID = -6884554299203591695L;
     /** {@link org.kin.rsocket.broker.AbstractRSocketFilter}实现类 */
     private String filterClassName;
@@ -33,5 +33,13 @@ public class FilterEnableEvent implements CloudEventSupport {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    @Override
+    public String toString() {
+        return "FilterEnableEvent{" +
+                "filterClassName='" + filterClassName + '\'' +
+                ", enabled=" + enabled +
+                '}';
     }
 }
