@@ -49,7 +49,11 @@ public final class AppStatusEventConsumer implements CloudEventConsumer, Closeab
                 AppMetadata appMetadata = responder.getAppMetadata();
                 if (event.getStatus().equals(AppStatus.CONNECTED)) {
                     //app connected
-                    //todo broker端暂时不监听app配置变化, 转而通过controller控制是否广播配置变化事件
+                    /**
+                     * todo broker端暂时不监听app配置变化, 转而通过controller控制是否广播配置变化事件
+                     * 后续考虑支持部分更新, 及全部更新, 还有支持broker端检查到变化主动推更新
+                     * 可能需要down stream告诉broker哪些key需要watch, 通过AppMetadata metadata带过来???
+                     */
 //                    listenConfChange(appMetadata);
                 } else if (event.getStatus().equals(AppStatus.SERVING)) {
                     //app serving
