@@ -66,7 +66,7 @@ public final class BrokerResponder extends ResponderSupport implements CloudEven
     private final Map<Integer, Integer> stickyServices = new ConcurrentHashMap<>();
     /** 记录请求过的服务id */
     private final Set<String> consumedServices = new ConcurrentHashSet<>();
-    /** peer RSocket, requester RSocket */
+    /** peer requester RSocket */
     private final RSocket peerRsocket;
     /** upstream broker */
     private final UpstreamCluster upstreamBrokers;
