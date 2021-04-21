@@ -25,13 +25,13 @@ import java.net.URI;
 
 /**
  * service <- broker/peer service
- * broker/peer service的Responder, 处理broker/peer service request
+ * service处理broker/peer service request
  *
  * @author huangjianqin
  * @date 2021/3/28
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-final class ServiceResponder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
+final class BrokerOrServiceRequestHandler extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
     /** requester from peer */
     private RSocket requester;
     /**
@@ -42,7 +42,7 @@ final class ServiceResponder extends ResponderSupport implements CloudEventRSock
     /** combo onClose from responder and requester */
     private Mono<Void> comboOnClose;
 
-    ServiceResponder(RSocket requester, ConnectionSetupPayload setupPayload) {
+    BrokerOrServiceRequestHandler(RSocket requester, ConnectionSetupPayload setupPayload) {
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 
