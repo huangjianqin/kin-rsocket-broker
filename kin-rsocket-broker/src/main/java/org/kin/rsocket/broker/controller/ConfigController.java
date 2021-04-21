@@ -62,7 +62,7 @@ public class ConfigController {
                             AppMetadata appMetadata = handler.getAppMetadata();
                             return refreshAll || appMetadata.getUuid().equals(id) || appMetadata.getIp().equals(ip);
                         })
-                        .flatMap(responder -> responder.fireCloudEventToPeer(event))
+                        .flatMap(responder -> responder.fireCloudEvent(event))
                         .then(Mono.just("success")));
     }
 

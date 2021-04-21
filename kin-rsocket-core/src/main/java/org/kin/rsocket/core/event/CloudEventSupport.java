@@ -1,10 +1,21 @@
 package org.kin.rsocket.core.event;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.netty.buffer.Unpooled;
+import io.rsocket.Payload;
+import io.rsocket.metadata.WellKnownMimeType;
+import io.rsocket.util.ByteBufPayload;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.JSON;
+import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
+import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
+import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -31,6 +42,53 @@ public interface CloudEventSupport extends Serializable {
             }
             return null;
         }).orElse(null);
+    }
+
+    /**
+     * cloud event reply转换成payload
+     */
+    static Payload cloudEventReply2Payload(URI replyTo, CloudEventReply eventReply) {
+        String path = replyTo.getPath();
+        String serviceName = path.substring(path.lastIndexOf("/") + 1);
+        String method = replyTo.getFragment();
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
+                GSVRoutingMetadata.of("", serviceName, method, ""),
+                MessageMimeTypeMetadata.of(WellKnownMimeType.APPLICATION_JSON));
+        return ByteBufPayload.create(org.kin.rsocket.core.utils.JSON.writeByteBuf(eventReply), compositeMetadata.getContent());
+    }
+
+    /**
+     * cloud event转换成payload
+     */
+    static Payload cloudEvent2Payload(CloudEventData<?> cloudEvent) {
+        try {
+            return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, Unpooled.wrappedBuffer(org.kin.rsocket.core.utils.JSON.serialize(cloudEvent)));
+        } catch (Exception e) {
+            ExceptionUtils.throwExt(e);
+        }
+        return null;
+    }
+
+    /**
+     * 从payload metadata中获取元数据
+     */
+    static CloudEventData<JsonNode> extractCloudEventsFromMetadata(Payload payload) {
+        String jsonText = null;
+        byte firstByte = payload.metadata().getByte(0);
+        // json text: well known type > 127, and normal mime type's length < 127
+        if (firstByte == '{') {
+            jsonText = payload.getMetadataUtf8();
+        } else {
+            //composite metadata
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            if (compositeMetadata.contains(RSocketMimeType.CloudEventsJson)) {
+                jsonText = compositeMetadata.getMetadataBytes(RSocketMimeType.CloudEventsJson).toString(StandardCharsets.UTF_8);
+            }
+        }
+        if (jsonText != null) {
+            return org.kin.rsocket.core.utils.JSON.decodeValue(jsonText);
+        }
+        return null;
     }
 
     default CloudEventData<? extends CloudEventSupport> toCloudEventData(URI source) {

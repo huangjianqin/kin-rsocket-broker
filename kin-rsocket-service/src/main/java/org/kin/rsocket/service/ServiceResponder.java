@@ -12,6 +12,7 @@ import org.kin.rsocket.core.ResponderSupport;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventReply;
+import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -126,7 +127,7 @@ final class ServiceResponder extends ResponderSupport implements CloudEventRSock
 
     @Override
     public Mono<Void> fireCloudEventReply(URI replayTo, CloudEventReply eventReply) {
-        return requester.fireAndForget(cloudEventReply2Payload(replayTo, eventReply));
+        return requester.fireAndForget(CloudEventSupport.cloudEventReply2Payload(replayTo, eventReply));
     }
 
     @Override
@@ -174,7 +175,7 @@ final class ServiceResponder extends ResponderSupport implements CloudEventRSock
     public Mono<Void> metadataPush(Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
-                CloudEventData<?> cloudEvent = extractCloudEventsFromMetadata(payload);
+                CloudEventData<?> cloudEvent = CloudEventSupport.extractCloudEventsFromMetadata(payload);
                 if (cloudEvent != null) {
                     return fireCloudEvent(cloudEvent);
                 }
@@ -187,10 +188,11 @@ final class ServiceResponder extends ResponderSupport implements CloudEventRSock
         return Mono.empty();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public Mono<Void> fireCloudEventToPeer(CloudEventData<?> cloudEvent) {
         try {
-            Payload payload = cloudEvent2Payload(cloudEvent);
+            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             return requester.metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);

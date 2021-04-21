@@ -103,7 +103,7 @@ public final class ServiceManager {
     /**
      * service responder acceptor逻辑
      */
-    private Mono<RSocket> acceptor(ConnectionSetupPayload setupPayload, RSocket requesterSocket) {
+    private Mono<RSocket> acceptor(ConnectionSetupPayload setupPayload, RSocket requester) {
         //parse setup payload
         RSocketCompositeMetadata compositeMetadata = null;
         AppMetadata appMetadata = null;
@@ -166,25 +166,25 @@ public final class ServiceManager {
             errorMsg = "Failed to accept the connection, please check app info and JWT token";
         }
         if (errorMsg != null) {
-            return returnRejectedRSocket(errorMsg, requesterSocket);
+            return returnRejectedRSocket(errorMsg, requester);
         }
         //create responder
         try {
-            BrokerResponder responder = new BrokerResponder(
-                    setupPayload, compositeMetadata, appMetadata, principal,
-                    requesterSocket, this,
-                    serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
+
+            ServiceRequestHandler requestHandler = new ServiceRequestHandler(setupPayload, appMetadata, principal,
+                    this, serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
+            BrokerResponder responder = new BrokerResponder(compositeMetadata, appMetadata, requester, this, requestHandler);
             responder.onClose()
                     .doOnTerminate(() -> onResponderDisposed(responder))
                     .subscribeOn(Schedulers.parallel()).subscribe();
             //handler registration notify
             registerResponder(responder);
             log.info(String.format("Succeed to accept connection from '%s'", appMetadata.getName()));
-            return Mono.just(responder);
+            return Mono.just(requestHandler);
         } catch (Exception e) {
             String formatedErrorMsg = String.format("Failed to accept the connection: %s", e.getMessage());
             log.error(formatedErrorMsg, e);
-            return returnRejectedRSocket(formatedErrorMsg, requesterSocket);
+            return returnRejectedRSocket(formatedErrorMsg, requester);
         }
     }
 
@@ -200,7 +200,7 @@ public final class ServiceManager {
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
-            responder.fireCloudEventToPeer(newBrokerClustersChangedEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
+            responder.fireCloudEvent(newBrokerClustersChangedEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
         }
         notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Online now!", appMetadata.getName(), appMetadata.getIp()));
     }
@@ -271,11 +271,11 @@ public final class ServiceManager {
     public Mono<Void> broadcast(String appName, CloudEventData<?> cloudEvent) {
         if (appName.equals(Symbols.BROKER)) {
             return Flux.fromIterable(instanceId2Responder.values())
-                    .flatMap(handler -> handler.fireCloudEventToPeer(cloudEvent))
+                    .flatMap(handler -> handler.fireCloudEvent(cloudEvent))
                     .then();
         } else if (appResponders.containsKey(appName)) {
             return Flux.fromIterable(appResponders.get(appName))
-                    .flatMap(handler -> handler.fireCloudEventToPeer(cloudEvent))
+                    .flatMap(handler -> handler.fireCloudEvent(cloudEvent))
                     .then();
         } else {
             return Mono.error(new ApplicationErrorException("Application not found: appName=" + appName));
@@ -288,7 +288,7 @@ public final class ServiceManager {
     public Mono<Void> broadcast(CloudEventData<?> cloudEvent) {
         return Flux.fromIterable(appResponders.keySet())
                 .flatMap(name -> Flux.fromIterable(appResponders.get(name)))
-                .flatMap(handler -> handler.fireCloudEventToPeer(cloudEvent))
+                .flatMap(handler -> handler.fireCloudEvent(cloudEvent))
                 .then();
     }
 
@@ -355,9 +355,9 @@ public final class ServiceManager {
                 //todo
                 // add defaultUri for internet access for IoT devices
                 // RSocketBroker defaultBroker = rsocketBrokerManager.findConsistentBroker(responder.getUuid());
-                fireEvent = responder.fireCloudEventToPeer(brokerClusterAliasesEvent);
+                fireEvent = responder.fireCloudEvent(brokerClusterAliasesEvent);
             } else {
-                fireEvent = responder.fireCloudEventToPeer(brokerClustersEvent);
+                fireEvent = responder.fireCloudEvent(brokerClustersEvent);
             }
             if (responder.isPublishServicesOnly()) {
                 return fireEvent;

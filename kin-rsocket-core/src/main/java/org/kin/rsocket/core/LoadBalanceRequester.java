@@ -11,10 +11,7 @@ import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.CloudEventRSocket;
-import org.kin.rsocket.core.event.CloudEventReply;
-import org.kin.rsocket.core.event.ServicesExposedEvent;
+import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -270,13 +267,14 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                 });
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
         try {
-            Payload payload = cloudEvent2Payload(cloudEvent);
+            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             return metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);
@@ -288,7 +286,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
-        return fireAndForget(cloudEventReply2Payload(replayTo, eventReply));
+        return fireAndForget(CloudEventSupport.cloudEventReply2Payload(replayTo, eventReply));
     }
 
     @Override
@@ -298,7 +296,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         }
         try {
             return Flux.fromIterable(activeRSockets.values())
-                    .flatMap(rsocket -> rsocket.metadataPush(cloudEvent2Payload(cloudEvent)))
+                    .flatMap(rsocket -> rsocket.metadataPush(CloudEventSupport.cloudEvent2Payload(cloudEvent)))
                     .doOnError(throwable -> log.error("Failed to fire event to all upstream nodes", throwable))
                     .then();
         } catch (Exception e) {
@@ -394,6 +392,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     /**
      * 重连成功后, 刷新数据, 并注册暴露的服务
      */
+    @SuppressWarnings("ConstantConditions")
     private void onRSocketReconnected(String rsocketUri, RSocket rsocket) {
         Map<String, RSocket> activeRSockets = new HashMap<>(getActiveRSockets());
         activeRSockets.put(rsocketUri, rsocket);
@@ -403,7 +402,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
 
         CloudEventData<ServicesExposedEvent> cloudEvent = ReactiveServiceRegistry.servicesExposedEvent();
         if (cloudEvent != null) {
-            Payload payload = cloudEvent2Payload(cloudEvent);
+            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             rsocket.metadataPush(payload).subscribe();
         }
 

@@ -167,14 +167,12 @@ final class DownStreamBrokerResponder extends AbstractRSocket {
             }
 
             if (targetResponder != null) {
-                rsocket = targetResponder.getPeerRsocket();
+                rsocket = targetResponder;
             }
             if (rsocket != null) {
                 sink.success(rsocket);
-            } else if (error != null) {
-                sink.error(error);
             } else {
-                sink.error(new ApplicationErrorException(String.format("Service not found '%s'", gsv)));
+                sink.error(new ApplicationErrorException(String.format("Service not found '%s'", gsv), error));
             }
         });
     }
