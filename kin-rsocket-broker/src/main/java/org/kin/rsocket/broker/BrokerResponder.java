@@ -31,8 +31,8 @@ import java.net.URI;
 import java.util.*;
 
 /**
- * service -> broker
- * broker responder, 处理service request
+ * service <- broker
+ * broker请求service
  *
  * @author huangjianqin
  * @date 2021/3/30

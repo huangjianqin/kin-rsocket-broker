@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * service -> broker
- * broker responder, 处理service request
+ * broker处理service request
  *
  * @author huangjianqin
  * @date 2021/4/21
