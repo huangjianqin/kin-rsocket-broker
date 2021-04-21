@@ -70,7 +70,7 @@ final class UpStreamBrokerRequester implements RequesterSupport {
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (setupPayload, rsocket) -> Mono.just(new DownStreamBrokerResponder(serviceManager, filterChain, setupPayload));
+        return (setupPayload, rsocket) -> Mono.just(new BrokerRequestHandler(serviceManager, filterChain, setupPayload));
     }
 
     private AppMetadata getAppMetadata() {

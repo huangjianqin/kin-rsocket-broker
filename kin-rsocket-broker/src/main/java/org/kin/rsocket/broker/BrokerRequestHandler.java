@@ -32,16 +32,16 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/30
  */
-final class DownStreamBrokerResponder extends AbstractRSocket {
-    private static final Logger log = LoggerFactory.getLogger(DownStreamBrokerResponder.class);
+final class BrokerRequestHandler extends AbstractRSocket {
+    private static final Logger log = LoggerFactory.getLogger(BrokerRequestHandler.class);
     private final ServiceManager serviceManager;
     private final RSocketFilterChain filterChain;
-    /** broker reuqester app metadata */
+    /** broker requester app metadata */
     private final AppMetadata upstreamBrokerMetadata;
 
-    public DownStreamBrokerResponder(ServiceManager serviceManager,
-                                     RSocketFilterChain filterChain,
-                                     Payload setupPayload) {
+    public BrokerRequestHandler(ServiceManager serviceManager,
+                                RSocketFilterChain filterChain,
+                                Payload setupPayload) {
         this.filterChain = filterChain;
         this.serviceManager = serviceManager;
 
