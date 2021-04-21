@@ -120,6 +120,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         //health check composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
                 GSVRoutingMetadata.of(null, HealthCheck.class.getCanonicalName(), "check", null),
+                //todo
                 MessageMimeTypeMetadata.of(RSocketMimeType.Java_Object));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.healthCheckCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);
@@ -466,7 +467,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                     .setupPayload(payload)
                     .metadataMimeType(RSocketMimeType.CompositeMetadata.getType())
                     //remote responder默认的编码类型, 之所以使用json, 因为其平台无关性
-                    .dataMimeType(RSocketMimeType.Json.getType())
+                    .dataMimeType(RSocketMimeType.defaultEncodingType().getType())
                     .acceptor(requesterSupport.socketAcceptor())
                     .connect(UriTransportRegistry.INSTANCE.client(uri));
         } catch (Exception e) {

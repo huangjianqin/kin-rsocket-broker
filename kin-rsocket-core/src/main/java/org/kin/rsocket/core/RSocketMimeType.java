@@ -84,12 +84,23 @@ public enum RSocketMimeType {
         this.name = name;
     }
 
+    /**
+     * 根据id寻找{@link RSocketMimeType}
+     */
     public static RSocketMimeType getById(byte id) {
         return MIME_TYPE_MAP.get(id);
     }
 
+    /**
+     * 根据type str寻找{@link RSocketMimeType}
+     */
     public static RSocketMimeType getByType(String type) {
         return MIME_MIME_MAP.get(type);
+    }
+
+    /** rsocket通信默认编码类型 todo 优化:考虑换个地方定义?? */
+    public static RSocketMimeType defaultEncodingType() {
+        return Json;
     }
 
     //getter

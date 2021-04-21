@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * responser端(client, service, broker)一些基本api
+ * todo 优化:将request处理路基抽出, 不暴露给使用者
  *
  * @author huangjianqin
  * @date 2021/3/26
@@ -53,7 +54,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
      */
     protected Mono<Payload> localRequestResponse(GSVRoutingMetadata routing,
                                                  MessageMimeTypeMetadata dataEncodingMetadata,
-                                                 MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
+                                                 MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                  Payload payload) {
         try {
             ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
@@ -82,7 +83,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                     });
                 }
                 //composite data for return value
-                RSocketMimeType resultEncodingType = resultEncodingType(messageAcceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
+                RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 Mono<Object> monoResult;
                 if (result instanceof Mono) {
                     monoResult = (Mono) result;
@@ -139,7 +140,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
      */
     protected Flux<Payload> localRequestStream(GSVRoutingMetadata routing,
                                                MessageMimeTypeMetadata dataEncodingMetadata,
-                                               MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
+                                               MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                Payload payload) {
         try {
             ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
@@ -152,7 +153,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                     fluxResult = ReactiveObjAdapter.INSTANCE.toFlux(result);
                 }
                 //composite data for return value
-                RSocketMimeType resultEncodingType = resultEncodingType(messageAcceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
+                RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 return fluxResult
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
@@ -173,7 +174,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
     @SuppressWarnings("ReactiveStreamsNullableInLambdaInTransform")
     protected Flux<Payload> localRequestChannel(GSVRoutingMetadata routing,
                                                 MessageMimeTypeMetadata dataEncodingMetadata,
-                                                MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
+                                                MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                 Payload signal, Flux<Payload> payloads) {
         try {
             ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
@@ -195,7 +196,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                     result = ReactiveObjAdapter.INSTANCE.toFlux(result);
                 }
                 //composite data for return value
-                RSocketMimeType resultEncodingType = resultEncodingType(messageAcceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
+                RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 //result return
                 return ((Flux<?>) result)
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
@@ -239,14 +240,14 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
     /**
      * @return 接口方法返回结果编码类型
      */
-    private RSocketMimeType resultEncodingType(MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata,
+    private RSocketMimeType resultEncodingType(MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                RSocketMimeType defaultEncodingType,
                                                ReactiveMethodInvoker methodInvoker) {
         if (methodInvoker.isBinaryReturn()) {
             return RSocketMimeType.Binary;
         }
-        if (messageAcceptMimeTypesMetadata != null) {
-            RSocketMimeType firstAcceptType = messageAcceptMimeTypesMetadata.getFirstAcceptType();
+        if (acceptMimeTypesMetadata != null) {
+            RSocketMimeType firstAcceptType = acceptMimeTypesMetadata.getFirstAcceptType();
             if (firstAcceptType != null) {
                 return firstAcceptType;
             }

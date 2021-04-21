@@ -15,7 +15,6 @@ import java.util.Properties;
 /**
  * broker端{@link org.kin.rsocket.core.event.ConfigChangedEvent}处理
  * 目前仅仅只有gossip支持在broker cluster广播{@link ConfigChangedEvent}
- * todo
  *
  * @author huangjianqin
  * @date 2021/3/31

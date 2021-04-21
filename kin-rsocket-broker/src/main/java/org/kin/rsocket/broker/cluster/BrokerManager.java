@@ -1,7 +1,6 @@
 package org.kin.rsocket.broker.cluster;
 
 import org.kin.framework.Closeable;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,9 +29,6 @@ public interface BrokerManager extends Closeable {
 
     /** 寻找某ip上的broker */
     Mono<BrokerInfo> getBroker(String ip);
-
-    /** todo 获取所有暴露的services */
-    Flux<ServiceLocator> getServices(String ip);
 
     /** 是否单节点模式 */
     Boolean isStandAlone();

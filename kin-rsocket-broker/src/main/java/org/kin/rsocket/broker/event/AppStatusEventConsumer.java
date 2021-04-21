@@ -2,12 +2,13 @@ package org.kin.rsocket.broker.event;
 
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.ServiceManager;
-import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
+import org.kin.rsocket.core.utils.UriUtils;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.Disposable;
@@ -37,14 +38,14 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, AppStatusEvent event) {
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
-        if (event != null && event.getId().equals(cloudEventData.getAttributes().getSource().getHost())) {
-            ServiceResponder responder = serviceManager.getByUUID(event.getId());
+        if (event != null && event.getId().equals(UriUtils.getAppUUID(cloudEventData.getAttributes().getSource()))) {
+            BrokerResponder responder = serviceManager.getByUUID(event.getId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
                 if (event.getStatus().equals(AppStatus.CONNECTED)) {
                     //app connected
                     /**
-                     * todo broker端暂时不监听app配置变化, 转而通过controller控制是否广播配置变化事件
+                     * todo 优化:broker端暂时不监听app配置变化, 转而通过controller控制是否广播配置变化事件
                      * 后续考虑支持部分更新, 及全部更新, 还有支持broker端检查到变化主动推更新
                      * 可能需要down stream告诉broker哪些key需要watch, 通过AppMetadata metadata带过来???
                      */

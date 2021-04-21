@@ -122,7 +122,7 @@ final class RequesterSupportImpl implements RequesterSupport {
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (setupPayload, requester) -> Mono.just(new Responder(requester, setupPayload));
+        return (setupPayload, requester) -> Mono.just(new ServiceResponder(requester, setupPayload));
     }
 
     @Override

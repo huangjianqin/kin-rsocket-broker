@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * @author huangjianqin
  * @date 2021/3/30
  */
-final class SubBrokerRequester implements RequesterSupport {
+final class UpStreamBrokerRequester implements RequesterSupport {
     /** broker config */
     private final RSocketBrokerProperties brokerConfig;
     /** app name */
@@ -34,10 +34,10 @@ final class SubBrokerRequester implements RequesterSupport {
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
 
-    public SubBrokerRequester(RSocketBrokerProperties brokerConfig,
-                              String appName,
-                              ServiceManager serviceManager,
-                              RSocketFilterChain filterChain) {
+    public UpStreamBrokerRequester(RSocketBrokerProperties brokerConfig,
+                                   String appName,
+                                   ServiceManager serviceManager,
+                                   RSocketFilterChain filterChain) {
         this.appName = appName;
         this.serviceManager = serviceManager;
         this.filterChain = filterChain;
@@ -70,7 +70,7 @@ final class SubBrokerRequester implements RequesterSupport {
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (setupPayload, rsocket) -> Mono.just(new BrokerResponder(serviceManager, filterChain, setupPayload));
+        return (setupPayload, rsocket) -> Mono.just(new DownStreamBrokerResponder(serviceManager, filterChain, setupPayload));
     }
 
     private AppMetadata getAppMetadata() {
@@ -91,7 +91,7 @@ final class SubBrokerRequester implements RequesterSupport {
         RSocketBrokerProperties.RSocketSSL socketSSL = brokerConfig.getSsl();
         appMetadata.setSecure(!Objects.isNull(socketSSL) && socketSSL.isEnabled());
 
-        //todo  这个元数据key要不要定义常量
+        //todo  优化:这个元数据key要不要定义常量
         appMetadata.addMetadata("broker", "true");
         return appMetadata;
     }

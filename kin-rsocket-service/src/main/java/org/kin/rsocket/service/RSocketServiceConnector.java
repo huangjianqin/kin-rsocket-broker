@@ -68,7 +68,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
         //bind
         if (config.getPort() > 0) {
             RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
-            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new Responder(requester, setupPayload)));
+            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new ServiceResponder(requester, setupPayload)));
             binderBuilder.listen(config.getSchema(), config.getPort());
             binderBuilderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
             binder = binderBuilder.build();
@@ -271,29 +271,6 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * 内置health check, 只要broker正常, 本application就可以对外提供服务
-     */
-    private class HealthCheckImpl implements HealthCheck {
-        /** broker health check */
-        private final HealthCheck brokerHealthCheck;
-
-        public HealthCheckImpl() {
-            brokerHealthCheck = ServiceReferenceBuilder
-                    .requester(HealthCheck.class)
-                    .nativeImage()
-                    .upstreamClusterManager(upstreamClusterManager)
-                    .build();
-        }
-
-        @Override
-        public Mono<Integer> check(String serviceName) {
-            return Mono.just(AppStatus.SERVING.equals(brokerHealthCheck.check(null)) ? 1 : 0);
-        }
-    }
-
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
     @Override
     public void add(String group, String serviceName, String version, List<String> uris) {
@@ -330,4 +307,27 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
         return upstreamClusterManager.getRequesterSupport();
     }
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
+
+    //--------------------------------------------------内部类----------------------------------------------------------------------
+
+    /**
+     * 内置health check, 只要broker正常, 本application就可以对外提供服务
+     */
+    private class HealthCheckImpl implements HealthCheck {
+        /** broker health check */
+        private final HealthCheck brokerHealthCheck;
+
+        public HealthCheckImpl() {
+            brokerHealthCheck = ServiceReferenceBuilder
+                    .requester(HealthCheck.class)
+                    .nativeImage()
+                    .upstreamClusterManager(upstreamClusterManager)
+                    .build();
+        }
+
+        @Override
+        public Mono<Integer> check(String serviceName) {
+            return Mono.just(AppStatus.SERVING.equals(brokerHealthCheck.check(null)) ? 1 : 0);
+        }
+    }
 }

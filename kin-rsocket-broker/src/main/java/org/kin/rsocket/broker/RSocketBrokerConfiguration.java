@@ -159,7 +159,7 @@ public class RSocketBrokerConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.ssl.key-store")
     public RSocketBinderBuilderCustomizer rsocketListenerSSLCustomizer(@Autowired ResourceLoader resourceLoader) {
         return builder -> {
-            //todo
+            //todo 学习
             RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
             if (rsocketSSL != null && rsocketSSL.isEnabled() && rsocketSSL.getKeyStore() != null) {
                 try {
@@ -181,15 +181,15 @@ public class RSocketBrokerConfiguration {
     //----------------------------------------------upstream broker requester相关----------------------------------------------
     @Bean(autowireCandidate = false)
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public SubBrokerRequester subBrokerRequester(@Autowired Environment env) {
+    public UpStreamBrokerRequester upStreamBrokerRequester(@Autowired Environment env) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new SubBrokerRequester(brokerConfig, appName, serviceManager(null, null, null), rsocketFilterChain(null));
+        return new UpStreamBrokerRequester(brokerConfig, appName, serviceManager(null, null, null), rsocketFilterChain(null));
     }
 
     @Bean(autowireCandidate = false)
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public UpstreamCluster upstreamBrokerCluster() {
-        return UpstreamCluster.brokerUpstreamCluster(subBrokerRequester(null), brokerConfig.getUpstreamBrokers());
+        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequester(null), brokerConfig.getUpstreamBrokers());
     }
 
     //----------------------------------------------services----------------------------------------------

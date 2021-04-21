@@ -132,7 +132,7 @@ final class RequesterProxy implements InvocationHandler {
                 source = ReactiveObjAdapter.INSTANCE.toFlux(args[0]);
             } else {
                 //2 params
-                ByteBuf bodyBuffer = Codecs.INSTANCE.encodeResult(args[0], methodMetadata.getDataEncodingType());
+                ByteBuf bodyBuffer = Codecs.INSTANCE.encodeResult(args[0], encodingType);
                 routePayload = ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes());
                 source = ReactiveObjAdapter.INSTANCE.toFlux(args[1]);
             }
@@ -161,7 +161,7 @@ final class RequesterProxy implements InvocationHandler {
             }
         } else {
             //body content
-            ByteBuf bodyBuffer = Codecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
+            ByteBuf bodyBuffer = Codecs.INSTANCE.encodeParams(args, encodingType);
             if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;

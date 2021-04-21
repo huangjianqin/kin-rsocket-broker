@@ -9,6 +9,7 @@ import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 
 /**
  * broker 路由器, 负责根据downstream请求元数据将请求路由到目标upstream
- * todo 看看需不需要定时清掉空闲连接的downstream
+ * todo 优化:看看需不需要定时清掉空闲连接的downstream
  *
  * @author huangjianqin
  * @date 2021/3/30
@@ -60,11 +61,11 @@ public final class ServiceManager {
     private final UpstreamCluster upstreamBrokers;
 
     /** key -> hash(app instance UUID), value -> 对应responder */
-    private final Map<Integer, ServiceResponder> instanceId2Responder = new ConcurrentHashMap<>();
+    private final Map<Integer, BrokerResponder> instanceId2Responder = new ConcurrentHashMap<>();
     /** key -> app instance UUID, value -> 对应responder */
-    private final Map<String, ServiceResponder> uuid2Responder = new ConcurrentHashMap<>();
+    private final Map<String, BrokerResponder> uuid2Responder = new ConcurrentHashMap<>();
     /** key -> app name, value -> responder list */
-    private final ListMultimap<String, ServiceResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
+    private final ListMultimap<String, BrokerResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
 
     /** key -> serviceId, value -> list(instanceId, 也就是hash(app uuid) (会重复的, 数量=权重, 用于随机获取对应的instanceId)) */
     private final ListMultimap<Integer, Integer> serviceId2InstanceIds = MultimapBuilder.hashKeys().arrayListValues().build();
@@ -127,13 +128,9 @@ public final class ServiceManager {
             if (principal != null && compositeMetadata.contains(RSocketMimeType.Application)) {
                 AppMetadata temp = compositeMetadata.getMetadata(RSocketMimeType.Application);
                 //App registration validation: app id: UUID and unique in server
-                //todo 没有uuid是否要拒绝连接
-                if (temp.getUuid() == null || temp.getUuid().isEmpty()) {
-                    temp.setUuid(UUID.randomUUID().toString());
-                }
                 String appId = temp.getUuid();
                 //validate appId data format
-                if (appId != null && appId.length() >= 32) {
+                if (StringUtils.isNotBlank(appId) && appId.length() >= 32) {
                     Integer instanceId = MurmurHash3.hash32(credentials + ":" + temp.getUuid());
                     temp.setId(instanceId);
                     //application instance not connected
@@ -145,6 +142,7 @@ public final class ServiceManager {
                         errorMsg = "Connection created already, Please don't create multiple connections.";
                     }
                 } else {
+                    //没有uuid是否要拒绝连接
                     //illegal application id, appID should be UUID
                     errorMsg = String.format("'%s' is not legal application ID, please supply legal UUID as Application ID", appId == null ? "" : appId);
                 }
@@ -172,7 +170,7 @@ public final class ServiceManager {
         }
         //create responder
         try {
-            ServiceResponder responder = new ServiceResponder(
+            BrokerResponder responder = new BrokerResponder(
                     setupPayload, compositeMetadata, appMetadata, principal,
                     requesterSocket, this,
                     serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
@@ -193,7 +191,7 @@ public final class ServiceManager {
     /**
      * 注册downstream信息
      */
-    private void registerResponder(ServiceResponder responder) {
+    private void registerResponder(BrokerResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
         uuid2Responder.put(appMetadata.getUuid(), responder);
         instanceId2Responder.put(responder.getId(), responder);
@@ -208,9 +206,9 @@ public final class ServiceManager {
     }
 
     /**
-     * {@link ServiceResponder} disposed时触发的逻辑
+     * {@link BrokerResponder} disposed时触发的逻辑
      */
-    private void onResponderDisposed(ServiceResponder responder) {
+    private void onResponderDisposed(BrokerResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
         uuid2Responder.remove(responder.getUuid());
         instanceId2Responder.remove(responder.getId());
@@ -228,37 +226,37 @@ public final class ServiceManager {
     }
 
     /**
-     * 获取所有已注册的{@link ServiceResponder}
+     * 获取所有已注册的{@link BrokerResponder}
      */
-    public Collection<ServiceResponder> getAllResponders() {
+    public Collection<BrokerResponder> getAllResponders() {
         return uuid2Responder.values();
     }
 
     /**
-     * 根据app name 获取所有已注册的{@link ServiceResponder}
+     * 根据app name 获取所有已注册的{@link BrokerResponder}
      */
-    public Collection<ServiceResponder> getByAppName(String appName) {
+    public Collection<BrokerResponder> getByAppName(String appName) {
         return appResponders.get(appName);
     }
 
     /**
-     * 根据app uuid 获取已注册的{@link ServiceResponder}
+     * 根据app uuid 获取已注册的{@link BrokerResponder}
      */
-    public ServiceResponder getByUUID(String uuid) {
+    public BrokerResponder getByUUID(String uuid) {
         return uuid2Responder.get(uuid);
     }
 
     /**
-     * 根据app instanceId 获取已注册的{@link ServiceResponder}
+     * 根据app instanceId 获取已注册的{@link BrokerResponder}
      */
-    public ServiceResponder getByInstanceId(Integer instanceId) {
+    public BrokerResponder getByInstanceId(Integer instanceId) {
         return instanceId2Responder.get(instanceId);
     }
 
     /**
-     * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link ServiceResponder}
+     * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
-    public ServiceResponder getByServiceId(Integer serviceId) {
+    public BrokerResponder getByServiceId(Integer serviceId) {
         Integer instanceId = getInstanceId(serviceId);
         if (Objects.isNull(instanceId)) {
             return null;
@@ -298,7 +296,7 @@ public final class ServiceManager {
      * 向指定uuid的app广播cloud event
      */
     public Mono<Void> send(String uuid, CloudEventData<?> cloudEvent) {
-        ServiceResponder responder = uuid2Responder.get(uuid);
+        BrokerResponder responder = uuid2Responder.get(uuid);
         if (responder != null) {
             return responder.fireCloudEvent(cloudEvent);
         } else {
@@ -485,7 +483,7 @@ public final class ServiceManager {
         int handlerCount = instanceIds.size();
         if (handlerCount > 1) {
             try {
-                //todo 是否考虑支持多种策略
+                //todo 优化:是否考虑支持多种策略
                 return instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
             } catch (Exception e) {
                 return instanceIds.get(0);
@@ -506,9 +504,9 @@ public final class ServiceManager {
     }
 
     /**
-     * 根据serviceId获取其所有已注册的{@link ServiceResponder}
+     * 根据serviceId获取其所有已注册的{@link BrokerResponder}
      */
-    public Collection<ServiceResponder> getAllByServiceId(Integer serviceId) {
+    public Collection<BrokerResponder> getAllByServiceId(Integer serviceId) {
         return getAllInstanceIds(serviceId).stream()
                 .map(this::getByInstanceId)
                 .filter(Objects::nonNull)

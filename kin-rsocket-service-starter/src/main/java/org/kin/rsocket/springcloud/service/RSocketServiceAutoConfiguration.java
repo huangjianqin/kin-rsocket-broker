@@ -136,7 +136,6 @@ public class RSocketServiceAutoConfiguration {
     public HealthCheck healthCheckRef() {
         return ServiceReferenceBuilder
                 .requester(HealthCheck.class)
-                //todo 看看编码方式是否需要修改
                 .nativeImage()
                 .upstreamClusterManager(rsocketServiceConnector(null))
                 .build();

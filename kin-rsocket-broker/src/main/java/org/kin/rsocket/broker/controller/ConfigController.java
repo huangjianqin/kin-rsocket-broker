@@ -24,8 +24,6 @@ import java.util.Objects;
 import java.util.Properties;
 
 /**
- * todo 一些常量看看需不需要修改
- *
  * @author huangjianqin
  * @date 2021/3/30
  */

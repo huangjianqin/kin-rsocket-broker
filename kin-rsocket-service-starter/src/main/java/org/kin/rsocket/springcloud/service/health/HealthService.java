@@ -11,8 +11,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 /**
- * todo 单机与spring模式需要使用不同的HealthService
- *
  * @author huangjianqin
  * @date 2021/3/28
  */

@@ -19,7 +19,6 @@ public final class JwtTokenFailureAnalyzer extends AbstractFailureAnalyzer<JwtTo
     }
 
     private String getAction(JwtTokenNotFoundException ex) {
-        //todo 生成JWT串
-        return "Please contact the Ops or open RSocket Broker console http://localhost:9998/ to generate a JWT token.";
+        return "please generate a JWT token.";
     }
 }

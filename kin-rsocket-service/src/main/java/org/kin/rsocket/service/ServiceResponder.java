@@ -23,13 +23,14 @@ import reactor.core.publisher.Mono;
 import java.net.URI;
 
 /**
- * broker/peer service的Responder
+ * service <- broker/peer service
+ * broker/peer service的Responder, 处理broker/peer service request
  *
  * @author huangjianqin
  * @date 2021/3/28
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-final class Responder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
+final class ServiceResponder extends ResponderSupport implements CloudEventRSocket, ResponderRsocket {
     /** requester from peer */
     private RSocket requester;
     /**
@@ -40,7 +41,7 @@ final class Responder extends ResponderSupport implements CloudEventRSocket, Res
     /** combo onClose from responder and requester */
     private Mono<Void> comboOnClose;
 
-    Responder(RSocket requester, ConnectionSetupPayload setupPayload) {
+    ServiceResponder(RSocket requester, ConnectionSetupPayload setupPayload) {
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 

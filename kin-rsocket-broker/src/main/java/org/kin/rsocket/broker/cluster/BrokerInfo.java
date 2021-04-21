@@ -1,8 +1,7 @@
 package org.kin.rsocket.broker.cluster;
 
 /**
- * 集群中broker数据
- * todo 数据设置
+ * 集群中broker信息
  *
  * @author huangjianqin
  * @date 2021/3/29

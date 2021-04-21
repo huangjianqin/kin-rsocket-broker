@@ -16,7 +16,6 @@ import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.utils.JSON;
 import org.slf4j.Logger;
@@ -118,12 +117,6 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
         } else {
             return Mono.empty();
         }
-    }
-
-    @Override
-    public Flux<ServiceLocator> getServices(String ip) {
-        //todo
-        return Flux.empty();
     }
 
     @Override

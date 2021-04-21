@@ -3,7 +3,6 @@ package org.kin.rsocket.broker.cluster;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,11 +58,6 @@ public final class StandAloneBrokerManager extends AbstractBrokerManager impleme
     @Override
     public Mono<BrokerInfo> getBroker(String ip) {
         return Mono.just(localBrokerInfo);
-    }
-
-    @Override
-    public Flux<ServiceLocator> getServices(String ip) {
-        return Flux.empty();
     }
 
     @Override

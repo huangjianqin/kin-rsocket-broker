@@ -4,8 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
+import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.ServiceManager;
-import org.kin.rsocket.broker.ServiceResponder;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveServiceInfoSupport;
 import org.kin.rsocket.core.ServiceLocator;
@@ -55,7 +55,7 @@ public class ServiceQueryController {
     public Mono<String> queryDefinition(@RequestParam(name = "group", defaultValue = "") String group,
                                         @PathVariable(name = "serviceName") String serviceName,
                                         @RequestParam(name = "version", defaultValue = "") String version) {
-        ServiceResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId());
+        BrokerResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId());
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.of("", ReactiveServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
