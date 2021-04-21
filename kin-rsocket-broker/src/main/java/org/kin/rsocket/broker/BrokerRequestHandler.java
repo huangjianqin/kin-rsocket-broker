@@ -26,8 +26,8 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 
 /**
- * broker <- upstream broker
- * broker responder, , 处理upstream broker request
+ * broker <- other broker
+ * broker 处理其他 broker request
  *
  * @author huangjianqin
  * @date 2021/3/30
