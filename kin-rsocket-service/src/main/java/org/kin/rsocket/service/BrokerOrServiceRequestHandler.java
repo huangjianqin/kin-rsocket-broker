@@ -18,6 +18,8 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 /**
  * service <- broker/peer service
  * service处理broker/peer service request
@@ -28,31 +30,35 @@ import reactor.core.publisher.Mono;
 @SuppressWarnings({"rawtypes", "unchecked"})
 final class BrokerOrServiceRequestHandler extends ResponderSupport {
     /** requester from peer */
-    private RSocket requester;
+    private final RSocket requester;
     /**
      * 默认数据编码类型, 从requester setup payload解析而来
      * 返回数据给requester时, 如果没有带数据编码类型, 则使用默认的编码类型进行编码
      */
-    private MessageMimeTypeMetadata defaultMessageMimeTypeMetadata = null;
+    private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
     /** combo onClose from responder and requester */
-    private Mono<Void> comboOnClose;
+    private final Mono<Void> comboOnClose;
 
     BrokerOrServiceRequestHandler(RSocket requester, ConnectionSetupPayload setupPayload) {
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 
+        //requester默认data编码类型
+        RSocketMimeType dataMimeType = RSocketMimeType.defaultEncodingType();
         //解析composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
         if (compositeMetadata.contains(RSocketMimeType.Application)) {
             AppMetadata appMetadata = compositeMetadata.getMetadata(RSocketMimeType.Application);
             //from remote requester
             if (!appMetadata.getUuid().equals(RSocketAppContext.ID)) {
-                RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
-                if (dataType != null) {
-                    this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataType);
+                RSocketMimeType requesterDataMimeType = RSocketMimeType.getByType(setupPayload.dataMimeType());
+                if (Objects.nonNull(requesterDataMimeType)) {
+                    dataMimeType = requesterDataMimeType;
                 }
             }
         }
+
+        this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataMimeType);
     }
 
     /**
