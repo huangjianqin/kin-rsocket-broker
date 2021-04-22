@@ -466,8 +466,9 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             Payload payload = requesterSupport.setupPayload().get();
             return rsocketConnector
                     .setupPayload(payload)
+                    //metadata编码类型
                     .metadataMimeType(RSocketMimeType.CompositeMetadata.getType())
-                    //remote responder默认的编码类型, 之所以使用json, 因为其平台无关性
+                    //setup data编码类型, remote默认的编码类型, 之所以使用json, 因为其平台无关性
                     .dataMimeType(RSocketMimeType.defaultEncodingType().getType())
                     .acceptor(requesterSupport.socketAcceptor())
                     .connect(UriTransportRegistry.INSTANCE.client(uri));
