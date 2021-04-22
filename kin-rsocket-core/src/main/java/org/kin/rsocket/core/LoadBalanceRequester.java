@@ -11,6 +11,7 @@ import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.rsocket.core.codec.Codecs;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
@@ -56,6 +57,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             e -> e instanceof ClosedChannelException || e instanceof ConnectionErrorException || e instanceof ConnectException;
     /** 刷新uri时连接失败, 则1分钟内尝试12重连, 间隔5s */
     private static final int RETRY_COUNT = 12;
+    /** upstream uri刷新逻辑单线程处理 */
     private static final Scheduler REFRESH_SCHEDULER = Schedulers.newSingle("LoadBalanceRequester-refreshRSockets");
 
     /** load balance rule */
@@ -118,7 +120,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
                 GSVRoutingMetadata.of(null, HealthCheck.class.getCanonicalName(), "check", null),
                 //todo
-                MessageMimeTypeMetadata.of(RSocketMimeType.Java_Object));
+                MessageMimeTypeMetadata.of(RSocketMimeType.defaultEncodingType()));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.healthCheckCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);
         ReferenceCountUtil.safeRelease(compositeMetadataContent);
@@ -521,19 +523,20 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     /**
      * health check
      */
+    @SuppressWarnings("ConstantConditions")
     private Mono<Boolean> healthCheck(RSocket rsocket, String url) {
         return rsocket.requestResponse(ByteBufPayload.create(Unpooled.EMPTY_BUFFER, healthCheckCompositeByteBuf.retainedDuplicate()))
                 .timeout(Duration.ofSeconds(HEALTH_CHECK_INTERVAL_SECONDS))
                 .handle((payload, sink) -> {
-                    //todo 逻辑是否需要修正
-//                    byte indicator = payload.data().readByte();
-//                    // check error code: hessian decode: 1: -111,  0-> -112, -1 -> -113
-//                    if (indicator == -111) {
-//                        sink.next(true);
-//                    } else {
-//                        sink.error(new Exception("Health check failed :" + url));
-//                    }
-                    sink.next(true);
+                    /**
+                     * 以{@link RSocketMimeType#defaultEncodingType()}编码
+                     */
+                    int result = (int) Codecs.INSTANCE.decodeResult(RSocketMimeType.defaultEncodingType(), payload.data(), Integer.class);
+                    if (result == HealthCheck.SERVING) {
+                        sink.next(true);
+                    } else {
+                        sink.error(new Exception("upstream health check failed :" + url));
+                    }
                 });
     }
 

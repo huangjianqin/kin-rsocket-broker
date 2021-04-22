@@ -87,20 +87,15 @@ public class MessageMimeTypeMetadata implements MetadataAware {
         }
     }
 
-    /**
-     * @return message 的mime type
-     */
-    public RSocketMimeType getMessageMimeType() {
-        return RSocketMimeType.getByType(this.mimeType);
-    }
-
     //getter
     public byte getMimeTypeId() {
         return mimeTypeId;
     }
 
-    @Override
-    public String getMimeType() {
-        return mimeType;
+    /**
+     * @return message 的mime type
+     */
+    public RSocketMimeType getMessageMimeType() {
+        return RSocketMimeType.getByType(this.mimeType);
     }
 }
