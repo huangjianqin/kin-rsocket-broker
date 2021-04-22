@@ -69,7 +69,7 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
     /**
      * 是否包含对应service, handlerName注册信息
      */
-    public boolean contains(Integer handlerId) {
+    public boolean contains(int handlerId) {
         return handlerId2Invoker.containsKey(handlerId);
     }
 
@@ -236,14 +236,14 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
     /**
      * 返回method invoker
      */
-    public ReactiveMethodInvoker getInvoker(Integer handlerId) {
+    public ReactiveMethodInvoker getInvoker(int handlerId) {
         return handlerId2Invoker.get(handlerId);
     }
 
     /**
      * 是否包含指定method invoker
      */
-    public boolean containsHandler(Integer handlerId) {
+    public boolean containsHandler(int handlerId) {
         return handlerId2Invoker.containsKey(handlerId);
     }
 

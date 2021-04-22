@@ -12,7 +12,6 @@ import org.kin.rsocket.core.utils.Separators;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * GSV routing metadata, format as tagging routing data
@@ -26,21 +25,21 @@ public class GSVRoutingMetadata implements MetadataAware {
     /** service name */
     private String service;
     /** method name */
-    private String handlerName;
+    private String handler;
     /** version */
     private String version;
     /** endpoint */
     private String endpoint;
     /** sticky session */
     private boolean sticky;
-    /** target instance ID */
-    private transient Integer targetId;
+    /** service ID */
+    private transient int serviceId;
 
     public static GSVRoutingMetadata of(String group, String service, String handlerName, String version) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.group = group;
         metadata.service = service;
-        metadata.handlerName = handlerName;
+        metadata.handler = handlerName;
         metadata.version = version;
         return metadata;
     }
@@ -131,7 +130,7 @@ public class GSVRoutingMetadata implements MetadataAware {
         int methodSymbolPosition = temp.lastIndexOf(Separators.SERVICE_HANDLER);
         if (methodSymbolPosition > 0) {
             this.service = temp.substring(0, methodSymbolPosition);
-            this.handlerName = temp.substring(methodSymbolPosition + 1);
+            this.handler = temp.substring(methodSymbolPosition + 1);
         } else {
             this.service = temp;
         }
@@ -169,8 +168,8 @@ public class GSVRoutingMetadata implements MetadataAware {
         //service
         routingBuilder.append(service);
         //method
-        if (handlerName != null && !handlerName.isEmpty()) {
-            routingBuilder.append(Separators.SERVICE_HANDLER).append(handlerName);
+        if (handler != null && !handler.isEmpty()) {
+            routingBuilder.append(Separators.SERVICE_HANDLER).append(handler);
         }
         //version
         if (version != null && !version.isEmpty()) {
@@ -193,15 +192,11 @@ public class GSVRoutingMetadata implements MetadataAware {
      *
      * @return service id
      */
-    public Integer serviceId() {
-        if (Objects.isNull(targetId)) {
-            if (group == null && version == null) {
-                targetId = MurmurHash3.hash32(service);
-            } else {
-                targetId = MurmurHash3.hash32(gsv());
-            }
+    public int serviceId() {
+        if (serviceId <= 0) {
+            serviceId = MurmurHash3.hash32(gsv());
         }
-        return targetId;
+        return serviceId;
     }
 
     /**
@@ -219,7 +214,7 @@ public class GSVRoutingMetadata implements MetadataAware {
      * @return handler id
      */
     public Integer handlerId() {
-        return MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handlerName);
+        return MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
     }
 
     //setter && getter
@@ -239,12 +234,12 @@ public class GSVRoutingMetadata implements MetadataAware {
         this.service = service;
     }
 
-    public String getHandlerName() {
-        return this.handlerName;
+    public String getHandler() {
+        return handler;
     }
 
-    public void setHandlerName(String handlerName) {
-        this.handlerName = handlerName;
+    public void setHandler(String handler) {
+        this.handler = handler;
     }
 
     public String getVersion() {
@@ -253,14 +248,6 @@ public class GSVRoutingMetadata implements MetadataAware {
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public int getTargetId() {
-        return targetId;
-    }
-
-    public void setTargetId(int targetId) {
-        this.targetId = targetId;
     }
 
     public String getEndpoint() {
@@ -277,6 +264,14 @@ public class GSVRoutingMetadata implements MetadataAware {
 
     public void setSticky(boolean sticky) {
         this.sticky = sticky;
+    }
+
+    public int getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(int serviceId) {
+        this.serviceId = serviceId;
     }
 }
 

@@ -5,6 +5,7 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.frame.FrameType;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveMethodSupport;
 import org.kin.rsocket.core.ServiceLocator;
@@ -79,7 +80,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         this.sticky = sticky | this.sticky;
         fullName = this.service + Separators.SERVICE_HANDLER + this.handlerName;
         serviceId = MurmurHash3.hash32(ServiceLocator.gsv(this.group, this.service, this.version));
-        handlerId = MurmurHash3.hash32(service + "." + handlerName);
+        handlerId = MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handlerName);
         //byte buffer binary encoding
         if (paramCount == 1) {
             Class<?> parameterType = method.getParameterTypes()[0];
@@ -153,6 +154,9 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         routingMetadata.setEndpoint(endpoint);
         routingMetadata.setSticky(sticky);
 
+        //binary routing metadata
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(this.serviceId, this.handlerId, this.sticky, routingMetadata.genRoutingKey());
+
         //encoding mime type
         MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataEncodingType);
 
@@ -163,8 +167,17 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         OriginMetadata originMetadata = OriginMetadata.of(origin);
 
         //default composite metadata
+        CompositeByteBuf compositeMetadataBytes;
         compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
-        CompositeByteBuf compositeMetadataBytes = (CompositeByteBuf) compositeMetadata.getContent();
+        //add gsv routing data if endpoint not empty
+        if (StringUtils.isNotBlank(endpoint)) {
+            this.compositeMetadata.addMetadata(binaryRoutingMetadata);
+            compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
+        } else {
+            compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
+            //add BinaryRoutingMetadata as first
+            compositeMetadataBytes.addComponent(true, 0, binaryRoutingMetadata.getHeaderAndContent());
+        }
 
         //cache
         this.compositeMetadataBytes = Unpooled.copiedBuffer(compositeMetadataBytes);

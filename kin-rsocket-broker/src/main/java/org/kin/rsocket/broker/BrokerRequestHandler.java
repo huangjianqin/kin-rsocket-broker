@@ -14,6 +14,7 @@ import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
+import org.kin.rsocket.core.metadata.BinaryRoutingMetadata;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.utils.JSON;
@@ -57,10 +58,16 @@ final class BrokerRequestHandler extends AbstractRSocket {
 
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
-        if (gsvRoutingMetadata == null) {
-            return Mono.error(new InvalidException("No Routing metadata"));
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        GSVRoutingMetadata gsvRoutingMetadata;
+        if (binaryRoutingMetadata != null) {
+            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+        } else {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            if (gsvRoutingMetadata == null) {
+                return Mono.error(new InvalidException("No Routing metadata"));
+            }
         }
 
         //request filters
@@ -76,11 +83,18 @@ final class BrokerRequestHandler extends AbstractRSocket {
 
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
-        if (gsvRoutingMetadata == null) {
-            return Mono.error(new InvalidException("No Routing metadata"));
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        GSVRoutingMetadata gsvRoutingMetadata;
+        if (binaryRoutingMetadata != null) {
+            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+        } else {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            if (gsvRoutingMetadata == null) {
+                return Mono.error(new InvalidException("No Routing metadata"));
+            }
         }
+
         //request filters
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
         if (this.filterChain.isFiltersPresent()) {
@@ -93,11 +107,18 @@ final class BrokerRequestHandler extends AbstractRSocket {
 
     @Override
     public Flux<Payload> requestStream(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
-        if (gsvRoutingMetadata == null) {
-            return Flux.error(new InvalidException("No Routing metadata"));
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        GSVRoutingMetadata gsvRoutingMetadata;
+        if (binaryRoutingMetadata != null) {
+            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+        } else {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            if (gsvRoutingMetadata == null) {
+                return Flux.error(new InvalidException("No Routing metadata"));
+            }
         }
+
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
@@ -114,11 +135,18 @@ final class BrokerRequestHandler extends AbstractRSocket {
     }
 
     private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
-        if (gsvRoutingMetadata == null) {
-            return Flux.error(new InvalidException("No Routing metadata"));
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(signal.metadata());
+        GSVRoutingMetadata gsvRoutingMetadata;
+        if (binaryRoutingMetadata != null) {
+            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+        } else {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            if (gsvRoutingMetadata == null) {
+                return Flux.error(new InvalidException("No Routing metadata"));
+            }
         }
+
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
         return destination.flatMapMany(rsocket -> rsocket.requestChannel(payloads));
     }

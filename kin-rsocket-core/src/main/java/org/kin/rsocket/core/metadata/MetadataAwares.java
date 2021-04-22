@@ -26,13 +26,14 @@ final class MetadataAwares {
         builder.put(RSocketMimeType.ServiceRegistry, ServiceRegistryMetadata.class);
         builder.put(RSocketMimeType.BearerToken, BearerTokenMetadata.class);
         builder.put(RSocketMimeType.Routing, GSVRoutingMetadata.class);
+        builder.put(RSocketMimeType.BinaryRouting, BinaryRoutingMetadata.class);
         builder.put(RSocketMimeType.MessageMimeType, MessageMimeTypeMetadata.class);
         builder.put(RSocketMimeType.MessageAcceptMimeTypes, MessageAcceptMimeTypesMetadata.class);
         builder.put(RSocketMimeType.CompositeMetadata, RSocketCompositeMetadata.class);
         builder.put(RSocketMimeType.MessageTags, MessageTagsMetadata.class);
         builder.put(RSocketMimeType.MessageOrigin, OriginMetadata.class);
 
-        //todo 优化:Tracing和BinaryRouting mime type未处理
+        //todo 优化:Tracing未处理
 
         TYPE_2_METADATA_CLASS = builder.build();
     }

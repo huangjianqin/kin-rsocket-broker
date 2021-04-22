@@ -57,7 +57,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                                  MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                  Payload payload) {
         try {
-            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
+            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.isAsyncReturn()) {
@@ -95,7 +95,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
-                return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
+                return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
             }
         } catch (Exception e) {
             error(failCallLog(), e);
@@ -108,7 +108,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
      * 本地调用服务接口方法并针对FireAndForget Frame Type场景定制额外逻辑
      */
     protected Mono<Void> localFireAndForget(GSVRoutingMetadata routing, MessageMimeTypeMetadata dataEncodingMetadata, Payload payload) {
-        ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
+        ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
         if (methodInvoker != null) {
             if (methodInvoker.isAsyncReturn()) {
                 try {
@@ -131,7 +131,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
             }
         } else {
             ReferenceCountUtil.safeRelease(payload);
-            return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
+            return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
         }
     }
 
@@ -143,7 +143,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                                MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                Payload payload) {
         try {
-            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
+            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
             if (methodInvoker != null) {
                 Object result = invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
                 Flux<Object> fluxResult;
@@ -159,7 +159,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
-                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
+                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
             }
         } catch (Exception e) {
             error(failCallLog(), e);
@@ -177,7 +177,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                                 MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                 Payload signal, Flux<Payload> payloads) {
         try {
-            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandlerName());
+            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {
@@ -202,7 +202,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
-                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandlerName())));
+                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
             }
         } catch (Exception e) {
             error(failCallLog(), e);
