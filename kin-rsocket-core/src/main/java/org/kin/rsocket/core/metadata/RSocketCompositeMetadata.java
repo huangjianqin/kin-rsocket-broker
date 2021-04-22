@@ -17,7 +17,7 @@ import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class RSocketCompositeMetadata implements MetadataAware {
+public final class RSocketCompositeMetadata implements MetadataAware {
     /**
      * key -> mime type, value -> bytes,
      * size会>= type2Metadata.size(), 因为存在一些未知的mime type, 不知道如何转换成class, 所以以bytes形式存在
@@ -44,6 +44,9 @@ public class RSocketCompositeMetadata implements MetadataAware {
             metadata.addMetadata(childMetadata);
         }
         return metadata;
+    }
+
+    private RSocketCompositeMetadata() {
     }
 
     @Override
@@ -76,16 +79,15 @@ public class RSocketCompositeMetadata implements MetadataAware {
 
             RSocketMimeType rsocketMimeType = RSocketMimeType.getByType(mimeType);
             if (Objects.nonNull(rsocketMimeType)) {
-                MetadataAware metadata = MetadataAwares.instance(rsocketMimeType);
-                if (Objects.nonNull(metadata)) {
-                    try {
-                        bytes.markReaderIndex();
-                        metadata.load(bytes);
-                        bytes.resetReaderIndex();
-                    } catch (Exception e) {
-                        ExceptionUtils.throwExt(e);
+                try {
+                    bytes.markReaderIndex();
+                    MetadataAware metadataAware = MetadataAwares.instance(rsocketMimeType, bytes);
+                    bytes.resetReaderIndex();
+                    if (Objects.nonNull(metadataAware)) {
+                        metadataStore.put(rsocketMimeType, metadataAware);
                     }
-                    metadataStore.put(rsocketMimeType, metadata);
+                } catch (Exception e) {
+                    ExceptionUtils.throwExt(e);
                 }
             }
         }

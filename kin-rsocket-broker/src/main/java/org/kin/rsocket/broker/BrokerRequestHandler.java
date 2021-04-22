@@ -51,8 +51,9 @@ final class BrokerRequestHandler extends AbstractRSocket {
         if (compositeMetadata.contains(RSocketMimeType.Application)) {
             upstreamBrokerMetadata = compositeMetadata.getMetadata(RSocketMimeType.Application);
         } else {
-            upstreamBrokerMetadata = new AppMetadata();
-            upstreamBrokerMetadata.setName("unknown peer broker");
+            AppMetadata.Builder builder = AppMetadata.builder();
+            builder.name("unknown peer broker");
+            upstreamBrokerMetadata = builder.build();
         }
     }
 

@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class MessageMimeTypeMetadata implements MetadataAware {
+public final class MessageMimeTypeMetadata implements MetadataAware {
     /** rsocket mime type id */
     private byte mimeTypeId;
     /** rsocket mime type str */
@@ -53,6 +53,9 @@ public class MessageMimeTypeMetadata implements MetadataAware {
         MessageMimeTypeMetadata metadata = new MessageMimeTypeMetadata();
         metadata.load(content);
         return metadata;
+    }
+
+    private MessageMimeTypeMetadata() {
     }
 
     @Override

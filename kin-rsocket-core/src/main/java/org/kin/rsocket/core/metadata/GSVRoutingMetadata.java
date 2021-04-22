@@ -19,7 +19,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class GSVRoutingMetadata implements MetadataAware {
+public final class GSVRoutingMetadata implements MetadataAware {
     /** group: region, datacenter, virtual group in datacenter */
     private String group;
     /** service name */
@@ -35,29 +35,34 @@ public class GSVRoutingMetadata implements MetadataAware {
     /** service ID */
     private transient int serviceId;
 
-    public static GSVRoutingMetadata of(String group, String service, String handlerName, String version) {
-        GSVRoutingMetadata metadata = new GSVRoutingMetadata();
-        metadata.group = group;
-        metadata.service = service;
-        metadata.handler = handlerName;
-        metadata.version = version;
-        return metadata;
+    public static GSVRoutingMetadata of(String group, String service, String handler, String version) {
+        return of(group, service, handler, version, "", false);
+    }
+
+    public static GSVRoutingMetadata of(String group, String service, String handler, String version, String endpoint, boolean sticky) {
+        GSVRoutingMetadata inst = new GSVRoutingMetadata();
+        inst.group = group;
+        inst.service = service;
+        inst.handler = handler;
+        inst.version = version;
+        inst.endpoint = endpoint;
+        return inst;
     }
 
     /**
-     * @param serviceHandlerKey service.handlerName
+     * @param serviceHandlerKey service.handler
      */
     public static GSVRoutingMetadata of(String group, String serviceHandlerKey, String version) {
         String service = "";
-        String handlerName = "";
+        String handler = "";
         int methodSymbolPosition = serviceHandlerKey.lastIndexOf(Separators.SERVICE_HANDLER);
         if (methodSymbolPosition > 0) {
             service = serviceHandlerKey.substring(0, methodSymbolPosition);
-            handlerName = serviceHandlerKey.substring(methodSymbolPosition + 1);
+            handler = serviceHandlerKey.substring(methodSymbolPosition + 1);
         } else {
             service = serviceHandlerKey;
         }
-        return of(group, service, handlerName, version);
+        return of(group, service, handler, version);
     }
 
     public static GSVRoutingMetadata of(ByteBuf content) {
@@ -70,6 +75,9 @@ public class GSVRoutingMetadata implements MetadataAware {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.parseRoutingKey(routingKey);
         return metadata;
+    }
+
+    private GSVRoutingMetadata() {
     }
 
     @Override
@@ -217,61 +225,29 @@ public class GSVRoutingMetadata implements MetadataAware {
         return MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
     }
 
-    //setter && getter
+    //getter
     public String getGroup() {
         return group;
-    }
-
-    public void setGroup(String group) {
-        this.group = group;
     }
 
     public String getService() {
         return service;
     }
 
-    public void setService(String service) {
-        this.service = service;
-    }
-
     public String getHandler() {
         return handler;
-    }
-
-    public void setHandler(String handler) {
-        this.handler = handler;
     }
 
     public String getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
     public String getEndpoint() {
         return endpoint;
     }
 
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
-    }
-
     public boolean isSticky() {
         return sticky;
-    }
-
-    public void setSticky(boolean sticky) {
-        this.sticky = sticky;
-    }
-
-    public int getServiceId() {
-        return serviceId;
-    }
-
-    public void setServiceId(int serviceId) {
-        this.serviceId = serviceId;
     }
 }
 

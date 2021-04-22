@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class OriginMetadata implements MetadataAware {
+public final class OriginMetadata implements MetadataAware {
     private URI origin;
 
     public static OriginMetadata of(URI origin) {
@@ -24,6 +24,9 @@ public class OriginMetadata implements MetadataAware {
         OriginMetadata metadata = new OriginMetadata();
         metadata.load(content);
         return metadata;
+    }
+
+    private OriginMetadata() {
     }
 
     @Override
@@ -48,9 +51,5 @@ public class OriginMetadata implements MetadataAware {
     //setter && getter
     public URI getOrigin() {
         return origin;
-    }
-
-    public void setOrigin(URI origin) {
-        this.origin = origin;
     }
 }

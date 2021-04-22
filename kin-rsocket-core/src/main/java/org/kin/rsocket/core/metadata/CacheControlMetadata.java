@@ -8,7 +8,7 @@ import org.kin.rsocket.core.RSocketMimeType;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class CacheControlMetadata implements MetadataAware {
+public final class CacheControlMetadata implements MetadataAware {
     /** expired timestamp */
     private long expiredAt;
 
@@ -22,6 +22,9 @@ public class CacheControlMetadata implements MetadataAware {
         CacheControlMetadata metadata = new CacheControlMetadata();
         metadata.load(content);
         return metadata;
+    }
+
+    private CacheControlMetadata() {
     }
 
     @Override
@@ -39,6 +42,12 @@ public class CacheControlMetadata implements MetadataAware {
     @Override
     public void load(ByteBuf byteBuf) {
         this.expiredAt = byteBuf.readLong();
+    }
+
+    //getter
+
+    public long getExpiredAt() {
+        return expiredAt;
     }
 }
 

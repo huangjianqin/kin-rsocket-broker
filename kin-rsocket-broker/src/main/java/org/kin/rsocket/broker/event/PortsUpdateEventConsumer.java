@@ -23,9 +23,9 @@ public final class PortsUpdateEventConsumer extends AbstractCloudEventConsumer<P
             BrokerResponder responder = serviceManager.getByUUID(event.getAppId());
             if (responder != null) {
                 AppMetadata appMetadata = responder.getAppMetadata();
-                appMetadata.setWebPort(event.getWebPort());
-                appMetadata.setManagementPort(event.getManagementPort());
-                appMetadata.setRsocketPorts(event.getRsocketPorts());
+                appMetadata.updateWebPort(event.getWebPort());
+                appMetadata.updateManagementPort(event.getManagementPort());
+                appMetadata.updateRsocketPorts(event.getRsocketPorts());
             }
         }
         return Mono.empty();

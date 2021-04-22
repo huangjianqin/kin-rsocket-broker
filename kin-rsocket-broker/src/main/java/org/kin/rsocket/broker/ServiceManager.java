@@ -132,11 +132,11 @@ public final class ServiceManager {
                 //validate appId data format
                 if (StringUtils.isNotBlank(appId) && appId.length() >= 32) {
                     Integer instanceId = MurmurHash3.hash32(credentials + ":" + temp.getUuid());
-                    temp.setId(instanceId);
+                    temp.updateId(instanceId);
                     //application instance not connected
                     if (!containsInstanceId(instanceId)) {
                         appMetadata = temp;
-                        appMetadata.setConnectedAt(new Date());
+                        appMetadata.updateConnectedAt(new Date());
                     } else {
                         // application connected already
                         errorMsg = "Connection created already, Please don't create multiple connections.";

@@ -5,6 +5,8 @@ import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.utils.JSON;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +16,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class ServiceRegistryMetadata implements MetadataAware {
+public final class ServiceRegistryMetadata implements MetadataAware {
     /** published services */
     private Set<ServiceLocator> published = new HashSet<>();
     /** subscribed services */
@@ -26,18 +28,7 @@ public class ServiceRegistryMetadata implements MetadataAware {
         return temp;
     }
 
-    /**
-     * add published services
-     */
-    public void addPublishedService(ServiceLocator publishedService) {
-        this.published.add(publishedService);
-    }
-
-    /**
-     * add subscribed services
-     */
-    public void addSubscribedService(ServiceLocator subscribedService) {
-        this.subscribed.add(subscribedService);
+    private ServiceRegistryMetadata() {
     }
 
     /**
@@ -62,20 +53,55 @@ public class ServiceRegistryMetadata implements MetadataAware {
         JSON.updateFieldValue(byteBuf, this);
     }
 
-    //setter && getter
+    //----------------------------------------------------------------builder----------------------------------------------------------------
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** builder **/
+    public static class Builder {
+        private ServiceRegistryMetadata serviceRegistryMetadata = new ServiceRegistryMetadata();
+
+        public Builder addPublishedService(ServiceLocator publishedService) {
+            serviceRegistryMetadata.published.add(publishedService);
+            return this;
+        }
+
+        public Builder addPublishedServices(ServiceLocator... publishedServices) {
+            return addPublishedServices(Arrays.asList(publishedServices));
+        }
+
+        public Builder addPublishedServices(Collection<ServiceLocator> publishedServices) {
+            serviceRegistryMetadata.published.addAll(publishedServices);
+            return this;
+        }
+
+        public Builder addSubscribedService(ServiceLocator subscribedService) {
+            serviceRegistryMetadata.subscribed.add(subscribedService);
+            return this;
+        }
+
+        public Builder addSubscribedServices(ServiceLocator... subscribedServices) {
+            return addSubscribedServices(Arrays.asList(subscribedServices));
+        }
+
+        public Builder addSubscribedServices(Collection<ServiceLocator> subscribedServices) {
+            serviceRegistryMetadata.subscribed.addAll(subscribedServices);
+            return this;
+        }
+
+        public ServiceRegistryMetadata build() {
+            return serviceRegistryMetadata;
+        }
+    }
+
+
+    //getter
     public Set<ServiceLocator> getPublished() {
         return published;
     }
 
-    public void setPublished(Set<ServiceLocator> published) {
-        this.published = published;
-    }
-
     public Set<ServiceLocator> getSubscribed() {
         return subscribed;
-    }
-
-    public void setSubscribed(Set<ServiceLocator> subscribed) {
-        this.subscribed = subscribed;
     }
 }

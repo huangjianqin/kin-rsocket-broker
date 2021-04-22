@@ -15,7 +15,7 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/4/23
  */
-public class BinaryRoutingMetadata implements MetadataAware {
+public final class BinaryRoutingMetadata implements MetadataAware {
     private static final byte BINARY_ROUTING_MARK = (byte) (WellKnownMimeType.MESSAGE_RSOCKET_BINARY_ROUTING.getIdentifier() | 0x80);
 
     private int serviceId;
@@ -49,6 +49,9 @@ public class BinaryRoutingMetadata implements MetadataAware {
             return BinaryRoutingMetadata.of(compositeByteBuf.slice(4, metadataContentLen));
         }
         return null;
+    }
+
+    private BinaryRoutingMetadata() {
     }
 
     @Override

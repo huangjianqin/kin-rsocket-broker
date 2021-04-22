@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class MessageTagsMetadata implements MetadataAware {
+public final class MessageTagsMetadata implements MetadataAware {
     /** credentials */
     private Map<String, String> tags;
 
@@ -29,6 +29,9 @@ public class MessageTagsMetadata implements MetadataAware {
         MessageTagsMetadata metadata = new MessageTagsMetadata();
         metadata.load(content);
         return metadata;
+    }
+
+    private MessageTagsMetadata() {
     }
 
     @Override
@@ -75,9 +78,5 @@ public class MessageTagsMetadata implements MetadataAware {
     //setter && getter
     public Map<String, String> getTags() {
         return tags;
-    }
-
-    public void setTags(Map<String, String> tags) {
-        this.tags = tags;
     }
 }

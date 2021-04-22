@@ -74,25 +74,24 @@ final class UpStreamBrokerRequester implements RequesterSupport {
     }
 
     private AppMetadata getAppMetadata() {
-        System.out.println("app metadata");
         //app metadata
-        AppMetadata appMetadata = new AppMetadata();
-        appMetadata.setUuid(RSocketAppContext.ID);
-        appMetadata.setName(appName);
-        appMetadata.setIp(NetUtils.getIp());
-        appMetadata.setDevice("KinRsocketBroker");
+        AppMetadata.Builder builder = AppMetadata.builder();
+        builder.uuid(RSocketAppContext.ID);
+        builder.name(appName);
+        builder.ip(NetUtils.getIp());
+        builder.device("KinRsocketBroker");
         //upstream brokers
-        appMetadata.setBrokers(brokerConfig.getUpstreamBrokers());
-        appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
+        builder.brokers(brokerConfig.getUpstreamBrokers());
+        builder.rsocketPorts(RSocketAppContext.rsocketPorts);
         //web port
-        appMetadata.setWebPort(RSocketAppContext.webPort);
+        builder.webPort(RSocketAppContext.webPort);
         //management port
-        appMetadata.setManagementPort(RSocketAppContext.managementPort);
+        builder.managementPort(RSocketAppContext.managementPort);
         RSocketBrokerProperties.RSocketSSL socketSSL = brokerConfig.getSsl();
-        appMetadata.setSecure(!Objects.isNull(socketSSL) && socketSSL.isEnabled());
+        builder.secure(!Objects.isNull(socketSSL) && socketSSL.isEnabled());
 
         //todo  优化:这个元数据key要不要定义常量
-        appMetadata.addMetadata("broker", "true");
-        return appMetadata;
+        builder.addMetadata("broker", "true");
+        return builder.build();
     }
 }

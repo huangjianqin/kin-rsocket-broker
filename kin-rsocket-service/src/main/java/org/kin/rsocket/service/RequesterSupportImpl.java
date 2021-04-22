@@ -62,9 +62,9 @@ final class RequesterSupportImpl implements RequesterSupport {
             //published services
             Set<ServiceLocator> serviceLocators = ReactiveServiceRegistry.exposedServices();
             if (!serviceLocators.isEmpty()) {
-                ServiceRegistryMetadata serviceRegistryMetadata = new ServiceRegistryMetadata();
-                serviceRegistryMetadata.setPublished(serviceLocators);
-                metadataAwares.add(serviceRegistryMetadata);
+                ServiceRegistryMetadata.Builder builder = ServiceRegistryMetadata.builder();
+                builder.addPublishedServices(serviceLocators);
+                metadataAwares.add(builder.build());
             }
             // authentication
             if (StringUtils.isNotBlank(config.getJwtToken())) {
@@ -78,32 +78,32 @@ final class RequesterSupportImpl implements RequesterSupport {
     /** 获取app元数据 */
     private AppMetadata getAppMetadata() {
         //app metadata
-        AppMetadata appMetadata = new AppMetadata();
-        appMetadata.setUuid(RSocketAppContext.ID);
-        appMetadata.setName(appName);
-        appMetadata.setIp(NetUtils.getIp());
-        appMetadata.setDevice("SpringBootApp");
+        AppMetadata.Builder builder = AppMetadata.builder();
+        builder.uuid(RSocketAppContext.ID);
+        builder.name(appName);
+        builder.ip(NetUtils.getIp());
+        builder.device("SpringBootApp");
         //brokers
-        appMetadata.setBrokers(config.getBrokers());
-        appMetadata.setTopology(config.getTopology());
-        appMetadata.setRsocketPorts(RSocketAppContext.rsocketPorts);
+        builder.brokers(config.getBrokers());
+        builder.topology(config.getTopology());
+        builder.rsocketPorts(RSocketAppContext.rsocketPorts);
         //web port
-        appMetadata.setWebPort(RSocketAppContext.webPort);
+        builder.webPort(RSocketAppContext.webPort);
         //management port
-        appMetadata.setManagementPort(RSocketAppContext.managementPort);
+        builder.managementPort(RSocketAppContext.managementPort);
         //元数据
-        appMetadata.setMetadata(
-                config.getMetadata().entrySet().stream()
-                        .map(e -> new Tuple<>(
-                                e.getKey().split("[=:]", 2)[0].trim().replace("kin.rsocket.metadata.", ""),
-                                e.getValue()))
-                        .collect(Collectors.toMap(Tuple::first, Tuple::second)));
+        Map<String, String> metadata = config.getMetadata().entrySet().stream()
+                .map(e -> new Tuple<>(
+                        e.getKey().split("[=:]", 2)[0].trim().replace("kin.rsocket.metadata.", ""),
+                        e.getValue()))
+                .collect(Collectors.toMap(Tuple::first, Tuple::second));
+        builder.metadata(metadata);
         //todo 优化:metadata增加常量字段声明
         //power unit
-        if (appMetadata.getMetadata("power-rating") != null) {
-            appMetadata.setPowerRating(Integer.parseInt(appMetadata.getMetadata("power-rating")));
+        if (metadata.containsKey("power-rating")) {
+            builder.powerRating(Integer.parseInt(metadata.get("power-rating")));
         }
-        appMetadata.setSecure(StringUtils.isNotBlank(config.getJwtToken()));
+        builder.secure(StringUtils.isNotBlank(config.getJwtToken()));
 
         //humans.md
         URL humansMd = this.getClass().getResource("/humans.md");
@@ -112,12 +112,12 @@ final class RequesterSupportImpl implements RequesterSupport {
                 byte[] bytes = new byte[inputStream.available()];
                 inputStream.read(bytes);
                 inputStream.close();
-                appMetadata.setHumansMd(new String(bytes, StandardCharsets.UTF_8));
+                builder.humansMd(new String(bytes, StandardCharsets.UTF_8));
             } catch (Exception ignore) {
                 //do nothing
             }
         }
-        return appMetadata;
+        return builder.build();
     }
 
     @Override

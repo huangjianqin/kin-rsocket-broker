@@ -2,9 +2,11 @@ package org.kin.rsocket.core.metadata;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
-import org.kin.framework.utils.ClassUtils;
+import io.netty.buffer.ByteBuf;
 import org.kin.rsocket.core.RSocketMimeType;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Objects;
 
 /**
@@ -39,8 +41,19 @@ final class MetadataAwares {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends MetadataAware> T instance(RSocketMimeType mimeType) {
+    public static <T extends MetadataAware> T instance(RSocketMimeType mimeType, ByteBuf bytes) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Class<? extends MetadataAware> claxx = TYPE_2_METADATA_CLASS.get(mimeType);
-        return Objects.isNull(claxx) ? null : (T) ClassUtils.instance(claxx);
+        if (Objects.isNull(claxx)) {
+            return null;
+        }
+
+        /**
+         * 取{@link MetadataAware}实现类中of(ByteBuf)静态方法, 作为构造{@link MetadataAware}实例的入口
+         */
+        Method parseBytesMethod = claxx.getDeclaredMethod("of", ByteBuf.class);
+        if (!parseBytesMethod.isAccessible()) {
+            parseBytesMethod.setAccessible(true);
+        }
+        return (T) parseBytesMethod.invoke(null, bytes);
     }
 }

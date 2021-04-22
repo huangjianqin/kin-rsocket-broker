@@ -17,7 +17,7 @@ import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class MessageAcceptMimeTypesMetadata implements MetadataAware {
+public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
     /** accept的mime type id, 也可能是{@link WellKnownMimeType#UNPARSEABLE_MIME_TYPE}未知mime type str */
     private List<Object> mimeTypes = new ArrayList<>();
     /** bytebuf size */
@@ -61,6 +61,9 @@ public class MessageAcceptMimeTypesMetadata implements MetadataAware {
         MessageAcceptMimeTypesMetadata metadata = new MessageAcceptMimeTypesMetadata();
         metadata.load(content);
         return metadata;
+    }
+
+    private MessageAcceptMimeTypesMetadata() {
     }
 
     @Override
@@ -112,21 +115,9 @@ public class MessageAcceptMimeTypesMetadata implements MetadataAware {
         }
     }
 
-    //setter && getter
+    //getter
     public List<Object> getMimeTypes() {
         return mimeTypes;
-    }
-
-    public void setMimeTypes(List<Object> mimeTypes) {
-        this.mimeTypes = mimeTypes;
-    }
-
-    public int getByteBufLength() {
-        return byteBufLength;
-    }
-
-    public void setByteBufLength(int byteBufLength) {
-        this.byteBufLength = byteBufLength;
     }
 }
 

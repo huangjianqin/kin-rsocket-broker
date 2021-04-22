@@ -150,9 +150,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
      */
     private void initCompositeMetadata(URI origin) {
         //routing metadata
-        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handlerName, version);
-        routingMetadata.setEndpoint(endpoint);
-        routingMetadata.setSticky(sticky);
+        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handlerName, version, endpoint, sticky);
 
         //binary routing metadata
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(this.serviceId, this.handlerId, this.sticky, routingMetadata.genRoutingKey());

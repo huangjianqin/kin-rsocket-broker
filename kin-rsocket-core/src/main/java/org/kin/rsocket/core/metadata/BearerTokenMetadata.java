@@ -12,7 +12,7 @@ import org.kin.rsocket.core.RSocketMimeType;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public class BearerTokenMetadata implements MetadataAware {
+public final class BearerTokenMetadata implements MetadataAware {
     /** Bearer Token */
     private char[] bearerToken;
 
@@ -26,6 +26,9 @@ public class BearerTokenMetadata implements MetadataAware {
         BearerTokenMetadata metadata = new BearerTokenMetadata();
         metadata.load(content);
         return metadata;
+    }
+
+    private BearerTokenMetadata() {
     }
 
     @Override
@@ -63,9 +66,5 @@ public class BearerTokenMetadata implements MetadataAware {
     //setter && getter
     public char[] getBearerToken() {
         return bearerToken;
-    }
-
-    public void setBearerToken(char[] bearerToken) {
-        this.bearerToken = bearerToken;
     }
 }
