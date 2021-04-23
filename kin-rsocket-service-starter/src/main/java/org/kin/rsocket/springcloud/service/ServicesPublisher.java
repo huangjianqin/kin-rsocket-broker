@@ -66,7 +66,6 @@ final class ServicesPublisher implements ApplicationListener<ContextRefreshedEve
             portsUpdateEvent.setAppId(RSocketAppContext.ID);
             portsUpdateEvent.setWebPort(RSocketAppContext.webPort);
             portsUpdateEvent.setManagementPort(RSocketAppContext.managementPort);
-            //todo 验证此时RSocketAppContext.rsocketPorts是否已赋值
             portsUpdateEvent.setRsocketPorts(RSocketAppContext.rsocketPorts);
             CloudEventData<PortsUpdateEvent> portsUpdateCloudEvent = CloudEventBuilder
                     .builder(portsUpdateEvent)
