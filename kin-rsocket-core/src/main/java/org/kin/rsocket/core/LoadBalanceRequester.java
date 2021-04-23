@@ -119,7 +119,6 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         //health check composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
                 GSVRoutingMetadata.of(null, HealthCheck.class.getCanonicalName(), "check", null),
-                //todo
                 MessageMimeTypeMetadata.of(RSocketMimeType.defaultEncodingType()));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.healthCheckCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);

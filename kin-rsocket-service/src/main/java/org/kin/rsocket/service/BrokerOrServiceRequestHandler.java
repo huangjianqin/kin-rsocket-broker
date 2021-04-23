@@ -7,7 +7,7 @@ import io.rsocket.RSocket;
 import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.ResponderSupport;
+import org.kin.rsocket.core.RequestHandlerSupport;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -28,7 +28,7 @@ import java.util.Objects;
  * @date 2021/3/28
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-final class BrokerOrServiceRequestHandler extends ResponderSupport {
+final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
     /** requester from peer */
     private final RSocket requester;
     /**

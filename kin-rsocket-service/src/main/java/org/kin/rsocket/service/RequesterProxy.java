@@ -69,8 +69,8 @@ final class RequesterProxy implements InvocationHandler {
      * 默认accept的数据编码类型
      */
     public static RSocketMimeType[] defaultAcceptEncodingTypes() {
-        return new RSocketMimeType[]{RSocketMimeType.Java_Object, RSocketMimeType.Protobuf,
-                RSocketMimeType.Json, RSocketMimeType.Hessian, RSocketMimeType.Avro, RSocketMimeType.CBOR,
+        return new RSocketMimeType[]{RSocketMimeType.Json, RSocketMimeType.Java_Object, RSocketMimeType.Protobuf,
+                RSocketMimeType.Hessian, RSocketMimeType.Avro, RSocketMimeType.CBOR,
                 RSocketMimeType.Text, RSocketMimeType.Binary};
     }
 
@@ -90,14 +90,13 @@ final class RequesterProxy implements InvocationHandler {
         sourceUri = builder.getSourceUri();
         encodingType = builder.getEncodingType();
 
-        RSocketMimeType acceptEncodingType = builder.getAcceptEncodingType();
-        if (acceptEncodingType == null) {
-            acceptEncodingTypes = defaultAcceptEncodingTypes();
+        RSocketMimeType[] acceptEncodingTypes = builder.getAcceptEncodingTypes();
+        if (acceptEncodingTypes == null) {
+            this.acceptEncodingTypes = defaultAcceptEncodingTypes();
         } else {
-            //todo 优化:数据编码类型默认是可接受的编码类型的第一位
-            acceptEncodingTypes = new RSocketMimeType[]{encodingType, acceptEncodingType};
+            this.acceptEncodingTypes = acceptEncodingTypes;
         }
-        timeout = builder.getTimeout();
+        timeout = builder.getCallTimeout();
     }
 
     @Override

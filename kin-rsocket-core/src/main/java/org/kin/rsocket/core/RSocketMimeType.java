@@ -98,7 +98,7 @@ public enum RSocketMimeType {
         return MIME_MIME_MAP.get(type);
     }
 
-    /** rsocket通信默认编码类型 todo 优化:考虑换个地方定义?? */
+    /** rsocket通信默认编码类型 */
     public static RSocketMimeType defaultEncodingType() {
         return Json;
     }

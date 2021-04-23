@@ -5,6 +5,7 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.frame.FrameType;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveMethodSupport;
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Arrays;
 
 /**
  * 服务接口方法元数据
@@ -25,11 +27,11 @@ import java.net.URI;
  * @author huangjianqin
  * @date 2021/3/26
  */
-public class ReactiveMethodMetadata extends ReactiveMethodSupport {
+final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /** service full name {@link Method#getName()} */
     private String service;
     /** handler name, 默认=method name */
-    private String handlerName;
+    private String handler;
     /** full name, service and name */
     private String fullName;
     /** service group */
@@ -57,30 +59,36 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /** 返回值是否是{@link Mono} */
     private boolean monoChannel = false;
 
-    public ReactiveMethodMetadata(String group, String service, String version,
-                                  Method method,
-                                  RSocketMimeType dataEncodingType,
-                                  RSocketMimeType[] acceptEncodingTypes,
-                                  String endpoint, boolean sticky, URI origin) {
+    ReactiveMethodMetadata(String group,
+                           String service,
+                           String version,
+                           Method method,
+                           RSocketMimeType dataEncodingType,
+                           RSocketMimeType[] acceptEncodingTypes,
+                           String endpoint,
+                           boolean sticky,
+                           URI origin) {
         super(method);
         this.service = service;
-        handlerName = method.getName();
+        handler = method.getName();
         this.dataEncodingType = dataEncodingType;
         this.acceptEncodingTypes = acceptEncodingTypes;
-        //处理@ServiceMapping注解
+        this.group = group;
+        this.version = version;
+        this.endpoint = endpoint;
+
+        //处理method上的@ServiceMapping注解
         ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
         if (serviceMapping != null) {
             initServiceMapping(serviceMapping);
         }
-        //RSocketRemoteServiceBuilder设置的group,version,endpoint优先级比@ServiceMapping注解设置的要大
-        this.group = group;
-        this.version = version;
-        this.endpoint = endpoint;
+
         // sticky from service builder or @ServiceMapping
         this.sticky = sticky | this.sticky;
-        fullName = this.service + Separators.SERVICE_HANDLER + this.handlerName;
+
+        fullName = this.service + Separators.SERVICE_HANDLER + this.handler;
         serviceId = MurmurHash3.hash32(ServiceLocator.gsv(this.group, this.service, this.version));
-        handlerId = MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handlerName);
+        handlerId = MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
         //byte buffer binary encoding
         if (paramCount == 1) {
             Class<?> parameterType = method.getParameterTypes()[0];
@@ -114,16 +122,16 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
     }
 
     /**
-     * 解析{@link ServiceMapping}注解
+     * 解析method上的{@link ServiceMapping}注解
      */
     private void initServiceMapping(ServiceMapping serviceMapping) {
         if (!serviceMapping.value().isEmpty()) {
             String serviceName = serviceMapping.value();
             if (serviceName.contains(Separators.SERVICE_HANDLER)) {
                 service = serviceName.substring(0, serviceName.lastIndexOf(Separators.SERVICE_HANDLER));
-                handlerName = serviceName.substring(serviceName.lastIndexOf(Separators.SERVICE_HANDLER) + 1);
+                handler = serviceName.substring(serviceName.lastIndexOf(Separators.SERVICE_HANDLER) + 1);
             } else {
-                handlerName = serviceName;
+                handler = serviceName;
             }
         }
         if (!serviceMapping.group().isEmpty()) {
@@ -138,9 +146,9 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         if (!serviceMapping.paramEncoding().isEmpty()) {
             dataEncodingType = RSocketMimeType.getByType(serviceMapping.paramEncoding());
         }
-        if (!serviceMapping.resultEncoding().isEmpty()) {
-            //todo 优化:是否需要支持数组
-            acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.getByType(serviceMapping.resultEncoding())};
+        if (CollectionUtils.isNonEmpty(serviceMapping.resultEncoding())) {
+            acceptEncodingTypes = Arrays.stream(serviceMapping.resultEncoding()).map(RSocketMimeType::getByType).toArray(RSocketMimeType[]::new);
+            ;
         }
         sticky = serviceMapping.sticky();
     }
@@ -150,7 +158,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
      */
     private void initCompositeMetadata(URI origin) {
         //routing metadata
-        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handlerName, version, endpoint, sticky);
+        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handler, version, endpoint, sticky);
 
         //binary routing metadata
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata.genRoutingKey());
@@ -187,8 +195,8 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         return service;
     }
 
-    public String getHandlerName() {
-        return handlerName;
+    public String getHandler() {
+        return handler;
     }
 
     public String getFullName() {

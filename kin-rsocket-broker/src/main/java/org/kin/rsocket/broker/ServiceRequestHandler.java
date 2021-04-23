@@ -40,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2021/4/21
  */
-public final class ServiceRequestHandler extends ResponderSupport {
+public final class ServiceRequestHandler extends RequestHandlerSupport {
     private static final Logger log = LoggerFactory.getLogger(ServiceRequestHandler.class);
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;

@@ -14,14 +14,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * responser端(client, service, broker)一些基本api
- * todo 优化:将request处理路基抽出, 不暴露给使用者
+ * requester reques
  *
  * @author huangjianqin
  * @date 2021/3/26
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public abstract class ResponderSupport extends AbstractRSocket implements LoggerOprs {
+public abstract class RequestHandlerSupport extends AbstractRSocket implements LoggerOprs {
     /**
      * 用于log 或者返回异常tips
      *
@@ -78,6 +77,7 @@ public abstract class ResponderSupport extends AbstractRSocket implements Logger
                                 sink.success(resultObj);
                             }
                         } catch (Exception e) {
+                            error(failCallLog(), e);
                             sink.error(e);
                         }
                     });

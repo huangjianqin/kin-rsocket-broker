@@ -1,13 +1,15 @@
 package org.kin.rsocket.service;
 
 import com.google.common.base.Preconditions;
+import org.kin.framework.collection.ConcurrentHashSet;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.service.utils.ByteBuddyUtils;
 
 import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.time.Duration;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.Set;
 
 /**
@@ -15,8 +17,8 @@ import java.util.Set;
  * @date 2021/3/27
  */
 public final class ServiceReferenceBuilder<T> {
-    /** todo 优化:缓存的所有requester proxy, 用于监控 */
-    public static final Set<ServiceLocator> CONSUMED_SERVICES = new HashSet<>();
+    /** 缓存的所有requester proxy, 用于监控 */
+    public static final Set<ServiceLocator> CONSUMED_SERVICES = new ConcurrentHashSet<>();
 
     /** uri */
     private URI sourceUri;
@@ -26,8 +28,8 @@ public final class ServiceReferenceBuilder<T> {
     private String service;
     /** version */
     private String version;
-    /** call timeout todo 优化:是否需要支持配置 */
-    private Duration timeout = Duration.ofMillis(3000);
+    /** call timeout, 默认3s */
+    private Duration callTimeout = Duration.ofMillis(3000);
     /**
      * endpoint
      * 形式:
@@ -48,7 +50,7 @@ public final class ServiceReferenceBuilder<T> {
     /** 数据编码类型 */
     private RSocketMimeType encodingType = RSocketMimeType.Java_Object;
     /** accept 编码类型 */
-    private RSocketMimeType acceptEncodingType = RSocketMimeType.Java_Object;
+    private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.Java_Object};
     /** 对应的upstream cluster */
     private UpstreamCluster upstreamCluster;
 
@@ -59,7 +61,7 @@ public final class ServiceReferenceBuilder<T> {
         ServiceReferenceBuilder<T> builder = new ServiceReferenceBuilder<T>();
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getCanonicalName();
-        //解析@ServiceMapping注解
+        //解析interface class 上的@ServiceMapping注解
         ServiceMapping serviceMapping = serviceInterface.getAnnotation(ServiceMapping.class);
         if (serviceMapping != null) {
             if (!serviceMapping.group().isEmpty()) {
@@ -77,8 +79,8 @@ public final class ServiceReferenceBuilder<T> {
             if (!serviceMapping.paramEncoding().isEmpty()) {
                 builder.encodingType = RSocketMimeType.getByType(serviceMapping.paramEncoding());
             }
-            if (!serviceMapping.resultEncoding().isEmpty()) {
-                builder.acceptEncodingType = RSocketMimeType.getByType(serviceMapping.resultEncoding());
+            if (CollectionUtils.isNonEmpty(serviceMapping.resultEncoding())) {
+                builder.acceptEncodingTypes = Arrays.stream(serviceMapping.resultEncoding()).map(RSocketMimeType::getByType).toArray(RSocketMimeType[]::new);
             }
             builder.sticky = serviceMapping.sticky();
         }
@@ -100,8 +102,8 @@ public final class ServiceReferenceBuilder<T> {
         return this;
     }
 
-    public ServiceReferenceBuilder<T> timeoutMillis(int millis) {
-        this.timeout = Duration.ofMillis(millis);
+    public ServiceReferenceBuilder<T> callTimeout(int millis) {
+        this.callTimeout = Duration.ofMillis(millis);
         return this;
     }
 
@@ -129,8 +131,8 @@ public final class ServiceReferenceBuilder<T> {
         return this;
     }
 
-    public ServiceReferenceBuilder<T> acceptEncodingType(RSocketMimeType encodingType) {
-        this.acceptEncodingType = encodingType;
+    public ServiceReferenceBuilder<T> acceptEncodingTypes(RSocketMimeType... mimeTypes) {
+        this.acceptEncodingTypes = mimeTypes;
         return this;
     }
 
@@ -138,8 +140,8 @@ public final class ServiceReferenceBuilder<T> {
      * GraalVM nativeImage support: set encodeType and acceptEncodingType to Json
      */
     public ServiceReferenceBuilder<T> nativeImage() {
-        this.encodingType = RSocketMimeType.Json;
-        this.acceptEncodingType = RSocketMimeType.Json;
+        encodingType(RSocketMimeType.Json);
+        acceptEncodingTypes(RSocketMimeType.Json);
         return this;
     }
 
@@ -207,8 +209,8 @@ public final class ServiceReferenceBuilder<T> {
         return version;
     }
 
-    public Duration getTimeout() {
-        return timeout;
+    public Duration getCallTimeout() {
+        return callTimeout;
     }
 
     public String getEndpoint() {
@@ -227,8 +229,8 @@ public final class ServiceReferenceBuilder<T> {
         return encodingType;
     }
 
-    public RSocketMimeType getAcceptEncodingType() {
-        return acceptEncodingType;
+    public RSocketMimeType[] getAcceptEncodingTypes() {
+        return acceptEncodingTypes;
     }
 
     public UpstreamCluster getUpstreamCluster() {
