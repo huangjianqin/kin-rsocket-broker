@@ -153,7 +153,7 @@ public class ReactiveMethodMetadata extends ReactiveMethodSupport {
         GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handlerName, version, endpoint, sticky);
 
         //binary routing metadata
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(this.serviceId, this.handlerId, this.sticky, routingMetadata.genRoutingKey());
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata.genRoutingKey());
 
         //encoding mime type
         MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataEncodingType);

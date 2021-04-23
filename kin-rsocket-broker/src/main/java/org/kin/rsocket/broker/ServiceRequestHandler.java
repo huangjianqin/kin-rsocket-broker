@@ -103,7 +103,7 @@ public final class ServiceRequestHandler extends ResponderSupport {
             encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
         } else {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
             //默认认为带了消息编码元数据
             encodingMetadataIncluded = true;
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
@@ -150,7 +150,7 @@ public final class ServiceRequestHandler extends ResponderSupport {
             encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
         } else {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
             //默认认为带了消息编码元数据
             encodingMetadataIncluded = true;
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
@@ -199,7 +199,7 @@ public final class ServiceRequestHandler extends ResponderSupport {
             encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
         } else {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
             //默认认为带了消息编码元数据
             encodingMetadataIncluded = true;
             messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
@@ -238,7 +238,7 @@ public final class ServiceRequestHandler extends ResponderSupport {
                 return Flux.error(new InvalidException("no routing metadata"));
             }
         } else {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         }
 
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);

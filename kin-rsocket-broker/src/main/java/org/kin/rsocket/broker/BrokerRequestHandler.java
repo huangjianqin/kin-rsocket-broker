@@ -62,7 +62,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
         GSVRoutingMetadata gsvRoutingMetadata;
         if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
@@ -87,7 +87,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
         GSVRoutingMetadata gsvRoutingMetadata;
         if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
@@ -111,7 +111,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
         GSVRoutingMetadata gsvRoutingMetadata;
         if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
@@ -139,7 +139,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(signal.metadata());
         GSVRoutingMetadata gsvRoutingMetadata;
         if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = GSVRoutingMetadata.of(binaryRoutingMetadata.getRouteKey());
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
             gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
