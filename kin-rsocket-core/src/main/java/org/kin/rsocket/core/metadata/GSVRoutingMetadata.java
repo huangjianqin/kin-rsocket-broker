@@ -9,9 +9,8 @@ import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * GSV routing metadata, format as tagging routing data
@@ -87,28 +86,14 @@ public final class GSVRoutingMetadata implements MetadataAware {
 
     @Override
     public ByteBuf getContent() {
-        List<String> tags = new ArrayList<>();
-        tags.add(genRoutingKey());
-        if (endpoint != null && !endpoint.isEmpty()) {
-            tags.add("e=" + endpoint);
-        }
-        if (sticky) {
-            tags.add("sticky=1");
-        }
         //官方使用tag
-        return TaggingMetadataCodec.createTaggingContent(PooledByteBufAllocator.DEFAULT, tags);
+        return TaggingMetadataCodec.createTaggingContent(PooledByteBufAllocator.DEFAULT, Collections.singletonList(genRoutingKey()));
     }
 
     @Override
     public void load(ByteBuf byteBuf) {
         Iterator<String> iterator = new RoutingMetadata(byteBuf).iterator();
-        //first tag is routing for service name or method
-        if (iterator.hasNext()) {
-            parseRoutingKey(iterator.next());
-        }
-        while (iterator.hasNext()) {
-            parseTags(iterator.next());
-        }
+        parseRoutingKey(iterator.next());
     }
 
     /**
