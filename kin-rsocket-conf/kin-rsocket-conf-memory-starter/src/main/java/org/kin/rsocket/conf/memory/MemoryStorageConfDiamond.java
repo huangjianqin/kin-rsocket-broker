@@ -23,14 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MemoryStorageConfDiamond extends AbstractConfDiamond {
     private static Logger log = LoggerFactory.getLogger(MemoryStorageConfDiamond.class);
 
-    /** app name, 也就是group */
-    private final Set<String> appNames = new ConcurrentHashSet<>();
+    /** group, 也就是app name */
+    private final Set<String> group = new ConcurrentHashSet<>();
     /** key value存储 */
     private final Map<String, String> storage = new ConcurrentHashMap<>();
 
     @Override
     public Flux<String> getGroups() {
-        return Flux.fromIterable(appNames).sort();
+        return Flux.fromIterable(group).sort();
     }
 
     @Override
@@ -68,34 +68,28 @@ public class MemoryStorageConfDiamond extends AbstractConfDiamond {
     }
 
     @Override
-    public Mono<Void> put(String key, String value) {
+    public Mono<Void> put(String group, String key, String value) {
         return Mono.fromRunnable(() -> {
-            storage.put(key, value);
-            String appName = "";
-            if (key.contains(ConfDiamond.GROUP_KEY_SEPARATOR)) {
-                appName = key.substring(0, key.indexOf(ConfDiamond.GROUP_KEY_SEPARATOR));
-                appNames.add(appName);
-            }
-            onKvAdd(appName, key, value);
+            storage.put(group + GROUP_KEY_SEPARATOR + key, value);
+            this.group.add(group);
+            onKvAdd(group, key, value);
         });
     }
 
     @Override
-    public Mono<Void> remove(String key) {
+    public Mono<Void> remove(String group, String key) {
         return Mono.fromRunnable(() -> {
-            storage.remove(key);
-            String appName = "";
-            if (key.contains(ConfDiamond.GROUP_KEY_SEPARATOR)) {
-                appName = key.substring(0, key.indexOf(ConfDiamond.GROUP_KEY_SEPARATOR));
-            }
-            super.onKvRemoved(appName, key);
+            storage.remove(group + GROUP_KEY_SEPARATOR + key);
+            this.group.remove(group);
+            super.onKvRemoved(group, key);
         });
     }
 
     @Override
-    public Mono<String> get(String key) {
-        if (storage.containsKey(key)) {
-            return Mono.just(storage.get(key));
+    public Mono<String> get(String group, String key) {
+        String storageKey = group + GROUP_KEY_SEPARATOR + key;
+        if (storage.containsKey(storageKey)) {
+            return Mono.just(storage.get(storageKey));
         }
         return Mono.empty();
     }

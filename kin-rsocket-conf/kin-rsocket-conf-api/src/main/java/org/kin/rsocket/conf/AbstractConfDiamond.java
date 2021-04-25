@@ -17,37 +17,48 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
     private final Map<String, Sinks.Many<Tuple<String, String>>> watchNotifications = new ConcurrentHashMap<>();
 
     @Override
-    public final Flux<Tuple<String, String>> watch(String key) {
-        if (StringUtils.isBlank(key)) {
+    public final Flux<Tuple<String, String>> watch(String group, String key) {
+        String storageKey = group;
+        if (StringUtils.isNotBlank(key)) {
+            storageKey = storageKey + GROUP_KEY_SEPARATOR + key;
+        }
+        if (StringUtils.isBlank(storageKey)) {
             return Flux.error(new IllegalArgumentException("watch key is null"));
         }
-        if (!watchNotifications.containsKey(key)) {
-            initNotification(key);
+        if (!watchNotifications.containsKey(storageKey)) {
+            initNotification(storageKey);
         }
-        return Flux.create(sink -> watchNotifications.get(key).asFlux().subscribe(sink::next));
+
+        String finalStorageKey = storageKey;
+        return Flux.create(sink -> watchNotifications.get(finalStorageKey).asFlux().subscribe(sink::next));
+    }
+
+    @Override
+    public Flux<Tuple<String, String>> watch(String group) {
+        return watch(group, "");
     }
 
     /**
      * 添加配置时触发
      */
-    protected final void onKvAdd(String appName, String key, String value) {
+    protected final void onKvAdd(String group, String key, String value) {
         if (watchNotifications.containsKey(key)) {
             watchNotifications.get(key).tryEmitNext(new Tuple<>(key, value));
         }
-        if (watchNotifications.containsKey(appName)) {
-            watchNotifications.get(appName).tryEmitNext(new Tuple<>(key, value));
+        if (watchNotifications.containsKey(group)) {
+            watchNotifications.get(group).tryEmitNext(new Tuple<>(key, value));
         }
     }
 
     /**
      * 配置移除时触发
      */
-    protected final void onKvRemoved(String appName, String key) {
+    protected final void onKvRemoved(String group, String key) {
         if (watchNotifications.containsKey(key)) {
             watchNotifications.get(key).tryEmitNext(new Tuple<>(key, ""));
         }
-        if (watchNotifications.containsKey(appName)) {
-            watchNotifications.get(appName).tryEmitNext(new Tuple<>(key, ""));
+        if (watchNotifications.containsKey(group)) {
+            watchNotifications.get(group).tryEmitNext(new Tuple<>(key, ""));
         }
     }
 

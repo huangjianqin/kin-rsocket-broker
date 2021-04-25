@@ -33,9 +33,7 @@ public final class BrokerConfigChangedEventConsumer extends AbstractCloudEventCo
         }
 
         for (String key : confs.stringPropertyNames()) {
-            confDiamond.put(event.getAppName() +
-                            ConfDiamond.GROUP_KEY_SEPARATOR + key,
-                    confs.getProperty(key)).subscribe();
+            confDiamond.put(event.getAppName(), key, confs.getProperty(key)).subscribe();
         }
 
         return Mono.empty();

@@ -84,7 +84,7 @@ public class ConfigController {
         return Flux.fromIterable(properties.stringPropertyNames())
                 .filter(key -> !key.contains(ConfDiamond.GROUP_KEY_SEPARATOR))
                 //update conf
-                .flatMap(key -> confDiamond.put(appName.concat(ConfDiamond.GROUP_KEY_SEPARATOR), properties.getProperty(key)))
+                .flatMap(key -> confDiamond.put(appName, key, properties.getProperty(key)))
                 .collectList()
                 //get latest conf
                 .flatMap(l -> confDiamond.findKeyValuesByGroup(appName))

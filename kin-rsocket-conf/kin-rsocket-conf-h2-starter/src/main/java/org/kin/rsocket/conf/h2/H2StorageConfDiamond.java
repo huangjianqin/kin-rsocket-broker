@@ -87,37 +87,28 @@ public class H2StorageConfDiamond extends AbstractConfDiamond {
     }
 
     @Override
-    public Mono<Void> put(String key, String value) {
+    public Mono<Void> put(String group, String key, String value) {
         return Mono.fromRunnable(() -> {
-            String[] parts = key.split(ConfDiamond.GROUP_KEY_SEPARATOR, 2);
-            if (parts.length == 2) {
-                mvStore.openMap(parts[0]).put(parts[1], value);
-                mvStore.commit();
-                onKvAdd(parts[0], key, value);
-            }
+            mvStore.openMap(group).put(key, value);
+            mvStore.commit();
+            onKvAdd(group, key, value);
         });
     }
 
     @Override
-    public Mono<Void> remove(String key) {
+    public Mono<Void> remove(String group, String key) {
         return Mono.fromRunnable(() -> {
-            String[] parts = key.split(ConfDiamond.GROUP_KEY_SEPARATOR, 2);
-            if (parts.length == 2) {
-                mvStore.openMap(parts[0]).remove(parts[1]);
-                mvStore.commit();
-                onKvRemoved(parts[0], key);
-            }
+            mvStore.openMap(group).remove(key);
+            mvStore.commit();
+            onKvRemoved(group, key);
         });
     }
 
     @Override
-    public Mono<String> get(String key) {
-        String[] parts = key.split(ConfDiamond.GROUP_KEY_SEPARATOR, 2);
-        if (mvStore.hasMap(parts[0])) {
-            MVMap<String, String> appMap = mvStore.openMap(parts[0]);
-            if (appMap.containsKey(parts[1])) {
-                return Mono.just(appMap.get(parts[1]));
-            }
+    public Mono<String> get(String group, String key) {
+        MVMap<String, String> appMap = mvStore.openMap(group);
+        if (appMap.containsKey(key)) {
+            return Mono.just(appMap.get(key));
         }
         return Mono.empty();
     }

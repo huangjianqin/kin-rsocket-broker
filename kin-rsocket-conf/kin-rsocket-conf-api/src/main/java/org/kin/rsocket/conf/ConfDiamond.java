@@ -27,17 +27,21 @@ public interface ConfDiamond {
     Mono<String> findKeyValuesByGroup(String group);
 
     /** 更新配置 */
-    Mono<Void> put(String key, String value);
+    Mono<Void> put(String group, String key, String value);
 
     /** 移除配置 */
-    Mono<Void> remove(String key);
+    Mono<Void> remove(String group, String key);
 
     /** 获取配置值 */
-    Mono<String> get(String key);
+    Mono<String> get(String group, String key);
 
     /**
-     * 返回监控配置变化的Flux
-     * 当key=group时, 即监控整组配置
+     * 返回监控 配置 变化的Flux
      */
-    Flux<Tuple<String, String>> watch(String key);
+    Flux<Tuple<String, String>> watch(String group, String key);
+
+    /**
+     * 返回监控 配置组 变化的Flux
+     */
+    Flux<Tuple<String, String>> watch(String group);
 }
