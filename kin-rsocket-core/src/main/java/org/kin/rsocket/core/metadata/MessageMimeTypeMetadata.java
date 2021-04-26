@@ -9,7 +9,7 @@ import org.kin.rsocket.core.RSocketMimeType;
 import java.nio.charset.StandardCharsets;
 
 /**
- * todo 优化:是否可优化成不传输未知mimetype, mimeType字段就可以不要了
+ * 允许传输broker未知(未实现)mimetype
  *
  * @author huangjianqin
  * @date 2021/3/25

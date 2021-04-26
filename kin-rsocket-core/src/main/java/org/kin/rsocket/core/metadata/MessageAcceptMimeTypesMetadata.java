@@ -12,14 +12,14 @@ import java.util.List;
 import static io.rsocket.metadata.WellKnownMimeType.UNPARSEABLE_MIME_TYPE;
 
 /**
- * todo 优化:是否可优化成不传输未知mimetype
+ * 允许传输broker未知(未实现)mimetype
  *
  * @author huangjianqin
  * @date 2021/3/25
  */
 public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
     /** accept的mime type id, 也可能是{@link WellKnownMimeType#UNPARSEABLE_MIME_TYPE}未知mime type str */
-    private List<Object> mimeTypes = new ArrayList<>();
+    private final List<Object> mimeTypes = new ArrayList<>();
     /** bytebuf size */
     private int byteBufLength = 0;
 
