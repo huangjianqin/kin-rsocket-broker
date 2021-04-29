@@ -14,9 +14,23 @@ broker集群目前仅仅支持gossip, 通过maven配置kin-roscket-broker-gossip
 一切皆服务, 包括broker, 一些内置功能是在broker实现rsocket service实现的
 
 ### **模块**
+* **kin-rsocket-auth**: 权限校验模块
+  * **kin-rsocket-auth-api**: 权限校验接口api模块
+  * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
 * **kin-roscket-broker**: rsocket broker实现
-* **kin-rsocket-broker-gossip-starter**: gossip broker manager实现
-* **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
-* **kin-roscket-service**: rsocket服务实现
-* **kin-roscket-example**: rsocket服务例子
+* **kin-rsocket-broker-conf-client-starter**: rsocket service conf client
+* **kin-rsocket-broker-gateway-http-starter**: rsocket service http gateway
+* **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud
 * **kin-rsocket-broker-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
+* **kin-rsocket-broker-starter**: rsocket broker实现, 整合spring cloud
+* **kin-rsocket-conf**: broker配置中心模块
+  * **kin-rsocket-conf-api**: : broker配置中心接口api模块
+  * **kin-rsocket-conf-h2-starter**: 基于h2文件系统实现的配置中心
+  * **kin-rsocket-conf-memory-starter**: 基于内存实现的配置中心
+* **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
+* **kin-roscket-example**: rsocket示例
+  * **kin-roscket-example-broker**: rsocket broker示例
+  * **kin-roscket-example-requester**: rsocket consumer示例
+  * **kin-roscket-example-responder**: rsocket service示例
+* **kin-roscket-service**: rsocket服务实现
+* **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
