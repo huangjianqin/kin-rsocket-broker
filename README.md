@@ -15,7 +15,7 @@ broker集群目前仅仅支持gossip, 通过maven配置kin-roscket-broker-gossip
 
 ### **模块**
 * **kin-roscket-broker**: rsocket broker实现
-* **kin-roscket-broker-gossip**: gossip broker manager实现
+* **kin-rsocket-broker-gossip-starter**: gossip broker manager实现
 * **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
 * **kin-roscket-service**: rsocket服务实现
 * **kin-roscket-example**: rsocket服务例子

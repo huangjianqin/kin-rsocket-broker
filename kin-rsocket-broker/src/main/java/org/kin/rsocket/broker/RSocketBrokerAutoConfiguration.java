@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableConfigurationProperties(RSocketBrokerProperties.class)
-public class RSocketBrokerConfiguration {
+public class RSocketBrokerAutoConfiguration {
     @Autowired
     private RSocketBrokerProperties brokerConfig;
 
@@ -135,7 +135,6 @@ public class RSocketBrokerConfiguration {
     public BrokerManager brokerManager() {
         return new StandAloneBrokerManager();
     }
-
 
     //----------------------------------------------broker binder相关----------------------------------------------
     @Bean(autowireCandidate = false, initMethod = "start", destroyMethod = "close")

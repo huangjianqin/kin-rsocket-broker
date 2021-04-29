@@ -8,13 +8,14 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-example</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>kin-rsocket-example-responder</module>
-        <module>kin-rsocket-example-requester</module>
-        <module>kin-rsocket-example-api</module>
-        <module>kin-rsocket-example-broker</module>
-    </modules>
+    <artifactId>kin-rsocket-broker-starter</artifactId>
+    <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-broker</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>
