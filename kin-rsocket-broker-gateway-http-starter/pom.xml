@@ -16,7 +16,6 @@
             <groupId>org.kin</groupId>
             <artifactId>kin-rsocket-service-starter</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- 默认jwt -->
@@ -29,12 +28,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-auth</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

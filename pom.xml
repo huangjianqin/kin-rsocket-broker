@@ -13,7 +13,7 @@
         <module>kin-rsocket-example</module>
         <module>kin-rsocket-broker-gossip-starter</module>
         <module>kin-rsocket-broker-registry-client-starter</module>
-        <module>kin-rsocket-broker-conf-client-starter</module>
+        <module>kin-rsocket-service-conf-client-starter</module>
         <module>kin-rsocket-broker-gateway-http-starter</module>
         <module>kin-rsocket-auth</module>
         <module>kin-rsocket-conf</module>

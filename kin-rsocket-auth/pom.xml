@@ -14,4 +14,12 @@
         <module>kin-rsocket-auth-jwt-starter</module>
         <module>kin-rsocket-auth-api</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-auth-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>

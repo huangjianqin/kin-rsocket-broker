@@ -17,6 +17,12 @@
     </modules>
 
     <dependencies>
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-conf-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- reactor -->
         <dependency>
             <groupId>org.kin</groupId>
