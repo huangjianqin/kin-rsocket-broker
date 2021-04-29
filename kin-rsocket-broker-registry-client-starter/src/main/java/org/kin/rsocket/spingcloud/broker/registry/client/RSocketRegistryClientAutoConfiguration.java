@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class RSocketRegistryClientAutoConfiguration {
-    @Bean
+    @Bean(autowireCandidate = false)
     public DiscoveryService discoveryService(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return ServiceReferenceBuilder
                 .requester(DiscoveryService.class)
@@ -25,7 +25,7 @@ public class RSocketRegistryClientAutoConfiguration {
     }
 
     @Bean
-    public ReactiveDiscoveryClient discoveryClient(DiscoveryService discoveryService) {
-        return new RSocketDiscoveryClient(discoveryService);
+    public ReactiveDiscoveryClient discoveryClient() {
+        return new RSocketDiscoveryClient(discoveryService(null));
     }
 }

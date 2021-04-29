@@ -17,7 +17,6 @@
             <groupId>org.kin</groupId>
             <artifactId>kin-rsocket-service-starter</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

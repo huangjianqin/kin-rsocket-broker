@@ -19,4 +19,4 @@ broker集群目前仅仅支持gossip, 通过maven配置kin-roscket-broker-gossip
 * **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
 * **kin-roscket-service**: rsocket服务实现
 * **kin-roscket-example**: rsocket服务例子
-* **spring-cloud-starter-kin-rsocket-broker-client**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
+* **kin-rsocket-broker-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务

@@ -23,7 +23,7 @@ public class RSocketDiscoveryClient implements ReactiveDiscoveryClient {
 
     @Override
     public String description() {
-        return "RSocket Discovery Client";
+        return "Kin RSocket Discovery Client";
     }
 
     @Override
