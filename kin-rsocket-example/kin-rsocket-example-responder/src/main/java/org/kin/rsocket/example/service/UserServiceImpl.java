@@ -1,12 +1,16 @@
 package org.kin.rsocket.example.service;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.kin.rsocket.core.RSocketService;
+import org.kin.rsocket.core.utils.JSON;
 import org.kin.rsocket.example.User;
 import org.kin.rsocket.example.UserService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,5 +42,25 @@ public class UserServiceImpl implements UserService {
             return Mono.just(User.of(name, random));
         }
         return Mono.just(User.of("unknown", random));
+    }
+
+    @Override
+    public Mono<User> find1(ByteBuf byteBuf) {
+        byte[] bytes = new byte[byteBuf.readableBytes()];
+        byteBuf.readBytes(bytes);
+
+        String name = new String(bytes, StandardCharsets.UTF_8);
+        System.out.println("rec: ".concat(name));
+        return find(name);
+    }
+
+    @Override
+    public Mono<ByteBuf> find2(String name) {
+        return find(name).map(u -> {
+            String userJson = JSON.write(u);
+            ByteBuf buffer = Unpooled.buffer();
+            buffer.writeBytes(userJson.getBytes(StandardCharsets.UTF_8));
+            return buffer;
+        });
     }
 }

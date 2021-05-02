@@ -57,9 +57,9 @@ final class RequesterProxy implements InvocationHandler {
     /** encoding type */
     private final URI sourceUri;
     /** 数据编码类型 */
-    protected final RSocketMimeType encodingType;
+    protected final RSocketMimeType defaultEncodingType;
     /** accept encoding types */
-    protected final RSocketMimeType[] acceptEncodingTypes;
+    protected final RSocketMimeType[] defaultAcceptEncodingTypes;
     /** timeout for request/response */
     protected final Duration timeout;
     /** java method metadata map cache for performance */
@@ -88,13 +88,13 @@ final class RequesterProxy implements InvocationHandler {
         endpoint = builder.getEndpoint();
         sticky = builder.isSticky();
         sourceUri = builder.getSourceUri();
-        encodingType = builder.getEncodingType();
+        defaultEncodingType = builder.getEncodingType();
 
         RSocketMimeType[] acceptEncodingTypes = builder.getAcceptEncodingTypes();
         if (acceptEncodingTypes == null) {
-            this.acceptEncodingTypes = defaultAcceptEncodingTypes();
+            this.defaultAcceptEncodingTypes = defaultAcceptEncodingTypes();
         } else {
-            this.acceptEncodingTypes = acceptEncodingTypes;
+            this.defaultAcceptEncodingTypes = acceptEncodingTypes;
         }
         timeout = builder.getCallTimeout();
     }
@@ -115,7 +115,7 @@ final class RequesterProxy implements InvocationHandler {
         if (Objects.isNull(methodMetadata)) {
             //lazy init method metadata
             methodMetadata = new ReactiveMethodMetadata(group, service, version,
-                    method, encodingType, this.acceptEncodingTypes, endpoint, sticky, sourceUri);
+                    method, defaultEncodingType, defaultAcceptEncodingTypes, endpoint, sticky, sourceUri);
             methodMetadataMap.put(method, methodMetadata);
         }
         MutableContext mutableContext = new MutableContext();
@@ -131,7 +131,7 @@ final class RequesterProxy implements InvocationHandler {
                 source = ReactiveObjAdapter.INSTANCE.toFlux(args[0]);
             } else {
                 //2 params
-                ByteBuf bodyBuffer = Codecs.INSTANCE.encodeResult(args[0], encodingType);
+                ByteBuf bodyBuffer = Codecs.INSTANCE.encodeResult(args[0], methodMetadata.getDataEncodingType());
                 routePayload = ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes());
                 source = ReactiveObjAdapter.INSTANCE.toFlux(args[1]);
             }
@@ -141,14 +141,19 @@ final class RequesterProxy implements InvocationHandler {
                 if (obj instanceof Payload) {
                     return (Payload) obj;
                 }
-                return ByteBufPayload.create(Codecs.INSTANCE.encodeResult(obj, encodingType), finalMethodMetadata.getCompositeMetadataBytes());
+                return ByteBufPayload.create(
+                        Codecs.INSTANCE.encodeResult(obj, finalMethodMetadata.getDataEncodingType()),
+                        finalMethodMetadata.getCompositeMetadataBytes());
             });
             Flux<Payload> payloads = rsocket.requestChannel(payloadFlux);
             //handle return
             Flux<Object> fluxReturn = payloads.concatMap(payload -> {
                 try {
                     RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-                    return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(extractPayloadDataMimeType(compositeMetadata, encodingType), payload.data(), finalMethodMetadata.getInferredClassForReturn()));
+                    return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
+                            extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
+                            payload.data(),
+                            finalMethodMetadata.getInferredClassForReturn()));
                 } catch (Exception e) {
                     return Flux.error(e);
                 }
@@ -160,20 +165,24 @@ final class RequesterProxy implements InvocationHandler {
             }
         } else {
             //body content
-            ByteBuf bodyBuffer = Codecs.INSTANCE.encodeParams(args, encodingType);
+            ByteBuf paramBodyBytes = Codecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
             if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-                Mono<Payload> payloadMono = rsocket.requestResponse(ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes()))
+                Mono<Payload> payloadMono = rsocket.requestResponse(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()))
                         .name(methodMetadata.getFullName())
                         .metrics()
                         .timeout(timeout)
-                        .doOnError(TimeoutException.class, e -> log.error(String.format("Timeout to call %s in %s seconds", finalMethodMetadata.getFullName(), timeout), e));
+                        .doOnError(TimeoutException.class,
+                                e -> log.error(String.format("Timeout to call %s in %s seconds", finalMethodMetadata.getFullName(), timeout), e));
 
                 Mono<Object> result = payloadMono.handle((payload, sink) -> {
                     try {
                         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-                        Object obj = Codecs.INSTANCE.decodeResult(extractPayloadDataMimeType(compositeMetadata, encodingType), payload.data(), finalMethodMetadata.getInferredClassForReturn());
+                        Object obj = Codecs.INSTANCE.decodeResult(
+                                extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
+                                payload.data(),
+                                finalMethodMetadata.getInferredClassForReturn());
                         if (obj != null) {
                             sink.next(obj);
                         }
@@ -185,22 +194,25 @@ final class RequesterProxy implements InvocationHandler {
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
-                return rsocket.fireAndForget(ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes()));
+                return rsocket.fireAndForget(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_STREAM) {
                 //request stream
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-                Flux<Payload> flux = rsocket.requestStream(ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes()));
+                Flux<Payload> flux = rsocket.requestStream(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
                 Flux<Object> result = flux.concatMap((payload) -> {
                     try {
                         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-                        return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(extractPayloadDataMimeType(compositeMetadata, encodingType), payload.data(), finalMethodMetadata.getInferredClassForReturn()));
+                        return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
+                                extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
+                                payload.data(),
+                                finalMethodMetadata.getInferredClassForReturn()));
                     } catch (Exception e) {
                         return Mono.error(e);
                     }
                 });
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else {
-                ReferenceCountUtil.safeRelease(bodyBuffer);
+                ReferenceCountUtil.safeRelease(paramBodyBytes);
                 return Mono.error(new Exception("Unknown RSocket Frame type: " + methodMetadata.getRsocketFrameType().name()));
             }
         }

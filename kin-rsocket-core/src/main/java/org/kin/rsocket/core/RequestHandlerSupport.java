@@ -182,12 +182,21 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {
                     Flux<Object> paramFlux = payloads
-                            .map(payload -> Codecs.INSTANCE.decodeResult(dataEncodingMetadata.getMessageMimeType(), payload.data(), methodInvoker.getInferredClassForParameter(0)));
+                            .map(payload -> Codecs.INSTANCE.decodeResult(
+                                    dataEncodingMetadata.getMessageMimeType(),
+                                    payload.data(),
+                                    methodInvoker.getInferredClassForParameter(0)));
                     result = methodInvoker.invoke(paramFlux);
                 } else {
-                    Object paramFirst = Codecs.INSTANCE.decodeResult(dataEncodingMetadata.getMessageMimeType(), signal.data(), methodInvoker.getParameterTypes()[0]);
+                    Object paramFirst = Codecs.INSTANCE.decodeResult(
+                            dataEncodingMetadata.getMessageMimeType(),
+                            signal.data(),
+                            methodInvoker.getParameterTypes()[0]);
                     Flux<Object> paramFlux = payloads
-                            .map(payload -> Codecs.INSTANCE.decodeResult(dataEncodingMetadata.getMessageMimeType(), payload.data(), methodInvoker.getInferredClassForParameter(1)));
+                            .map(payload -> Codecs.INSTANCE.decodeResult(
+                                    dataEncodingMetadata.getMessageMimeType(),
+                                    payload.data(),
+                                    methodInvoker.getInferredClassForParameter(1)));
                     result = methodInvoker.invoke(paramFirst, paramFlux);
                 }
                 if (result instanceof Mono) {

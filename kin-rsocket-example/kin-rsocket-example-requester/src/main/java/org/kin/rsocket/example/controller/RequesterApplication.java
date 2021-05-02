@@ -1,9 +1,13 @@
 package org.kin.rsocket.example.controller;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.kin.rsocket.example.UserService;
 import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.RSocketServiceProperties;
 import org.kin.rsocket.service.ServiceReferenceBuilder;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author huangjianqin
@@ -22,6 +26,18 @@ public class RequesterApplication {
         UserService userService = ServiceReferenceBuilder.requester(UserService.class).upstreamClusterManager(connector).build();
         try {
             userService.findAll().subscribe(System.out::println);
+
+            ByteBuf buffer = Unpooled.buffer();
+            buffer.writeBytes("AA".getBytes(StandardCharsets.UTF_8));
+            userService.find1(buffer).subscribe(System.out::println);
+
+            userService.find2("AA").subscribe(byteBuf -> {
+                byte[] bytes = new byte[byteBuf.readableBytes()];
+                byteBuf.readBytes(bytes);
+
+                System.out.println(new String(bytes, StandardCharsets.UTF_8));
+            });
+
             Thread.sleep(1_000);
         } finally {
             connector.close();

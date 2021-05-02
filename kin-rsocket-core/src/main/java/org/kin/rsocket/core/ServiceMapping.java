@@ -16,16 +16,16 @@ public @interface ServiceMapping {
     String value() default "";
 
     /** 所属组 */
-    String group() default "kin";
+    String group() default "";
 
     /** 版本号 */
-    String version() default "0.1.0.0";
+    String version() default "";
 
     /** 参数编码 MIME Type, 默认{@link RSocketMimeType#Java_Object} */
-    String paramEncoding() default "Java_Object";
+    String paramEncoding() default "application/x-java-object";
 
     /** 返回值编码 MIME Type, 默认{@link RSocketMimeType#Java_Object} */
-    String[] resultEncoding() default {"Java_Object"};
+    String[] resultEncoding() default {"application/x-java-object"};
 
     /** endpoint, such as id:xxxx,  ip:192.168.1.2 */
     String endpoint() default "";

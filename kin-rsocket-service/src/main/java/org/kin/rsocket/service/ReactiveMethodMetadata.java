@@ -148,7 +148,6 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         }
         if (CollectionUtils.isNonEmpty(serviceMapping.resultEncoding())) {
             acceptEncodingTypes = Arrays.stream(serviceMapping.resultEncoding()).map(RSocketMimeType::getByType).toArray(RSocketMimeType[]::new);
-            ;
         }
         sticky = serviceMapping.sticky();
     }
