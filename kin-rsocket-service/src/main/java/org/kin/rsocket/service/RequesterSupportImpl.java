@@ -98,10 +98,9 @@ final class RequesterSupportImpl implements RequesterSupport {
                         e.getValue()))
                 .collect(Collectors.toMap(Tuple::first, Tuple::second));
         builder.metadata(metadata);
-        //todo 优化:metadata增加常量字段声明
         //power unit
-        if (metadata.containsKey("power-rating")) {
-            builder.powerRating(Integer.parseInt(metadata.get("power-rating")));
+        if (metadata.containsKey(ServiceMetadataKeys.POWER_RATE)) {
+            builder.powerRating(Integer.parseInt(metadata.get(ServiceMetadataKeys.POWER_RATE)));
         }
         builder.secure(StringUtils.isNotBlank(config.getJwtToken()));
 

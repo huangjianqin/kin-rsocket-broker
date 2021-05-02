@@ -44,12 +44,11 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                 AppMetadata appMetadata = responder.getAppMetadata();
                 if (event.getStatus().equals(AppStatus.CONNECTED)) {
                     //app connected
-                    /**
-                     * todo 优化:broker端暂时不监听app配置变化, 转而通过controller控制是否广播配置变化事件
-                     * 后续考虑支持部分更新, 及全部更新, 还有支持broker端检查到变化主动推更新
-                     * 可能需要down stream告诉broker哪些key需要watch, 通过AppMetadata metadata带过来???
-                     */
-//                    listenConfChange(appMetadata);
+                    String autoRefreshKey = "auto-refresh";
+                    if ("true".equalsIgnoreCase(appMetadata.getMetadata(autoRefreshKey))) {
+                        //broker主动监听配置变化, 并通知app refresh context
+                        listenConfChange(appMetadata);
+                    }
                 } else if (event.getStatus().equals(AppStatus.SERVING)) {
                     //app serving
                     responder.publishServices();

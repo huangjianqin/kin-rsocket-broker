@@ -90,8 +90,8 @@ final class UpStreamBrokerRequester implements RequesterSupport {
         RSocketBrokerProperties.RSocketSSL socketSSL = brokerConfig.getSsl();
         builder.secure(!Objects.isNull(socketSSL) && socketSSL.isEnabled());
 
-        //todo  优化:这个元数据key要不要定义常量
-        builder.addMetadata("broker", "true");
+        //标识app是broker
+        builder.addMetadata(BrokerMetadataKeys.BROKER, "true");
         return builder.build();
     }
 }

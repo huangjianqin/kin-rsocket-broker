@@ -82,14 +82,6 @@ public final class AppMetadata implements MetadataAware {
     }
 
     /**
-     * todo 支持动态修改???
-     * 设置powerRating
-     */
-    public void powerRating(int powerRating) {
-        this.powerRating = Math.max(1, powerRating);
-    }
-
-    /**
      * 添加Metadata
      */
     public void addMetadata(String name, String value) {

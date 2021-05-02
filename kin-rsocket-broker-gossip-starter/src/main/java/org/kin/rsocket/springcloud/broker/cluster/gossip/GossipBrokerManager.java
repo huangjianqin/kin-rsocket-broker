@@ -70,7 +70,6 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
         cluster = new ClusterImpl()
                 .config(clusterConfig -> clusterConfig.externalHost(localIp).externalPort(gossipPort))
                 .membership(membershipConfig -> membershipConfig.seedMembers(seedMembers()).syncInterval(5_000))
-                //todo 默认使用jdk序列化, 现在使用json, 看看需不需要修改
                 .transport(transportConfig ->
                         transportConfig
                                 .messageCodec(JacksonMessageCodec.INSTANCE)

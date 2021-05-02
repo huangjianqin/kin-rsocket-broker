@@ -45,7 +45,6 @@ import java.util.stream.Collectors;
 
 /**
  * broker 路由器, 负责根据downstream请求元数据将请求路由到目标upstream
- * todo 优化:看看需不需要定时清掉空闲连接的downstream
  *
  * @author huangjianqin
  * @date 2021/3/30
@@ -352,9 +351,6 @@ public final class ServiceManager {
             String topology = responder.getAppMetadata().getTopology();
             Mono<Void> fireEvent;
             if (Topologys.INTERNET.equals(topology)) {
-                //todo
-                // add defaultUri for internet access for IoT devices
-                // RSocketBroker defaultBroker = rsocketBrokerManager.findConsistentBroker(responder.getUuid());
                 fireEvent = responder.fireCloudEvent(brokerClusterAliasesEvent);
             } else {
                 fireEvent = responder.fireCloudEvent(brokerClustersEvent);
@@ -392,7 +388,6 @@ public final class ServiceManager {
      * 注册app instance及其服务
      */
     public void register(Integer instanceId, int powerUnit, Collection<ServiceLocator> services) {
-        //todo notification for global service
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
             if (!instanceId2ServiceIds.get(instanceId).contains(serviceId)) {
@@ -483,7 +478,6 @@ public final class ServiceManager {
         int handlerCount = instanceIds.size();
         if (handlerCount > 1) {
             try {
-                //todo 优化:是否考虑支持多种策略
                 return instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
             } catch (Exception e) {
                 return instanceIds.get(0);
