@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/3/30
  */
 public class JwtAuthenticationService implements AuthenticationService {
-    private static final String iss = "KinRSocketBroker";
+    private static final String ISS = "KinRSocketBroker";
     /** 公钥文件名 */
     private static final String PUBLIC_KEY_FILE = "jwt_rsa.pub";
     /** 私钥文件名 */
@@ -67,7 +67,7 @@ public class JwtAuthenticationService implements AuthenticationService {
             generateRSAKeyPairs(authDir);
         }
 
-        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(iss).build());
+        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(ISS).build());
     }
 
     @Override
@@ -101,7 +101,7 @@ public class JwtAuthenticationService implements AuthenticationService {
         Arrays.sort(audience);
         Arrays.sort(organizations);
         JWTCreator.Builder builder = JWT.create()
-                .withIssuer(iss)
+                .withIssuer(ISS)
                 .withSubject(sub)
                 .withAudience(audience)
                 .withIssuedAt(new Date())
