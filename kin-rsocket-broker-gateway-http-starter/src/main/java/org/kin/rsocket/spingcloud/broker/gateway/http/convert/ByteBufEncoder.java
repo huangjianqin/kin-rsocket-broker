@@ -16,8 +16,7 @@ import reactor.core.publisher.Flux;
 import java.util.Map;
 
 /**
- * todo 学习
- * ByteBuf encoder
+ * netty ByteBuf -> spring DataBuffer
  *
  * @author huangjianqin
  * @date 2021/4/20

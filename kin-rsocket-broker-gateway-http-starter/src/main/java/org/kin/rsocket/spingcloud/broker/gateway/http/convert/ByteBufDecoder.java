@@ -13,7 +13,7 @@ import org.springframework.util.MimeTypeUtils;
 import java.util.Map;
 
 /**
- * ByteBuf Decoder
+ * spring DataBuffer -> netty ByteBuf
  *
  * @author huangjianqin
  * @date 2021/4/20
