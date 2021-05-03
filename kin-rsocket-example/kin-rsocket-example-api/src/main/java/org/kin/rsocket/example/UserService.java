@@ -15,9 +15,15 @@ public interface UserService {
 
     Mono<User> find(String name);
 
+    /**
+     * 测试参数为{@link ByteBuf}
+     */
     @ServiceMapping(paramEncoding = "application/octet-stream")
     Mono<User> find1(ByteBuf byteBuf);
 
+    /**
+     * 测试返回值为{@link ByteBuf}
+     */
     Mono<ByteBuf> find2(String name);
 
     /**
