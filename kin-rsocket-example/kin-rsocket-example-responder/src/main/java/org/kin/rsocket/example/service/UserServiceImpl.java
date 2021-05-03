@@ -63,4 +63,9 @@ public class UserServiceImpl implements UserService {
             return buffer;
         });
     }
+
+    @Override
+    public Mono<Boolean> checkRequired(int a, String s, String[] ss) {
+        return Mono.just(true);
+    }
 }

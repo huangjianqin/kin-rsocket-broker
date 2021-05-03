@@ -18,13 +18,13 @@ public class ReactiveMethodSupport {
     public static final List<Class<?>> BINARY_CLASS_LIST = Collections.unmodifiableList(Arrays.asList(ByteBuf.class, ByteBuffer.class, byte[].class));
 
     /** 对应方法 */
-    protected Method method;
+    protected final Method method;
     /** 参数数量 */
-    protected int paramCount;
+    protected final int paramCount;
     /** 方法返回类型 */
-    protected Class<?> returnType;
+    protected final Class<?> returnType;
     /** 方法返回类型泛型参数实际类型 */
-    protected Class<?> inferredClassForReturn;
+    protected final Class<?> inferredClassForReturn;
 
     protected ReactiveMethodSupport(Method method) {
         this.method = method;

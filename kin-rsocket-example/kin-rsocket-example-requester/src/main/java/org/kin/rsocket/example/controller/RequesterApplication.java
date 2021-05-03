@@ -38,6 +38,11 @@ public class RequesterApplication {
                 System.out.println(new String(bytes, StandardCharsets.UTF_8));
             });
 
+            userService.checkRequired(0, "", null).subscribe(System.out::println);
+            userService.checkRequired(1, "", null).subscribe(System.out::println);
+            userService.checkRequired(1, "aa", null).subscribe(System.out::println);
+            userService.checkRequired(1, "aa", new String[]{"bb"}).subscribe(System.out::println);
+
             Thread.sleep(1_000);
         } finally {
             connector.close();
