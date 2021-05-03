@@ -50,7 +50,6 @@ public class UserServiceImpl implements UserService {
         byteBuf.readBytes(bytes);
 
         String name = new String(bytes, StandardCharsets.UTF_8);
-        System.out.println("rec: ".concat(name));
         return find(name);
     }
 
