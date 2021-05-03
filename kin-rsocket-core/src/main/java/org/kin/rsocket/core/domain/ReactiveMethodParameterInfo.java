@@ -14,10 +14,49 @@ public class ReactiveMethodParameterInfo implements Serializable {
     private String type;
     /** 参数类型中第一个泛型参数实际类型 */
     private String inferredType;
-    /** 描述, todo 优化:后续通过注解增加 */
+    /** 参数描述 */
     private String description;
     /** 参数是否必须赋值, todo 优化:后续通过注解增加 */
     private boolean required;
+
+    //--------------------------------builder--------------------------------
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** builder **/
+    public static class Builder {
+        private final ReactiveMethodParameterInfo reactiveMethodParameterInfo = new ReactiveMethodParameterInfo();
+
+        public Builder name(String name) {
+            reactiveMethodParameterInfo.name = name;
+            return this;
+        }
+
+        public Builder type(String type) {
+            reactiveMethodParameterInfo.type = type;
+            return this;
+        }
+
+        public Builder inferredType(String inferredType) {
+            reactiveMethodParameterInfo.inferredType = inferredType;
+            return this;
+        }
+
+        public Builder description(String description) {
+            reactiveMethodParameterInfo.description = description;
+            return this;
+        }
+
+        public Builder required(boolean required) {
+            reactiveMethodParameterInfo.required = required;
+            return this;
+        }
+
+        public ReactiveMethodParameterInfo build() {
+            return reactiveMethodParameterInfo;
+        }
+    }
 
     //setter && getter
     public String getName() {

@@ -142,17 +142,23 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      */
     private ReactiveServiceInfo newReactiveServiceInfo(String group, String serviceName,
                                                        String version, Class<?> interfaceClass) {
-        ReactiveServiceInfo serviceInfo = new ReactiveServiceInfo();
-        serviceInfo.setGroup(group);
-        serviceInfo.setVersion(version);
+        ReactiveServiceInfo.Builder builder = ReactiveServiceInfo.builder();
+        builder.group(group);
+        builder.version(version);
         if (interfaceClass.getPackage() != null) {
-            serviceInfo.setNamespace(interfaceClass.getPackage().getName());
+            builder.namespace(interfaceClass.getPackage().getName());
         }
-        serviceInfo.setName(interfaceClass.getName());
-        serviceInfo.setServiceName(serviceName);
+        builder.name(interfaceClass.getName());
+        builder.serviceName(serviceName);
+
+        Desc desc = interfaceClass.getAnnotation(Desc.class);
+        if (Objects.nonNull(desc) && StringUtils.isNotBlank(desc.value())) {
+            builder.description(desc.value());
+        }
+
         Deprecated interfaceDeprecated = interfaceClass.getAnnotation(Deprecated.class);
         if (interfaceDeprecated != null) {
-            serviceInfo.setDeprecated(true);
+            builder.deprecated(true);
         }
 
         List<ReactiveMethodInfo> methodInfos = new ArrayList<>(8);
@@ -164,46 +170,59 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
 
             methodInfos.add(newReactiveMethodInfo(method));
         }
-        serviceInfo.setOperations(methodInfos);
+        builder.methods(methodInfos);
 
-        return serviceInfo;
+        return builder.build();
     }
 
     /**
      * 创建reactive service method信息
      */
     private ReactiveMethodInfo newReactiveMethodInfo(Method method) {
-        ReactiveMethodInfo methodInfo = new ReactiveMethodInfo();
+        ReactiveMethodInfo.Builder builder = ReactiveMethodInfo.builder();
+
+        Desc desc = method.getAnnotation(Desc.class);
+        if (Objects.nonNull(desc) && StringUtils.isNotBlank(desc.value())) {
+            builder.description(desc.value());
+        }
+
         Deprecated methodDeprecated = method.getAnnotation(Deprecated.class);
         if (methodDeprecated != null) {
-            methodInfo.setDeprecated(true);
+            builder.deprecated(true);
         }
-        methodInfo.setName(method.getName());
-        methodInfo.setReturnType(method.getReturnType().getCanonicalName());
-        methodInfo.setReturnInferredType(ClassUtils.getInferredClassForGeneric(method.getGenericReturnType()).getCanonicalName());
+        builder.name(method.getName());
+        builder.returnType(method.getReturnType().getCanonicalName());
+        builder.returnInferredType(ClassUtils.getInferredClassForGeneric(method.getGenericReturnType()).getCanonicalName());
 
         List<ReactiveMethodParameterInfo> parameterInfos = new ArrayList<>(4);
         for (Parameter parameter : method.getParameters()) {
             parameterInfos.add(newReactiveMethodParameterInfo(parameter));
         }
-        methodInfo.setParameters(parameterInfos);
+        builder.parameters(parameterInfos);
 
-        return methodInfo;
+        return builder.build();
     }
 
     /**
      * 创建reactive service parameter信息
      */
     private ReactiveMethodParameterInfo newReactiveMethodParameterInfo(Parameter parameter) {
-        ReactiveMethodParameterInfo parameterInfo = new ReactiveMethodParameterInfo();
-        parameterInfo.setName(parameter.getName());
-        parameterInfo.setType(parameter.getType().getCanonicalName());
-        String inferredType = ClassUtils.getInferredClassForGeneric(parameter.getParameterizedType()).getCanonicalName();
-        if (!parameterInfo.getType().equals(inferredType)) {
-            parameterInfo.setInferredType(inferredType);
+        ReactiveMethodParameterInfo.Builder builder = ReactiveMethodParameterInfo.builder();
+
+        Desc desc = parameter.getAnnotation(Desc.class);
+        if (Objects.nonNull(desc) && StringUtils.isNotBlank(desc.value())) {
+            builder.description(desc.value());
         }
 
-        return parameterInfo;
+        builder.name(parameter.getName());
+        String type = parameter.getType().getCanonicalName();
+        builder.type(type);
+        String inferredType = ClassUtils.getInferredClassForGeneric(parameter.getParameterizedType()).getCanonicalName();
+        if (!type.equals(inferredType)) {
+            builder.inferredType(inferredType);
+        }
+
+        return builder.build();
     }
 
     /**

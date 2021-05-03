@@ -12,7 +12,7 @@ public class ReactiveMethodInfo implements Serializable {
     private static final long serialVersionUID = 4422311675833851700L;
     /** method name */
     private String name;
-    /** 描述, todo 优化:后续通过注解增加 */
+    /** 接口描述 */
     private String description;
     /** 方法是否弃用 */
     private boolean deprecated;
@@ -22,6 +22,50 @@ public class ReactiveMethodInfo implements Serializable {
     private String returnInferredType;
     /** 方法参数信息 */
     private List<ReactiveMethodParameterInfo> parameters = Collections.emptyList();
+
+    //--------------------------------builder--------------------------------
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** builder **/
+    public static class Builder {
+        private final ReactiveMethodInfo reactiveMethodInfo = new ReactiveMethodInfo();
+
+        public Builder name(String name) {
+            reactiveMethodInfo.name = name;
+            return this;
+        }
+
+        public Builder description(String description) {
+            reactiveMethodInfo.description = description;
+            return this;
+        }
+
+        public Builder deprecated(boolean deprecated) {
+            reactiveMethodInfo.deprecated = deprecated;
+            return this;
+        }
+
+        public Builder returnType(String returnType) {
+            reactiveMethodInfo.returnType = returnType;
+            return this;
+        }
+
+        public Builder returnInferredType(String returnInferredType) {
+            reactiveMethodInfo.returnInferredType = returnInferredType;
+            return this;
+        }
+
+        public Builder parameters(List<ReactiveMethodParameterInfo> parameters) {
+            reactiveMethodInfo.parameters = parameters;
+            return this;
+        }
+
+        public ReactiveMethodInfo build() {
+            return reactiveMethodInfo;
+        }
+    }
 
     //setter && getter
     public String getName() {

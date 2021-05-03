@@ -20,12 +20,66 @@ public class ReactiveServiceInfo implements Serializable {
     private String group;
     /** version */
     private String version;
-    /** 描述, todo 优化:后续通过注解增加 */
+    /** 服务描述 */
     private String description;
     /** 接口是否弃用 */
     private boolean deprecated;
     /** 方法信息 */
-    private List<ReactiveMethodInfo> operations = Collections.emptyList();
+    private List<ReactiveMethodInfo> methods = Collections.emptyList();
+
+    //--------------------------------builder--------------------------------
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /** builder **/
+    public static class Builder {
+        private final ReactiveServiceInfo reactiveServiceInfo = new ReactiveServiceInfo();
+
+        public Builder namespace(String namespace) {
+            reactiveServiceInfo.namespace = namespace;
+            return this;
+        }
+
+        public Builder name(String name) {
+            reactiveServiceInfo.name = name;
+            return this;
+        }
+
+        public Builder serviceName(String serviceName) {
+            reactiveServiceInfo.serviceName = serviceName;
+            return this;
+        }
+
+        public Builder group(String group) {
+            reactiveServiceInfo.group = group;
+            return this;
+        }
+
+        public Builder version(String version) {
+            reactiveServiceInfo.version = version;
+            return this;
+        }
+
+        public Builder description(String description) {
+            reactiveServiceInfo.description = description;
+            return this;
+        }
+
+        public Builder deprecated(boolean deprecated) {
+            reactiveServiceInfo.deprecated = deprecated;
+            return this;
+        }
+
+        public Builder methods(List<ReactiveMethodInfo> operations) {
+            reactiveServiceInfo.methods = operations;
+            return this;
+        }
+
+        public ReactiveServiceInfo build() {
+            return reactiveServiceInfo;
+        }
+    }
 
     //setter && getter
     public String getNamespace() {
@@ -76,12 +130,12 @@ public class ReactiveServiceInfo implements Serializable {
         this.description = description;
     }
 
-    public List<ReactiveMethodInfo> getOperations() {
-        return operations;
+    public List<ReactiveMethodInfo> getMethods() {
+        return methods;
     }
 
-    public void setOperations(List<ReactiveMethodInfo> operations) {
-        this.operations = operations;
+    public void setMethods(List<ReactiveMethodInfo> methods) {
+        this.methods = methods;
     }
 
     public boolean isDeprecated() {
