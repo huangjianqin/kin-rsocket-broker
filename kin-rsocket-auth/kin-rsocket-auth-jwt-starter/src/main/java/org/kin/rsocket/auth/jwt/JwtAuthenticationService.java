@@ -23,13 +23,14 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * authentication service with JWT implementation, please refer https://github.com/auth0/java-jwt
- * todo 学习
+ * 单点校验算法
+ * 通过算法生成一串token, 然后provider和consumer同时拥有这个token, 在request和response时校验token的合法性
+ * 缺点: consumer端也拥有token, 如果泄露, 就gg了
  *
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class JwtAuthenticationService implements AuthenticationService {
+public final class JwtAuthenticationService implements AuthenticationService {
     private static final String ISS = "KinRSocketBroker";
     /** 公钥文件名 */
     private static final String PUBLIC_KEY_FILE = "jwt_rsa.pub";
