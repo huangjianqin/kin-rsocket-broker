@@ -1,8 +1,14 @@
 package org.kin.rsocket.broker;
 
+import org.apache.commons.io.FileUtils;
+import org.kin.framework.utils.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
+import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,9 +31,29 @@ public class RSocketBrokerProperties {
     private RSocketSSL ssl;
     /** upstream broker url */
     private List<String> upstreamBrokers = Collections.emptyList();
-    /** upstream token, 目前仅仅支持jwt */
+    /**
+     * upstream token
+     * 支持文件路径配置
+     * 目前仅仅支持jwt
+     */
     private String upstreamToken;
 
+    @PostConstruct
+    public void loadUpstreamToken() throws IOException {
+        if (StringUtils.isBlank(upstreamToken)) {
+            return;
+        }
+
+        File upstreamTokenFile = new File(upstreamToken);
+        if (!upstreamTokenFile.exists() || upstreamTokenFile.isDirectory()) {
+            return;
+        }
+
+        //如果配置的jwt token文件路径, 则加载进来并覆盖
+        upstreamToken = FileUtils.readFileToString(upstreamTokenFile, StandardCharsets.UTF_8);
+    }
+
+    //setter && getter
     public int getPort() {
         return port;
     }

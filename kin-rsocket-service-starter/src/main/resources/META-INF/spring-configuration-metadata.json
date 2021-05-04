@@ -52,7 +52,7 @@
     {
       "name": "kin.rsocket.jwtToken",
       "type": "java.lang.String",
-      "description": "rsocket service应用持有的jwt token, 用于broker校验",
+      "description": "rsocket service应用持有的jwt token, 用于broker校验; 支持文件路径配置",
       "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
       "defaultValue": ""
     },
