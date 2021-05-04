@@ -28,6 +28,13 @@ import java.security.cert.X509Certificate;
 import java.util.*;
 
 /**
+ * uri参数详情:
+ * client:
+ * fingerPrints:   已知证书文件路径, 默认{user.home}/.rsocket/known_finger_prints
+ * server:
+ * password:   私钥, 默认{@link TcpSslTransportParser#DEFAULT_PASSWORD}
+ * store:  证书文件路径, 默认{user.home}/.rsocket/rsocket.p12
+ *
  * @author huangjianqin
  * @date 2021/3/27
  */
@@ -50,7 +57,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
             Map<String, String> params = splitQuery(uri);
 
             TrustManagerFactory trustManagerFactory = InsecureTrustManagerFactory.INSTANCE;
-            //读取已知密钥
+            //读取已知证书
             File fingerPrints = new File(params.getOrDefault("fingerPrints", System.getProperty("user.home") + "/.rsocket/known_finger_prints"));
             if (fingerPrints.exists()) {
                 List<String> fingerPrintsSha256 = new ArrayList<>();
