@@ -31,6 +31,7 @@ import java.util.*;
  * uri参数详情:
  * client:
  * fingerPrints:   已知证书文件路径, 默认{user.home}/.rsocket/known_finger_prints
+ *
  * server:
  * password:   私钥, 默认{@link TcpSslTransportParser#DEFAULT_PASSWORD}
  * store:  证书文件路径, 默认{user.home}/.rsocket/rsocket.p12
