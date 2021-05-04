@@ -12,7 +12,10 @@ import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.codec.Codecs;
-import org.kin.rsocket.core.event.*;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventRSocket;
+import org.kin.rsocket.core.event.CloudEventSupport;
+import org.kin.rsocket.core.event.ServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -31,7 +34,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.net.ConnectException;
-import java.net.URI;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.*;
@@ -280,14 +282,6 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         } catch (Exception e) {
             return Mono.error(e);
         }
-    }
-
-    @Override
-    public Mono<Void> fireCloudEventReply(URI replayTo, CloudEventReply eventReply) {
-        if (isDisposed()) {
-            return (Mono<Void>) disposedMono();
-        }
-        return fireAndForget(CloudEventSupport.cloudEventReply2Payload(replayTo, eventReply));
     }
 
     @Override

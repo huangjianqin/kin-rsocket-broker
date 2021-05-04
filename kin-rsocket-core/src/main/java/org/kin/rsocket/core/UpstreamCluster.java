@@ -4,7 +4,6 @@ import io.rsocket.Payload;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
-import org.kin.rsocket.core.event.CloudEventReply;
 import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -14,7 +13,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import java.io.Closeable;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -112,11 +110,6 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
         return loadBalanceRequester.fireCloudEvent(cloudEvent);
-    }
-
-    @Override
-    public Mono<Void> fireCloudEventReply(URI replayTo, CloudEventReply eventReply) {
-        return loadBalanceRequester.fireCloudEventReply(replayTo, eventReply);
     }
 
     @Override

@@ -10,7 +10,6 @@ import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
-import org.kin.rsocket.core.event.CloudEventReply;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -27,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.net.URI;
 import java.util.*;
 
 /**
@@ -137,11 +135,6 @@ public final class BrokerResponder implements CloudEventRSocket {
         } catch (Exception e) {
             return Mono.error(e);
         }
-    }
-
-    @Override
-    public Mono<Void> fireCloudEventReply(URI replayTo, CloudEventReply eventReply) {
-        return fireAndForget(CloudEventSupport.cloudEventReply2Payload(replayTo, eventReply));
     }
 
     @Override
