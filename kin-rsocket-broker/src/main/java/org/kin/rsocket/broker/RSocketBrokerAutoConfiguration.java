@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.broker.cluster.StandAloneBrokerManager;
@@ -158,15 +159,18 @@ public class RSocketBrokerAutoConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.ssl.key-store")
     public RSocketBinderBuilderCustomizer rsocketListenerSSLCustomizer(@Autowired ResourceLoader resourceLoader) {
         return builder -> {
-            //todo 学习
             RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
-            if (rsocketSSL != null && rsocketSSL.isEnabled() && rsocketSSL.getKeyStore() != null) {
+            if (rsocketSSL != null && rsocketSSL.isEnabled() && StringUtils.isNotBlank(rsocketSSL.getKeyStore())) {
                 try {
-                    KeyStore store = KeyStore.getInstance("PKCS12");
+                    KeyStore store = KeyStore.getInstance(rsocketSSL.getKeyStoreType());
+                    //加载KeyStore
                     store.load(resourceLoader.getResource(rsocketSSL.getKeyStore()).getInputStream(), rsocketSSL.getKeyStorePassword().toCharArray());
                     String alias = store.aliases().nextElement();
+                    //证书
                     Certificate certificate = store.getCertificate(alias);
+
                     KeyStore.Entry entry = store.getEntry(alias, new KeyStore.PasswordProtection(rsocketSSL.getKeyStorePassword().toCharArray()));
+                    //私钥
                     PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
                     builder.sslContext(certificate, privateKey);
                     builder.listen("tcps", brokerConfig.getPort());

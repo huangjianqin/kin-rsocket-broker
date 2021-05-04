@@ -86,22 +86,14 @@ public class RSocketBrokerProperties {
 
     //-----------------------------------------------------------------------------------------------------------------
     public static class RSocketSSL {
-        /**
-         * todo 学习并补充完整
-         */
+        /** 是否开启tcp ssl */
         private boolean enabled = false;
-        /**
-         *
-         */
+        /** 密钥类型 */
         private String keyStoreType = "PKCS12";
-        /**
-         *
-         */
+        /** key store路径 */
         private String keyStore = System.getProperty("user.home") + "/.rsocket/rsocket.p12";
-        /**
-         *
-         */
-        private String keyStorePassword = "changeit";
+        /** 默认key store密钥密码 */
+        private String keyStorePassword = "kin";
 
         //setter && getter
         public boolean isEnabled() {

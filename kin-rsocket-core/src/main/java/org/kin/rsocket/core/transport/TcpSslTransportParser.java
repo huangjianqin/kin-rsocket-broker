@@ -30,11 +30,12 @@ import java.util.*;
 /**
  * uri参数详情:
  * client:
- * fingerPrints:   已知证书文件路径, 默认{user.home}/.rsocket/known_finger_prints
- *
+ * fingerPrints:   指纹文件路径, 默认{user.home}/.rsocket/known_finger_prints
+ * <p>
  * server:
- * password:   私钥, 默认{@link TcpSslTransportParser#DEFAULT_PASSWORD}
- * store:  证书文件路径, 默认{user.home}/.rsocket/rsocket.p12
+ * keyStoreType: key store类型
+ * keyStorePassword:   key store私钥密码, 默认{@link TcpSslTransportParser#DEFAULT_PASSWORD}
+ * keyStore:  key store文件路径, 默认{user.home}/.rsocket/rsocket.p12
  *
  * @author huangjianqin
  * @date 2021/3/27
@@ -43,7 +44,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
     private static final List<String> SCHEMES = Arrays.asList(Schemas.TCPS, Schemas.TPC_TLS, Schemas.TLS);
     /** 使用的协议 */
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
-    /** 默认密码 */
+    /** 默认key store密码 */
     private static final String DEFAULT_PASSWORD = "kin";
 
     @Override
@@ -58,7 +59,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
             Map<String, String> params = splitQuery(uri);
 
             TrustManagerFactory trustManagerFactory = InsecureTrustManagerFactory.INSTANCE;
-            //读取已知证书
+            //读取指纹
             File fingerPrints = new File(params.getOrDefault("fingerPrints", System.getProperty("user.home") + "/.rsocket/known_finger_prints"));
             if (fingerPrints.exists()) {
                 List<String> fingerPrintsSha256 = new ArrayList<>();
@@ -103,17 +104,21 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
             Map<String, String> params = splitQuery(uri);
             PrivateKey privateKey;
             X509Certificate certificate;
-            char[] password = params.getOrDefault("password", DEFAULT_PASSWORD).toCharArray();
-            File keyStore = new File(params.getOrDefault("store", System.getProperty("user.home") + "/.rsocket/rsocket.p12"));
+
+            String keyStoreType = params.getOrDefault("keyStoreType", "PKCS12");
+            char[] password = params.getOrDefault("keyStorePassword", DEFAULT_PASSWORD).toCharArray();
+            File keyStore = new File(params.getOrDefault("keyStore", System.getProperty("user.home") + "/.rsocket/rsocket.p12"));
             if (keyStore.exists()) {
                 // key store found
-                KeyStore store = KeyStore.getInstance("PKCS12");
+                KeyStore store = KeyStore.getInstance(keyStoreType);
                 try (InputStream is = new FileInputStream(keyStore)) {
                     store.load(is, password);
                 }
                 String alias = store.aliases().nextElement();
+                //证书
                 certificate = (X509Certificate) store.getCertificate(alias);
                 KeyStore.Entry entry = store.getEntry(alias, new KeyStore.PasswordProtection(password));
+                //私钥
                 privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
             } else {
                 // user netty self signed certification
@@ -166,7 +171,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
     //----------------------------------------------------------------------------------------------------
 
     /**
-     * fingerPrintsSha256的密钥管理
+     * 指纹管理
      */
     private static class FingerPrintTrustManagerFactory extends SimpleTrustManagerFactory {
         private final TrustManager trustManager;

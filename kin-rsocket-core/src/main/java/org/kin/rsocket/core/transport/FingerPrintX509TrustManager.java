@@ -11,15 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 对证书进一步保护性处理, 防止证书泄露
+ * x509证书通过SHA-256加密后再把每个byte转换成十六进制
+ *
  * @author huangjianqin
  * @date 2021/3/27
  */
 public final class FingerPrintX509TrustManager implements X509TrustManager {
-    /** 密钥 */
-    private List<String> fingerPrintsSha256;
+    private final List<String> fingerPrintsSha256;
 
     public FingerPrintX509TrustManager(List<String> fingerPrintsSha256) {
-        this.fingerPrintsSha256 = new ArrayList<>();
+        this.fingerPrintsSha256 = new ArrayList<>(fingerPrintsSha256.size());
         for (String fingerPrint : fingerPrintsSha256) {
             this.fingerPrintsSha256.add(fingerPrint.toUpperCase());
         }
@@ -33,13 +35,14 @@ public final class FingerPrintX509TrustManager implements X509TrustManager {
     @Override
     public void checkServerTrusted(X509Certificate[] chain, String s) throws CertificateException {
         if (chain.length != 1) {
-            throw new CertificateException("Expected exactly one certificate in the chain.");
+            throw new CertificateException("expected exactly one certificate in the chain.");
         }
+        //检查server证书是否一致, server证书需通过SHA-256加密, 再把每个byte转换成十六进制生成'指纹', 提供给client作校验
         chain[0].checkValidity();
         X509Certificate x509Cert = chain[0];
-        String certFingerprint = getFingerprint("SHA-256", x509Cert);
-        if (!fingerPrintsSha256.contains(certFingerprint.toUpperCase())) {
-            throw new CertificateException("Invalid fingerprint: " + certFingerprint);
+        String certFingerPrint = getFingerPrint("SHA-256", x509Cert);
+        if (!fingerPrintsSha256.contains(certFingerPrint.toUpperCase())) {
+            throw new CertificateException("invalid fingerprint: " + certFingerPrint);
         }
     }
 
@@ -48,11 +51,13 @@ public final class FingerPrintX509TrustManager implements X509TrustManager {
         return new X509Certificate[0];
     }
 
-    public static String getFingerprint(String algorithm, Certificate cert) {
+    public static String getFingerPrint(String algorithm, Certificate cert) {
         try {
             byte[] encCertInfo = cert.getEncoded();
             MessageDigest md = MessageDigest.getInstance(algorithm);
+            //加密
             byte[] digest = md.digest(encCertInfo);
+            //转换成十六进制
             StringBuilder sb = new StringBuilder(digest.length * 2);
             for (byte b : digest) {
                 byte2hex(b, sb);
