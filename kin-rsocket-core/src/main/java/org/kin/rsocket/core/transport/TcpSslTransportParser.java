@@ -33,33 +33,10 @@ import java.util.*;
  */
 public final class TcpSslTransportParser implements Uri2TransportParser {
     private static final List<String> SCHEMES = Arrays.asList(Schemas.TCPS, Schemas.TPC_TLS, Schemas.TLS);
-    /** 默认密码 */
-    private static final String DEFAULT_PASSWORD = "changeit";
-    private TrustManagerFactory trustManagerFactory = InsecureTrustManagerFactory.INSTANCE;
     /** 使用的协议 */
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
-
-    public TcpSslTransportParser() {
-        //todo, 优化:路径支持配置?
-        File fingerPrints = new File(System.getProperty("user.home") + "/.rsocket/known_finger_prints");
-        if (fingerPrints.exists()) {
-            List<String> fingerPrintsSha256 = new ArrayList<>();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fingerPrints), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    if (!line.isEmpty()) {
-                        String fingerPrint = line.replaceAll(":", "");
-                        fingerPrintsSha256.add(fingerPrint.trim());
-                    }
-                }
-            } catch (Exception ignore) {
-
-            }
-            if (!fingerPrintsSha256.isEmpty()) {
-                trustManagerFactory = new FingerPrintTrustManagerFactory(fingerPrintsSha256);
-            }
-        }
-    }
+    /** 默认密码 */
+    private static final String DEFAULT_PASSWORD = "kin";
 
     @Override
     public Optional<ClientTransport> buildClient(URI uri) {
@@ -68,7 +45,31 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
         if (!SCHEMES.contains(uri.getScheme())) {
             return Optional.empty();
         }
+
         try {
+            Map<String, String> params = splitQuery(uri);
+
+            TrustManagerFactory trustManagerFactory = InsecureTrustManagerFactory.INSTANCE;
+            //读取已知密钥
+            File fingerPrints = new File(params.getOrDefault("fingerPrints", System.getProperty("user.home") + "/.rsocket/known_finger_prints"));
+            if (fingerPrints.exists()) {
+                List<String> fingerPrintsSha256 = new ArrayList<>();
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fingerPrints), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        if (!line.isEmpty()) {
+                            String fingerPrint = line.replaceAll(":", "");
+                            fingerPrintsSha256.add(fingerPrint.trim());
+                        }
+                    }
+                } catch (Exception ignore) {
+                    //do nothing
+                }
+                if (!fingerPrintsSha256.isEmpty()) {
+                    trustManagerFactory = new FingerPrintTrustManagerFactory(fingerPrintsSha256);
+                }
+            }
+
             SslContext context = SslContextBuilder
                     .forClient()
                     .protocols(PROTOCOLS)
@@ -159,8 +160,8 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
     /**
      * fingerPrintsSha256的密钥管理
      */
-    private class FingerPrintTrustManagerFactory extends SimpleTrustManagerFactory {
-        private TrustManager trustManager;
+    private static class FingerPrintTrustManagerFactory extends SimpleTrustManagerFactory {
+        private final TrustManager trustManager;
 
         public FingerPrintTrustManagerFactory(List<String> fingerPrintsSha256) {
             this.trustManager = new FingerPrintX509TrustManager(fingerPrintsSha256);
