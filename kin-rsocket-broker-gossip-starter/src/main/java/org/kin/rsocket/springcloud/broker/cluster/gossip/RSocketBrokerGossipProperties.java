@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "kin.rsocket.broker.gossip")
 public class RSocketBrokerGossipProperties {
     /** Gossip listen port */
-    private int port;
+    private int port = 10999;
     /** gossip node */
     private String[] seeds;
 

@@ -1,0 +1,74 @@
+{
+  "properties": [
+    {
+      "name": "kin.rsocket.schema",
+      "type": "java.lang.String",
+      "description": "rsocket连接类型",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": "tcp"
+    },
+    {
+      "name": "kin.rsocket.port",
+      "type": "java.lang.Integer",
+      "description": "rsocket server绑定端口",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": "9998"
+    },
+    {
+      "name": "kin.rsocket.brokers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "remote rsocket broker uris",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": "tcp://0.0.0.0:9999"
+    },
+    {
+      "name": "kin.rsocket.topology",
+      "type": "java.lang.String",
+      "description": "rsocket service topology类型",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": "intranet"
+    },
+    {
+      "name": "kin.rsocket.metadata",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "rsocket service应用元数据",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.group",
+      "type": "java.lang.String",
+      "description": "rsocket service所属组",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.version",
+      "type": "java.lang.String",
+      "description": "rsocket service版本",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.jwtToken",
+      "type": "java.lang.String",
+      "description": "rsocket service应用持有的jwt token, 用于broker校验",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.timeout",
+      "type": "java.lang.Integer",
+      "description": "rsocket service call timeout",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": "3000"
+    },
+    {
+      "name": "kin.rsocket.endpoints",
+      "type": "java.util.List<org.kin.rsocket.service.EndpointProperties>",
+      "description": "remote rsocket endpoint信息配置",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": ""
+    }
+  ]
+}

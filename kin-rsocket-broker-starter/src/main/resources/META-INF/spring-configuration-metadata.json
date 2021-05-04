@@ -1,0 +1,74 @@
+{
+  "properties": [
+    {
+      "name": "kin.rsocket.broker.port",
+      "type": "java.lang.Integer",
+      "description": "rsocket broker绑定端口",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "9999"
+    },
+    {
+      "name": "kin.rsocket.broker.auth",
+      "type": "java.lang.Boolean",
+      "description": "rsocket broker是否对request进行权限校验",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "true"
+    },
+    {
+      "name": "kin.rsocket.broker.authDir",
+      "type": "java.lang.String",
+      "description": "rsocket broker校验token文件",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "{user.home}/.rsocket/"
+    },
+    {
+      "name": "kin.rsocket.broker.externalDomain",
+      "type": "java.lang.String",
+      "description": "external domain for requester from external",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.broker.upstreamBrokers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "remote rsocket broker uris",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.broker.upstreamToken",
+      "type": "java.lang.Boolean",
+      "description": "remote rsocket broker",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.broker.ssl.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否开启rsocket broker connection ssl",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "false"
+    },
+    {
+      "name": "kin.rsocket.broker.ssl.keyStoreType",
+      "type": "java.lang.String",
+      "description": "rsocket broker connection ssl key store type",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "PKCS12"
+    },
+    {
+      "name": "kin.rsocket.broker.ssl.keyStore",
+      "type": "java.lang.String",
+      "description": "rsocket broker connection ssl key store文件",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "{user.home}/.rsocket/rsocket.p12"
+    },
+    {
+      "name": "kin.rsocket.broker.ssl.keyStorePassword",
+      "type": "java.lang.String",
+      "description": "rsocket broker connection ssl key store password",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "kin"
+    }
+  ]
+}

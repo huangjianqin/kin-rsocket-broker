@@ -16,7 +16,7 @@ public class RSocketBrokerProperties {
     private int port = 9999;
     /** 是否需要权限校验 */
     private boolean auth = true;
-    /** 认证证书目录 */
+    /** 校验token文件 */
     private String authDir = System.getProperty("user.home").concat(".rsocket");
     /** external domain for requester from external: the requester can not access broker's internal ip */
     private String externalDomain;

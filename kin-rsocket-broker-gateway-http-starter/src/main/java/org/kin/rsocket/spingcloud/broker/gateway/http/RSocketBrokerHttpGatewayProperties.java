@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "kin.rsocket.broker")
 public class RSocketBrokerHttpGatewayProperties {
-    private boolean restapiAuth;
+    private boolean restapiAuth = true;
 
     //setter && getter
     public boolean isRestapiAuth() {

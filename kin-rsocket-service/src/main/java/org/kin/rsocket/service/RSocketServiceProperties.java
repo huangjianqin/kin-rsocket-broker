@@ -17,7 +17,7 @@ public class RSocketServiceProperties {
     /** listen port, default is 9998`, 0 means to disable listen */
     private Integer port = 9998;
     /** broker url, such tcp://127.0.0.1:9999 */
-    private List<String> brokers;
+    private List<String> brokers = Collections.singletonList("tcp://0.0.0.0:9999");
     /** topology, intranet or internet */
     private String topology = Topologys.INTRANET;
     /** metadata */

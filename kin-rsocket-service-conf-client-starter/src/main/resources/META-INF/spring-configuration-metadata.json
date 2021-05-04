@@ -1,0 +1,11 @@
+{
+  "properties": [
+    {
+      "name": "kin.rsocket.conf.auto-refresh",
+      "type": "java.lang.Boolean",
+      "description": "rsocket service是否支持自动动态刷新配置",
+      "sourceType": "org.kin.rsocket.spingcloud.broker.conf.client.RSocketServiceConfProperties",
+      "defaultValue": "false"
+    }
+  ]
+}
