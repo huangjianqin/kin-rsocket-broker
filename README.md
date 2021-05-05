@@ -1,18 +1,32 @@
 # **kin-rsocket-broker**
-Kin Rsocket Broker是一款基于RSocket协议的反应式对等通讯系统, 为通讯多方构建分布式的RPC, Pub/Sub, Streaming等通讯支持。
 
-* 反应式: 无需担心线程模型、全异步化、流式背压支持、独特的对等通讯模式可适应各种内部网络环境和跨云混云的需求。
-* 消息：面向消息通讯，服务路由、过滤、observability都非常简单。
-* 交换系统：得益于RSocket, 完全分布式、异构系统整合简单，无论应用什么语言开发、部署在哪里，都可以相互通讯。
+Kin RSocket Broker是一款基于RSocket协议的反应式对等通讯系统, 为通讯多方构建分布式的RPC, Pub/Sub, Streaming等通讯支持.
 
-## **实现**
-broker集群目前仅仅支持gossip, 通过maven配置kin-roscket-broker-gossip依赖实现
+* 反应式: 无需担心线程模型、全异步化、流式背压支持、独特的对等通讯模式可适应各种内部网络环境和跨云混云的需求.
+* 消息：面向消息通讯, 服务路由、过滤、observability都非常简单.
+* 交换系统：得益于RSocket, 完全分布式、异构系统整合简单, 无论应用什么语言开发、部署在哪里, 都可以相互通讯.
 
-### **世界观**
+## RSocket Broker工作原理
 
-一切皆服务, 包括broker, 一些内置功能是在broker实现rsocket service实现的
+RSocket Broker桥接应用间通讯的双方, 相当于一个中间人的角色. 应用在启动后, 会和Broker创建一个长连接. 如果应用是服务提供者, 会向Broker注册自己能提供的服务信息.
+Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用需要调用其他服务时, 应用会将请求以消息的方式发给Broker, 然后Broker会解析消息的元信息, 然后根据路由表将请求转发给服务提供者,
+然后将处理结果后的消息再转发给调用方. Broker完全是异步化的, 你不需要关心线程池这些概念, 而且消息转发都是基于Zero Copy, 所以性能非常高.
 
-### **模块**
+![RSocket Broker Structure](kin-rsocket-broker-structure.png)
+
+通过上述的架构图, RSocket Broker彻底解决了传统设计中众多的问题：
+
+* 配置推送: 应用与Broker维持长连接, 只需要Broker通过RSocket的metadataPush就可以完成配置推送
+* 服务注册和发现：应用和Broker建立连接后, 应用会通知Broker暴露的服务
+* 透明路由: 应用在调用服务时, 不需要知道服务对应的应用信息, 由Broker成路由
+* service-to-service调用: RSocket提供的4个模型可以很好地解决服务到服务调用的各种复杂需求
+* load balancing: 负载均衡在broker路由过程完成, 对应用完全透明
+* circuit breakers: 断路保护, 现在调整为Back Pressure支持, 更贴近实际业务场景
+* distributed messaging: RSocket本身就是基于消息推送的, 而且是分布式的.
+* 多语言支持: RSocket是一套标准协议, 主流语言的SDK都有支持.
+
+## **实现模块**
+
 * **kin-rsocket-auth**: 权限校验模块
   * **kin-rsocket-auth-api**: 权限校验接口api模块
   * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
@@ -34,3 +48,8 @@ broker集群目前仅仅支持gossip, 通过maven配置kin-roscket-broker-gossip
 * **kin-roscket-service**: rsocket服务实现
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
 * **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
+
+## **展望**
+
+* 数据存储优化
+* 整合spring cloud服务
