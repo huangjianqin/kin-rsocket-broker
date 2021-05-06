@@ -70,9 +70,7 @@ final class ServicesPublisher implements ApplicationListener<ContextRefreshedEve
             CloudEventData<PortsUpdateEvent> portsUpdateCloudEvent = CloudEventBuilder
                     .builder(portsUpdateEvent)
                     .build();
-            brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent)
-                    .doOnSuccess(aVoid -> log.info(String.format("Application connected with RSocket Brokers(%s) successfully", brokerUris)))
-                    .subscribe();
+            brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent).subscribe();
         }
 
         connector.publishServices();

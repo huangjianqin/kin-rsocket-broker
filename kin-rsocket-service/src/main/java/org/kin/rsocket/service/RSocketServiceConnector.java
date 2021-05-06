@@ -187,7 +187,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
 
         // app status
         getBroker().broadcastCloudEvent(appStatusEventCloudEvent)
-                .doOnSuccess(aVoid -> log.info(String.format("Application connected with RSocket Brokers(%s) successfully", brokerUris)))
+                .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", brokerUris)))
                 .subscribe();
 
         // service exposed
@@ -206,7 +206,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
                     String exposedServiceGsvs = ReactiveServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(","));
-                    log.info(String.format("Services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
+                    log.info(String.format("services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
                 }).subscribe();
     }
 

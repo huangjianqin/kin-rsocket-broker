@@ -183,10 +183,10 @@ public final class ServiceManager {
                     .subscribeOn(Schedulers.parallel()).subscribe();
             //handler registration notify
             registerResponder(responder);
-            log.info(String.format("Succeed to accept connection from '%s'", appMetadata.getName()));
+            log.info(String.format("succeed to accept connection from application '%s'", appMetadata.getName()));
             return Mono.just(requestHandler);
         } catch (Exception e) {
-            String formatedErrorMsg = String.format("Failed to accept the connection: %s", e.getMessage());
+            String formatedErrorMsg = String.format("failed to accept the connection: %s", e.getMessage());
             log.error(formatedErrorMsg, e);
             return returnRejectedRSocket(formatedErrorMsg, requester);
         }
@@ -213,7 +213,7 @@ public final class ServiceManager {
             //如果不是单节点, 则广播broker uris变化给downstream
             responder.fireCloudEvent(newBrokerClustersChangedEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
         }
-        notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Online now!", appMetadata.getName(), appMetadata.getIp()));
+        notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' online now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
     /**
@@ -232,9 +232,9 @@ public final class ServiceManager {
             writeLock.unlock();
         }
 
-        log.info("Succeed to remove broker handler");
+        log.info("succeed to remove broker responder");
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
-        this.notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Offline now!", appMetadata.getName(), appMetadata.getIp()));
+        this.notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' offline now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
     /**

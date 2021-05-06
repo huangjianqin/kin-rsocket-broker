@@ -126,7 +126,7 @@ public class RSocketBinder implements Closeable {
                         .onTerminateDetach()
                         .subscribe();
                 responders.add(disposable);
-                log.info("Succeed to start RSocket Responder on " + schema + "://" + host + ":" + port);
+                log.info("succeed to start RSocket on " + schema + "://" + host + ":" + port);
 
                 RSocketAppContext.rsocketPorts = schemas;
             }

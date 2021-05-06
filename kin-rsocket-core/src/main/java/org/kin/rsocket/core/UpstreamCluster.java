@@ -153,7 +153,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         stopped = true;
         urisSink.tryEmitComplete();
         loadBalanceRequester.dispose();
-        log.info("Succeed to disconnect from the ".concat(ServiceLocator.gsv(group, serviceName, version)));
+        log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, serviceName, version)));
     }
 
     //getter
