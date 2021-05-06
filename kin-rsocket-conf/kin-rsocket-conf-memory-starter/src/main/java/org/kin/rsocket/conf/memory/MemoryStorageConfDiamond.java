@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/3/29
  */
 public class MemoryStorageConfDiamond extends AbstractConfDiamond {
-    private static Logger log = LoggerFactory.getLogger(MemoryStorageConfDiamond.class);
+    private static final Logger log = LoggerFactory.getLogger(MemoryStorageConfDiamond.class);
 
     /** group, 也就是app name */
     private final Set<String> group = new ConcurrentHashSet<>();
@@ -69,20 +69,20 @@ public class MemoryStorageConfDiamond extends AbstractConfDiamond {
 
     @Override
     public Mono<Void> put(String group, String key, String value) {
-        return Mono.fromRunnable(() -> {
+        return Mono.<Void>fromRunnable(() -> {
             storage.put(group + GROUP_KEY_SEPARATOR + key, value);
             this.group.add(group);
             onKvAdd(group, key, value);
-        });
+        }).publishOn(SCHEDULER);
     }
 
     @Override
     public Mono<Void> remove(String group, String key) {
-        return Mono.fromRunnable(() -> {
+        return Mono.<Void>fromRunnable(() -> {
             storage.remove(group + GROUP_KEY_SEPARATOR + key);
             this.group.remove(group);
             super.onKvRemoved(group, key);
-        });
+        }).publishOn(SCHEDULER);
     }
 
     @Override

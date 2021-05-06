@@ -50,6 +50,4 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
 
 ## **展望**
-
-* 数据存储优化
 * 整合spring cloud服务

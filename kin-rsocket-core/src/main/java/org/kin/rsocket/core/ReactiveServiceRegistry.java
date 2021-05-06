@@ -15,6 +15,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +57,8 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
         return ServicesExposedEvent.of(serviceLocators);
     }
 
+    /** 修改数据需加锁 */
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     /** key -> serviceName, value -> provider, 即service instance */
     private final Map<String, Object> serviceName2Provider = new HashMap<>();
     /** key -> hash(serviceName.method), value -> service method invoker */
@@ -70,7 +75,13 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * 是否包含对应service, handlerName注册信息
      */
     public boolean contains(int handlerId) {
-        return handlerId2Invoker.containsKey(handlerId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return handlerId2Invoker.containsKey(handlerId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -84,7 +95,13 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * 是否包含对应handlerId的注册信息
      */
     public boolean contains(String serviceName) {
-        return serviceName2Provider.containsKey(serviceName);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return serviceName2Provider.containsKey(serviceName);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -93,7 +110,13 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * @return 所有已注册的服务
      */
     public Set<String> findAllServices() {
-        return serviceName2Provider.keySet();
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new HashSet<>(serviceName2Provider.keySet());
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -102,9 +125,15 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * @return 所有已注册的服务
      */
     public Set<ServiceLocator> findAllServiceLocators() {
-        return serviceName2Info.values().stream()
-                .map(i -> ServiceLocator.of(i.getGroup(), i.getServiceName(), i.getVersion()))
-                .collect(Collectors.toSet());
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return serviceName2Info.values().stream()
+                    .map(i -> ServiceLocator.of(i.getGroup(), i.getServiceName(), i.getVersion()))
+                    .collect(Collectors.toSet());
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -118,22 +147,28 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * 注册service, 不会主动往broker注册新增服务
      */
     public void addProvider(String group, String serviceName, String version, Class<?> interfaceClass, Object provider) {
-        for (Method method : interfaceClass.getMethods()) {
-            if (!method.isDefault()) {
-                String handlerName = method.getName();
-                //解析ServiceMapping注解, 看看是否自定义method(handler) name
-                ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-                if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                    handlerName = serviceMapping.value();
+        Lock writeLock = this.lock.writeLock();
+        writeLock.lock();
+        try {
+            for (Method method : interfaceClass.getMethods()) {
+                if (!method.isDefault()) {
+                    String handlerName = method.getName();
+                    //解析ServiceMapping注解, 看看是否自定义method(handler) name
+                    ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
+                    if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
+                        handlerName = serviceMapping.value();
+                    }
+                    String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
+
+                    ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
+
+                    serviceName2Provider.put(serviceName, provider);
+                    handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
+                    serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass));
                 }
-                String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
-
-                ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
-
-                serviceName2Provider.put(serviceName, provider);
-                handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
-                serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass));
             }
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -234,19 +269,25 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * 注销service信息, , 不会主动往broker注销移除服务
      */
     public void removeProvider(String group, String serviceName, String version, Class<?> serviceInterface) {
-        serviceName2Provider.remove(serviceName);
-        for (Method method : serviceInterface.getMethods()) {
-            if (!method.isDefault()) {
-                String handlerName = method.getName();
-                ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-                if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                    handlerName = serviceMapping.value();
-                }
-                String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
+        Lock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            serviceName2Provider.remove(serviceName);
+            for (Method method : serviceInterface.getMethods()) {
+                if (!method.isDefault()) {
+                    String handlerName = method.getName();
+                    ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
+                    if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
+                        handlerName = serviceMapping.value();
+                    }
+                    String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
 
-                handlerId2Invoker.remove(MurmurHash3.hash32(key));
-                serviceName2Info.remove(serviceName);
+                    handlerId2Invoker.remove(MurmurHash3.hash32(key));
+                    serviceName2Info.remove(serviceName);
+                }
             }
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -261,14 +302,26 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * 返回method invoker
      */
     public ReactiveMethodInvoker getInvoker(int handlerId) {
-        return handlerId2Invoker.get(handlerId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return handlerId2Invoker.get(handlerId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 是否包含指定method invoker
      */
     public boolean containsHandler(int handlerId) {
-        return handlerId2Invoker.containsKey(handlerId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return handlerId2Invoker.containsKey(handlerId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -276,6 +329,12 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      */
     @Override
     public ReactiveServiceInfo getReactiveServiceInfoByName(String serviceName) {
-        return serviceName2Info.get(serviceName);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return serviceName2Info.get(serviceName);
+        } finally {
+            readLock.unlock();
+        }
     }
 }

@@ -4,6 +4,8 @@ import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/4/2
  */
 public abstract class AbstractConfDiamond implements ConfDiamond {
+    /** 配置中心单线程修改数据 */
+    protected static final Scheduler SCHEDULER = Schedulers.newSingle("ConfDiamond");
+
     /** watcher */
     private final Map<String, Sinks.Many<Tuple<String, String>>> watchNotifications = new ConcurrentHashMap<>();
 

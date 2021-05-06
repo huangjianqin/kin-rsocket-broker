@@ -36,6 +36,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     private final LoadBalanceRequester loadBalanceRequester;
     /** 上次刷新的uris */
     private volatile List<String> lastUris = Collections.emptyList();
+    /** cluster是否stopped */
     private volatile boolean stopped;
 
     /**

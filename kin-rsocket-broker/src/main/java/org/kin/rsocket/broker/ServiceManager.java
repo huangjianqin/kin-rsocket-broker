@@ -9,6 +9,7 @@ import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
@@ -39,8 +40,10 @@ import reactor.core.scheduler.Schedulers;
 import java.net.URI;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
@@ -59,10 +62,12 @@ public final class ServiceManager {
     private final boolean authRequired;
     private final UpstreamCluster upstreamBrokers;
 
+    /** 修改数据需加锁 */
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     /** key -> hash(app instance UUID), value -> 对应responder */
-    private final Map<Integer, BrokerResponder> instanceId2Responder = new ConcurrentHashMap<>();
+    private final Map<Integer, BrokerResponder> instanceId2Responder = new HashMap<>();
     /** key -> app instance UUID, value -> 对应responder */
-    private final Map<String, BrokerResponder> uuid2Responder = new ConcurrentHashMap<>();
+    private final Map<String, BrokerResponder> uuid2Responder = new HashMap<>();
     /** key -> app name, value -> responder list */
     private final ListMultimap<String, BrokerResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
 
@@ -192,9 +197,16 @@ public final class ServiceManager {
      */
     private void registerResponder(BrokerResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
-        uuid2Responder.put(appMetadata.getUuid(), responder);
-        instanceId2Responder.put(responder.getId(), responder);
-        appResponders.put(appMetadata.getName(), responder);
+
+        Lock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            uuid2Responder.put(appMetadata.getUuid(), responder);
+            instanceId2Responder.put(responder.getId(), responder);
+            appResponders.put(appMetadata.getName(), responder);
+        } finally {
+            writeLock.unlock();
+        }
         //广播事件
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
         if (!brokerManager.isStandAlone()) {
@@ -209,9 +221,17 @@ public final class ServiceManager {
      */
     private void onResponderDisposed(BrokerResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
-        uuid2Responder.remove(responder.getUuid());
-        instanceId2Responder.remove(responder.getId());
-        appResponders.remove(appMetadata.getName(), responder);
+
+        Lock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            uuid2Responder.remove(responder.getUuid());
+            instanceId2Responder.remove(responder.getId());
+            appResponders.remove(appMetadata.getName(), responder);
+        } finally {
+            writeLock.unlock();
+        }
+
         log.info("Succeed to remove broker handler");
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
         this.notificationSink.tryEmitNext(String.format("App '%s' with IP '%s' Offline now!", appMetadata.getName(), appMetadata.getIp()));
@@ -221,35 +241,65 @@ public final class ServiceManager {
      * 获取所有app names
      */
     public Collection<String> getAllAppNames() {
-        return appResponders.keySet();
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new HashSet<>(appResponders.keySet());
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 获取所有已注册的{@link BrokerResponder}
      */
     public Collection<BrokerResponder> getAllResponders() {
-        return uuid2Responder.values();
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new ArrayList<>(uuid2Responder.values());
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 根据app name 获取所有已注册的{@link BrokerResponder}
      */
     public Collection<BrokerResponder> getByAppName(String appName) {
-        return appResponders.get(appName);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new ArrayList<>(appResponders.get(appName));
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 根据app uuid 获取已注册的{@link BrokerResponder}
      */
     public BrokerResponder getByUUID(String uuid) {
-        return uuid2Responder.get(uuid);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return uuid2Responder.get(uuid);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 根据app instanceId 获取已注册的{@link BrokerResponder}
      */
     public BrokerResponder getByInstanceId(Integer instanceId) {
-        return instanceId2Responder.get(instanceId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return instanceId2Responder.get(instanceId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -269,13 +319,29 @@ public final class ServiceManager {
      */
     public Mono<Void> broadcast(String appName, CloudEventData<?> cloudEvent) {
         if (appName.equals(Symbols.BROKER)) {
-            return Flux.fromIterable(instanceId2Responder.values())
-                    .flatMap(handler -> handler.fireCloudEvent(cloudEvent))
-                    .then();
+            return Flux.<BrokerResponder>create(s -> {
+                Lock readLock = lock.readLock();
+                readLock.lock();
+                try {
+                    for (BrokerResponder brokerResponder : instanceId2Responder.values()) {
+                        s.next(brokerResponder);
+                    }
+                } finally {
+                    readLock.unlock();
+                }
+            }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
         } else if (appResponders.containsKey(appName)) {
-            return Flux.fromIterable(appResponders.get(appName))
-                    .flatMap(handler -> handler.fireCloudEvent(cloudEvent))
-                    .then();
+            return Flux.<BrokerResponder>create(s -> {
+                Lock readLock = lock.readLock();
+                readLock.lock();
+                try {
+                    for (BrokerResponder brokerResponder : appResponders.get(appName)) {
+                        s.next(brokerResponder);
+                    }
+                } finally {
+                    readLock.unlock();
+                }
+            }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
         } else {
             return Mono.error(new ApplicationErrorException("Application not found: appName=" + appName));
         }
@@ -285,21 +351,34 @@ public final class ServiceManager {
      * 向所有已注册的app广播cloud event
      */
     public Mono<Void> broadcast(CloudEventData<?> cloudEvent) {
-        return Flux.fromIterable(appResponders.keySet())
-                .flatMap(name -> Flux.fromIterable(appResponders.get(name)))
-                .flatMap(handler -> handler.fireCloudEvent(cloudEvent))
-                .then();
+        return Flux.<BrokerResponder>create(s -> {
+            Lock readLock = lock.readLock();
+            readLock.lock();
+            try {
+                for (BrokerResponder brokerResponder : appResponders.values()) {
+                    s.next(brokerResponder);
+                }
+            } finally {
+                readLock.unlock();
+            }
+        }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
     }
 
     /**
      * 向指定uuid的app广播cloud event
      */
     public Mono<Void> send(String uuid, CloudEventData<?> cloudEvent) {
-        BrokerResponder responder = uuid2Responder.get(uuid);
-        if (responder != null) {
-            return responder.fireCloudEvent(cloudEvent);
-        } else {
-            return Mono.error(new ApplicationErrorException("Application not found: app uuid=" + uuid));
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            BrokerResponder responder = uuid2Responder.get(uuid);
+            if (responder != null) {
+                return responder.fireCloudEvent(cloudEvent);
+            } else {
+                return Mono.error(new ApplicationErrorException("Application not found: app uuid=" + uuid));
+            }
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -342,7 +421,7 @@ public final class ServiceManager {
     }
 
     /**
-     *
+     * 广播集群broker拓扑事件
      */
     private Flux<Void> broadcastClusterTopology(Collection<BrokerInfo> brokerInfos) {
         CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokerInfos, Topologys.INTRANET);
@@ -388,16 +467,23 @@ public final class ServiceManager {
      * 注册app instance及其服务
      */
     public void register(Integer instanceId, int powerUnit, Collection<ServiceLocator> services) {
-        for (ServiceLocator serviceLocator : services) {
-            int serviceId = serviceLocator.getId();
-            if (!instanceId2ServiceIds.get(instanceId).contains(serviceId)) {
-                instanceId2ServiceIds.put(instanceId, serviceId);
-                for (int i = 0; i < powerUnit; i++) {
-                    //put n个
-                    serviceId2InstanceIds.put(serviceId, instanceId);
+        Lock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            for (ServiceLocator serviceLocator : services) {
+                int serviceId = serviceLocator.getId();
+
+                if (!instanceId2ServiceIds.get(instanceId).contains(serviceId)) {
+                    instanceId2ServiceIds.put(instanceId, serviceId);
+                    for (int i = 0; i < powerUnit; i++) {
+                        //put n个
+                        serviceId2InstanceIds.put(serviceId, instanceId);
+                    }
+                    this.services.put(serviceId, serviceLocator);
                 }
-                this.services.put(serviceId, serviceLocator);
             }
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -405,8 +491,36 @@ public final class ServiceManager {
      * 注销app instance及其服务
      */
     public void unregister(Integer instanceId) {
-        if (instanceId2ServiceIds.containsKey(instanceId)) {
-            for (Integer serviceId : instanceId2ServiceIds.get(instanceId)) {
+        Lock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            if (instanceId2ServiceIds.containsKey(instanceId)) {
+                for (Integer serviceId : instanceId2ServiceIds.get(instanceId)) {
+                    //移除所有相同的instanceId
+                    while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
+                        //do nothing
+                    }
+                    if (!serviceId2InstanceIds.containsKey(serviceId)) {
+                        //没有该serviceId对应instanceId了
+                        services.remove(serviceId);
+                    }
+                }
+                //移除该instanceId对应的所有serviceId
+                instanceId2ServiceIds.removeAll(instanceId);
+            }
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    /**
+     * 注销app instance及其服务
+     */
+    public void unregister(Integer instanceId, Integer serviceId) {
+        Lock writeLock = lock.writeLock();
+        writeLock.lock();
+        try {
+            if (instanceId2ServiceIds.containsKey(instanceId)) {
                 //移除所有相同的instanceId
                 while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
                     //do nothing
@@ -415,30 +529,14 @@ public final class ServiceManager {
                     //没有该serviceId对应instanceId了
                     services.remove(serviceId);
                 }
+                //移除该instanceId上的serviceId
+                instanceId2ServiceIds.remove(instanceId, serviceId);
+                if (!instanceId2ServiceIds.containsKey(instanceId)) {
+                    instanceId2ServiceIds.removeAll(instanceId);
+                }
             }
-            //移除该instanceId对应的所有serviceId
-            instanceId2ServiceIds.removeAll(instanceId);
-        }
-    }
-
-    /**
-     * 注销app instance及其服务
-     */
-    public void unregister(Integer instanceId, Integer serviceId) {
-        if (instanceId2ServiceIds.containsKey(instanceId)) {
-            //移除所有相同的instanceId
-            while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
-                //do nothing
-            }
-            if (!serviceId2InstanceIds.containsKey(serviceId)) {
-                //没有该serviceId对应instanceId了
-                services.remove(serviceId);
-            }
-            //移除该instanceId上的serviceId
-            instanceId2ServiceIds.remove(instanceId, serviceId);
-            if (!instanceId2ServiceIds.containsKey(instanceId)) {
-                instanceId2ServiceIds.removeAll(instanceId);
-            }
+        } finally {
+            writeLock.unlock();
         }
     }
 
@@ -446,46 +544,76 @@ public final class ServiceManager {
      * 根据instanceId获取其所有serviceId
      */
     public Set<Integer> getServiceIds(Integer instanceId) {
-        return instanceId2ServiceIds.get(instanceId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new HashSet<>(instanceId2ServiceIds.get(instanceId));
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * instanceId是否已注册
      */
     public boolean containsInstanceId(Integer instanceId) {
-        return instanceId2ServiceIds.containsKey(instanceId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return instanceId2ServiceIds.containsKey(instanceId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * serviceId是否已注册
      */
     public boolean containsServiceId(Integer serviceId) {
-        return serviceId2InstanceIds.containsKey(serviceId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return serviceId2InstanceIds.containsKey(serviceId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 根据serviceId获取其数据, 即{@link ServiceLocator}
      */
     public ServiceLocator getServiceLocator(Integer serviceId) {
-        return services.get(serviceId);
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return services.get(serviceId);
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 根据serviceId获取对应instanceId
      */
     public Integer getInstanceId(Integer serviceId) {
-        List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
-        int handlerCount = instanceIds.size();
-        if (handlerCount > 1) {
-            try {
-                return instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
-            } catch (Exception e) {
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
+            int handlerCount = instanceIds.size();
+            if (handlerCount > 1) {
+                try {
+                    return instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
+                } catch (Exception e) {
+                    return instanceIds.get(0);
+                }
+            } else if (handlerCount == 1) {
                 return instanceIds.get(0);
+            } else {
+                return null;
             }
-        } else if (handlerCount == 1) {
-            return instanceIds.get(0);
-        } else {
-            return null;
+        } finally {
+            readLock.unlock();
         }
     }
 
@@ -493,8 +621,13 @@ public final class ServiceManager {
      * 根据serviceId获取其所有instanceId
      */
     public Collection<Integer> getAllInstanceIds(Integer serviceId) {
-        return serviceId2InstanceIds.get(serviceId);
-
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new ArrayList<>(serviceId2InstanceIds.get(serviceId));
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
@@ -511,16 +644,31 @@ public final class ServiceManager {
      * 统计serviceId对应instanceId数量
      */
     public Integer countInstanceIds(Integer serviceId) {
-        //有重复
-        List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
-        return new HashSet<>(instanceIds).size();
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            //有重复
+            List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
+            if (CollectionUtils.isNonEmpty(instanceIds)) {
+                return instanceIds.size();
+            }
+            return 0;
+        } finally {
+            readLock.unlock();
+        }
     }
 
     /**
      * 获取所有服务数据
      */
     public Collection<ServiceLocator> getAllServices() {
-        return services.values();
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return new ArrayList<>(services.values());
+        } finally {
+            readLock.unlock();
+        }
     }
 }
 

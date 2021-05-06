@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 管理broker或者上流服务的rsocket connection
@@ -24,7 +24,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     /** upstream requester配置 */
     private final RequesterSupport requesterSupport;
     /** upstream clusters */
-    private Map<String, UpstreamCluster> clusters = new HashMap<>();
+    private final Map<String, UpstreamCluster> clusters = new ConcurrentHashMap<>();
     /** broker upstream cluster */
     private UpstreamCluster brokerCluster;
 
