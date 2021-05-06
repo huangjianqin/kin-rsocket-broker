@@ -5,7 +5,7 @@
     <parent>
         <artifactId>kin-rsocket-broker-parent</artifactId>
         <groupId>org.kin</groupId>
-        <version>0.1.0.0</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kin-rsocket-broker-gateway-http-starter</artifactId>

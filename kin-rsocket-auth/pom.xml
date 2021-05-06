@@ -11,15 +11,7 @@
     <artifactId>kin-rsocket-auth</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>kin-rsocket-auth-jwt-starter</module>
         <module>kin-rsocket-auth-api</module>
+        <module>kin-rsocket-auth-jwt-starter</module>
     </modules>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-auth-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    </dependencies>
 </project>
