@@ -198,9 +198,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
 
                     //subscribe rsocket close event
                     for (Map.Entry<String, RSocket> entry : newAddedRSockets.entrySet()) {
-                        entry.getValue().onClose().publishOn(REFRESH_SCHEDULER).subscribe(aVoid -> {
-                            onRSocketClosed(entry.getKey(), entry.getValue(), null);
-                        });
+                        onRSocketConnected(entry.getKey(), entry.getValue());
                     }
                 });
     }
@@ -246,10 +244,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Mono.error(new NoAvailableConnectionException(serviceId));
         }
         return next.requestResponse(payload)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                    next.dispose();
-                    return requestResponse(payload);
-                });
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> requestResponse(payload));
     }
 
 
@@ -264,10 +259,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Mono.error(new NoAvailableConnectionException(serviceId));
         }
         return next.fireAndForget(payload)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                    next.dispose();
-                    return fireAndForget(payload);
-                });
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> fireAndForget(payload));
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -284,6 +276,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     public Mono<Void> broadcastCloudEvent(CloudEventData<?> cloudEvent) {
         if (isDisposed()) {
@@ -310,10 +303,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Flux.error(new NoAvailableConnectionException(serviceId));
         }
         return next.requestStream(payload)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                    next.dispose();
-                    return requestStream(payload);
-                });
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> requestStream(payload));
     }
 
     @Override
@@ -326,10 +316,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Flux.error(new NoAvailableConnectionException(serviceId));
         }
         return next.requestChannel(payloads)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                    next.dispose();
-                    return requestChannel(payloads);
-                });
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> requestChannel(payloads));
     }
 
     @Override
@@ -357,7 +344,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return;
         }
         for (String unhealthyUri : unhealthyUris) {
-            tryToReconnect(unhealthyUri, null);
+            tryToReconnect(unhealthyUri);
         }
     }
 
@@ -374,13 +361,13 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                 if (Objects.nonNull(cause)) {
                     log.error(String.format("connection '%s' closed, cause by", rsocketUri), cause);
                 } else {
-                    log.info("connection '%s' closed");
+                    log.info(String.format("connection '%s' closed", rsocketUri));
                 }
                 tryToReconnect(rsocketUri, cause);
             }
-            if (!rsocket.isDisposed()) {
-                rsocket.dispose();
-            }
+        }
+        if (!rsocket.isDisposed()) {
+            rsocket.dispose();
         }
     }
 
@@ -393,7 +380,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         activeRSockets.put(rsocketUri, rsocket);
         this.activeRSockets = activeRSockets;
         this.unhealthyUris.remove(rsocketUri);
-        rsocket.onClose().publishOn(REFRESH_SCHEDULER).subscribe(aVoid -> onRSocketClosed(rsocketUri, rsocket, null));
+        onRSocketConnected(rsocketUri, rsocket);
 
         CloudEventData<ServicesExposedEvent> cloudEvent = ReactiveServiceRegistry.servicesExposedEvent();
         if (cloudEvent != null) {
@@ -405,37 +392,63 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     }
 
     /**
-     * 刷新uri时连接失败, 5s后尝试重连
+     * 连接成功后, 对{@link RSocket}的处理
+     */
+    private void onRSocketConnected(String rsocketUri, RSocket rsocket) {
+        rsocket.onClose()
+                .publishOn(REFRESH_SCHEDULER)
+                .doOnError(error -> {
+                    if (CONNECTION_ERROR_PREDICATE.test(error)) {
+                        //connection closed
+                        onRSocketClosed(rsocketUri, rsocket, error);
+                    }
+                })
+                .doOnSuccess(aVoid -> onRSocketClosed(rsocketUri, rsocket, null))
+                .subscribe();
+    }
+
+    /**
+     * 一分钟内每5s尝试重连
      */
     private void tryToReconnect(String rsocketUri, Throwable error) {
-        if (!this.lastRefreshRSocketUris.contains(rsocketUri)) {
-            return;
-        }
         //try to reconnect every 5 seconds in 1 minute if connection error
-        if (CONNECTION_ERROR_PREDICATE.test(error)) {
-            Flux.range(1, RETRY_COUNT)
-                    .delayElements(Duration.ofSeconds(5))
-                    .filter(id -> activeRSockets.isEmpty() || !activeRSockets.containsKey(rsocketUri))
-                    .subscribe(count -> {
-                        if (LoadBalanceRequester.this.isDisposed()) {
-                            return;
-                        }
-                        connect(rsocketUri)
-                                .flatMap(rsocket -> healthCheck(rsocket, rsocketUri).map(payload -> rsocket))
-                                .publishOn(REFRESH_SCHEDULER)
-                                .doOnError(e -> {
-                                    log.error(String.format("reconnect '%s' error %d times", rsocketUri, count), e);
-                                    unhealthyUris.add(rsocketUri);
-                                })
-                                .subscribe(rsocket -> {
-                                    onRSocketReconnected(rsocketUri, rsocket);
-                                });
-                    });
+        if (Objects.isNull(error) || CONNECTION_ERROR_PREDICATE.test(error)) {
+            //channel正常关闭 | 特定异常关闭
+            tryToReconnect(rsocketUri);
         }
     }
 
     /**
-     * create connect
+     * 一分钟内每5s尝试重连
+     */
+    private void tryToReconnect(String rsocketUri) {
+        if (!this.lastRefreshRSocketUris.contains(rsocketUri)) {
+            //如果不是有效rsocket uri, 则不管
+            return;
+        }
+
+        Flux.range(1, RETRY_COUNT)
+                .delayElements(Duration.ofSeconds(5))
+                .filter(id -> activeRSockets.isEmpty() || !activeRSockets.containsKey(rsocketUri))
+                .subscribe(count -> {
+                    if (LoadBalanceRequester.this.isDisposed()) {
+                        return;
+                    }
+                    connect(rsocketUri)
+                            .flatMap(rsocket -> healthCheck(rsocket, rsocketUri).map(payload -> rsocket))
+                            .publishOn(REFRESH_SCHEDULER)
+                            .doOnError(e -> {
+                                log.error(String.format("reconnect '%s' error %d times", rsocketUri, count), e);
+                                unhealthyUris.add(rsocketUri);
+                            })
+                            .subscribe(rsocket -> {
+                                onRSocketReconnected(rsocketUri, rsocket);
+                            });
+                });
+    }
+
+    /**
+     * build connect
      */
     private Mono<RSocket> connect(String uri) {
         if (isDisposed()) {
@@ -481,14 +494,14 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                     this.lastHealthCheckTimestamp = System.currentTimeMillis();
                     return Flux.fromIterable(activeRSockets.entrySet());
                 })
-                .subscribe(entry -> {
-                    healthCheck(entry.getValue(), entry.getKey()).doOnError(error -> {
-                        if (CONNECTION_ERROR_PREDICATE.test(error)) {
-                            //connection closed
-                            entry.getValue().dispose();
-                        }
-                    }).subscribe();
-                });
+                .subscribe(entry ->
+                        healthCheck(entry.getValue(), entry.getKey())
+                                .doOnError(error -> {
+                                    if (CONNECTION_ERROR_PREDICATE.test(error)) {
+                                        //connection closed
+                                        onRSocketClosed(entry.getKey(), entry.getValue(), error);
+                                    }
+                                }).subscribe());
     }
 
     /**
