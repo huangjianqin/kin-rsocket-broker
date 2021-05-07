@@ -135,7 +135,7 @@ public final class ServiceManager {
                 String appId = temp.getUuid();
                 //validate appId data format
                 if (StringUtils.isNotBlank(appId) && appId.length() >= 32) {
-                    Integer instanceId = MurmurHash3.hash32(credentials + ":" + temp.getUuid());
+                    int instanceId = MurmurHash3.hash32(credentials + ":" + temp.getUuid());
                     temp.updateId(instanceId);
                     //application instance not connected
                     if (!containsInstanceId(instanceId)) {
@@ -292,7 +292,7 @@ public final class ServiceManager {
     /**
      * 根据app instanceId 获取已注册的{@link BrokerResponder}
      */
-    public BrokerResponder getByInstanceId(Integer instanceId) {
+    public BrokerResponder getByInstanceId(int instanceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -305,11 +305,11 @@ public final class ServiceManager {
     /**
      * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
-    public BrokerResponder getByServiceId(Integer serviceId) {
+    public BrokerResponder getByServiceId(int serviceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            Integer instanceId = router.route(serviceId);
+            int instanceId = router.route(serviceId);
             if (Objects.nonNull(instanceId)) {
                 return instanceId2Responder.get(instanceId);
             } else {
@@ -465,14 +465,14 @@ public final class ServiceManager {
     /**
      * 注册app instance及其服务
      */
-    public void register(Integer instanceId, Set<ServiceLocator> services) {
+    public void register(int instanceId, Set<ServiceLocator> services) {
         register(instanceId, 1, services);
     }
 
     /**
      * 注册app instance及其服务
      */
-    public void register(Integer instanceId, int weight, Collection<ServiceLocator> services) {
+    public void register(int instanceId, int weight, Collection<ServiceLocator> services) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
@@ -493,7 +493,7 @@ public final class ServiceManager {
     /**
      * 注销app instance及其服务
      */
-    public void unregister(Integer instanceId) {
+    public void unregister(int instanceId) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
@@ -515,7 +515,7 @@ public final class ServiceManager {
     /**
      * 注销app instance及其服务
      */
-    public void unregister(Integer instanceId, Integer serviceId) {
+    public void unregister(int instanceId, int serviceId) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
@@ -538,7 +538,7 @@ public final class ServiceManager {
     /**
      * 根据instanceId获取其所有serviceId
      */
-    public Set<Integer> getServiceIds(Integer instanceId) {
+    public Set<Integer> getServiceIds(int instanceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -551,7 +551,7 @@ public final class ServiceManager {
     /**
      * instanceId是否已注册
      */
-    public boolean containsInstanceId(Integer instanceId) {
+    public boolean containsInstanceId(int instanceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -564,7 +564,7 @@ public final class ServiceManager {
     /**
      * serviceId是否已注册
      */
-    public boolean containsServiceId(Integer serviceId) {
+    public boolean containsServiceId(int serviceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -577,7 +577,7 @@ public final class ServiceManager {
     /**
      * 根据serviceId获取其数据, 即{@link ServiceLocator}
      */
-    public ServiceLocator getServiceLocator(Integer serviceId) {
+    public ServiceLocator getServiceLocator(int serviceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -590,7 +590,7 @@ public final class ServiceManager {
     /**
      * 根据serviceId获取其所有instanceId
      */
-    public Collection<Integer> getAllInstanceIds(Integer serviceId) {
+    public Collection<Integer> getAllInstanceIds(int serviceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -603,7 +603,7 @@ public final class ServiceManager {
     /**
      * 根据serviceId获取其所有已注册的{@link BrokerResponder}
      */
-    public Collection<BrokerResponder> getAllByServiceId(Integer serviceId) {
+    public Collection<BrokerResponder> getAllByServiceId(int serviceId) {
         return getAllInstanceIds(serviceId).stream()
                 .map(this::getByInstanceId)
                 .filter(Objects::nonNull)
@@ -613,7 +613,7 @@ public final class ServiceManager {
     /**
      * 统计serviceId对应instanceId数量
      */
-    public Integer countInstanceIds(Integer serviceId) {
+    public Integer countInstanceIds(int serviceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {

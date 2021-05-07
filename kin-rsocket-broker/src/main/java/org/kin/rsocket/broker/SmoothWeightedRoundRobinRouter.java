@@ -23,7 +23,7 @@ public class SmoothWeightedRoundRobinRouter implements Router {
     private final ListMultimap<Integer, RouterWeight> serviceId2InstanceRouterWeights = MultimapBuilder.hashKeys().arrayListValues().build();
 
     @Override
-    public Integer route(Integer serviceId) {
+    public Integer route(int serviceId) {
         List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
         if (CollectionUtils.isNonEmpty(routerWeights)) {
             //总权重
@@ -47,14 +47,14 @@ public class SmoothWeightedRoundRobinRouter implements Router {
     }
 
     @Override
-    public void onAppRegistered(Integer instanceId, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
         for (ServiceLocator serviceLocator : services) {
             serviceId2InstanceRouterWeights.put(serviceLocator.getId(), new RouterWeight(instanceId, weight));
         }
     }
 
     @Override
-    public void onServiceUnregistered(Integer instanceId, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds) {
         for (Integer serviceId : serviceIds) {
             List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
             if (CollectionUtils.isEmpty(routerWeights)) {
@@ -65,7 +65,7 @@ public class SmoothWeightedRoundRobinRouter implements Router {
     }
 
     @Override
-    public Collection<Integer> getAllInstanceIds(Integer serviceId) {
+    public Collection<Integer> getAllInstanceIds(int serviceId) {
         List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
         if (CollectionUtils.isNonEmpty(routerWeights)) {
             return serviceId2InstanceRouterWeights.get(serviceId).stream().map(RouterWeight::getInstanceId).collect(Collectors.toList());

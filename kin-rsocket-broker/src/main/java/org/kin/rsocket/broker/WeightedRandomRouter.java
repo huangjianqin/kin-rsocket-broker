@@ -23,7 +23,7 @@ public class WeightedRandomRouter implements Router {
     private final ListMultimap<Integer, Integer> serviceId2InstanceIds = MultimapBuilder.hashKeys().arrayListValues().build();
 
     @Override
-    public Integer route(Integer serviceId) {
+    public Integer route(int serviceId) {
         int instanceId;
         List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
         int handlerCount = instanceIds.size();
@@ -43,7 +43,7 @@ public class WeightedRandomRouter implements Router {
     }
 
     @Override
-    public void onAppRegistered(Integer instanceId, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
 
@@ -56,7 +56,7 @@ public class WeightedRandomRouter implements Router {
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public void onServiceUnregistered(Integer instanceId, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds) {
         for (Integer serviceId : serviceIds) {
             //移除所有相同的instanceId
             while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
@@ -66,7 +66,7 @@ public class WeightedRandomRouter implements Router {
     }
 
     @Override
-    public Collection<Integer> getAllInstanceIds(Integer serviceId) {
+    public Collection<Integer> getAllInstanceIds(int serviceId) {
         List<Integer> routerWeights = serviceId2InstanceIds.get(serviceId);
         if (CollectionUtils.isNonEmpty(routerWeights)) {
             return new ArrayList<>(serviceId2InstanceIds.get(serviceId));
