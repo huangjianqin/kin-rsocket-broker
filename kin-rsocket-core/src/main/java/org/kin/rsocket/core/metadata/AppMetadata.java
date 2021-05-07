@@ -23,7 +23,7 @@ public final class AppMetadata implements MetadataAware {
     /** application uuid, almost uuid */
     private String uuid;
     /** 权重, 越大, 该服务被路由的概率越大 */
-    private int powerRating = 1;
+    private int weight = 1;
     /** app name */
     private String name;
     /** name space */
@@ -140,8 +140,8 @@ public final class AppMetadata implements MetadataAware {
             return this;
         }
 
-        public Builder powerRating(int powerRating) {
-            appMetadata.powerRating = Math.max(1, powerRating);
+        public Builder weight(int weight) {
+            appMetadata.weight = Math.max(1, weight);
             ;
             return this;
         }
@@ -248,8 +248,8 @@ public final class AppMetadata implements MetadataAware {
         return uuid;
     }
 
-    public int getPowerRating() {
-        return powerRating;
+    public int getWeight() {
+        return weight;
     }
 
     public String getName() {

@@ -472,7 +472,7 @@ public final class ServiceManager {
     /**
      * 注册app instance及其服务
      */
-    public void register(Integer instanceId, int powerUnit, Collection<ServiceLocator> services) {
+    public void register(Integer instanceId, int weight, Collection<ServiceLocator> services) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
@@ -484,7 +484,7 @@ public final class ServiceManager {
                     this.services.put(serviceId, serviceLocator);
                 }
             }
-            router.onAppRegistered(instanceId, powerUnit, services);
+            router.onAppRegistered(instanceId, weight, services);
         } finally {
             writeLock.unlock();
         }

@@ -149,7 +149,7 @@ public final class BrokerResponder implements CloudEventRSocket {
         if (CollectionUtils.isNonEmpty(this.peerServices)) {
             Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getId());
             if (serviceIds.isEmpty()) {
-                this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), peerServices);
+                this.serviceManager.register(appMetadata.getId(), appMetadata.getWeight(), peerServices);
                 this.appStatus = AppStatus.SERVING;
             }
         }
@@ -158,7 +158,7 @@ public final class BrokerResponder implements CloudEventRSocket {
     /** 注册指定服务 */
     public void registerServices(Collection<ServiceLocator> services) {
         this.peerServices.addAll(services);
-        this.serviceManager.register(appMetadata.getId(), appMetadata.getPowerRating(), services);
+        this.serviceManager.register(appMetadata.getId(), appMetadata.getWeight(), services);
         this.appStatus = AppStatus.SERVING;
     }
 

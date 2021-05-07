@@ -98,9 +98,9 @@ final class RequesterSupportImpl implements RequesterSupport {
                         e.getValue()))
                 .collect(Collectors.toMap(Tuple::first, Tuple::second));
         builder.metadata(metadata);
-        //power unit
-        if (metadata.containsKey(ServiceMetadataKeys.POWER_RATE)) {
-            builder.powerRating(Integer.parseInt(metadata.get(ServiceMetadataKeys.POWER_RATE)));
+        //weight
+        if (metadata.containsKey(ServiceMetadataKeys.WEIGHT)) {
+            builder.weight(Integer.parseInt(metadata.get(ServiceMetadataKeys.WEIGHT)));
         }
         builder.secure(StringUtils.isNotBlank(config.getJwtToken()));
 
