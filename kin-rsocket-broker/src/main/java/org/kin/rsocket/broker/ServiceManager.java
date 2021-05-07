@@ -594,7 +594,6 @@ public final class ServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            //todo
             return router.getAllInstanceIds(serviceId);
         } finally {
             readLock.unlock();
@@ -618,7 +617,6 @@ public final class ServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            //todo
             //有重复
             Collection<Integer> instanceIds = getAllInstanceIds(serviceId);
             if (CollectionUtils.isNonEmpty(instanceIds)) {
