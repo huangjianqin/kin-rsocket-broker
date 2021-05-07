@@ -37,6 +37,8 @@ public class RSocketBrokerProperties {
      * 目前仅仅支持jwt
      */
     private String upstreamToken;
+    /** broker 路由规则 */
+    private String route;
 
     @PostConstruct
     public void loadUpstreamToken() throws IOException {
@@ -108,6 +110,14 @@ public class RSocketBrokerProperties {
 
     public void setUpstreamToken(String upstreamToken) {
         this.upstreamToken = upstreamToken;
+    }
+
+    public String getRoute() {
+        return route;
+    }
+
+    public void setRoute(String route) {
+        this.route = route;
     }
 
     //-----------------------------------------------------------------------------------------------------------------

@@ -69,6 +69,13 @@
       "description": "rsocket broker connection ssl key store password",
       "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
       "defaultValue": "kin"
+    },
+    {
+      "name": "kin.rsocket.broker.route",
+      "type": "java.lang.String",
+      "description": "rsocket broker consumer请求路由规则",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "random roundRobin"
     }
   ]
 }

@@ -40,7 +40,6 @@ import reactor.core.scheduler.Schedulers;
 import java.net.URI;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -61,6 +60,7 @@ public final class ServiceManager {
     private final ServiceMeshInspector serviceMeshInspector;
     private final boolean authRequired;
     private final UpstreamCluster upstreamBrokers;
+    private final Router router;
 
     /** 修改数据需加锁 */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -71,8 +71,6 @@ public final class ServiceManager {
     /** key -> app name, value -> responder list */
     private final ListMultimap<String, BrokerResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
 
-    /** key -> serviceId, value -> list(instanceId, 也就是hash(app uuid) (会重复的, 数量=权重, 用于随机获取对应的instanceId)) */
-    private final ListMultimap<Integer, Integer> serviceId2InstanceIds = MultimapBuilder.hashKeys().arrayListValues().build();
     /** key -> serviceId, value -> service info */
     private final IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
     /** key -> instanceId, value -> list(serviceId) */
@@ -84,7 +82,8 @@ public final class ServiceManager {
                           BrokerManager brokerManager,
                           ServiceMeshInspector serviceMeshInspector,
                           boolean authRequired,
-                          UpstreamCluster upstreamBrokers) {
+                          UpstreamCluster upstreamBrokers,
+                          Router router) {
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
@@ -95,6 +94,7 @@ public final class ServiceManager {
         if (!brokerManager.isStandAlone()) {
             this.brokerManager.brokersChangedFlux().flatMap(this::broadcastClusterTopology).subscribe();
         }
+        this.router = router;
     }
 
     /**
@@ -306,12 +306,18 @@ public final class ServiceManager {
      * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
     public BrokerResponder getByServiceId(Integer serviceId) {
-        Integer instanceId = getInstanceId(serviceId);
-        if (Objects.isNull(instanceId)) {
-            return null;
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            Integer instanceId = router.route(serviceId);
+            if (Objects.nonNull(instanceId)) {
+                return instanceId2Responder.get(instanceId);
+            } else {
+                return null;
+            }
+        } finally {
+            readLock.unlock();
         }
-
-        return getByInstanceId(instanceId);
     }
 
     /**
@@ -475,13 +481,10 @@ public final class ServiceManager {
 
                 if (!instanceId2ServiceIds.get(instanceId).contains(serviceId)) {
                     instanceId2ServiceIds.put(instanceId, serviceId);
-                    for (int i = 0; i < powerUnit; i++) {
-                        //put n个
-                        serviceId2InstanceIds.put(serviceId, instanceId);
-                    }
                     this.services.put(serviceId, serviceLocator);
                 }
             }
+            router.onAppRegistered(instanceId, powerUnit, services);
         } finally {
             writeLock.unlock();
         }
@@ -495,18 +498,14 @@ public final class ServiceManager {
         writeLock.lock();
         try {
             if (instanceId2ServiceIds.containsKey(instanceId)) {
-                for (Integer serviceId : instanceId2ServiceIds.get(instanceId)) {
-                    //移除所有相同的instanceId
-                    while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
-                        //do nothing
-                    }
-                    if (!serviceId2InstanceIds.containsKey(serviceId)) {
-                        //没有该serviceId对应instanceId了
-                        services.remove(serviceId);
-                    }
+                Set<Integer> serviceIds = instanceId2ServiceIds.get(instanceId);
+                for (Integer serviceId : serviceIds) {
+                    //没有该serviceId对应instanceId了
+                    services.remove(serviceId);
                 }
                 //移除该instanceId对应的所有serviceId
                 instanceId2ServiceIds.removeAll(instanceId);
+                router.onServiceUnregistered(instanceId, serviceIds);
             }
         } finally {
             writeLock.unlock();
@@ -521,19 +520,15 @@ public final class ServiceManager {
         writeLock.lock();
         try {
             if (instanceId2ServiceIds.containsKey(instanceId)) {
-                //移除所有相同的instanceId
-                while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
-                    //do nothing
-                }
-                if (!serviceId2InstanceIds.containsKey(serviceId)) {
-                    //没有该serviceId对应instanceId了
-                    services.remove(serviceId);
-                }
+                //没有该serviceId对应instanceId了
+                services.remove(serviceId);
+
                 //移除该instanceId上的serviceId
                 instanceId2ServiceIds.remove(instanceId, serviceId);
                 if (!instanceId2ServiceIds.containsKey(instanceId)) {
                     instanceId2ServiceIds.removeAll(instanceId);
                 }
+                router.onServiceUnregistered(instanceId, Collections.singleton(serviceId));
             }
         } finally {
             writeLock.unlock();
@@ -573,7 +568,7 @@ public final class ServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return serviceId2InstanceIds.containsKey(serviceId);
+            return services.containsKey(serviceId);
         } finally {
             readLock.unlock();
         }
@@ -593,38 +588,14 @@ public final class ServiceManager {
     }
 
     /**
-     * 根据serviceId获取对应instanceId
-     */
-    public Integer getInstanceId(Integer serviceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
-            int handlerCount = instanceIds.size();
-            if (handlerCount > 1) {
-                try {
-                    return instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
-                } catch (Exception e) {
-                    return instanceIds.get(0);
-                }
-            } else if (handlerCount == 1) {
-                return instanceIds.get(0);
-            } else {
-                return null;
-            }
-        } finally {
-            readLock.unlock();
-        }
-    }
-
-    /**
      * 根据serviceId获取其所有instanceId
      */
     public Collection<Integer> getAllInstanceIds(Integer serviceId) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new ArrayList<>(serviceId2InstanceIds.get(serviceId));
+            //todo
+            return router.getAllInstanceIds(serviceId);
         } finally {
             readLock.unlock();
         }
@@ -647,8 +618,9 @@ public final class ServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
+            //todo
             //有重复
-            List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
+            Collection<Integer> instanceIds = getAllInstanceIds(serviceId);
             if (CollectionUtils.isNonEmpty(instanceIds)) {
                 return instanceIds.size();
             }

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -117,7 +118,8 @@ public class RSocketBrokerAutoConfiguration {
     @Bean
     public ServiceManager serviceManager(@Autowired AuthenticationService authenticationService,
                                          @Autowired BrokerManager brokerManager,
-                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster) {
+                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
+                                         @Autowired Router router) {
         return new ServiceManager(
                 rsocketFilterChain(null),
                 notificationSink(),
@@ -125,7 +127,8 @@ public class RSocketBrokerAutoConfiguration {
                 brokerManager,
                 serviceMeshInspector(),
                 brokerConfig.isAuth(),
-                upstreamBrokerCluster);
+                upstreamBrokerCluster,
+                router);
     }
 
     /**
@@ -181,12 +184,31 @@ public class RSocketBrokerAutoConfiguration {
         };
     }
 
+    //----------------------------------------------router----------------------------------------------
+    @Bean("router")
+    @ConditionalOnMissingBean
+    @ConditionalOnExpression("'roundRobin'.equals('${kin.rsocket.broker.route}')")
+    public Router smoothWeightedRoundRobinRouter() {
+        return new SmoothWeightedRoundRobinRouter();
+    }
+
+    /**
+     * 默认router, 故优先级最低
+     * 因为定义得越后面, bean优先级越低, 故放在最后面即可
+     */
+    @Bean("router")
+    @ConditionalOnMissingBean
+    @ConditionalOnExpression("'random'.equals('${kin.rsocket.broker.route:random}')")
+    public Router weightedRandomRouter() {
+        return new WeightedRandomRouter();
+    }
+
     //----------------------------------------------upstream broker requester相关----------------------------------------------
     @Bean(autowireCandidate = false)
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public UpStreamBrokerRequester upStreamBrokerRequester(@Autowired Environment env) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new UpStreamBrokerRequester(brokerConfig, appName, serviceManager(null, null, null), rsocketFilterChain(null));
+        return new UpStreamBrokerRequester(brokerConfig, appName, serviceManager(null, null, null, null), rsocketFilterChain(null));
     }
 
     @Bean(autowireCandidate = false)
