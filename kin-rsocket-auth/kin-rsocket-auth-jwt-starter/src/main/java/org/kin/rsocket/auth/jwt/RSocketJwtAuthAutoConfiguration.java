@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 import java.io.File;
 
@@ -22,18 +21,17 @@ public class RSocketJwtAuthAutoConfiguration {
     @Bean("authenticationService")
     @ConditionalOnProperty(name = "kin.rsocket.broker.auth")
     @ConditionalOnMissingBean
-    @Order(100)
-    public AuthenticationService authenticationService0(@Value("${kin.rsocket.broker.authDir}") String authDir) throws Exception {
+    public AuthenticationService brokerAuthenticationService(@Value("${kin.rsocket.broker.authDir}") String authDir) throws Exception {
         return new JwtAuthenticationService(true, new File(authDir));
     }
+
 
     /**
      * rsocket service
      */
     @Bean("authenticationService")
     @ConditionalOnMissingBean
-    @Order(101)
-    public AuthenticationService authenticationService1() throws Exception {
+    public AuthenticationService authenticationService() throws Exception {
         return new JwtAuthenticationService();
     }
 }
