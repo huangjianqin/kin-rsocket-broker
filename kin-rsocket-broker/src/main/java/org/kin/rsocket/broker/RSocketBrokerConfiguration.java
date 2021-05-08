@@ -21,7 +21,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import reactor.core.publisher.Sinks;
@@ -37,23 +36,21 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableConfigurationProperties(RSocketBrokerProperties.class)
-public class RSocketBrokerAutoConfiguration {
-    @Autowired
-    private RSocketBrokerProperties brokerConfig;
-
+public class RSocketBrokerConfiguration {
     /**
      * 接受tips的flux
      */
-    @Bean(autowireCandidate = false)
+    @Bean
     public Sinks.Many<String> notificationSink() {
         return Sinks.many().multicast().onBackpressureBuffer(8);
     }
 
     //----------------------------------------------cloud event consumers----------------------------------------------
+
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean(autowireCandidate = false, destroyMethod = "close")
+    @Bean(destroyMethod = "close")
     public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
         CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
         return CloudEventConsumers.INSTANCE;
@@ -97,7 +94,7 @@ public class RSocketBrokerAutoConfiguration {
 
     //----------------------------------------------
 
-    @Bean(autowireCandidate = false)
+    @Bean
     public RSocketFilterChain rsocketFilterChain(ObjectProvider<AbstractRSocketFilter> filters) {
         return new RSocketFilterChain(filters.orderedStream().collect(Collectors.toList()));
     }
@@ -111,21 +108,25 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    public ServiceMeshInspector serviceMeshInspector() {
+    public ServiceMeshInspector serviceMeshInspector(@Autowired RSocketBrokerProperties brokerConfig) {
         return new ServiceMeshInspector(brokerConfig.isAuth());
     }
 
     @Bean
-    public ServiceManager serviceManager(@Autowired AuthenticationService authenticationService,
+    public ServiceManager serviceManager(@Autowired RSocketBrokerProperties brokerConfig,
+                                         @Autowired RSocketFilterChain chain,
+                                         @Autowired Sinks.Many<String> notificationSink,
+                                         @Autowired AuthenticationService authenticationService,
                                          @Autowired BrokerManager brokerManager,
+                                         @Autowired ServiceMeshInspector serviceMeshInspector,
                                          @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
                                          @Autowired Router router) {
         return new ServiceManager(
-                rsocketFilterChain(null),
-                notificationSink(),
+                chain,
+                notificationSink,
                 authenticationService,
                 brokerManager,
-                serviceMeshInspector(),
+                serviceMeshInspector,
                 brokerConfig.isAuth(),
                 upstreamBrokerCluster,
                 router);
@@ -141,7 +142,7 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     //----------------------------------------------broker binder相关----------------------------------------------
-    @Bean(autowireCandidate = false, initMethod = "start", destroyMethod = "close")
+    @Bean(initMethod = "start", destroyMethod = "close")
     public RSocketBinder rsocketListener(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
         RSocketBinder.Builder builder = RSocketBinder.builder();
         customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
@@ -149,8 +150,8 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    @Order(100)
-    public RSocketBinderBuilderCustomizer defaultRSocketListenerCustomizer(@Autowired ServiceManager serviceManager) {
+    public RSocketBinderBuilderCustomizer defaultRSocketListenerCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
+                                                                           @Autowired ServiceManager serviceManager) {
         return builder -> {
             builder.acceptor(serviceManager.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
@@ -158,9 +159,9 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    @Order(101)
     @ConditionalOnProperty(name = "kin.rsocket.broker.ssl.key-store")
-    public RSocketBinderBuilderCustomizer rsocketListenerSSLCustomizer(@Autowired ResourceLoader resourceLoader) {
+    public RSocketBinderBuilderCustomizer rsocketListenerSSLCustomizer(@Autowired ResourceLoader resourceLoader,
+                                                                       @Autowired RSocketBrokerProperties brokerConfig) {
         return builder -> {
             RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
             if (rsocketSSL != null && rsocketSSL.isEnabled() && StringUtils.isNotBlank(rsocketSSL.getKeyStore())) {
@@ -204,17 +205,21 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     //----------------------------------------------upstream broker requester相关----------------------------------------------
-    @Bean(autowireCandidate = false)
+    @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public UpStreamBrokerRequester upStreamBrokerRequester(@Autowired Environment env) {
+    public UpstreamBrokerRequester upStreamBrokerRequester(@Autowired Environment env,
+                                                           @Autowired RSocketBrokerProperties brokerConfig,
+                                                           @Autowired ServiceManager serviceManager,
+                                                           @Autowired RSocketFilterChain chain) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new UpStreamBrokerRequester(brokerConfig, appName, serviceManager(null, null, null, null), rsocketFilterChain(null));
+        return new UpstreamBrokerRequester(brokerConfig, appName, serviceManager, chain);
     }
 
-    @Bean(autowireCandidate = false)
+    @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public UpstreamCluster upstreamBrokerCluster() {
-        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequester(null), brokerConfig.getUpstreamBrokers());
+    public UpstreamCluster upstreamBrokerCluster(@Autowired UpstreamBrokerRequester upStreamBrokerRequester,
+                                                 @Autowired RSocketBrokerProperties brokerConfig) {
+        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequester, brokerConfig.getUpstreamBrokers());
     }
 
     //----------------------------------------------services----------------------------------------------
@@ -223,7 +228,7 @@ public class RSocketBrokerAutoConfiguration {
         return new BrokerDiscoveryService();
     }
 
-    @Bean(autowireCandidate = false)
+    @Bean
     public HealthService healthService() {
         return new HealthService();
     }

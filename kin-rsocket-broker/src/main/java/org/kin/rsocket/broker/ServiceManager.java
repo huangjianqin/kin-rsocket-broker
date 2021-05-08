@@ -232,7 +232,7 @@ public final class ServiceManager {
             writeLock.unlock();
         }
 
-        log.info("succeed to remove broker responder");
+        log.info(String.format("succeed to remove connection from application '%s'", appMetadata.getName()));
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
         this.notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' offline now!", appMetadata.getName(), appMetadata.getIp()));
     }

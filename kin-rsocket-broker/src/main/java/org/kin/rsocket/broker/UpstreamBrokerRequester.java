@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * @author huangjianqin
  * @date 2021/3/30
  */
-final class UpStreamBrokerRequester implements RequesterSupport {
+final class UpstreamBrokerRequester implements RequesterSupport {
     /** broker config */
     private final RSocketBrokerProperties brokerConfig;
     /** app name */
@@ -34,7 +34,7 @@ final class UpStreamBrokerRequester implements RequesterSupport {
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
 
-    public UpStreamBrokerRequester(RSocketBrokerProperties brokerConfig,
+    public UpstreamBrokerRequester(RSocketBrokerProperties brokerConfig,
                                    String appName,
                                    ServiceManager serviceManager,
                                    RSocketFilterChain filterChain) {

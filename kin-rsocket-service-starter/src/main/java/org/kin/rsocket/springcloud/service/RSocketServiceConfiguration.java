@@ -15,6 +15,7 @@ import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,8 +24,6 @@ import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 
 import java.util.stream.Collectors;
@@ -35,16 +34,13 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableConfigurationProperties(RSocketServiceProperties.class)
-public class RSocketServiceAutoConfiguration {
-    @Autowired
-    private RSocketServiceProperties config;
-
+public class RSocketServiceConfiguration {
     //----------------------------cloud event consumers----------------------------
 
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean(autowireCandidate = false, destroyMethod = "close")
+    @Bean(destroyMethod = "close")
     public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
         CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
         return CloudEventConsumers.INSTANCE;
@@ -62,7 +58,8 @@ public class RSocketServiceAutoConfiguration {
 
     //--------------------------------------------------------------------------------
     @Bean(destroyMethod = "close")
-    public RSocketServiceConnector rsocketServiceConnector(@Autowired Environment env) {
+    public RSocketServiceConnector rsocketServiceConnector(@Autowired Environment env,
+                                                           @Autowired RSocketServiceProperties config) {
         String appName = env.getProperty("spring.application.name", "unknown");
         return new RSocketServiceConnector(appName, config);
     }
@@ -70,17 +67,19 @@ public class RSocketServiceAutoConfiguration {
 
     /**
      * {@link RSocketService}注解processor
+     * 此处使用{@link Value}而不是{@link Autowired} {@link RSocketServiceProperties}, 是为了先初始化{@link RSocketServiceAnnoProcessor},
+     * 避免{@link RSocketServiceProperties}没有被所有{@link org.springframework.beans.factory.config.BeanPostProcessor}处理, 而导致spring打印警告
      */
     @Bean
-    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor() {
-        return new RSocketServiceAnnoProcessor(config.getGroup(), config.getVersion());
+    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor(@Value("${kin.rsocket.group:}") String group,
+                                                                   @Value("${kin.rsocket.version:}") String version) {
+        return new RSocketServiceAnnoProcessor(group, version);
     }
 
     /**
      * 服务暴露给broker逻辑实现
      */
     @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
     public ServicesPublisher servicesPublisher() {
         return new ServicesPublisher();
     }
@@ -88,9 +87,10 @@ public class RSocketServiceAutoConfiguration {
     /**
      * 开启actuator监控
      */
-    @Bean(autowireCandidate = false)
-    public RSocketEndpoint rsocketEndpoint() {
-        return new RSocketEndpoint(config, rsocketServiceConnector(null));
+    @Bean
+    public RSocketEndpoint rsocketEndpoint(@Autowired RSocketServiceProperties config,
+                                           @Autowired RSocketServiceConnector connector) {
+        return new RSocketEndpoint(config, connector);
     }
 
     /**
@@ -98,8 +98,10 @@ public class RSocketServiceAutoConfiguration {
      */
     @Bean
     @ConditionalOnProperty("kin.rsocket.brokers")
-    public HealthIndicator healthIndicator(@Value("${kin.rsocket.brokers}") String brokers) {
-        return new HealthIndicator(rsocketEndpoint(), healthCheckRef(), brokers);
+    public HealthIndicator healthIndicator(@Value("${kin.rsocket.brokers}") String brokers,
+                                           @Autowired RSocketEndpoint endpoint,
+                                           @Autowired @Qualifier("healthCheckRef") HealthCheck healthCheck) {
+        return new HealthIndicator(endpoint, healthCheck, brokers);
     }
 
     /**
@@ -131,13 +133,18 @@ public class RSocketServiceAutoConfiguration {
         };
     }
 
+    @Bean
+    public JwtTokenFailureAnalyzer jwtTokenFailureAnalyzer() {
+        return new JwtTokenFailureAnalyzer();
+    }
+
     //----------------------------service reference----------------------------
-    @Bean(autowireCandidate = false)
-    public HealthCheck healthCheckRef() {
+    @Bean("healthCheckRef")
+    public HealthCheck healthCheckRef(@Autowired RSocketServiceConnector connector) {
         return ServiceReferenceBuilder
                 .requester(HealthCheck.class)
                 .nativeImage()
-                .upstreamClusterManager(rsocketServiceConnector(null))
+                .upstreamClusterManager(connector)
                 .build();
     }
 }
