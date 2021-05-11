@@ -73,7 +73,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
             }
         }
 
-        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), readPrivateKey(authDir))).withIssuer(ISS).build());
+        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(ISS).build());
     }
 
     @Override

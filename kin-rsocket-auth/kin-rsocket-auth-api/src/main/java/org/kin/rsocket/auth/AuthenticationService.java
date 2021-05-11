@@ -12,6 +12,7 @@ public interface AuthenticationService {
 
     /**
      * 生成证书
+     * 对admin提供生成校验证书接口
      */
     default String generateCredentials(String id,
                                        String[] organizations,
