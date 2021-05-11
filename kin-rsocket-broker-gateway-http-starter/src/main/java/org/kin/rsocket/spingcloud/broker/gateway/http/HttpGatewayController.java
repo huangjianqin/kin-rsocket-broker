@@ -9,9 +9,7 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.service.UpstreamClusterManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -23,22 +21,25 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
  * @author huangjianqin
  * @date 2021/4/20
  */
-@Controller
+@RestController
+@RequestMapping("/api")
 public class HttpGatewayController {
     private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
 
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private RSocketBrokerHttpGatewayProperties config;
+    private final AuthenticationService authenticationService;
+    private final RSocketBrokerHttpGatewayProperties config;
     /** broker upstream cluster */
-    private RSocket rsocket;
+    private final RSocket rsocket;
 
-    public HttpGatewayController(UpstreamClusterManager upstreamClusterManager) {
+    public HttpGatewayController(UpstreamClusterManager upstreamClusterManager,
+                                 AuthenticationService authenticationService,
+                                 RSocketBrokerHttpGatewayProperties config) {
         rsocket = upstreamClusterManager.getBroker();
+        this.authenticationService = authenticationService;
+        this.config = config;
     }
 
-    @RequestMapping(value = "/api/{serviceName}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/{serviceName}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public Mono<ResponseEntity<ByteBuf>> handle(@PathVariable("serviceName") String serviceName,
                                                 @PathVariable("method") String method,
                                                 @RequestParam(name = "group", required = false, defaultValue = "") String group,

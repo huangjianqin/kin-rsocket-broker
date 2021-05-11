@@ -2,10 +2,10 @@ package org.kin.rsocket.broker.services;
 
 import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.ServiceManager;
-import org.kin.rsocket.broker.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.discovery.DiscoveryService;
+import org.kin.rsocket.core.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;

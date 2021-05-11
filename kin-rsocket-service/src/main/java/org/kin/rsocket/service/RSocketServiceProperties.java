@@ -14,8 +14,8 @@ import java.util.Map;
 public class RSocketServiceProperties {
     /** schema, such as tcp, local */
     private String schema = "tcp";
-    /** listen port, default is 9998`, 0 means to disable listen */
-    private Integer port = 9998;
+    /** listen port, 0 means to disable listen */
+    private int port;
     /** broker url, such tcp://127.0.0.1:9999 */
     private List<String> brokers = Collections.singletonList("tcp://0.0.0.0:9999");
     /** topology, intranet or internet */
@@ -29,7 +29,7 @@ public class RSocketServiceProperties {
     /** JWT token */
     private String jwtToken;
     /** request/response timeout, and default value is 3000 and unit is millisecond */
-    private Integer timeout = 3000;
+    private int timeout = 3000;
     /** endpoints: interface full name to endpoint url */
     private List<EndpointProperties> endpoints;
 
@@ -42,11 +42,11 @@ public class RSocketServiceProperties {
         this.schema = schema;
     }
 
-    public Integer getPort() {
+    public int getPort() {
         return port;
     }
 
-    public void setPort(Integer port) {
+    public void setPort(int port) {
         this.port = port;
     }
 
@@ -106,11 +106,11 @@ public class RSocketServiceProperties {
         this.metadata = metadata;
     }
 
-    public Integer getTimeout() {
+    public int getTimeout() {
         return timeout;
     }
 
-    public void setTimeout(Integer timeout) {
+    public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
 

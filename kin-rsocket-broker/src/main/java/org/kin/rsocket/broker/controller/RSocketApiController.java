@@ -53,7 +53,7 @@ public class RSocketApiController {
                                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         try {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
-            Integer serviceId = routingMetadata.serviceId();
+            int serviceId = routingMetadata.serviceId();
 
             BrokerResponder responder;
             if (!endpoint.isEmpty() && endpoint.startsWith("id:")) {

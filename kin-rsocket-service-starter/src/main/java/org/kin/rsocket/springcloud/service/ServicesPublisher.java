@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
  * @see ContextRefreshedEvent
  */
 @Order(-100)
-final class ServicesPublisher implements ApplicationListener<ContextRefreshedEvent> {
+final class ServicesPublisher implements ApplicationListener<ApplicationReadyEvent> {
     private static final Logger log = LoggerFactory.getLogger(ServicesPublisher.class);
     @Autowired
     private RSocketServiceConnector connector;
@@ -44,7 +45,7 @@ final class ServicesPublisher implements ApplicationListener<ContextRefreshedEve
     private HealthService healthService;
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
+    public void onApplicationEvent(ApplicationReadyEvent event) {
         //connect
         connector.connect(
                 binderBuilderCustomizers.orderedStream().collect(Collectors.toList()),

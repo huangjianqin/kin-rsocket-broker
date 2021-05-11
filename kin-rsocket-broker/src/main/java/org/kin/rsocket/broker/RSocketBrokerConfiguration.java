@@ -4,6 +4,7 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.broker.cluster.StandAloneBrokerManager;
+import org.kin.rsocket.broker.controller.*;
 import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
 import org.kin.rsocket.broker.services.HealthService;
@@ -232,5 +233,30 @@ public class RSocketBrokerConfiguration {
     public HealthService healthService() {
         return new HealthService();
     }
-    //----------------------------------------------
+
+    //----------------------------------------------controller----------------------------------------------
+    @Bean
+    public AppQueryController appQueryController() {
+        return new AppQueryController();
+    }
+
+    @Bean
+    public ConfigController configController() {
+        return new ConfigController();
+    }
+
+    @Bean
+    public OprController oprController() {
+        return new OprController();
+    }
+
+    @Bean
+    public RSocketApiController rsocketApiController() {
+        return new RSocketApiController();
+    }
+
+    @Bean
+    public ServiceQueryController serviceQueryController() {
+        return new ServiceQueryController();
+    }
 }

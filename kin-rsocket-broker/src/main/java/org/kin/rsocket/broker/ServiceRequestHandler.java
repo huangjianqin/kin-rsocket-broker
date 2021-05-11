@@ -111,7 +111,13 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
 
         // broker local service call
         if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            return localRequestResponse(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, acceptMimeTypesMetadata, payload);
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
+            if (Objects.isNull(acceptMimeTypesMetadata)) {
+                acceptMimeTypesMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes);
+            }
+
+            return localRequestResponse(gsvRoutingMetadata, messageMimeTypeMetadata, acceptMimeTypesMetadata, payload);
         }
 
         //request filters
@@ -158,6 +164,9 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
 
         // broker local service call
         if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
+
             return localFireAndForget(gsvRoutingMetadata, messageMimeTypeMetadata, payload);
         }
 
@@ -207,6 +216,12 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
 
         // broker local service call
         if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
+            if (Objects.isNull(acceptMimeTypesMetadata)) {
+                acceptMimeTypesMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes);
+            }
+
             return localRequestStream(gsvRoutingMetadata, messageMimeTypeMetadata, acceptMimeTypesMetadata, payload);
         }
 
@@ -391,6 +406,18 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
      */
     private void recordServiceInvoke(String serviceId) {
         consumedServices.add(serviceId);
+    }
+
+    /**
+     * 解析并获取{@link MessageMimeTypeMetadata}
+     */
+    private MessageMimeTypeMetadata getDataEncodingMetadata(RSocketCompositeMetadata compositeMetadata) {
+        MessageMimeTypeMetadata dataEncodingMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageMimeType);
+        if (dataEncodingMetadata == null) {
+            return defaultMessageMimeTypeMetadata;
+        } else {
+            return dataEncodingMetadata;
+        }
     }
 
     //getter

@@ -65,10 +65,15 @@ public final class JwtAuthenticationService implements AuthenticationService {
             if (Objects.nonNull(authDir) && !authDir.exists()) {
                 authDir.mkdir();
             }
-            generateRSAKeyPairs(authDir);
+            File pubKeyFile = new File(authDir, PUBLIC_KEY_FILE);
+            File priKeyFile = new File(authDir, PRIVATE_KEY_FILE);
+            if (!pubKeyFile.exists() && !priKeyFile.exists()) {
+                //RSAKey公钥和密钥文件都不存在
+                generateRSAKeyPairs(authDir);
+            }
         }
 
-        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(ISS).build());
+        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), readPrivateKey(authDir))).withIssuer(ISS).build());
     }
 
     @Override

@@ -244,7 +244,10 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Mono.error(new NoAvailableConnectionException(serviceId));
         }
         return next.requestResponse(payload)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> requestResponse(payload));
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
+                    onRSocketClosed(next, error);
+                    return requestResponse(payload);
+                });
     }
 
 
@@ -259,7 +262,10 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Mono.error(new NoAvailableConnectionException(serviceId));
         }
         return next.fireAndForget(payload)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> fireAndForget(payload));
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
+                    onRSocketClosed(next, error);
+                    return fireAndForget(payload);
+                });
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -303,7 +309,10 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Flux.error(new NoAvailableConnectionException(serviceId));
         }
         return next.requestStream(payload)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> requestStream(payload));
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
+                    onRSocketClosed(next, error);
+                    return requestStream(payload);
+                });
     }
 
     @Override
@@ -316,7 +325,10 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return Flux.error(new NoAvailableConnectionException(serviceId));
         }
         return next.requestChannel(payloads)
-                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> requestChannel(payloads));
+                .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
+                    onRSocketClosed(next, error);
+                    return requestChannel(payloads);
+                });
     }
 
     @Override
@@ -345,6 +357,14 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
         }
         for (String unhealthyUri : unhealthyUris) {
             tryToReconnect(unhealthyUri);
+        }
+    }
+
+    private void onRSocketClosed(RSocket rsocket, Throwable cause) {
+        for (Map.Entry<String, RSocket> entry : activeRSockets.entrySet()) {
+            if (entry.getValue() == rsocket) {
+                onRSocketClosed(entry.getKey(), entry.getValue(), cause);
+            }
         }
     }
 

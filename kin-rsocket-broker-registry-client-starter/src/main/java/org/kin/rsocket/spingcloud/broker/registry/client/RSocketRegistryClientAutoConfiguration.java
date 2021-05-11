@@ -4,6 +4,8 @@ import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.service.ServiceReferenceBuilder;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
+import org.springframework.cloud.client.ConditionalOnReactiveDiscoveryEnabled;
 import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,8 +17,10 @@ import org.springframework.context.annotation.Configuration;
  * @date 2021/4/20
  */
 @Configuration
+@ConditionalOnDiscoveryEnabled
+@ConditionalOnReactiveDiscoveryEnabled
 public class RSocketRegistryClientAutoConfiguration {
-    @Bean(autowireCandidate = false)
+    @Bean
     public DiscoveryService discoveryService(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return ServiceReferenceBuilder
                 .requester(DiscoveryService.class)
@@ -25,7 +29,7 @@ public class RSocketRegistryClientAutoConfiguration {
     }
 
     @Bean
-    public ReactiveDiscoveryClient discoveryClient() {
-        return new RSocketDiscoveryClient(discoveryService(null));
+    public ReactiveDiscoveryClient discoveryClient(@Autowired DiscoveryService discoveryService) {
+        return new RSocketReactiveDiscoveryClient(discoveryService);
     }
 }

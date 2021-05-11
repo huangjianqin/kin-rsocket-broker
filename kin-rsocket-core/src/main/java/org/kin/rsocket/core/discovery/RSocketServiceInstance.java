@@ -1,4 +1,4 @@
-package org.kin.rsocket.broker.discovery;
+package org.kin.rsocket.core.discovery;
 
 import org.springframework.cloud.client.ServiceInstance;
 

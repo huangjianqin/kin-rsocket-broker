@@ -41,6 +41,7 @@ public @interface RSocketService {
 
     /**
      * encoding strategies
+     * todo
      *
      * @return encoding names
      */
@@ -48,7 +49,7 @@ public @interface RSocketService {
 
     /**
      * service tags
-     *
+     * todo
      * @return labels
      */
     String[] tags() default {};
