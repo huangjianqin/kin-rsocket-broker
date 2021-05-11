@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * @date 2021/3/28
  */
 @SuppressWarnings({"ConstantConditions", "rawtypes"})
-final class RequesterSupportImpl implements RequesterSupport {
+public final class RequesterSupportImpl implements RequesterSupport {
     /** spring rsocket config */
     private final RSocketServiceProperties config;
     /** app name */

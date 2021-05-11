@@ -1,4 +1,4 @@
-package org.kin.rsocket.spingcloud.broker.gateway.http;
+package org.kin.rsocket.springcloud.gateway.http;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author huangjianqin
  * @date 2021/4/20
  */
-@ConfigurationProperties(prefix = "kin.rsocket.broker")
+@ConfigurationProperties(prefix = "kin.rsocket.gateway")
 public class RSocketBrokerHttpGatewayProperties {
     private boolean restapiAuth = false;
 

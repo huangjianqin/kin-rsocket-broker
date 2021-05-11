@@ -1,0 +1,11 @@
+{
+  "properties": [
+    {
+      "name": "kin.rsocket.gateway.restapiAuth",
+      "type": "java.lang.Boolean",
+      "description": "rsocket http gateway是否开启校验",
+      "sourceType": "org.kin.rsocket.springcloud.gateway.http.RSocketBrokerHttpGatewayProperties",
+      "defaultValue": "true"
+    }
+  ]
+}
