@@ -19,6 +19,7 @@
         <module>kin-rsocket-conf</module>
         <module>kin-rsocket-service-starter</module>
         <module>kin-rsocket-broker-starter</module>
+        <module>kin-rsocket-bom</module>
     </modules>
     <packaging>pom</packaging>
 
