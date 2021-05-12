@@ -3,13 +3,9 @@ package org.kin.rsocket.springcloud.service;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RSocketServiceAnnoProcessor;
-import org.kin.rsocket.core.event.CloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.ServiceReferenceBuilder;
-import org.kin.rsocket.springcloud.service.event.CloudEvent2ApplicationEventConsumer;
-import org.kin.rsocket.springcloud.service.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.springcloud.service.health.HealthIndicator;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
@@ -24,6 +20,7 @@ import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
 import java.util.stream.Collectors;
@@ -34,37 +31,16 @@ import java.util.stream.Collectors;
  */
 @Configuration
 @EnableConfigurationProperties(RSocketServiceProperties.class)
+@Import(RSocketCloudEventConsumerConfiguration.class)
 public class RSocketServiceConfiguration {
-    //----------------------------cloud event consumers----------------------------
-
-    /**
-     * 管理所有{@link CloudEventConsumer}的实例
-     */
-    @Bean(destroyMethod = "close")
-    public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
-        return CloudEventConsumers.INSTANCE;
-    }
-
-    @Bean
-    public CloudEvent2ApplicationEventConsumer cloudEvent2ListenerConsumer() {
-        return new CloudEvent2ApplicationEventConsumer();
-    }
-
-    @Bean
-    public InvalidCacheEventConsumer invalidCacheEventConsumer() {
-        return new InvalidCacheEventConsumer();
-    }
-
-    //--------------------------------------------------------------------------------
     @Bean(destroyMethod = "close")
     public RSocketServiceConnector rsocketServiceConnector(@Autowired Environment env,
                                                            @Autowired RSocketServiceProperties config) {
         String appName = env.getProperty("spring.application.name", "unknown");
         return new RSocketServiceConnector(appName, config);
     }
-    //----------------------------spring----------------------------
 
+    //----------------------------spring----------------------------
     /**
      * {@link RSocketService}注解processor
      * 此处使用{@link Value}而不是{@link Autowired} {@link RSocketServiceProperties}, 是为了先初始化{@link RSocketServiceAnnoProcessor},
