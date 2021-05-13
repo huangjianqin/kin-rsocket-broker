@@ -1,6 +1,5 @@
 package org.kin.rsocket.core.discovery;
 
-import org.springframework.cloud.client.ServiceInstance;
 import reactor.core.publisher.Flux;
 
 /**
@@ -16,7 +15,7 @@ public interface DiscoveryService {
      *
      * @param serviceId 即app name
      */
-    Flux<ServiceInstance> getInstances(String serviceId);
+    Flux<RSocketServiceInstance> getInstances(String serviceId);
 
     /**
      * 返回所有服务

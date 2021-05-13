@@ -8,7 +8,8 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-example-requester</artifactId>
+    <artifactId>kin-rsocket-example-springcloud</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -19,14 +20,34 @@
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-gateway-http-starter</artifactId>
+            <artifactId>kin-rsocket-registry-client-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <!-- reactive web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- reactor open feign -->
+        <dependency>
+            <groupId>com.playtika.reactivefeign</groupId>
+            <artifactId>feign-reactor-cloud</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.playtika.reactivefeign</groupId>
+            <artifactId>feign-reactor-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.playtika.reactivefeign</groupId>
+            <artifactId>feign-reactor-spring-configuration</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.playtika.reactivefeign</groupId>
+            <artifactId>feign-reactor-webclient</artifactId>
         </dependency>
     </dependencies>
 

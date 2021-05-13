@@ -33,7 +33,8 @@ public class RSocketReactiveDiscoveryClient implements ReactiveDiscoveryClient {
                                 rsocketInstance.getServiceId(),
                                 rsocketInstance.getHost(),
                                 rsocketInstance.getPort(),
-                                rsocketInstance.isSecure(),
+                                //todo 返回https时, http gate抛异常
+                                false,
                                 rsocketInstance.getMetadata()));
     }
 

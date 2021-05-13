@@ -1,4 +1,4 @@
-package org.kin.rsocket.example.controller;
+package org.kin.rsocket.example.consumer;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

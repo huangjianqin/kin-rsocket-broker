@@ -26,14 +26,12 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * 多语言支持: RSocket是一套标准协议, 主流语言的SDK都有支持.
 
 ## **实现模块**
-
 * **kin-rsocket-auth**: 权限校验模块
   * **kin-rsocket-auth-api**: 权限校验接口api模块
   * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
 * **kin-roscket-broker**: rsocket broker实现
-* **kin-rsocket-broker-gateway-http-starter**: rsocket service http gateway
 * **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud
-* **kin-rsocket-broker-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
+* **kin-rsocket-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
 * **kin-rsocket-broker-starter**: rsocket broker实现, 整合spring cloud
 * **kin-rsocket-conf**: broker配置中心模块
   * **kin-rsocket-conf-api**: : broker配置中心接口api模块
@@ -45,9 +43,21 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
   * **kin-roscket-example-broker**: rsocket broker示例
   * **kin-roscket-example-requester**: rsocket consumer示例
   * **kin-roscket-example-responder**: rsocket service示例
+  * **kin-roscket-example-springcloud**: rsocket service整合spring cloud示例
+* **kin-rsocket-gateway-http-starter**: rsocket service http gateway
 * **kin-roscket-service**: rsocket服务实现
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
 * **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
 
+## **整合Spring Cloud**
+
+基于playtika的reactive feign提供支持异步的feign
+
+rsocket broker相当于注册中心, 每个消费者挂上 ```kin-rsocket-registry-client-starter``` 发现broker上已注册的服务,
+每个rsocket服务都需要挂上 ```kin-rsocket-gateway-http-starter```, 那么就可以实现类似于spring cloud全家桶那样子的 微服务架构. 当然, 对于异构集群,
+可以把 ```kin-rsocket-registry-client-starter``` 和 ```kin-rsocket-gateway-http-starter```
+同时作为两个集群的一员, 然后通过registry client发现broker服务, 根据服务实例信息, 请求gateway, 进而实现非对称集群访问rsocket broker集群服务
+
+详细代码请看 ```kin-roscket-example-springcloud``` 模块
+
 ## **展望**
-* 整合spring cloud服务

@@ -1,4 +1,4 @@
-package org.kin.rsocket.example.controller;
+package org.kin.rsocket.example.consumer;
 
 import org.kin.rsocket.example.UserService;
 import org.kin.rsocket.service.RSocketServiceConnector;

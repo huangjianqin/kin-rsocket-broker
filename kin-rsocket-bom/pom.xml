@@ -33,7 +33,7 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-rsocket-broker-registry-client-starter</artifactId>
+                <artifactId>kin-rsocket-registry-client-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

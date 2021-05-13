@@ -12,7 +12,7 @@
         <module>kin-rsocket-service</module>
         <module>kin-rsocket-example</module>
         <module>kin-rsocket-broker-gossip-starter</module>
-        <module>kin-rsocket-broker-registry-client-starter</module>
+        <module>kin-rsocket-registry-client-starter</module>
         <module>kin-rsocket-service-conf-client-starter</module>
         <module>kin-rsocket-gateway-http-starter</module>
         <module>kin-rsocket-auth</module>
@@ -46,6 +46,7 @@
         <kin-rpc-serialization.version>0.1.0.0</kin-rpc-serialization.version>
         <byte-buddy.version>1.10.18</byte-buddy.version>
         <guava.version>30.1-jre</guava.version>
+        <feign-reactor.version>3.0.0</feign-reactor.version>
     </properties>
 
     <dependencyManagement>
@@ -71,8 +72,16 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${springboot.version}</version>
-                <scope>import</scope>
                 <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-bom</artifactId>
+                <version>${feign-reactor.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

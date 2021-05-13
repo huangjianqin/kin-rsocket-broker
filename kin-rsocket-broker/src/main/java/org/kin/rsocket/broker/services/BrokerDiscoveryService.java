@@ -9,7 +9,6 @@ import org.kin.rsocket.core.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.ServiceInstance;
 import reactor.core.publisher.Flux;
 
 /**
@@ -22,7 +21,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
     private ServiceManager serviceManager;
 
     @Override
-    public Flux<ServiceInstance> getInstances(String serviceId) {
+    public Flux<RSocketServiceInstance> getInstances(String serviceId) {
         return findServicesInstancesByAppName(serviceId);
     }
 
@@ -34,7 +33,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
     /**
      * 通过app name寻找service instances
      */
-    private Flux<ServiceInstance> findServicesInstancesByAppName(String appName) {
+    private Flux<RSocketServiceInstance> findServicesInstancesByAppName(String appName) {
         return Flux.fromIterable(serviceManager.getAllResponders())
                 .filter(responder -> responder.getAppMetadata().getName().equalsIgnoreCase(appName))
                 .filter(responder -> responder.getAppStatus().equals(AppStatus.SERVING))
@@ -44,7 +43,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
     /**
      * 构建{@link RSocketServiceInstance}实例
      */
-    private ServiceInstance newServiceInstance(BrokerResponder responder) {
+    private RSocketServiceInstance newServiceInstance(BrokerResponder responder) {
         AppMetadata appMetadata = responder.getAppMetadata();
         RSocketServiceInstance serviceInstance = new RSocketServiceInstance();
         serviceInstance.setInstanceId(appMetadata.getUuid());
@@ -54,9 +53,10 @@ public class BrokerDiscoveryService implements DiscoveryService {
             serviceInstance.setPort(appMetadata.getWebPort());
             String schema = "http";
             serviceInstance.setSecure(appMetadata.isSecure());
-            if (appMetadata.isSecure()) {
-                schema = "https";
-            }
+            //todo 返回https时, http gate抛异常
+//            if (appMetadata.isSecure()) {
+//                schema = "https";
+//            }
             serviceInstance.setSchema(schema);
             //返回web port
             serviceInstance.setUri(schema + "://" + appMetadata.getIp() + ":" + appMetadata.getWebPort());
