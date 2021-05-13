@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RSocketBrokerGossipProperties {
     /** Gossip listen port */
     private int port = 10999;
-    /** gossip node */
+    /** gossip node, host:port */
     private String[] seeds;
 
     //setter && getter

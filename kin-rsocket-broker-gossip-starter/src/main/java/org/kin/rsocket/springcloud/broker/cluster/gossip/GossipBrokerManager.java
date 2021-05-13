@@ -90,7 +90,10 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     private List<Address> seedMembers() {
         //从upstream broker host获取
         return Stream.of(gossipConfig.getSeeds())
-                .map(host -> Address.create(host, gossipConfig.getPort()))
+                .map(hostPort -> {
+                    String[] splits = hostPort.split(":");
+                    return Address.create(splits[0], Integer.parseInt(splits[1]));
+                })
                 .collect(Collectors.toList());
     }
 
