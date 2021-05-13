@@ -43,6 +43,8 @@ final class ServicesPublisher implements ApplicationListener<ApplicationReadyEve
     private ObjectProvider<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers;
     @Autowired
     private HealthService healthService;
+    @Autowired
+    private RSocketServiceProperties serviceConfig;
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
@@ -60,9 +62,6 @@ final class ServicesPublisher implements ApplicationListener<ApplicationReadyEve
             return;
         }
 
-        //broker uris
-        String brokerUris = String.join(",", brokerCluster.getUris());
-
         //ports update
         if (RSocketAppContext.webPort > 0 || RSocketAppContext.managementPort > 0 || RSocketAppContext.rsocketPorts != null) {
             PortsUpdateEvent portsUpdateEvent = new PortsUpdateEvent();
@@ -76,6 +75,9 @@ final class ServicesPublisher implements ApplicationListener<ApplicationReadyEve
             brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent).subscribe();
         }
 
-        connector.publishServices();
+        if (serviceConfig.getPort() > 0) {
+            //没有绑定rsocket port, 则是无法调用该app 服务, 那么没必要暴露服务
+            connector.publishServices();
+        }
     }
 }

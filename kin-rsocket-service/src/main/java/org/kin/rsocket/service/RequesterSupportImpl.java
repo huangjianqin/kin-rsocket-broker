@@ -59,12 +59,14 @@ public final class RequesterSupportImpl implements RequesterSupport {
             List<MetadataAware> metadataAwares = new ArrayList<>(3);
             //app metadata
             metadataAwares.add(getAppMetadata());
-            //published services
-            Set<ServiceLocator> serviceLocators = ReactiveServiceRegistry.exposedServices();
-            if (!serviceLocators.isEmpty()) {
-                ServiceRegistryMetadata.Builder builder = ServiceRegistryMetadata.builder();
-                builder.addPublishedServices(serviceLocators);
-                metadataAwares.add(builder.build());
+            if (config.getPort() > 0) {
+                //published services
+                Set<ServiceLocator> serviceLocators = ReactiveServiceRegistry.exposedServices();
+                if (!serviceLocators.isEmpty()) {
+                    ServiceRegistryMetadata.Builder builder = ServiceRegistryMetadata.builder();
+                    builder.addPublishedServices(serviceLocators);
+                    metadataAwares.add(builder.build());
+                }
             }
             // authentication
             if (StringUtils.isNotBlank(config.getJwtToken())) {
