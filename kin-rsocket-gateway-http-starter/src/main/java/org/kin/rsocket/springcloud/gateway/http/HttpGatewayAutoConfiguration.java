@@ -2,7 +2,6 @@ package org.kin.rsocket.springcloud.gateway.http;
 
 import io.rsocket.RSocket;
 import org.kin.rsocket.auth.AuthenticationService;
-import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.service.RequesterSupportImpl;
 import org.kin.rsocket.service.UpstreamClusterManager;
@@ -40,18 +39,13 @@ public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
                                                        @Autowired AuthenticationService authenticationService,
                                                        @Autowired RSocketBrokerHttpGatewayProperties httpGatewayConfig,
                                                        @Autowired RSocketServiceProperties serviceConfig,
-                                                       @Autowired RequesterSupport requesterSupport,
                                                        @Value("${spring.application.name:rsocket-http-gateway}") String appName) {
         RSocket brokerRSocket;
         if (Objects.nonNull(upstreamClusterManager)) {
             //配置有UpstreamClusterManager bean
             brokerRSocket = upstreamClusterManager.getBroker();
         } else {
-            if (Objects.isNull(requesterSupport)) {
-                requesterSupport = new RequesterSupportImpl(serviceConfig, appName);
-            }
-
-            brokerRSocket = UpstreamCluster.brokerUpstreamCluster(requesterSupport, serviceConfig.getBrokers());
+            brokerRSocket = UpstreamCluster.brokerUpstreamCluster(new RequesterSupportImpl(serviceConfig, appName), serviceConfig.getBrokers());
         }
 
         if (Objects.isNull(brokerRSocket)) {
