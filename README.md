@@ -49,6 +49,187 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
 * **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
 
+## **RSocket服务示例**
+
+基于maven
+
+### **Broker单点**
+
+配置pom.xml
+
+```xml
+
+<dependency>
+  <groupId>org.kin</groupId>
+  <artifactId>kin-rsocket-broker</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+配置application.yml
+
+```yaml
+server:
+  port: 9998
+
+kin:
+  rsocket:
+    broker:
+      port: 9999
+```
+
+创建main class
+
+```java
+
+@SpringBootApplication
+@EnableRSocketBroker
+public class RSocketBrokerApplication {
+  public static void main(String[] args) {
+    SpringApplication.run(RSocketBrokerApplication.class, args);
+  }
+}
+```
+
+### **Broker集群**
+
+目前实现基于gossip管理所有broker  
+配置pom.xml
+
+```xml
+
+<dependency>
+  <groupId>org.kin</groupId>
+  <artifactId>kin-rsocket-broker-gossip-starter</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+配置application.yml
+
+```yaml
+server:
+  port: 9998
+
+kin:
+  rsocket:
+    broker:
+      port: 9999
+      gossip:
+        port: 10999
+        seeds: ${other broker node host:port}
+```
+
+### **RSocket服务提供者**
+
+配置pom.xml
+
+```xml
+
+<dependency>
+  <groupId>org.kin</groupId>
+  <artifactId>kin-rsocket-service-starter</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+配置application.yml
+
+```yaml
+server:
+  port: 9100
+
+kin:
+  rsocket:
+    brokers: tcp://127.0.0.1:9999
+    port: 9101
+```
+
+创建接口以及其实现类
+
+```java
+public interface HelloService {
+  Mono<String> hello();
+}
+
+@RSocketService(HelloService.class)
+@Service
+public class HelloServiceImpl implements HelloService {
+  @Override
+  public Mono<String> hello() {
+    return Mono.just("Welcome To RSocket Service");
+  }
+}
+```
+
+创建main class
+
+```java
+
+@EnableRSocketService
+@SpringBootApplication
+public class ServiceApplication {
+  public static void main(String[] args) throws InterruptedException {
+    SpringApplication.run(ServiceApplication.class, args);
+  }
+}
+```
+
+### **RSocket服务消费者**
+
+配置pom.xml
+
+```xml
+
+<dependency>
+  <groupId>org.kin</groupId>
+  <artifactId>kin-rsocket-service-starter</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+配置application.yml
+
+```yaml
+server:
+  port: 9200
+
+kin:
+  rsocket:
+    brokers: tcp://127.0.0.1:9999
+    port: 9201
+```
+
+创建服务引用
+
+```java
+
+@Configuration
+public class RequesterConfiguration {
+  @Bean
+  public HelloService helloService(@Autowired RSocketServiceConnector connector) {
+    return ServiceReferenceBuilder
+            .requester(HelloService.class)
+            .upstreamClusterManager(connector)
+            .build();
+  }
+}
+
+```
+
+创建main class
+
+```java
+
+@EnableRSocketService
+@SpringBootApplication
+public class RequesterSpringApplication {
+  public static void main(String[] args) {
+    SpringApplication.run(RequesterSpringApplication.class, args);
+  }
+}
+```
+
 ## **整合Spring Cloud**
 
 基于playtika的reactive feign提供支持异步的feign
@@ -61,3 +242,5 @@ rsocket broker相当于注册中心, 每个消费者挂上 ```kin-rsocket-regist
 详细代码请看 ```kin-roscket-example-springcloud``` 模块
 
 ## **展望**
+
+* 简化创建RSocket service refernce bean操作
