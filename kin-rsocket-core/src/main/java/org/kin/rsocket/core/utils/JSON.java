@@ -36,6 +36,8 @@ public class JSON {
     /** 负责cloud event <-> json之间的转换 */
     private static final EventFormat EVENT_FORMAT = EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE);
     private static final ObjectMapper PARSER = new ObjectMapper();
+    private static final TypeReference<List<JsonNode>> TYPE_JSON_NODE_LIST = new TypeReference<List<JsonNode>>() {
+    };
 
     static {
         PARSER.setTypeFactory(TypeFactory.defaultInstance());
@@ -306,5 +308,17 @@ public class JSON {
             return new CloudEventData<>(jsonCloudEventData.getNode(), cloudEvent);
         }
         return new CloudEventData<>(null, cloudEvent);
+    }
+
+    /**
+     * 按数组形式读取json, 然后再根据指定class反序列每个item
+     */
+    public static Object[] readJsonArray(ByteBuf byteBuf, Class<?>[] targetClasses) throws IOException {
+        Object[] targets = new Object[targetClasses.length];
+        List<JsonNode> jsonNodes = PARSER.readValue(new ByteBufInputStream(byteBuf), TYPE_JSON_NODE_LIST);
+        for (int i = 0; i < targetClasses.length; i++) {
+            targets[i] = PARSER.treeToValue(jsonNodes.get(i), targetClasses[i]);
+        }
+        return targets;
     }
 }

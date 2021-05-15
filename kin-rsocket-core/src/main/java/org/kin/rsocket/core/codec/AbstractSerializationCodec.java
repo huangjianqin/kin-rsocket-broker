@@ -2,6 +2,7 @@ package org.kin.rsocket.core.codec;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.kinrpc.serialization.Serialization;
 
@@ -51,6 +52,9 @@ public abstract class AbstractSerializationCodec implements Codec {
 
     @Override
     public ByteBuf encodeParams(Object[] args) throws CodecException {
+        if (CollectionUtils.isEmpty(args)) {
+            return Unpooled.EMPTY_BUFFER;
+        }
         return encodeObj(args);
     }
 
