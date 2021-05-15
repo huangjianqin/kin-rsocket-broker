@@ -60,7 +60,7 @@ public class ServiceQueryController {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.of("", ReactiveServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
-            ByteBuf bodyBuf = Unpooled.wrappedBuffer(serviceName.getBytes(StandardCharsets.UTF_8));
+            ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(serviceName).concat("\"]")).getBytes(StandardCharsets.UTF_8));
             return brokerResponder
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(Payload::getDataUtf8);
