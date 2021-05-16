@@ -1,4 +1,4 @@
-package org.kin.rsocket.spingcloud.broker.registry.client;
+package org.kin.rsocket.spingcloud.registry.client;
 
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.service.ServiceReferenceBuilder;
