@@ -1,6 +1,6 @@
 package org.kin.rsocket.broker.event;
 
-import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
@@ -8,8 +8,6 @@ import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.Properties;
 
 /**
@@ -25,12 +23,7 @@ public final class BrokerConfigChangedEventConsumer extends AbstractCloudEventCo
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, ConfigChangedEvent event) {
-        Properties confs = new Properties();
-        try {
-            confs.load(new StringReader(event.getContent()));
-        } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
-        }
+        Properties confs = PropertiesUtils.loadPropertiesContent(event.getContent());
 
         for (String key : confs.stringPropertyNames()) {
             confDiamond.put(event.getAppName(), key, confs.getProperty(key)).subscribe();

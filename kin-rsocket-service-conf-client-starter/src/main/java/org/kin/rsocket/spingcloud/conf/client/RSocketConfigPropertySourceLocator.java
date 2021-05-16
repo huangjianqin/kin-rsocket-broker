@@ -1,5 +1,7 @@
-package org.kin.rsocket.spingcloud.broker.conf.client;
+package org.kin.rsocket.spingcloud.conf.client;
 
+import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.PropertiesUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
@@ -9,7 +11,6 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.StringReader;
 import java.net.URI;
 import java.util.Objects;
 import java.util.Properties;
@@ -17,7 +18,8 @@ import java.util.Properties;
 /**
  * RSocket Config properties source locator from RSocket Broker
  *
- * @author huangjianqin* @date 2021/4/20
+ * @author huangjianqin
+ * @date 2021/4/20
  */
 public class RSocketConfigPropertySourceLocator implements PropertySourceLocator {
     private static final Logger log = LoggerFactory.getLogger(RSocketConfigPropertySourceLocator.class);
@@ -56,7 +58,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
                             .block();
                     if (confText != null && !confText.isEmpty()) {
                         lastContent = confText;
-                        confs.load(new StringReader(lastContent));
+                        PropertiesUtils.loadPropertiesContent(confs, lastContent);
                         this.confs = confs;
                         log.info("Succeed to receive config: ".concat(confs.toString()));
                     } else {
@@ -72,7 +74,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
                     this.source = new PropertiesPropertySource("kin-rsocket-broker", confs);
                     return source;
                 } catch (Exception e) {
-                    log.error(String.format("Failed to fetch configuration from uri '%s'", httpUri), e);
+                    ExceptionUtils.throwExt(e);
                 }
             }
         }

@@ -1,5 +1,6 @@
-package org.kin.rsocket.spingcloud.broker.conf.client;
+package org.kin.rsocket.spingcloud.conf.client;
 
+import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.refresh.ContextRefresher;
 import reactor.core.publisher.Mono;
 
-import java.io.StringReader;
 import java.util.Properties;
 
 /**
@@ -37,7 +37,7 @@ public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<Confi
             Properties confs = locator.getConfs();
             if (confs != null) {
                 try {
-                    confs.load(new StringReader(event.getContent()));
+                    PropertiesUtils.loadPropertiesContent(confs, event.getContent());
                     log.info("Succeed to receive config: ".concat(confs.toString()));
                     //refresh environment, @RefreshScope bean, then configuration properties bean
                     contextRefresher.refresh();

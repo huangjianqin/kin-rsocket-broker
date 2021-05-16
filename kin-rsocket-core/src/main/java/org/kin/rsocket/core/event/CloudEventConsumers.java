@@ -4,6 +4,8 @@ import org.kin.framework.Closeable;
 import org.kin.rsocket.core.RSocketAppContext;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,10 +23,13 @@ public final class CloudEventConsumers implements Closeable {
     private final List<CloudEventConsumer> consumers = new CopyOnWriteArrayList<>();
     /** event topic processor subscribe disposable */
     private final Disposable disposable;
+    /** cloud event处理, 有界无限队列线程池执行, 主要是因为app刷新配置时需要请求broker配置信息并且spring的加载配置也不支持异步, 需要block */
+    private static final Scheduler CLOUD_EVENT_CONSUMER_SCHEDULER = Schedulers.newBoundedElastic(3, Integer.MAX_VALUE, "cloudEventConsumer");
 
     public CloudEventConsumers() {
         disposable = RSocketAppContext.CLOUD_EVENT_SINK.asFlux().subscribe(cloudEvent -> {
             Flux.fromIterable(consumers)
+                    .publishOn(CLOUD_EVENT_CONSUMER_SCHEDULER)
                     .filter(consumer -> consumer.shouldAccept(cloudEvent))
                     .flatMap(consumer -> consumer.consume(cloudEvent))
                     .subscribe();

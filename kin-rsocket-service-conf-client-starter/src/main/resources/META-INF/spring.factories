@@ -1,4 +1,4 @@
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-com.alibaba.rsocket.config.bootstrap.RSocketConfigPropertySourceLocator
+org.kin.rsocket.spingcloud.conf.client.RSocketConfDiamondClientBootstrapConfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.spingcloud.broker.conf.client.RSocketConfDiamondClientAutoConfiguration
+org.kin.rsocket.spingcloud.conf.client.RSocketConfDiamondClientAutoConfiguration

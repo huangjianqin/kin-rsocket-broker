@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import org.kin.framework.Closeable;
-import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.ServiceManager;
 import org.kin.rsocket.conf.ConfDiamond;
@@ -14,9 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -75,19 +72,10 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                 Properties properties = new Properties();
                 properties.put(config.first(), config.second());
 
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                properties.list(pw);
-
-                pw.close();
-                try {
-                    sw.close();
-                } catch (IOException e) {
-                    ExceptionUtils.throwExt(e);
-                }
+                String propertiesContent = PropertiesUtils.writePropertiesContent(properties);
 
                 CloudEventData<ConfigChangedEvent> configChangedEvent =
-                        CloudEventBuilder.builder(ConfigChangedEvent.of(appName, sw.toString())).build();
+                        CloudEventBuilder.builder(ConfigChangedEvent.of(appName, propertiesContent)).build();
                 serviceManager.broadcast(appName, configChangedEvent).subscribe();
             }));
         }

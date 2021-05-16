@@ -1,6 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import io.rsocket.exceptions.InvalidException;
+import org.kin.framework.utils.PropertiesUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
@@ -19,7 +20,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -49,7 +49,7 @@ public class ConfigController {
     public Mono<String> refresh(@PathVariable(name = "appName") String appName,
                                 @RequestParam(name = "ip", required = false) String ip,
                                 @RequestParam(name = "id", required = false) String id,
-                                @RequestHeader(name = HttpHeaders.AUTHORIZATION) String token) {
+                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         if (!isAuthenticated(token)) {
             return Mono.error(new InvalidException("Failed to validate JWT token, please supply correct token."));
         }
@@ -71,15 +71,14 @@ public class ConfigController {
      */
     @PostMapping("/update/{appName}")
     public Mono<String> update(@PathVariable(name = "appName") String appName,
-                               @RequestHeader(name = HttpHeaders.AUTHORIZATION) String token,
+                               @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token,
                                //properties形式
                                @RequestBody String body) throws IOException {
         if (!isAuthenticated(token)) {
             return Mono.error(new InvalidException("Failed to validate JWT token, please supply correct token."));
         }
 
-        Properties properties = new Properties();
-        properties.load(new StringReader(body));
+        Properties properties = PropertiesUtils.loadPropertiesContent(body);
 
         return Flux.fromIterable(properties.stringPropertyNames())
                 .filter(key -> !key.contains(ConfDiamond.GROUP_KEY_SEPARATOR))
@@ -95,7 +94,8 @@ public class ConfigController {
     }
 
     @GetMapping("/last/{appName}")
-    public Mono<String> fetch(@PathVariable(name = "appName") String appName, @RequestHeader(name = HttpHeaders.AUTHORIZATION) String token) {
+    public Mono<String> fetch(@PathVariable(name = "appName") String appName,
+                              @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         if (!isAuthenticated(token)) {
             return Mono.error(new InvalidException("Failed to validate JWT token, please supply correct token."));
         }

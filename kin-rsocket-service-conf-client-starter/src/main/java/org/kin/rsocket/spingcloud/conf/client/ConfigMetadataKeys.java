@@ -1,4 +1,4 @@
-package org.kin.rsocket.spingcloud.broker.conf.client;
+package org.kin.rsocket.spingcloud.conf.client;
 
 import org.kin.rsocket.core.MetadataKeys;
 

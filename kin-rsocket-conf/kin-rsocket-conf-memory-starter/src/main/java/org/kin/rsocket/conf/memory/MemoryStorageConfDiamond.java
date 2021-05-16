@@ -1,7 +1,7 @@
 package org.kin.rsocket.conf.memory;
 
 import org.kin.framework.collection.ConcurrentHashSet;
-import org.kin.framework.utils.ExceptionUtils;
+import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.conf.AbstractConfDiamond;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.slf4j.Logger;
@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -36,7 +34,8 @@ public class MemoryStorageConfDiamond extends AbstractConfDiamond {
     @Override
     public Flux<String> findKeysByGroup(String group) {
         return Flux.fromIterable(storage.keySet())
-                .filter(name -> name.startsWith(group.concat(ConfDiamond.GROUP_KEY_SEPARATOR)));
+                .filter(name -> name.startsWith(group.concat(ConfDiamond.GROUP_KEY_SEPARATOR)))
+                .map(name -> name.split(ConfDiamond.GROUP_KEY_SEPARATOR, 2)[1]);
     }
 
     @Override
@@ -45,25 +44,14 @@ public class MemoryStorageConfDiamond extends AbstractConfDiamond {
                 .map(entries -> {
                     Properties properties = new Properties();
                     for (Map.Entry<String, String> entry : entries) {
-                        if (!entry.getKey().startsWith(group.concat(ConfDiamond.GROUP_KEY_SEPARATOR))) {
+                        String key = entry.getKey();
+                        if (!key.startsWith(group.concat(ConfDiamond.GROUP_KEY_SEPARATOR))) {
                             continue;
                         }
-                        properties.put(entry.getKey(), entry.getValue());
+                        properties.put(key.split(ConfDiamond.GROUP_KEY_SEPARATOR, 2)[1], entry.getValue());
                     }
 
-                    try {
-                        StringWriter sw = new StringWriter();
-                        PrintWriter pw = new PrintWriter(sw);
-                        properties.list(pw);
-
-                        pw.close();
-                        sw.close();
-                        return sw.toString();
-                    } catch (Exception e) {
-                        ExceptionUtils.throwExt(e);
-                    }
-
-                    return "";
+                    return PropertiesUtils.writePropertiesContent(properties, String.format("app '%s' configs", group));
                 }).doOnError(e -> log.error(String.format("conf diamond get all confs from app '%s' error", group), e));
     }
 
