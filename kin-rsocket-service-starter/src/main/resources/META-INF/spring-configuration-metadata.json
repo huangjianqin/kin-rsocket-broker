@@ -17,7 +17,7 @@
     {
       "name": "kin.rsocket.brokers",
       "type": "java.util.List<java.lang.String>",
-      "description": "remote rsocket broker uris",
+      "description": "remote rsocket broker uris, 如果需要支持配置刷新, 则需定义在bootstrap.yml",
       "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
       "defaultValue": "tcp://0.0.0.0:9999"
     },
@@ -52,7 +52,7 @@
     {
       "name": "kin.rsocket.jwtToken",
       "type": "java.lang.String",
-      "description": "rsocket service应用持有的jwt token, 用于broker校验; 支持文件路径配置",
+      "description": "rsocket service应用持有的jwt token, 用于broker校验; 支持文件路径配置, 如果需要支持配置刷新, 则需定义在bootstrap.yml",
       "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
       "defaultValue": ""
     },
