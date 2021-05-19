@@ -25,5 +25,12 @@
             <version>${byte-buddy.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- spring -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

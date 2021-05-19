@@ -5,7 +5,7 @@ import io.netty.buffer.Unpooled;
 import org.kin.rsocket.example.UserService;
 import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.RSocketServiceProperties;
-import org.kin.rsocket.service.ServiceReferenceBuilder;
+import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 
 import java.nio.charset.StandardCharsets;
 
@@ -23,7 +23,7 @@ public class RequesterApplication {
                 .build();
         RSocketServiceConnector connector = new RSocketServiceConnector("MockApp", properties);
         connector.connect();
-        UserService userService = ServiceReferenceBuilder.requester(UserService.class).upstreamClusterManager(connector).build();
+        UserService userService = RSocketServiceReferenceBuilder.requester(UserService.class).upstreamClusterManager(connector).build();
         try {
             userService.findAll().subscribe(System.out::println);
 

@@ -1,7 +1,7 @@
 package org.kin.rsocket.spingcloud.registry.client;
 
 import org.kin.rsocket.core.discovery.DiscoveryService;
-import org.kin.rsocket.service.ServiceReferenceBuilder;
+import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 public class RSocketRegistryClientAutoConfiguration {
     @Bean
     public DiscoveryService discoveryService(@Autowired UpstreamClusterManager upstreamClusterManager) {
-        return ServiceReferenceBuilder
+        return RSocketServiceReferenceBuilder
                 .requester(DiscoveryService.class)
                 .upstreamClusterManager(upstreamClusterManager)
                 .build();

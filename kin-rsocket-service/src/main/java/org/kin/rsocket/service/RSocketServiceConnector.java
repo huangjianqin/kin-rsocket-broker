@@ -318,7 +318,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
         private final HealthCheck brokerHealthCheck;
 
         public HealthCheckImpl() {
-            brokerHealthCheck = ServiceReferenceBuilder
+            brokerHealthCheck = RSocketServiceReferenceBuilder
                     .requester(HealthCheck.class)
                     .nativeImage()
                     .upstreamClusterManager(upstreamClusterManager)

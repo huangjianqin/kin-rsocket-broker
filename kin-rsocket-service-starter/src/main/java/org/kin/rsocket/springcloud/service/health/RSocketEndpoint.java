@@ -5,7 +5,7 @@ import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketServiceProperties;
-import org.kin.rsocket.service.ServiceReferenceBuilder;
+import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
@@ -52,8 +52,8 @@ public final class RSocketEndpoint {
         if (this.serviceProvider) {
             info.put("published", ReactiveServiceRegistry.exposedServices());
         }
-        if (!ServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
-            info.put("subscribed", ServiceReferenceBuilder.CONSUMED_SERVICES.stream()
+        if (!RSocketServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
+            info.put("subscribed", RSocketServiceReferenceBuilder.CONSUMED_SERVICES.stream()
                     //过滤掉自带的服务
                     .filter(serviceLocator -> !HealthCheck.class.getCanonicalName().equals(serviceLocator.getService()))
                     .collect(Collectors.toList()));

@@ -1,10 +1,7 @@
 package org.kin.rsocket.example.consumer;
 
 import org.kin.rsocket.example.UserService;
-import org.kin.rsocket.service.RSocketServiceConnector;
-import org.kin.rsocket.service.ServiceReferenceBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
+import org.kin.rsocket.service.RSocketServiceReference;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -12,12 +9,17 @@ import org.springframework.context.annotation.Configuration;
  * @date 2021/4/9
  */
 @Configuration
+//方式2. 通过@RSocketServiceReference注册
+@RSocketServiceReference(UserService.class)
 public class RequesterConfiguration {
-    @Bean
-    public UserService userService(@Autowired RSocketServiceConnector connector) {
-        return ServiceReferenceBuilder
-                .requester(UserService.class)
-                .upstreamClusterManager(connector)
-                .build();
-    }
+    /**
+     * 方式1. 通过@Bean, 根据用户API手动注册
+     */
+//    @Bean
+//    public UserService userService(@Autowired RSocketServiceConnector connector) {
+//        return RSocketServiceReferenceBuilder
+//                .requester(UserService.class)
+//                .upstreamClusterManager(connector)
+//                .build();
+//    }
 }

@@ -74,7 +74,7 @@ final class RequesterProxy implements InvocationHandler {
                 RSocketMimeType.Text, RSocketMimeType.Binary};
     }
 
-    public RequesterProxy(ServiceReferenceBuilder<?> builder) {
+    public RequesterProxy(RSocketServiceReferenceBuilder<?> builder) {
         rsocket = builder.getUpstreamCluster();
         serviceInterface = builder.getServiceInterface();
         if (StringUtils.isBlank(builder.getService())) {

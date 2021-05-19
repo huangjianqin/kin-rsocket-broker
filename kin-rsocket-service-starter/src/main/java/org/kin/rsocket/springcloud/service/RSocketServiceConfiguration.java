@@ -5,7 +5,7 @@ import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RSocketServiceAnnoProcessor;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketServiceConnector;
-import org.kin.rsocket.service.ServiceReferenceBuilder;
+import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.springcloud.service.health.HealthIndicator;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
@@ -117,7 +117,7 @@ public class RSocketServiceConfiguration {
     //----------------------------service reference----------------------------
     @Bean("healthCheckRef")
     public HealthCheck healthCheckRef(@Autowired RSocketServiceConnector connector) {
-        return ServiceReferenceBuilder
+        return RSocketServiceReferenceBuilder
                 .requester(HealthCheck.class)
                 .nativeImage()
                 .upstreamClusterManager(connector)

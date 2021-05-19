@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
 @RefreshScope
 @Component
 public class Config {
-    @Value("${A}")
+    @Value("${A:}")
     private String a;
-    @Value("${B}")
+    @Value("${B:}")
     private String b;
 
     @Override

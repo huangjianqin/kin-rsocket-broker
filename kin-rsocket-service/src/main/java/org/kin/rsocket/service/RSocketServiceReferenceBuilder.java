@@ -16,7 +16,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class ServiceReferenceBuilder<T> {
+public final class RSocketServiceReferenceBuilder<T> {
     /** 缓存的所有requester proxy, 用于监控 */
     public static final Set<ServiceLocator> CONSUMED_SERVICES = new ConcurrentHashSet<>();
 
@@ -54,11 +54,11 @@ public final class ServiceReferenceBuilder<T> {
     /** 对应的upstream cluster */
     private UpstreamCluster upstreamCluster;
 
-    private ServiceReferenceBuilder() {
+    private RSocketServiceReferenceBuilder() {
     }
 
-    public static <T> ServiceReferenceBuilder<T> requester(Class<T> serviceInterface) {
-        ServiceReferenceBuilder<T> builder = new ServiceReferenceBuilder<T>();
+    public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface) {
+        RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<T>();
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getCanonicalName();
         //解析interface class 上的@ServiceMapping注解
@@ -87,33 +87,33 @@ public final class ServiceReferenceBuilder<T> {
         return builder;
     }
 
-    public ServiceReferenceBuilder<T> group(String group) {
+    public RSocketServiceReferenceBuilder<T> group(String group) {
         this.group = group;
         return this;
     }
 
-    public ServiceReferenceBuilder<T> service(String service) {
+    public RSocketServiceReferenceBuilder<T> service(String service) {
         this.service = service;
         return this;
     }
 
-    public ServiceReferenceBuilder<T> version(String version) {
+    public RSocketServiceReferenceBuilder<T> version(String version) {
         this.version = version;
         return this;
     }
 
-    public ServiceReferenceBuilder<T> callTimeout(int millis) {
+    public RSocketServiceReferenceBuilder<T> callTimeout(int millis) {
         this.callTimeout = Duration.ofMillis(millis);
         return this;
     }
 
-    public ServiceReferenceBuilder<T> endpoint(String endpoint) {
+    public RSocketServiceReferenceBuilder<T> endpoint(String endpoint) {
         Preconditions.checkArgument(endpoint.contains(":"));
         this.endpoint = endpoint;
         return this;
     }
 
-    public ServiceReferenceBuilder<T> sticky(boolean sticky) {
+    public RSocketServiceReferenceBuilder<T> sticky(boolean sticky) {
         this.sticky = sticky;
         return this;
     }
@@ -121,31 +121,31 @@ public final class ServiceReferenceBuilder<T> {
     /**
      * 一般使用{@link #upstreamClusterManager(UpstreamClusterManager)}, 因为其会自动寻找对应serviceId的UpstreamCluster
      */
-    public ServiceReferenceBuilder<T> upstream(UpstreamCluster upstreamCluster) {
+    public RSocketServiceReferenceBuilder<T> upstream(UpstreamCluster upstreamCluster) {
         this.upstreamCluster = upstreamCluster;
         return this;
     }
 
-    public ServiceReferenceBuilder<T> encodingType(RSocketMimeType encodingType) {
+    public RSocketServiceReferenceBuilder<T> encodingType(RSocketMimeType encodingType) {
         this.encodingType = encodingType;
         return this;
     }
 
-    public ServiceReferenceBuilder<T> acceptEncodingTypes(RSocketMimeType... mimeTypes) {
-        this.acceptEncodingTypes = mimeTypes;
+    public RSocketServiceReferenceBuilder<T> acceptEncodingTypes(RSocketMimeType... acceptEncodingTypes) {
+        this.acceptEncodingTypes = acceptEncodingTypes;
         return this;
     }
 
     /**
      * GraalVM nativeImage support: set encodeType and acceptEncodingType to Json
      */
-    public ServiceReferenceBuilder<T> nativeImage() {
+    public RSocketServiceReferenceBuilder<T> nativeImage() {
         encodingType(RSocketMimeType.Json);
         acceptEncodingTypes(RSocketMimeType.Json);
         return this;
     }
 
-    public ServiceReferenceBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
+    public RSocketServiceReferenceBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
         String serviceId = ServiceLocator.gsv(group, service, version);
         UpstreamCluster upstream = upstreamClusterManager.get(serviceId);
         if (upstream == null) {
