@@ -56,8 +56,8 @@ public class RSocketServiceConfiguration {
      * 服务暴露给broker逻辑实现
      */
     @Bean
-    public ServicesPublisher servicesPublisher() {
-        return new ServicesPublisher();
+    public RSocketServicesPublisher servicesPublisher() {
+        return new RSocketServicesPublisher();
     }
 
     /**

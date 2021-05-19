@@ -35,12 +35,12 @@ import java.util.Objects;
  */
 final class BrokerRequestHandler extends AbstractRSocket {
     private static final Logger log = LoggerFactory.getLogger(BrokerRequestHandler.class);
-    private final ServiceManager serviceManager;
+    private final RSocketServiceManager serviceManager;
     private final RSocketFilterChain filterChain;
     /** broker requester app metadata */
     private final AppMetadata upstreamBrokerMetadata;
 
-    public BrokerRequestHandler(ServiceManager serviceManager,
+    public BrokerRequestHandler(RSocketServiceManager serviceManager,
                                 RSocketFilterChain filterChain,
                                 Payload setupPayload) {
         this.filterChain = filterChain;

@@ -3,7 +3,7 @@ package org.kin.rsocket.broker.event;
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.broker.BrokerResponder;
-import org.kin.rsocket.broker.ServiceManager;
+import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
@@ -24,7 +24,7 @@ import java.util.Properties;
  */
 public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> implements Closeable, DisposableBean {
     @Autowired
-    private ServiceManager serviceManager;
+    private RSocketServiceManager serviceManager;
     @Autowired
     private ConfDiamond confDiamond;
     /**

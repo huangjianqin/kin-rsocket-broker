@@ -14,15 +14,15 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public final class ServicesHiddenEvent implements CloudEventSupport {
+public final class RSocketServicesHiddenEvent implements CloudEventSupport {
     private static final long serialVersionUID = -5175763743094581006L;
     /** application id */
     private String appId;
     /** need hidden services */
     private Set<ServiceLocator> services = Collections.emptySet();
 
-    public static CloudEventData<ServicesHiddenEvent> of(Collection<ServiceLocator> serviceLocators) {
-        ServicesHiddenEvent inst = new ServicesHiddenEvent();
+    public static CloudEventData<RSocketServicesHiddenEvent> of(Collection<ServiceLocator> serviceLocators) {
+        RSocketServicesHiddenEvent inst = new RSocketServicesHiddenEvent();
         inst.appId = RSocketAppContext.ID;
         inst.services = new HashSet<>(serviceLocators.size());
         inst.services.addAll(serviceLocators);

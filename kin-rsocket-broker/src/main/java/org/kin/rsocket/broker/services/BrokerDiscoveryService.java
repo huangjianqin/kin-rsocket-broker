@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.services;
 
 import org.kin.rsocket.broker.BrokerResponder;
-import org.kin.rsocket.broker.ServiceManager;
+import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.discovery.DiscoveryService;
@@ -18,7 +18,7 @@ import reactor.core.publisher.Flux;
 @RSocketService(DiscoveryService.class)
 public class BrokerDiscoveryService implements DiscoveryService {
     @Autowired
-    private ServiceManager serviceManager;
+    private RSocketServiceManager serviceManager;
 
     @Override
     public Flux<RSocketServiceInstance> getInstances(String serviceId) {

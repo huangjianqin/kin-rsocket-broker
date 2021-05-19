@@ -14,19 +14,19 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/23
  */
-public final class ServicesExposedEvent implements CloudEventSupport {
+public final class RSocketServicesExposedEvent implements CloudEventSupport {
     private static final long serialVersionUID = 3937855844811039738L;
     /** app UUID */
     private String appId;
     /** exposed services */
     private Set<ServiceLocator> services = new HashSet<>();
 
-    public static CloudEventData<ServicesExposedEvent> of(ServiceLocator... serviceLocators) {
+    public static CloudEventData<RSocketServicesExposedEvent> of(ServiceLocator... serviceLocators) {
         return of(Arrays.asList(serviceLocators));
     }
 
-    public static CloudEventData<ServicesExposedEvent> of(Collection<ServiceLocator> serviceLocators) {
-        ServicesExposedEvent servicesExposedEvent = new ServicesExposedEvent();
+    public static CloudEventData<RSocketServicesExposedEvent> of(Collection<ServiceLocator> serviceLocators) {
+        RSocketServicesExposedEvent servicesExposedEvent = new RSocketServicesExposedEvent();
         servicesExposedEvent.services.addAll(serviceLocators);
         servicesExposedEvent.setAppId(RSocketAppContext.ID);
         return CloudEventBuilder

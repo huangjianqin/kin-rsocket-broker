@@ -13,7 +13,7 @@ import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.metadata.ServiceRegistryMetadata;
+import org.kin.rsocket.core.metadata.RSocketServiceRegistryMetadata;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public final class BrokerResponder implements CloudEventRSocket {
     private final Set<Integer> appTagsHashCodeSet;
     /** peer requester RSocket */
     private final RSocket requester;
-    private final ServiceManager serviceManager;
+    private final RSocketServiceManager serviceManager;
     private final Mono<Void> comboOnClose;
     /** remote requester ip */
     private final String remoteIp;
@@ -56,13 +56,13 @@ public final class BrokerResponder implements CloudEventRSocket {
     /** app status */
     private AppStatus appStatus = AppStatus.CONNECTED;
     /** requester请求处理handler */
-    private final ServiceRequestHandler requestHandler;
+    private final RSocketServiceRequestHandler requestHandler;
 
     public BrokerResponder(RSocketCompositeMetadata compositeMetadata,
                            AppMetadata appMetadata,
                            RSocket requester,
-                           ServiceManager serviceManager,
-                           ServiceRequestHandler requestHandler) {
+                           RSocketServiceManager serviceManager,
+                           RSocketServiceRequestHandler requestHandler) {
         this.appMetadata = appMetadata;
         //app tags hashcode set
         Set<Integer> appTagsHashCodeSet = new HashSet<>(4);
@@ -86,7 +86,7 @@ public final class BrokerResponder implements CloudEventRSocket {
         //publish services metadata
         this.peerServices = new HashSet<>();
         if (compositeMetadata.contains(RSocketMimeType.ServiceRegistry)) {
-            ServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.ServiceRegistry);
+            RSocketServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.ServiceRegistry);
             if (CollectionUtils.isNonEmpty(serviceRegistryMetadata.getPublished())) {
                 peerServices.addAll(serviceRegistryMetadata.getPublished());
                 publishServices();
@@ -264,7 +264,7 @@ public final class BrokerResponder implements CloudEventRSocket {
         this.appStatus = appStatus;
     }
 
-    ServiceRequestHandler getRequestHandler() {
+    RSocketServiceRequestHandler getRequestHandler() {
         return requestHandler;
     }
 }

@@ -11,18 +11,18 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class ServiceMeshInspector {
+public final class RSocketServiceMeshInspector {
     private static final String SEPARATOR = ":";
     /** 白名单 */
     private Set<Integer> whiteRelationBitmap = new HashSet<>();
     /** 是否需要验证 */
     private final boolean authRequired;
 
-    public ServiceMeshInspector() {
+    public RSocketServiceMeshInspector() {
         this(true);
     }
 
-    public ServiceMeshInspector(boolean authRequired) {
+    public RSocketServiceMeshInspector(boolean authRequired) {
         this.authRequired = authRequired;
     }
 

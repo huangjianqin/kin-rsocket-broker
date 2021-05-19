@@ -8,7 +8,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public class ReactiveServiceInfo implements Serializable {
+public class RSocketServiceInfo implements Serializable {
     private static final long serialVersionUID = -2955933836182324398L;
     /** package */
     private String namespace;
@@ -34,7 +34,7 @@ public class ReactiveServiceInfo implements Serializable {
 
     /** builder **/
     public static class Builder {
-        private final ReactiveServiceInfo reactiveServiceInfo = new ReactiveServiceInfo();
+        private final RSocketServiceInfo reactiveServiceInfo = new RSocketServiceInfo();
 
         public Builder namespace(String namespace) {
             reactiveServiceInfo.namespace = namespace;
@@ -76,7 +76,7 @@ public class ReactiveServiceInfo implements Serializable {
             return this;
         }
 
-        public ReactiveServiceInfo build() {
+        public RSocketServiceInfo build() {
             return reactiveServiceInfo;
         }
     }

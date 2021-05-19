@@ -51,13 +51,13 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class ServiceManager {
-    private static final Logger log = LoggerFactory.getLogger(ServiceManager.class);
+public final class RSocketServiceManager {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceManager.class);
     private final RSocketFilterChain rsocketFilterChain;
     private final Sinks.Many<String> notificationSink;
     private final AuthenticationService authenticationService;
     private final BrokerManager brokerManager;
-    private final ServiceMeshInspector serviceMeshInspector;
+    private final RSocketServiceMeshInspector serviceMeshInspector;
     private final boolean authRequired;
     private final UpstreamCluster upstreamBrokers;
     private final Router router;
@@ -76,14 +76,14 @@ public final class ServiceManager {
     /** key -> instanceId, value -> list(serviceId) */
     private final SetMultimap<Integer, Integer> instanceId2ServiceIds = MultimapBuilder.hashKeys().linkedHashSetValues().build();
 
-    public ServiceManager(RSocketFilterChain filterChain,
-                          Sinks.Many<String> notificationSink,
-                          AuthenticationService authenticationService,
-                          BrokerManager brokerManager,
-                          ServiceMeshInspector serviceMeshInspector,
-                          boolean authRequired,
-                          UpstreamCluster upstreamBrokers,
-                          Router router) {
+    public RSocketServiceManager(RSocketFilterChain filterChain,
+                                 Sinks.Many<String> notificationSink,
+                                 AuthenticationService authenticationService,
+                                 BrokerManager brokerManager,
+                                 RSocketServiceMeshInspector serviceMeshInspector,
+                                 boolean authRequired,
+                                 UpstreamCluster upstreamBrokers,
+                                 Router router) {
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
@@ -175,7 +175,7 @@ public final class ServiceManager {
         //create responder
         try {
 
-            ServiceRequestHandler requestHandler = new ServiceRequestHandler(setupPayload, appMetadata, principal,
+            RSocketServiceRequestHandler requestHandler = new RSocketServiceRequestHandler(setupPayload, appMetadata, principal,
                     this, serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
             BrokerResponder responder = new BrokerResponder(compositeMetadata, appMetadata, requester, this, requestHandler);
             responder.onClose()

@@ -40,8 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2021/4/21
  */
-public final class ServiceRequestHandler extends RequestHandlerSupport {
-    private static final Logger log = LoggerFactory.getLogger(ServiceRequestHandler.class);
+public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRequestHandler.class);
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;
     /** app metadata */
@@ -52,20 +52,20 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
     private final Map<Integer, Integer> stickyServices = new ConcurrentHashMap<>();
     /** upstream broker */
     private final UpstreamCluster upstreamBrokers;
-    private final ServiceManager serviceManager;
-    private final ServiceMeshInspector serviceMeshInspector;
+    private final RSocketServiceManager serviceManager;
+    private final RSocketServiceMeshInspector serviceMeshInspector;
     /** default消息编码类型 */
     private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
     /** 记录请求过的服务id */
     private final Set<String> consumedServices = new ConcurrentHashSet<>();
 
-    public ServiceRequestHandler(ConnectionSetupPayload setupPayload,
-                                 AppMetadata appMetadata,
-                                 RSocketAppPrincipal principal,
-                                 ServiceManager serviceManager,
-                                 ServiceMeshInspector serviceMeshInspector,
-                                 UpstreamCluster upstreamBrokers,
-                                 RSocketFilterChain filterChain) {
+    public RSocketServiceRequestHandler(ConnectionSetupPayload setupPayload,
+                                        AppMetadata appMetadata,
+                                        RSocketAppPrincipal principal,
+                                        RSocketServiceManager serviceManager,
+                                        RSocketServiceMeshInspector serviceMeshInspector,
+                                        UpstreamCluster upstreamBrokers,
+                                        RSocketFilterChain filterChain) {
         this.upstreamBrokers = upstreamBrokers;
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
 
@@ -110,7 +110,7 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
         }
 
         // broker local service call
-        if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+        if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
             if (Objects.isNull(acceptMimeTypesMetadata)) {
@@ -163,7 +163,7 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
         }
 
         // broker local service call
-        if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+        if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
 
@@ -215,7 +215,7 @@ public final class ServiceRequestHandler extends RequestHandlerSupport {
         }
 
         // broker local service call
-        if (ReactiveServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+        if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
             messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
             if (Objects.isNull(acceptMimeTypesMetadata)) {

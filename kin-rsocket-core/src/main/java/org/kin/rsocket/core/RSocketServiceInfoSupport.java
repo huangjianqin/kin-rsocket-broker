@@ -1,6 +1,6 @@
 package org.kin.rsocket.core;
 
-import org.kin.rsocket.core.domain.ReactiveServiceInfo;
+import org.kin.rsocket.core.domain.RSocketServiceInfo;
 
 /**
  * 服务注册表
@@ -11,9 +11,9 @@ import org.kin.rsocket.core.domain.ReactiveServiceInfo;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public interface ReactiveServiceInfoSupport {
+public interface RSocketServiceInfoSupport {
     /**
      * 用于后台访问服务接口具体信息
      */
-    ReactiveServiceInfo getReactiveServiceInfoByName(String serviceName);
+    RSocketServiceInfo getReactiveServiceInfoByName(String serviceName);
 }

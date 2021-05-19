@@ -5,9 +5,9 @@ import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.BrokerResponder;
-import org.kin.rsocket.broker.ServiceManager;
+import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.ReactiveServiceInfoSupport;
+import org.kin.rsocket.core.RSocketServiceInfoSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -28,11 +28,11 @@ import java.util.Objects;
  */
 @RestController
 @RequestMapping("/services")
-public class ServiceQueryController {
+public class RSocketServiceQueryController {
     /** json编码元数据 */
     private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
     @Autowired
-    private ServiceManager serviceManager;
+    private RSocketServiceManager serviceManager;
 
     @GetMapping("/{serviceName}")
     public Flux<Map<String, Object>> query(@PathVariable(name = "serviceName") String serviceName) {
@@ -58,7 +58,7 @@ public class ServiceQueryController {
         BrokerResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId());
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
-                    GSVRoutingMetadata.of("", ReactiveServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
+                    GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
             ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(serviceName).concat("\"]")).getBytes(StandardCharsets.UTF_8));
             return brokerResponder

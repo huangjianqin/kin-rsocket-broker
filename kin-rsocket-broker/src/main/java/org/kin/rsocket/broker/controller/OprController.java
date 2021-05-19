@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import org.kin.rsocket.broker.BrokerResponder;
-import org.kin.rsocket.broker.ServiceManager;
+import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.ServiceLocator;
@@ -32,7 +32,7 @@ import java.util.Map;
 @RequestMapping("/opr")
 public class OprController {
     @Autowired
-    private ServiceManager serviceManager;
+    private RSocketServiceManager serviceManager;
     @Autowired
     private BrokerManager brokerManager;
 

@@ -36,7 +36,7 @@ public final class RSocketEndpoint {
                            UpstreamClusterManager upstreamClusterManager) {
         this.config = config;
         this.upstreamClusterManager = upstreamClusterManager;
-        Set<ServiceLocator> exposedServices = ReactiveServiceRegistry.exposedServices();
+        Set<ServiceLocator> exposedServices = RSocketServiceRegistry.exposedServices();
         if (!exposedServices.isEmpty()) {
             this.serviceProvider = true;
         } else {
@@ -50,7 +50,7 @@ public final class RSocketEndpoint {
         info.put("id", RSocketAppContext.ID);
         info.put("serviceStatus", serviceStatus.getDesc());
         if (this.serviceProvider) {
-            info.put("published", ReactiveServiceRegistry.exposedServices());
+            info.put("published", RSocketServiceRegistry.exposedServices());
         }
         if (!RSocketServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
             info.put("subscribed", RSocketServiceReferenceBuilder.CONSUMED_SERVICES.stream()
@@ -145,7 +145,7 @@ public final class RSocketEndpoint {
      * 向所有upstream注册服务
      */
     private Mono<Void> sendRegisterService(ServiceLocator targetService) {
-        CloudEventData<ServicesExposedEvent> cloudEvent = ServicesExposedEvent.of(Collections.singletonList(targetService));
+        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServicesExposedEvent.of(Collections.singletonList(targetService));
         return Flux.fromIterable(upstreamClusterManager.getAll()).flatMap(upstreamCluster -> upstreamCluster.broadcastCloudEvent(cloudEvent)).then();
     }
 
@@ -153,7 +153,7 @@ public final class RSocketEndpoint {
      * 向所有upstream注销服务
      */
     private Mono<Void> sendUnregisterService(ServiceLocator targetService) {
-        CloudEventData<ServicesHiddenEvent> cloudEvent = ServicesHiddenEvent.of(Collections.singletonList(targetService));
+        CloudEventData<RSocketServicesHiddenEvent> cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetService));
         return Flux.fromIterable(upstreamClusterManager.getAll()).flatMap(upstreamCluster -> upstreamCluster.broadcastCloudEvent(cloudEvent)).then();
     }
 
@@ -162,7 +162,7 @@ public final class RSocketEndpoint {
      */
     private ServiceLocator getServiceLocator(String serviceName) {
         ServiceLocator targetService = null;
-        for (ServiceLocator serviceLocator : ReactiveServiceRegistry.exposedServices()) {
+        for (ServiceLocator serviceLocator : RSocketServiceRegistry.exposedServices()) {
             if (serviceName.equals(serviceLocator.getService())) {
                 targetService = serviceLocator;
                 break;

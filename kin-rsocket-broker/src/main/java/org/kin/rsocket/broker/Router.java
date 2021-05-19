@@ -13,25 +13,25 @@ import java.util.Collection;
 public interface Router {
     /**
      * 根据实现的路由规则选择出一个app instance Id
-     * {@link ServiceManager#lock}加锁下完成
+     * {@link RSocketServiceManager#lock}加锁下完成
      */
     Integer route(int serviceId);
 
     /**
      * app注册完触发
-     * {@link ServiceManager#lock}加锁下完成
+     * {@link RSocketServiceManager#lock}加锁下完成
      */
     void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services);
 
     /**
      * app注销完触发
-     * {@link ServiceManager#lock}加锁下完成
+     * {@link RSocketServiceManager#lock}加锁下完成
      */
     void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds);
 
     /**
      * 获取所有指定服务对应的所有app instance Id
-     * {@link ServiceManager#lock}加锁下完成
+     * {@link RSocketServiceManager#lock}加锁下完成
      */
     Collection<Integer> getAllInstanceIds(int serviceId);
 }

@@ -2,11 +2,11 @@ package org.kin.rsocket.core;
 
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodParameterInfo;
-import org.kin.rsocket.core.domain.ReactiveServiceInfo;
 import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.ServicesExposedEvent;
+import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
@@ -31,14 +31,14 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport {
-    public static final ReactiveServiceRegistry INSTANCE = new ReactiveServiceRegistry();
+public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
+    public static final RSocketServiceRegistry INSTANCE = new RSocketServiceRegistry();
 
     /**
      * @return exposed services信息
      */
     public static Set<ServiceLocator> exposedServices() {
-        return ReactiveServiceRegistry.INSTANCE.findAllServiceLocators()
+        return RSocketServiceRegistry.INSTANCE.findAllServiceLocators()
                 .stream()
                 //过滤掉local service
                 .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName()))
@@ -48,13 +48,13 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
     /**
      * @return services exposed cloud event
      */
-    public static CloudEventData<ServicesExposedEvent> servicesExposedEvent() {
+    public static CloudEventData<RSocketServicesExposedEvent> servicesExposedEvent() {
         Collection<ServiceLocator> serviceLocators = exposedServices();
         if (serviceLocators.isEmpty()) {
             return null;
         }
 
-        return ServicesExposedEvent.of(serviceLocators);
+        return RSocketServicesExposedEvent.of(serviceLocators);
     }
 
     /** 修改数据需加锁 */
@@ -64,11 +64,11 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
     /** key -> hash(serviceName.method), value -> service method invoker */
     private final Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>();
     /** key -> service name, value -> reactive service info */
-    private final Map<String, ReactiveServiceInfo> serviceName2Info = new HashMap<>();
+    private final Map<String, RSocketServiceInfo> serviceName2Info = new HashMap<>();
 
-    private ReactiveServiceRegistry() {
+    private RSocketServiceRegistry() {
         //用于broker可以请求service instance访问其指定服务详细信息
-        addProvider("", "", ReactiveServiceInfoSupport.class, this);
+        addProvider("", "", RSocketServiceInfoSupport.class, this);
     }
 
     /**
@@ -175,9 +175,9 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
     /**
      * 创建reactive service信息, 用于后台访问服务接口具体信息
      */
-    private ReactiveServiceInfo newReactiveServiceInfo(String group, String serviceName,
-                                                       String version, Class<?> interfaceClass) {
-        ReactiveServiceInfo.Builder builder = ReactiveServiceInfo.builder();
+    private RSocketServiceInfo newReactiveServiceInfo(String group, String serviceName,
+                                                      String version, Class<?> interfaceClass) {
+        RSocketServiceInfo.Builder builder = RSocketServiceInfo.builder();
         builder.group(group);
         builder.version(version);
         if (interfaceClass.getPackage() != null) {
@@ -328,7 +328,7 @@ public final class ReactiveServiceRegistry implements ReactiveServiceInfoSupport
      * 用于后台访问服务接口具体信息
      */
     @Override
-    public ReactiveServiceInfo getReactiveServiceInfoByName(String serviceName) {
+    public RSocketServiceInfo getReactiveServiceInfoByName(String serviceName) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {

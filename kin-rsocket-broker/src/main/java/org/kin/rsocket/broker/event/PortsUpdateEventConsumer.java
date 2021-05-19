@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import org.kin.rsocket.broker.BrokerResponder;
-import org.kin.rsocket.broker.ServiceManager;
+import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
  */
 public final class PortsUpdateEventConsumer extends AbstractCloudEventConsumer<PortsUpdateEvent> {
     @Autowired
-    private ServiceManager serviceManager;
+    private RSocketServiceManager serviceManager;
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, PortsUpdateEvent event) {

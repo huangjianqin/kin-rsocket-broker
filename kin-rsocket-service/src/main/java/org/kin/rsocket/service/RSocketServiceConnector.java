@@ -123,7 +123,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
      * 注册service
      */
     public RSocketServiceConnector registerService(String group, String version, Class<?> serviceInterface, Object provider) {
-        ReactiveServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider);
+        RSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider);
         return this;
     }
 
@@ -138,7 +138,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
      * 注册service
      */
     public RSocketServiceConnector registerService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
-        ReactiveServiceRegistry.INSTANCE.addProvider(group, serviceName, version, serviceInterface, provider);
+        RSocketServiceRegistry.INSTANCE.addProvider(group, serviceName, version, serviceInterface, provider);
         return this;
     }
 
@@ -191,7 +191,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
                 .subscribe();
 
         // service exposed
-        CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent = ReactiveServiceRegistry.servicesExposedEvent();
+        CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent = RSocketServiceRegistry.servicesExposedEvent();
         if (servicesExposedEventCloudEvent != null) {
             publishServices(servicesExposedEventCloudEvent);
         }
@@ -200,12 +200,12 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
     /**
      * 通知broker暴露新服务
      */
-    private void publishServices(CloudEventData<ServicesExposedEvent> servicesExposedEventCloudEvent) {
+    private void publishServices(CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent) {
         getBroker().broadcastCloudEvent(servicesExposedEventCloudEvent)
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
-                    String exposedServiceGsvs = ReactiveServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
+                    String exposedServiceGsvs = RSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
                     log.info(String.format("services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
                 }).subscribe();
     }
@@ -215,7 +215,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
      */
     private void publishService(String group, String serviceName, String version) {
         //publish
-        CloudEventData<ServicesExposedEvent> cloudEvent = ServicesExposedEvent.of(ServiceLocator.of(group, serviceName, version));
+        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServicesExposedEvent.of(ServiceLocator.of(group, serviceName, version));
         publishServices(cloudEvent);
     }
 
@@ -231,13 +231,13 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
      */
     public void removeService(String group, String serviceName, String version, Class<?> serviceInterface) {
         ServiceLocator targetServiceLocator = ServiceLocator.of(group, serviceName, version);
-        CloudEventData<ServicesHiddenEvent> cloudEvent = ServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
+        CloudEventData<RSocketServicesHiddenEvent> cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
         getBroker().broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
 
-                    ReactiveServiceRegistry.INSTANCE.removeProvider(group, serviceName, version, serviceInterface);
+                    RSocketServiceRegistry.INSTANCE.removeProvider(group, serviceName, version, serviceInterface);
                     log.info(String.format("Services(%s) hide on Brokers(%s)!.", serviceName, brokerUris));
                 }).subscribe();
     }

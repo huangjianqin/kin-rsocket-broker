@@ -25,7 +25,7 @@ final class MetadataAwares {
 
         map.put(RSocketMimeType.Application, AppMetadata.class);
         map.put(RSocketMimeType.CacheControl, CacheControlMetadata.class);
-        map.put(RSocketMimeType.ServiceRegistry, ServiceRegistryMetadata.class);
+        map.put(RSocketMimeType.ServiceRegistry, RSocketServiceRegistryMetadata.class);
         map.put(RSocketMimeType.BearerToken, BearerTokenMetadata.class);
         map.put(RSocketMimeType.Routing, GSVRoutingMetadata.class);
         map.put(RSocketMimeType.BinaryRouting, BinaryRoutingMetadata.class);

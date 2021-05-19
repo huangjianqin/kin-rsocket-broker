@@ -30,13 +30,13 @@ final class UpstreamBrokerRequester implements RequesterSupport {
     /** app name */
     private final String appName;
     /** 服务路由器 */
-    private final ServiceManager serviceManager;
+    private final RSocketServiceManager serviceManager;
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
 
     public UpstreamBrokerRequester(RSocketBrokerProperties brokerConfig,
                                    String appName,
-                                   ServiceManager serviceManager,
+                                   RSocketServiceManager serviceManager,
                                    RSocketFilterChain filterChain) {
         this.appName = appName;
         this.serviceManager = serviceManager;

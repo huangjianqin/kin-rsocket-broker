@@ -68,13 +68,13 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
-    public ServicesExposedEventConsumer servicesExposedEventConsumer() {
-        return new ServicesExposedEventConsumer();
+    public RSocketServicesExposedEventConsumer servicesExposedEventConsumer() {
+        return new RSocketServicesExposedEventConsumer();
     }
 
     @Bean
-    public ServicesHiddenEventConsumer servicesHiddenEventConsumer() {
-        return new ServicesHiddenEventConsumer();
+    public RSocketServicesHiddenEventConsumer servicesHiddenEventConsumer() {
+        return new RSocketServicesHiddenEventConsumer();
     }
 
     @Bean
@@ -109,20 +109,20 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
-    public ServiceMeshInspector serviceMeshInspector(@Autowired RSocketBrokerProperties brokerConfig) {
-        return new ServiceMeshInspector(brokerConfig.isAuth());
+    public RSocketServiceMeshInspector serviceMeshInspector(@Autowired RSocketBrokerProperties brokerConfig) {
+        return new RSocketServiceMeshInspector(brokerConfig.isAuth());
     }
 
     @Bean
-    public ServiceManager serviceManager(@Autowired RSocketBrokerProperties brokerConfig,
-                                         @Autowired RSocketFilterChain chain,
-                                         @Autowired Sinks.Many<String> notificationSink,
-                                         @Autowired AuthenticationService authenticationService,
-                                         @Autowired BrokerManager brokerManager,
-                                         @Autowired ServiceMeshInspector serviceMeshInspector,
-                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
-                                         @Autowired Router router) {
-        return new ServiceManager(
+    public RSocketServiceManager serviceManager(@Autowired RSocketBrokerProperties brokerConfig,
+                                                @Autowired RSocketFilterChain chain,
+                                                @Autowired Sinks.Many<String> notificationSink,
+                                                @Autowired AuthenticationService authenticationService,
+                                                @Autowired BrokerManager brokerManager,
+                                                @Autowired RSocketServiceMeshInspector serviceMeshInspector,
+                                                @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
+                                                @Autowired Router router) {
+        return new RSocketServiceManager(
                 chain,
                 notificationSink,
                 authenticationService,
@@ -152,7 +152,7 @@ public class RSocketBrokerConfiguration {
 
     @Bean
     public RSocketBinderBuilderCustomizer defaultRSocketListenerCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
-                                                                           @Autowired ServiceManager serviceManager) {
+                                                                           @Autowired RSocketServiceManager serviceManager) {
         return builder -> {
             builder.acceptor(serviceManager.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
@@ -210,7 +210,7 @@ public class RSocketBrokerConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public UpstreamBrokerRequester upStreamBrokerRequester(@Autowired Environment env,
                                                            @Autowired RSocketBrokerProperties brokerConfig,
-                                                           @Autowired ServiceManager serviceManager,
+                                                           @Autowired RSocketServiceManager serviceManager,
                                                            @Autowired RSocketFilterChain chain) {
         String appName = env.getProperty("spring.application.name", "unknown");
         return new UpstreamBrokerRequester(brokerConfig, appName, serviceManager, chain);
@@ -256,7 +256,7 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
-    public ServiceQueryController serviceQueryController() {
-        return new ServiceQueryController();
+    public RSocketServiceQueryController serviceQueryController() {
+        return new RSocketServiceQueryController();
     }
 }

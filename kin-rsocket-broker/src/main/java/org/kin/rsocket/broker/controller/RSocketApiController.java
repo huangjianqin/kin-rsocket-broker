@@ -6,8 +6,8 @@ import io.rsocket.util.DefaultPayload;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.BrokerResponder;
-import org.kin.rsocket.broker.ServiceManager;
-import org.kin.rsocket.broker.ServiceMeshInspector;
+import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceMeshInspector;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -37,9 +37,9 @@ public class RSocketApiController {
     @Value("${kin.rsocket.broker.auth}")
     private boolean authRequired;
     @Autowired
-    private ServiceManager serviceManager;
+    private RSocketServiceManager serviceManager;
     @Autowired
-    private ServiceMeshInspector serviceMeshInspector;
+    private RSocketServiceMeshInspector serviceMeshInspector;
     @Autowired
     private AuthenticationService authenticationService;
 

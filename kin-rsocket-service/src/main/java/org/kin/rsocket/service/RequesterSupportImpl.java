@@ -9,7 +9,7 @@ import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.ReactiveServiceRegistry;
+import org.kin.rsocket.core.RSocketServiceRegistry;
 import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.*;
@@ -61,9 +61,9 @@ public final class RequesterSupportImpl implements RequesterSupport {
             metadataAwares.add(getAppMetadata());
             if (config.getPort() > 0) {
                 //published services
-                Set<ServiceLocator> serviceLocators = ReactiveServiceRegistry.exposedServices();
+                Set<ServiceLocator> serviceLocators = RSocketServiceRegistry.exposedServices();
                 if (!serviceLocators.isEmpty()) {
-                    ServiceRegistryMetadata.Builder builder = ServiceRegistryMetadata.builder();
+                    RSocketServiceRegistryMetadata.Builder builder = RSocketServiceRegistryMetadata.builder();
                     builder.addPublishedServices(serviceLocators);
                     metadataAwares.add(builder.build());
                 }
@@ -101,8 +101,8 @@ public final class RequesterSupportImpl implements RequesterSupport {
                 .collect(Collectors.toMap(Tuple::first, Tuple::second));
         builder.metadata(metadata);
         //weight
-        if (metadata.containsKey(ServiceMetadataKeys.WEIGHT)) {
-            builder.weight(Integer.parseInt(metadata.get(ServiceMetadataKeys.WEIGHT)));
+        if (metadata.containsKey(RSocketServiceMetadataKeys.WEIGHT)) {
+            builder.weight(Integer.parseInt(metadata.get(RSocketServiceMetadataKeys.WEIGHT)));
         }
         builder.secure(StringUtils.isNotBlank(config.getJwtToken()));
 

@@ -16,19 +16,19 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public final class ServiceRegistryMetadata implements MetadataAware {
+public final class RSocketServiceRegistryMetadata implements MetadataAware {
     /** published services */
     private Set<ServiceLocator> published = new HashSet<>();
     /** subscribed services */
     private Set<ServiceLocator> subscribed = new HashSet<>();
 
-    public static ServiceRegistryMetadata of(ByteBuf content) {
-        ServiceRegistryMetadata temp = new ServiceRegistryMetadata();
+    public static RSocketServiceRegistryMetadata of(ByteBuf content) {
+        RSocketServiceRegistryMetadata temp = new RSocketServiceRegistryMetadata();
         temp.load(content);
         return temp;
     }
 
-    private ServiceRegistryMetadata() {
+    private RSocketServiceRegistryMetadata() {
     }
 
     /**
@@ -60,7 +60,7 @@ public final class ServiceRegistryMetadata implements MetadataAware {
 
     /** builder **/
     public static class Builder {
-        private ServiceRegistryMetadata serviceRegistryMetadata = new ServiceRegistryMetadata();
+        private RSocketServiceRegistryMetadata serviceRegistryMetadata = new RSocketServiceRegistryMetadata();
 
         public Builder addPublishedService(ServiceLocator publishedService) {
             serviceRegistryMetadata.published.add(publishedService);
@@ -90,7 +90,7 @@ public final class ServiceRegistryMetadata implements MetadataAware {
             return this;
         }
 
-        public ServiceRegistryMetadata build() {
+        public RSocketServiceRegistryMetadata build() {
             return serviceRegistryMetadata;
         }
     }

@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
  * @see ContextRefreshedEvent
  */
 @Order(-100)
-final class ServicesPublisher implements ApplicationListener<ApplicationReadyEvent> {
-    private static final Logger log = LoggerFactory.getLogger(ServicesPublisher.class);
+final class RSocketServicesPublisher implements ApplicationListener<ApplicationReadyEvent> {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServicesPublisher.class);
     @Autowired
     private RSocketServiceConnector connector;
     @Autowired

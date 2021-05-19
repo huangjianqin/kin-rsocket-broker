@@ -56,7 +56,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                  MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                  Payload payload) {
         try {
-            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
+            ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.isAsyncReturn()) {
@@ -108,7 +108,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      * 本地调用服务接口方法并针对FireAndForget Frame Type场景定制额外逻辑
      */
     protected Mono<Void> localFireAndForget(GSVRoutingMetadata routing, MessageMimeTypeMetadata dataEncodingMetadata, Payload payload) {
-        ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
+        ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
         if (methodInvoker != null) {
             if (methodInvoker.isAsyncReturn()) {
                 try {
@@ -143,7 +143,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                Payload payload) {
         try {
-            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
+            ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
             if (methodInvoker != null) {
                 Object result = invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
                 Flux<Object> fluxResult;
@@ -177,7 +177,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                 MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                 Payload signal, Flux<Payload> payloads) {
         try {
-            ReactiveMethodInvoker methodInvoker = ReactiveServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
+            ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.getService(), routing.getHandler());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {
