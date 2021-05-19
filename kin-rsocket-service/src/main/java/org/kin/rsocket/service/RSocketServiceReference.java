@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
+ * 通过注解方法创建rsocket service reference
+ * 注意: 最终rsocket service reference的bean name是其service name, 所以注意不要重复, 不然会启动错误
+ *
  * @author huangjianqin
  * @date 2021/5/19
  */
