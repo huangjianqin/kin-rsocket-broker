@@ -1,8 +1,6 @@
 package org.kin.rsocket.example.consumer;
 
-import org.kin.rsocket.example.UserService;
-import org.kin.rsocket.service.RSocketServiceReference;
-import org.kin.rsocket.service.RSocketServiceReferenceRegistry;
+import org.kin.rsocket.service.EnableRSocketServiceReference;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -10,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
  * @date 2021/4/9
  */
 @Configuration
-//方式2. 通过@RSocketServiceReference注册
-@RSocketServiceReferenceRegistry({@RSocketServiceReference(interfaceClass = UserService.class)})
+//方式2. 通过@EnableRSocketServiceReference的字段references配置@RSocketServiceReference注册
+@EnableRSocketServiceReference
 public class RequesterConfiguration {
     /**
      * 方式1. 通过@Bean, 根据用户API手动注册

@@ -3,8 +3,10 @@ package org.kin.rsocket.service;
 import com.google.common.base.Preconditions;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.service.utils.ByteBuddyUtils;
+import org.springframework.core.annotation.AnnotationAttributes;
 
 import java.lang.reflect.Proxy;
 import java.net.URI;
@@ -85,6 +87,51 @@ public final class RSocketServiceReferenceBuilder<T> {
             builder.sticky = serviceMapping.sticky();
         }
         return builder;
+    }
+
+    /**
+     * 指定service interface class和{@link RSocketServiceReference}属性生成builder实例
+     */
+    public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
+        RSocketServiceReferenceBuilder<T> referenceBuilder = requester(serviceInterface);
+        String serviceName = annoAttrs.getString("name");
+        if (StringUtils.isNotBlank(serviceName)) {
+            referenceBuilder.service(serviceName);
+        }
+
+        String group = annoAttrs.getString("group");
+        if (StringUtils.isNotBlank(group)) {
+            referenceBuilder.group(group);
+        }
+
+        String version = annoAttrs.getString("version");
+        if (StringUtils.isNotBlank(version)) {
+            referenceBuilder.version(version);
+        }
+
+        int callTimeout = annoAttrs.getNumber("callTimeout");
+        if (callTimeout > 0) {
+            referenceBuilder.callTimeout(callTimeout);
+        }
+
+        String endpoint = annoAttrs.getString("endpoint");
+        if (StringUtils.isNotBlank(endpoint)) {
+            referenceBuilder.endpoint(endpoint);
+        }
+
+        boolean sticky = annoAttrs.getBoolean("sticky");
+        if (sticky) {
+            referenceBuilder.sticky(sticky);
+        }
+
+        RSocketMimeType encodingType = annoAttrs.getEnum("encodingType");
+        referenceBuilder.encodingType(encodingType);
+
+        RSocketMimeType[] acceptEncodingTypes = (RSocketMimeType[]) annoAttrs.get("acceptEncodingTypes");
+        if (CollectionUtils.isNonEmpty(acceptEncodingTypes)) {
+            referenceBuilder.acceptEncodingTypes(acceptEncodingTypes);
+        }
+        return referenceBuilder;
     }
 
     public RSocketServiceReferenceBuilder<T> group(String group) {

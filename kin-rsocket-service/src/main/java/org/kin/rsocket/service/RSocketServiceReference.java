@@ -20,7 +20,7 @@ public @interface RSocketServiceReference {
      *
      * @return service interface
      */
-    Class<?> interfaceClass();
+    Class<?> interfaceClass() default Void.class;
 
     /**
      * service name
