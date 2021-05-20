@@ -1,7 +1,6 @@
 package org.kin.rsocket.service;
 
 import org.kin.rsocket.core.RSocketMimeType;
-import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
 
@@ -15,14 +14,13 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(RSocketServiceReferenceRegistrar.class)
 public @interface RSocketServiceReference {
     /**
      * service interface
      *
      * @return service interface
      */
-    Class<?> value();
+    Class<?> interfaceClass();
 
     /**
      * service name

@@ -10,18 +10,24 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 
+import java.util.Objects;
+
 /**
- * 根据{@link RSocketServiceReference}注解信息注册对应的{@link RSocketServiceReferenceFactoryBean}
- *
  * @author huangjianqin
  * @date 2021/5/19
+ * @see RSocketServiceReferenceRegistrar
  */
-class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
+class RSocketServiceReferenceRegistryRegistrar implements ImportBeanDefinitionRegistrar {
+
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-        AnnotationAttributes mapperScanAttrs = AnnotationAttributes.fromMap(importingClassMetadata.getAnnotationAttributes(RSocketServiceReference.class.getName()));
-        if (mapperScanAttrs != null) {
-            registerBeanDefinition(mapperScanAttrs, registry);
+        AnnotationAttributes rsocketServiceReferencesAttrs = AnnotationAttributes
+                .fromMap(importingClassMetadata.getAnnotationAttributes(RSocketServiceReferenceRegistry.class.getName()));
+        if (Objects.nonNull(rsocketServiceReferencesAttrs)) {
+            AnnotationAttributes[] rsocketServiceReferenceAttrs = rsocketServiceReferencesAttrs.getAnnotationArray("value");
+            for (int i = 0; i < rsocketServiceReferenceAttrs.length; i++) {
+                registerBeanDefinition(rsocketServiceReferenceAttrs[i], registry);
+            }
         }
     }
 
@@ -31,7 +37,11 @@ class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar 
     void registerBeanDefinition(AnnotationAttributes annoAttrs, BeanDefinitionRegistry registry) {
         BeanDefinitionBuilder beanBuilder = BeanDefinitionBuilder.genericBeanDefinition(RSocketServiceReferenceFactoryBean.class);
 
-        Class<?> serviceInterfaceClass = annoAttrs.getClass("value");
+        Class<?> serviceInterfaceClass = annoAttrs.getClass("interfaceClass");
+        if (Objects.isNull(serviceInterfaceClass)) {
+            //接口没有定义, 则不走这里
+            return;
+        }
         RSocketServiceReferenceBuilder<?> referenceBuilder = RSocketServiceReferenceBuilder.requester(serviceInterfaceClass);
         String serviceName = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(serviceName)) {

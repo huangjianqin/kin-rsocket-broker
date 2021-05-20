@@ -11,8 +11,8 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(RSocketServiceReferencesRegistrar.class)
-public @interface RSocketServiceReferences {
+@Import(RSocketServiceReferenceRegistryRegistrar.class)
+public @interface RSocketServiceReferenceRegistry {
     /**
      * {@link RSocketServiceReference}集合
      */
