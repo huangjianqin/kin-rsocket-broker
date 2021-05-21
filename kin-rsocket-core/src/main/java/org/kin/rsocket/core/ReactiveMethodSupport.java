@@ -22,9 +22,9 @@ public class ReactiveMethodSupport {
     /** 参数数量 */
     protected final int paramCount;
     /** 方法返回类型 */
-    protected final Class<?> returnType;
+    protected Class<?> returnType;
     /** 方法返回类型泛型参数实际类型 */
-    protected final Class<?> inferredClassForReturn;
+    protected Class<?> inferredClassForReturn;
 
     protected ReactiveMethodSupport(Method method) {
         this.method = method;

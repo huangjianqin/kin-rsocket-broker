@@ -20,6 +20,7 @@
         <module>kin-rsocket-service-starter</module>
         <module>kin-rsocket-broker-starter</module>
         <module>kin-rsocket-bom</module>
+        <module>kin-rsocket-cloud-function-starter</module>
     </modules>
     <packaging>pom</packaging>
 
