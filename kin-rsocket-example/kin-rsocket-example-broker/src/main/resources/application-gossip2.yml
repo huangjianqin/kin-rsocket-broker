@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: rsocket-broker-gossip2
+server:
+  port: 11000
+
+kin:
+  rsocket:
+    broker:
+      port: 11001
+      auth: false
+      gossip:
+        port: 11002
+        seeds:
+          - 0.0.0.0:11001
+
+# management
+management:
+  server:
+    port: 11003
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+      health:
+        show-details: always
+      shutdown:
+        enabled: true
+  metrics:
+    enable:
+      http: false
+  trace:
+    http:
+      enabled: false
+
+# logging
+logging:
+  level:
+    root: info

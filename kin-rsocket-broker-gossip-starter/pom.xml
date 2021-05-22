@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-broker-starter</artifactId>
+            <artifactId>kin-rsocket-broker-standalone-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 

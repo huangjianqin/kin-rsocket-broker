@@ -8,6 +8,7 @@ import io.scalecube.cluster.codec.jackson.JacksonMessageCodec;
 import io.scalecube.cluster.membership.MembershipEvent;
 import io.scalecube.cluster.transport.api.Message;
 import io.scalecube.net.Address;
+import io.scalecube.transport.netty.tcp.TcpTransportFactory;
 import org.kin.framework.event.HandleEvent;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
@@ -16,6 +17,7 @@ import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.utils.JSON;
 import org.slf4j.Logger;
@@ -72,13 +74,15 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
                 .membership(membershipConfig -> membershipConfig.seedMembers(seedMembers()).syncInterval(5_000))
                 .transport(transportConfig ->
                         transportConfig
+                                .transportFactory(new TcpTransportFactory())
                                 .messageCodec(JacksonMessageCodec.INSTANCE)
                                 .port(gossipPort))
                 .handler(cluster1 -> this)
                 .start();
         //subscribe and start & join the cluster
         cluster.subscribe();
-        this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, brokerConfig.getSsl().isEnabled() ? "tcps" : "tcp",
+        RSocketBrokerProperties.RSocketSSL sslConfig = brokerConfig.getSsl();
+        this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, Objects.nonNull(sslConfig) && sslConfig.isEnabled() ? "tcps" : "tcp",
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         brokers.put(localIp, localBrokerInfo);
         log.info("start cluster with Gossip support");
@@ -145,7 +149,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
             try {
                 Class<?> cloudEventClass = Class.forName(cloudEventHeader);
                 String json = gossip.data();
-                handleCloudEvent((CloudEventData) JSON.read(json, cloudEventClass));
+                handleCloudEvent(CloudEventBuilder.builder(JSON.read(json, cloudEventClass)).build());
             } catch (Exception e) {
                 log.error("gossip broadcast cloud event error", e);
             }
@@ -156,7 +160,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
         Message message = Message.builder()
                 .header(CLOUD_EVENT_HEADER, cloudEvent.getAttributes().getType())
-                .data(JSON.write(cloudEvent))
+                .data(JSON.write(cloudEvent.getData()))
                 .build();
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
@@ -174,25 +178,20 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     public void onMembershipEvent(MembershipEvent event) {
         Member member = event.member();
         String brokerIp = member.address().host();
+        int brokerPort = member.address().port();
         if (event.isAdded()) {
             makeJsonRpcCall(member).subscribe(rsocketBroker -> {
                 brokers.put(brokerIp, rsocketBroker);
-                log.info(String.format("Broker '%s' added from cluster", brokerIp));
+                log.info("Broker '{}:{}' added from cluster", brokerIp, brokerPort);
             });
         } else if (event.isRemoved()) {
             brokers.remove(brokerIp);
-            log.info(String.format("Broker '%s' removed from cluster", brokerIp));
+            log.info("Broker '{}:{}' removed from cluster", brokerIp, brokerPort);
         } else if (event.isLeaving()) {
             brokers.remove(brokerIp);
-            log.info(String.format("Broker '%s' left from cluster", brokerIp));
+            log.info("Broker '{}:{}' left from cluster", brokerIp, brokerPort);
         }
         brokersSink.tryEmitNext(brokers.values());
-    }
-
-    private BrokerInfo memberToBroker(Member member) {
-        BrokerInfo brokerInfo = new BrokerInfo();
-        brokerInfo.setIp(member.address().host());
-        return brokerInfo;
     }
 
     @Override

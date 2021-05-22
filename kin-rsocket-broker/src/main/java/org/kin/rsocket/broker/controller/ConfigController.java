@@ -90,7 +90,7 @@ public class ConfigController {
                 //build ConfigChangedEvent
                 .map(content -> CloudEventBuilder.builder(ConfigChangedEvent.of(appName, content)).build())
                 //broadcast event to all broker
-                .flatMap(event -> brokerManager.broadcast(event).then(Mono.just("success")));
+                .flatMap(eventData -> brokerManager.broadcast(eventData).then(Mono.just("success")));
     }
 
     @GetMapping("/last/{appName}")

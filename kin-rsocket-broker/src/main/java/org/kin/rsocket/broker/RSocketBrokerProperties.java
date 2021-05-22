@@ -25,7 +25,7 @@ public class RSocketBrokerProperties {
     /** 校验token文件 */
     private String authDir = System.getProperty("user.home").concat(".rsocket");
     /** external domain for requester from external: the requester can not access broker's internal ip */
-    private String externalDomain;
+    private String externalDomain = "";
     /** ssl信息 */
     @NestedConfigurationProperty
     private RSocketSSL ssl;

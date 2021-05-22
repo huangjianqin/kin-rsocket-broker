@@ -1,6 +1,6 @@
 package org.kin.rsocket.example.broker;
 
-import org.kin.rsocket.springcloud.broker.EnableRSocketBroker;
+import org.kin.rsocket.broker.EnableRSocketBroker;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

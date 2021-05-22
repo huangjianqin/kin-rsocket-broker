@@ -29,10 +29,11 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-rsocket-auth**: 权限校验模块
   * **kin-rsocket-auth-api**: 权限校验接口api模块
   * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
-* **kin-roscket-broker**: rsocket broker实现
+* **kin-roscket-bom**: kin rsocket依赖统一管理
+* **kin-roscket-broker**: rsocket broker基础功能实现
 * **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud
-* **kin-rsocket-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
-* **kin-rsocket-broker-starter**: rsocket broker实现, 整合spring cloud
+* **kin-rsocket-broker-standalone-starter**: standalone broker实现, 整合spring cloud
+* **kin-rsocket-cloud-function-starter**: rsocket service兼容spring cloud function实现
 * **kin-rsocket-conf**: broker配置中心模块
   * **kin-rsocket-conf-api**: : broker配置中心接口api模块
   * **kin-rsocket-conf-h2-starter**: 基于h2文件系统实现的配置中心
@@ -45,6 +46,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
   * **kin-roscket-example-responder**: rsocket service示例
   * **kin-roscket-example-springcloud**: rsocket service整合spring cloud示例
 * **kin-rsocket-gateway-http-starter**: rsocket service http gateway
+* **kin-rsocket-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
 * **kin-roscket-service**: rsocket服务实现
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
 * **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
@@ -61,8 +63,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 
 <dependency>
   <groupId>org.kin</groupId>
-  <artifactId>kin-rsocket-broker</artifactId>
-  <version>${project.version}</version>
+  <artifactId>kin-rsocket-broker-standalone-starter</artifactId>
 </dependency>
 ```
 
@@ -97,11 +98,9 @@ public class RSocketBrokerApplication {
 配置pom.xml
 
 ```xml
-
 <dependency>
   <groupId>org.kin</groupId>
   <artifactId>kin-rsocket-broker-gossip-starter</artifactId>
-  <version>${project.version}</version>
 </dependency>
 ```
 
@@ -129,7 +128,6 @@ kin:
 <dependency>
   <groupId>org.kin</groupId>
   <artifactId>kin-rsocket-service-starter</artifactId>
-  <version>${project.version}</version>
 </dependency>
 ```
 
@@ -184,7 +182,6 @@ public class ServiceApplication {
 <dependency>
   <groupId>org.kin</groupId>
   <artifactId>kin-rsocket-service-starter</artifactId>
-  <version>${project.version}</version>
 </dependency>
 ```
 

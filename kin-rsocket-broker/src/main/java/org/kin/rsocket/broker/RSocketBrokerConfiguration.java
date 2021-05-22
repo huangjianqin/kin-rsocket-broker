@@ -3,7 +3,6 @@ package org.kin.rsocket.broker;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
-import org.kin.rsocket.broker.cluster.StandAloneBrokerManager;
 import org.kin.rsocket.broker.controller.*;
 import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
@@ -131,15 +130,6 @@ public class RSocketBrokerConfiguration {
                 brokerConfig.isAuth(),
                 upstreamBrokerCluster,
                 router);
-    }
-
-    /**
-     * 默认{@link BrokerManager}实现, 可通过maven依赖配置其他starter来使用自定义{@link BrokerManager}实现
-     */
-    @Bean
-    @ConditionalOnMissingBean(BrokerManager.class)
-    public BrokerManager brokerManager() {
-        return new StandAloneBrokerManager();
     }
 
     //----------------------------------------------broker binder相关----------------------------------------------

@@ -1,6 +1,5 @@
-package org.kin.rsocket.springcloud.broker;
+package org.kin.rsocket.broker;
 
-import org.kin.rsocket.broker.RSocketBrokerConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -12,6 +11,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import(RSocketBrokerConfiguration.class)
+@Import({RSocketBrokerConfiguration.class})
 public @interface EnableRSocketBroker {
 }

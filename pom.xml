@@ -8,17 +8,17 @@
     <version>${revision}</version>
     <modules>
         <module>kin-rsocket-broker</module>
+        <module>kin-rsocket-broker-gossip-starter</module>
+        <module>kin-rsocket-broker-standalone-starter</module>
         <module>kin-rsocket-core</module>
         <module>kin-rsocket-service</module>
         <module>kin-rsocket-example</module>
-        <module>kin-rsocket-broker-gossip-starter</module>
         <module>kin-rsocket-registry-client-starter</module>
         <module>kin-rsocket-service-conf-client-starter</module>
         <module>kin-rsocket-gateway-http-starter</module>
         <module>kin-rsocket-auth</module>
         <module>kin-rsocket-conf</module>
         <module>kin-rsocket-service-starter</module>
-        <module>kin-rsocket-broker-starter</module>
         <module>kin-rsocket-bom</module>
         <module>kin-rsocket-cloud-function-starter</module>
     </modules>
@@ -43,7 +43,7 @@
         <rsocket.version>1.1.0</rsocket.version>
         <cloudevents.version>2.0.0.RC2</cloudevents.version>
         <java-jwt.version>3.12.1</java-jwt.version>
-        <scalecube-cluster.version>2.6.6</scalecube-cluster.version>
+        <scalecube-cluster.version>2.6.9</scalecube-cluster.version>
         <kin-rpc-serialization.version>0.1.0.0</kin-rpc-serialization.version>
         <byte-buddy.version>1.10.18</byte-buddy.version>
         <guava.version>30.1-jre</guava.version>
