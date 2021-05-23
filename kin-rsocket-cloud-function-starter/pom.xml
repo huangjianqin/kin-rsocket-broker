@@ -17,6 +17,7 @@
             <artifactId>kin-rsocket-service</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-function-webflux</artifactId>

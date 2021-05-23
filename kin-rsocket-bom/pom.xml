@@ -33,13 +33,13 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-rsocket-registry-client-starter</artifactId>
+                <artifactId>kin-rsocket-broker-standalone-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-rsocket-broker-starter</artifactId>
+                <artifactId>kin-rsocket-cloud-function-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -100,6 +100,12 @@
             <dependency>
                 <groupId>org.kin</groupId>
                 <artifactId>kin-rsocket-gateway-http-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-rsocket-registry-client-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
