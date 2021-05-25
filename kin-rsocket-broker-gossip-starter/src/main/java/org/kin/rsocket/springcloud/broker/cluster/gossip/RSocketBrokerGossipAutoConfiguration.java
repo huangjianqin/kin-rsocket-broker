@@ -18,9 +18,12 @@ import org.springframework.core.annotation.Order;
 @Configuration
 @EnableConfigurationProperties(RSocketBrokerGossipProperties.class)
 public class RSocketBrokerGossipAutoConfiguration {
+    /**
+     * 配置了gossip cluster绑定端口, 并且至少有一个seed, 也就是member, 才有效启动gossip 集群模式
+     */
     @Bean
     @ConditionalOnBean(RSocketBrokerProperties.class)
-    @ConditionalOnProperty("kin.rsocket.broker.gossip.port")
+    @ConditionalOnProperty(prefix = "kin.rsocket.broker.gossip", name = {"port", "seeds[0]"})
     public BrokerManager brokerManager(@Autowired RSocketBrokerProperties brokerConfig,
                                        @Autowired RSocketBrokerGossipProperties gossipConfig) {
         return new GossipBrokerManager(brokerConfig, gossipConfig);
