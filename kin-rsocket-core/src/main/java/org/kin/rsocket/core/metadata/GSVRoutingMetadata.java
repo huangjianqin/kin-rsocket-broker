@@ -210,29 +210,53 @@ public final class GSVRoutingMetadata implements MetadataAware {
         return MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
     }
 
-    //getter
+    //setter && getter
     public String getGroup() {
         return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 
     public String getService() {
         return service;
     }
 
+    public void setService(String service) {
+        this.service = service;
+    }
+
     public String getHandler() {
         return handler;
+    }
+
+    public void setHandler(String handler) {
+        this.handler = handler;
     }
 
     public String getVersion() {
         return version;
     }
 
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     public String getEndpoint() {
         return endpoint;
     }
 
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
     public boolean isSticky() {
         return sticky;
+    }
+
+    public void setSticky(boolean sticky) {
+        this.sticky = sticky;
     }
 }
 

@@ -309,7 +309,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            int instanceId = router.route(serviceId);
+            Integer instanceId = router.route(serviceId);
             if (Objects.nonNull(instanceId)) {
                 return instanceId2Responder.get(instanceId);
             } else {
