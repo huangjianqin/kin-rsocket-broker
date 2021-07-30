@@ -1,7 +1,7 @@
 {
   "properties": [
     {
-      "name": "kin.rsocket.gateway.restapiAuth",
+      "name": "kin.rsocket.gateway.restApiAuth",
       "type": "java.lang.Boolean",
       "description": "rsocket http gateway是否开启校验",
       "sourceType": "org.kin.rsocket.springcloud.gateway.http.RSocketBrokerHttpGatewayProperties",

@@ -14,6 +14,6 @@ public class AvroCodec extends AbstractSerializationCodec {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Avro;
+        return RSocketMimeType.AVRO;
     }
 }

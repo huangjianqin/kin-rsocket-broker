@@ -32,7 +32,7 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 @RequestMapping("/api")
 public class RSocketApiController {
     /** json编码元数据 */
-    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
+    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
 
     @Value("${kin.rsocket.broker.auth}")
     private boolean authRequired;

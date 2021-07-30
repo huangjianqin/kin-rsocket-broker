@@ -50,7 +50,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.BinaryRouting;
+        return RSocketMimeType.BINARY_ROUTING;
     }
 
     @Override

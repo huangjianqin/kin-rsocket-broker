@@ -34,11 +34,13 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * requester 代理
+ * <p>
+ * 类定义必须为public, 不然生成出来的代理无法访问到该类
  *
  * @author huangjianqin
  * @date 2021/3/27
  */
-final class RequesterProxy implements InvocationHandler {
+public final class RequesterProxy implements InvocationHandler {
     private static final Logger log = LoggerFactory.getLogger(RequesterProxy.class);
     /** 绑定的{@link UpstreamCluster} */
     protected final RSocket rsocket;
@@ -69,9 +71,9 @@ final class RequesterProxy implements InvocationHandler {
      * 默认accept的数据编码类型
      */
     public static RSocketMimeType[] defaultAcceptEncodingTypes() {
-        return new RSocketMimeType[]{RSocketMimeType.Json, RSocketMimeType.Java_Object, RSocketMimeType.Protobuf,
-                RSocketMimeType.Hessian, RSocketMimeType.Avro, RSocketMimeType.CBOR,
-                RSocketMimeType.Text, RSocketMimeType.Binary};
+        return new RSocketMimeType[]{RSocketMimeType.JSON, RSocketMimeType.JAVA_OBJECT, RSocketMimeType.PROTOBUF,
+                RSocketMimeType.HESSIAN, RSocketMimeType.AVRO, RSocketMimeType.CBOR,
+                RSocketMimeType.TEXT, RSocketMimeType.BINARY};
     }
 
     public RequesterProxy(RSocketServiceReferenceBuilder<?> builder) {
@@ -222,8 +224,8 @@ final class RequesterProxy implements InvocationHandler {
      * 从{@link RSocketCompositeMetadata}获取{@link MessageMimeTypeMetadata}元数据
      */
     private RSocketMimeType extractPayloadDataMimeType(RSocketCompositeMetadata compositeMetadata, RSocketMimeType defaultEncodingType) {
-        if (compositeMetadata.contains(RSocketMimeType.MessageMimeType)) {
-            MessageMimeTypeMetadata mimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageMimeType);
+        if (compositeMetadata.contains(RSocketMimeType.MESSAGE_MIME_TYPE)) {
+            MessageMimeTypeMetadata mimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
             return mimeTypeMetadata.getMessageMimeType();
         }
         return defaultEncodingType;

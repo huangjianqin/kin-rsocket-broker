@@ -93,7 +93,7 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         if (paramCount == 1) {
             Class<?> parameterType = method.getParameterTypes()[0];
             if (BINARY_CLASS_LIST.contains(parameterType)) {
-                this.dataEncodingType = RSocketMimeType.Binary;
+                this.dataEncodingType = RSocketMimeType.BINARY;
             }
         }
         //初始化方法调用的元数据

@@ -14,6 +14,6 @@ public class ProtobufCodec extends AbstractSerializationCodec {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Protobuf;
+        return RSocketMimeType.PROTOBUF;
     }
 }

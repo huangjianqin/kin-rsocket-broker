@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 public class BinaryCodec implements Codec {
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Binary;
+        return RSocketMimeType.BINARY;
     }
 
     @Override

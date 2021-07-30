@@ -23,7 +23,7 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 @RestController
 @RequestMapping("/api")
 public class HttpGatewayController {
-    private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
+    private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
 
     private final AuthenticationService authenticationService;
     private final RSocketBrokerHttpGatewayProperties config;
@@ -46,7 +46,7 @@ public class HttpGatewayController {
                                                 @RequestBody(required = false) ByteBuf body,
                                                 @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         boolean authenticated;
-        if (!config.isRestapiAuth()) {
+        if (!config.isRestApiAuth()) {
             authenticated = true;
         } else {
             authenticated = Objects.nonNull(authenticationService.auth(token));

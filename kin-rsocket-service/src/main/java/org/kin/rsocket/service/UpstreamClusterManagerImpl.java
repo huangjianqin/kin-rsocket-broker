@@ -60,9 +60,11 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
                     ExceptionUtils.throwExt(e);
                 }
             }
+            //添加rsocket service broker connection
             add(null, Symbols.BROKER, null, config.getBrokers());
         }
         if (config.getEndpoints() != null && !config.getEndpoints().isEmpty()) {
+            //添加rsocket service endpoint connection
             for (EndpointProperties endpointProperties : config.getEndpoints()) {
                 add(endpointProperties.getGroup(),
                         endpointProperties.getService(),

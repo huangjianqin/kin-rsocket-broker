@@ -65,7 +65,7 @@ public final class RSocketEndpoint {
                 Map<String, Object> temp = new HashMap<>();
                 temp.put("service", upstreamCluster.getServiceId());
                 temp.put("uris", upstreamCluster.getUris());
-                LoadBalanceRequester loadBalanceRequester = upstreamCluster.getLoadBalanceRequester();
+                LoadBalanceRsocketRequester loadBalanceRequester = upstreamCluster.getLoadBalanceRequester();
                 temp.put("activeUris", loadBalanceRequester.getActiveRSockets().keySet());
                 Set<String> unhealthyUris = loadBalanceRequester.getUnhealthyUris();
                 if (!unhealthyUris.isEmpty()) {

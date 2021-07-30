@@ -24,7 +24,7 @@ public class SmoothWeightedRoundRobinRouter implements Router {
 
     @Override
     public Integer route(int serviceId) {
-        List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
+        List<RouterWeight> routerWeights = getByServiceId(serviceId);
         if (CollectionUtils.isNonEmpty(routerWeights)) {
             //总权重
             int sumWeight = 0;
@@ -48,29 +48,35 @@ public class SmoothWeightedRoundRobinRouter implements Router {
 
     @Override
     public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
-        for (ServiceLocator serviceLocator : services) {
-            serviceId2InstanceRouterWeights.put(serviceLocator.getId(), new RouterWeight(instanceId, weight));
+        synchronized (serviceId2InstanceRouterWeights) {
+            for (ServiceLocator serviceLocator : services) {
+                serviceId2InstanceRouterWeights.put(serviceLocator.getId(), new RouterWeight(instanceId, weight));
+            }
         }
     }
 
     @Override
     public void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds) {
-        for (Integer serviceId : serviceIds) {
-            List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
-            if (CollectionUtils.isEmpty(routerWeights)) {
-                continue;
+        synchronized (serviceId2InstanceRouterWeights) {
+            for (Integer serviceId : serviceIds) {
+                List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
+                if (CollectionUtils.isEmpty(routerWeights)) {
+                    continue;
+                }
+                routerWeights.removeIf(item -> item.getInstanceId() == instanceId);
             }
-            routerWeights.removeIf(item -> item.getInstanceId() == instanceId);
+        }
+    }
+
+    private List<RouterWeight> getByServiceId(int serviceId) {
+        synchronized (serviceId2InstanceRouterWeights) {
+            //不允许修改原始list
+            return Collections.unmodifiableList(serviceId2InstanceRouterWeights.get(serviceId));
         }
     }
 
     @Override
     public Collection<Integer> getAllInstanceIds(int serviceId) {
-        List<RouterWeight> routerWeights = serviceId2InstanceRouterWeights.get(serviceId);
-        if (CollectionUtils.isNonEmpty(routerWeights)) {
-            return serviceId2InstanceRouterWeights.get(serviceId).stream().map(RouterWeight::getInstanceId).collect(Collectors.toList());
-        }
-
-        return Collections.emptyList();
+        return getByServiceId(serviceId).stream().map(RouterWeight::getInstanceId).collect(Collectors.toList());
     }
 }

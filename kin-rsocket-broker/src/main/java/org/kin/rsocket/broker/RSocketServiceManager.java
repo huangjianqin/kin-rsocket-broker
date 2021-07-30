@@ -120,8 +120,8 @@ public final class RSocketServiceManager {
                 //authentication not required
                 principal = RSocketAppPrincipal.DEFAULT;
                 credentials = UUID.randomUUID().toString();
-            } else if (compositeMetadata.contains(RSocketMimeType.BearerToken)) {
-                BearerTokenMetadata bearerTokenMetadata = compositeMetadata.getMetadata(RSocketMimeType.BearerToken);
+            } else if (compositeMetadata.contains(RSocketMimeType.BEARER_TOKEN)) {
+                BearerTokenMetadata bearerTokenMetadata = compositeMetadata.getMetadata(RSocketMimeType.BEARER_TOKEN);
                 credentials = new String(bearerTokenMetadata.getBearerToken());
                 principal = authenticationService.auth(credentials);
             } else {
@@ -129,8 +129,8 @@ public final class RSocketServiceManager {
                 errorMsg = "Failed to accept the connection, please check app info and JWT token";
             }
             //validate application information
-            if (principal != null && compositeMetadata.contains(RSocketMimeType.Application)) {
-                AppMetadata temp = compositeMetadata.getMetadata(RSocketMimeType.Application);
+            if (principal != null && compositeMetadata.contains(RSocketMimeType.APPLICATION)) {
+                AppMetadata temp = compositeMetadata.getMetadata(RSocketMimeType.APPLICATION);
                 //App registration validation: app id: UUID and unique in server
                 String appId = temp.getUuid();
                 //validate appId data format

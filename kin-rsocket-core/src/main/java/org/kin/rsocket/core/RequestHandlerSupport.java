@@ -253,7 +253,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                RSocketMimeType defaultEncodingType,
                                                ReactiveMethodInvoker methodInvoker) {
         if (methodInvoker.isBinaryReturn()) {
-            return RSocketMimeType.Binary;
+            return RSocketMimeType.BINARY;
         }
         if (acceptMimeTypesMetadata != null) {
             RSocketMimeType firstAcceptType = acceptMimeTypesMetadata.getFirstAcceptType();

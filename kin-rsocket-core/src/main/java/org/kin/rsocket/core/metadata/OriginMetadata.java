@@ -31,7 +31,7 @@ public final class OriginMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.MessageOrigin;
+        return RSocketMimeType.MESSAGE_ORIGIN;
     }
 
     @Override

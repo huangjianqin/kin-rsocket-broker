@@ -14,6 +14,6 @@ public class KryoCodec extends AbstractSerializationCodec {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Java_Object;
+        return RSocketMimeType.JAVA_OBJECT;
     }
 }

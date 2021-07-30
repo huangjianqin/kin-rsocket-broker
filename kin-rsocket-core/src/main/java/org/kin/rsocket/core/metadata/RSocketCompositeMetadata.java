@@ -51,7 +51,7 @@ public final class RSocketCompositeMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.CompositeMetadata;
+        return RSocketMimeType.COMPOSITE_METADATA;
     }
 
     @Override
@@ -83,9 +83,7 @@ public final class RSocketCompositeMetadata implements MetadataAware {
                     bytes.markReaderIndex();
                     MetadataAware metadataAware = MetadataAwares.instance(rsocketMimeType, bytes);
                     bytes.resetReaderIndex();
-                    if (Objects.nonNull(metadataAware)) {
-                        metadataStore.put(rsocketMimeType, metadataAware);
-                    }
+                    metadataStore.put(rsocketMimeType, metadataAware);
                 } catch (Exception e) {
                     ExceptionUtils.throwExt(e);
                 }

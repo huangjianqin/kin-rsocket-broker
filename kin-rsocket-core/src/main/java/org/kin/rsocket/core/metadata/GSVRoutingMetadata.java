@@ -81,7 +81,7 @@ public final class GSVRoutingMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Routing;
+        return RSocketMimeType.ROUTING;
     }
 
     @Override

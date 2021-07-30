@@ -8,14 +8,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "kin.rsocket.gateway")
 public class RSocketBrokerHttpGatewayProperties {
-    private boolean restapiAuth = false;
+    private boolean restApiAuth = false;
 
     //setter && getter
-    public boolean isRestapiAuth() {
-        return restapiAuth;
+    public boolean isRestApiAuth() {
+        return restApiAuth;
     }
 
-    public void setRestapiAuth(boolean restapiAuth) {
-        this.restapiAuth = restapiAuth;
+    public void setRestApiAuth(boolean restApiAuth) {
+        this.restApiAuth = restApiAuth;
     }
 }

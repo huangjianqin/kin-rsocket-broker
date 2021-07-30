@@ -47,8 +47,8 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         RSocketMimeType dataMimeType = RSocketMimeType.defaultEncodingType();
         //解析composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
-        if (compositeMetadata.contains(RSocketMimeType.Application)) {
-            AppMetadata appMetadata = compositeMetadata.getMetadata(RSocketMimeType.Application);
+        if (compositeMetadata.contains(RSocketMimeType.APPLICATION)) {
+            AppMetadata appMetadata = compositeMetadata.getMetadata(RSocketMimeType.APPLICATION);
             //from remote requester
             if (!appMetadata.getUuid().equals(RSocketAppContext.ID)) {
                 RSocketMimeType requesterDataMimeType = RSocketMimeType.getByType(setupPayload.dataMimeType());
@@ -102,7 +102,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
             ReferenceCountUtil.safeRelease(payload);
             return noEncodingDataErrorMono();
         }
-        return localRequestResponse(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
+        return localRequestResponse(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
     }
 
     @Override
@@ -134,7 +134,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
             ReferenceCountUtil.safeRelease(payload);
             return noEncodingDataErrorFlux();
         }
-        return localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), payload);
+        return localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
     }
 
     private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
@@ -151,7 +151,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         }
 
         return localRequestChannel(routingMetaData, dataEncodingMetadata,
-                compositeMetadata.getMetadata(RSocketMimeType.MessageAcceptMimeTypes), signal,
+                compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), signal,
                 ((Flux<Payload>) payloads).skip(1));
     }
 
@@ -188,7 +188,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
      * 解析并获取{@link MessageMimeTypeMetadata}
      */
     private MessageMimeTypeMetadata getDataEncodingMetadata(RSocketCompositeMetadata compositeMetadata) {
-        MessageMimeTypeMetadata dataEncodingMetadata = compositeMetadata.getMetadata(RSocketMimeType.MessageMimeType);
+        MessageMimeTypeMetadata dataEncodingMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
         if (dataEncodingMetadata == null) {
             return defaultMessageMimeTypeMetadata;
         } else {
@@ -200,6 +200,6 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
      * 解析并获取{@link GSVRoutingMetadata}
      */
     private GSVRoutingMetadata getGsvRoutingMetadata(RSocketCompositeMetadata compositeMetadata) {
-        return compositeMetadata.getMetadata(RSocketMimeType.Routing);
+        return compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
     }
 }

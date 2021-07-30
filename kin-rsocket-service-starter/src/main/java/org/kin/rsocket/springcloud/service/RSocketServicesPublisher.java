@@ -6,7 +6,7 @@ import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
-import org.kin.rsocket.service.RSocketServiceConnector;
+import org.kin.rsocket.service.RSocketServiceRequester;
 import org.kin.rsocket.service.RequesterSupportBuilderCustomizer;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 final class RSocketServicesPublisher implements ApplicationListener<ApplicationReadyEvent> {
     private static final Logger log = LoggerFactory.getLogger(RSocketServicesPublisher.class);
     @Autowired
-    private RSocketServiceConnector connector;
+    private RSocketServiceRequester requester;
     @Autowired
     private ObjectProvider<RSocketBinderBuilderCustomizer> binderBuilderCustomizers;
     @Autowired
@@ -49,12 +49,12 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationR
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         //connect
-        connector.connect(
+        requester.connect(
                 binderBuilderCustomizers.orderedStream().collect(Collectors.toList()),
                 requesterSupportBuilderCustomizers.orderedStream().collect(Collectors.toList()),
                 healthService);
 
-        UpstreamCluster brokerCluster = connector.getBroker();
+        UpstreamCluster brokerCluster = requester.getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
             //本质上就是直连的方式
@@ -77,7 +77,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationR
 
         if (serviceConfig.getPort() > 0) {
             //没有绑定rsocket port, 则是无法调用该app 服务, 那么没必要暴露服务
-            connector.publishServices();
+            requester.publishServices();
         }
     }
 }

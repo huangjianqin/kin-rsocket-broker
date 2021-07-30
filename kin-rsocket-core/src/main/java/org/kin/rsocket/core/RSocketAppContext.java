@@ -23,11 +23,11 @@ public class RSocketAppContext {
     /** 是否支持字节码增强 */
     public static final boolean ENHANCE;
     /** spring web port */
-    public static int webPort = 0;
+    public static volatile int webPort = 0;
     /** spring actuator port */
-    public static int managementPort = 0;
+    public static volatile int managementPort = 0;
     /** key -> rsocket port, value -> rsocket schema */
-    public static Map<Integer, String> rsocketPorts;
+    public static volatile Map<Integer, String> rsocketPorts;
 
     static {
         Class<?> byteBuddyClass = null;

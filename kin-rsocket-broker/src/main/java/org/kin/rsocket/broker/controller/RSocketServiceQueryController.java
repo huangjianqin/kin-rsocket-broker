@@ -30,7 +30,7 @@ import java.util.Objects;
 @RequestMapping("/services")
 public class RSocketServiceQueryController {
     /** json编码元数据 */
-    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.Json);
+    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
     @Autowired
     private RSocketServiceManager serviceManager;
 

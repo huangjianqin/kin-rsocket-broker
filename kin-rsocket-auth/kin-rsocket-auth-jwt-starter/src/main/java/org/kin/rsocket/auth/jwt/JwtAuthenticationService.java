@@ -37,16 +37,15 @@ public final class JwtAuthenticationService implements AuthenticationService {
     /** 私钥文件名 */
     private static final String PRIVATE_KEY_FILE = "jwt_rsa.key";
 
-    /** 密钥目录 */
-    private final File authDir;
     /** jwt校验算法 */
     private final List<JWTVerifier> verifiers = new ArrayList<>();
     /** cache verified principal */
-    private Cache<Integer, RSocketAppPrincipal> jwtVerifyCache = CacheBuilder.newBuilder()
+    private final Cache<Integer, RSocketAppPrincipal> jwtVerifyCache = CacheBuilder.newBuilder()
             .maximumSize(100_00)
             //30min后移除
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .build();
+    private final RSAPrivateKey privateKey;
 
     public JwtAuthenticationService() throws Exception {
         this(false);
@@ -58,9 +57,9 @@ public final class JwtAuthenticationService implements AuthenticationService {
 
     /**
      * @param autoGen 是否自动生成RSAKeyPairs
+     * @param authDir 密钥目录
      */
     public JwtAuthenticationService(boolean autoGen, File authDir) throws Exception {
-        this.authDir = authDir;
         if (autoGen) {
             if (Objects.nonNull(authDir) && !authDir.exists()) {
                 authDir.mkdir();
@@ -73,7 +72,9 @@ public final class JwtAuthenticationService implements AuthenticationService {
             }
         }
 
+        //使用暴露的公钥去校验签名
         this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(ISS).build());
+        this.privateKey = readPrivateKey(authDir);
     }
 
     @Override
@@ -122,7 +123,8 @@ public final class JwtAuthenticationService implements AuthenticationService {
             builder = builder.withArrayClaim("authorities", authorities);
         }
 
-        return builder.sign(Algorithm.RSA256(null, readPrivateKey(authDir)));
+        //使用私钥生成签名
+        return builder.sign(Algorithm.RSA256(null, privateKey));
     }
 
     /**
@@ -133,6 +135,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
         try (InputStream inputStream = new FileInputStream(keyFile)) {
             byte[] keyBytes = toBytes(inputStream);
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
+            //以pkc8编码
             return (RSAPrivateKey) KeyFactory.getInstance("RSA").generatePrivate(spec);
         }
 
@@ -146,6 +149,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
         try (InputStream inputStream = new FileInputStream(keyFile)) {
             byte[] keyBytes = toBytes(inputStream);
             X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+            //以x509编码
             return (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(spec);
         }
     }

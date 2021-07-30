@@ -36,7 +36,7 @@ public final class MessageTagsMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.MessageTags;
+        return RSocketMimeType.MESSAGE_TAGS;
     }
 
     @Override
@@ -50,7 +50,7 @@ public final class MessageTagsMetadata implements MetadataAware {
 
     @Override
     public void load(ByteBuf byteBuf) {
-        TaggingMetadata taggingMetadata = new TaggingMetadata(RSocketMimeType.MessageTags.getType(), byteBuf);
+        TaggingMetadata taggingMetadata = new TaggingMetadata(RSocketMimeType.MESSAGE_TAGS.getType(), byteBuf);
         taggingMetadata.forEach(pair -> {
             int start = pair.indexOf("=");
             String name = pair.substring(0, start);

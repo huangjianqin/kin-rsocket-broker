@@ -29,7 +29,7 @@ public final class CacheControlMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.CacheControl;
+        return RSocketMimeType.CACHE_CONTROL;
     }
 
     @Override

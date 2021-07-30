@@ -85,8 +85,8 @@ public final class BrokerResponder implements CloudEventRSocket {
 
         //publish services metadata
         this.peerServices = new HashSet<>();
-        if (compositeMetadata.contains(RSocketMimeType.ServiceRegistry)) {
-            RSocketServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.ServiceRegistry);
+        if (compositeMetadata.contains(RSocketMimeType.SERVICE_REGISTRY)) {
+            RSocketServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.SERVICE_REGISTRY);
             if (CollectionUtils.isNonEmpty(serviceRegistryMetadata.getPublished())) {
                 peerServices.addAll(serviceRegistryMetadata.getPublished());
                 publishServices();

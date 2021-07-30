@@ -13,7 +13,7 @@ import java.util.Objects;
  */
 class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     @Autowired
-    private RSocketServiceConnector connector;
+    private RSocketServiceRequester requester;
     /** 缓存rsocket service reference builder */
     private final RSocketServiceReferenceBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
@@ -54,7 +54,7 @@ class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     @Override
     protected T createInstance() throws Exception {
         if (Objects.isNull(reference)) {
-            builder.upstreamClusterManager(connector);
+            builder.upstreamClusterManager(requester);
             reference = builder.build();
         }
 

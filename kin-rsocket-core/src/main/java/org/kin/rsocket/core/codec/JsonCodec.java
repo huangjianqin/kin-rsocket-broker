@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class JsonCodec implements Codec {
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Json;
+        return RSocketMimeType.JSON;
     }
 
     @Override

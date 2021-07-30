@@ -12,47 +12,47 @@ import java.util.stream.Stream;
  */
 public enum RSocketMimeType {
     /** json */
-    Json("Json", WellKnownMimeType.APPLICATION_JSON),
+    JSON("Json", WellKnownMimeType.APPLICATION_JSON),
     /** protobuf */
-    Protobuf("Protobuf", WellKnownMimeType.APPLICATION_PROTOBUF),
+    PROTOBUF("Protobuf", WellKnownMimeType.APPLICATION_PROTOBUF),
     /** avro */
-    Avro("Avro", WellKnownMimeType.APPLICATION_AVRO),
+    AVRO("Avro", WellKnownMimeType.APPLICATION_AVRO),
     /** hessian */
-    Hessian("Hessian", WellKnownMimeType.APPLICATION_HESSIAN),
+    HESSIAN("Hessian", WellKnownMimeType.APPLICATION_HESSIAN),
     /** text */
-    Text("Text", WellKnownMimeType.TEXT_PLAIN),
+    TEXT("Text", WellKnownMimeType.TEXT_PLAIN),
     /** binary */
-    Binary("Binary", WellKnownMimeType.APPLICATION_OCTET_STREAM),
+    BINARY("Binary", WellKnownMimeType.APPLICATION_OCTET_STREAM),
     /** java对象序列化, 使用kryo */
-    Java_Object("Java_Object", WellKnownMimeType.APPLICATION_JAVA_OBJECT),
+    JAVA_OBJECT("Java_Object", WellKnownMimeType.APPLICATION_JAVA_OBJECT),
     /** cbor, 物联网专用, 编码紧凑, 轻量, 并且兼容JSON */
     CBOR("CBOR", WellKnownMimeType.APPLICATION_CBOR),
     /** json形式的cloud event数据 */
-    CloudEventsJson("CloudEventsJson", WellKnownMimeType.APPLICATION_CLOUDEVENTS_JSON),
+    CLOUD_EVENTS_JSON("CloudEventsJson", WellKnownMimeType.APPLICATION_CLOUDEVENTS_JSON),
     /** application元数据 */
-    Application("Meta-Application", WellKnownMimeType.MESSAGE_RSOCKET_APPLICATION),
+    APPLICATION("Meta-Application", WellKnownMimeType.MESSAGE_RSOCKET_APPLICATION),
     /** cache控制元数据 */
-    CacheControl("Meta-CacheControl", WellKnownMimeType.MESSAGE_RSOCKET_DATA_CACHE_CONTROL),
+    CACHE_CONTROL("Meta-CacheControl", WellKnownMimeType.MESSAGE_RSOCKET_DATA_CACHE_CONTROL),
     /** service注册元数据 */
-    ServiceRegistry("Meta-Service-Registry", WellKnownMimeType.MESSAGE_RSOCKET_SERVICE_REGISTRY),
+    SERVICE_REGISTRY("Meta-Service-Registry", WellKnownMimeType.MESSAGE_RSOCKET_SERVICE_REGISTRY),
     /** token */
-    BearerToken("Meta-BearerToken", WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION),
+    BEARER_TOKEN("Meta-BearerToken", WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION),
     /** trace */
-    Tracing("Meta-Tracing", WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN),
+    TRACING("Meta-Tracing", WellKnownMimeType.MESSAGE_RSOCKET_TRACING_ZIPKIN),
     /** 路由元数据 */
-    Routing("Meta-Routing", WellKnownMimeType.MESSAGE_RSOCKET_ROUTING),
+    ROUTING("Meta-Routing", WellKnownMimeType.MESSAGE_RSOCKET_ROUTING),
     /** 二进制形式的路由元数据 */
-    BinaryRouting("Meta-BinaryRouting", WellKnownMimeType.MESSAGE_RSOCKET_BINARY_ROUTING),
+    BINARY_ROUTING("Meta-BinaryRouting", WellKnownMimeType.MESSAGE_RSOCKET_BINARY_ROUTING),
     /** 消息编码 */
-    MessageMimeType("Message-MimeType", WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE),
+    MESSAGE_MIME_TYPE("Message-MimeType", WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE),
     /** 消息可接受的编码类型 */
-    MessageAcceptMimeTypes("Message-Accept-MimeTypes", WellKnownMimeType.MESSAGE_RSOCKET_ACCEPT_MIMETYPES),
+    MESSAGE_ACCEPT_MIME_TYPES("Message-Accept-MimeTypes", WellKnownMimeType.MESSAGE_RSOCKET_ACCEPT_MIMETYPES),
     /** 混合元数据 */
-    CompositeMetadata("Meta-Composite", WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA),
+    COMPOSITE_METADATA("Meta-Composite", WellKnownMimeType.MESSAGE_RSOCKET_COMPOSITE_METADATA),
     /** message tags */
-    MessageTags("Message-Tags", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_TAGS),
+    MESSAGE_TAGS("Message-Tags", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_TAGS),
     /** message origin */
-    MessageOrigin("Message-Origin", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_ORIGIN);
+    MESSAGE_ORIGIN("Message-Origin", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_ORIGIN);
 
     /** key -> id, value -> mime type */
     public static final Map<Byte, RSocketMimeType> MIME_TYPE_MAP;
@@ -100,7 +100,7 @@ public enum RSocketMimeType {
 
     /** rsocket通信默认编码类型 */
     public static RSocketMimeType defaultEncodingType() {
-        return Json;
+        return JSON;
     }
 
     //getter

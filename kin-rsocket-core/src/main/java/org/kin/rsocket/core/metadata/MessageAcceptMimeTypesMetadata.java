@@ -68,7 +68,7 @@ public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.MessageAcceptMimeTypes;
+        return RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES;
     }
 
     /**

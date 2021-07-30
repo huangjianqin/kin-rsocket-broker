@@ -204,10 +204,10 @@ kin:
 @Configuration
 public class RequesterConfiguration {
   @Bean
-  public HelloService helloService(@Autowired RSocketServiceConnector connector) {
-    return ServiceReferenceBuilder
-            .requester(HelloService.class)
-            .upstreamClusterManager(connector)
+  public UserService userService(@Autowired RSocketServiceRequester requester) {
+    return RSocketServiceReferenceBuilder
+            .requester(UserService.class)
+            .upstreamClusterManager(requester)
             .build();
   }
 }

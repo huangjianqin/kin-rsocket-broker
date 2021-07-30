@@ -33,7 +33,7 @@ public final class BearerTokenMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.BearerToken;
+        return RSocketMimeType.BEARER_TOKEN;
     }
 
     @Override

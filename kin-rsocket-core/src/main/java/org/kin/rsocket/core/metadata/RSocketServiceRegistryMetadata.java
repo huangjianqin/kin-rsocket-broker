@@ -40,7 +40,7 @@ public final class RSocketServiceRegistryMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.ServiceRegistry;
+        return RSocketMimeType.SERVICE_REGISTRY;
     }
 
     @Override

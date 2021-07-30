@@ -48,8 +48,8 @@ final class BrokerRequestHandler extends AbstractRSocket {
 
         //解析composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
-        if (compositeMetadata.contains(RSocketMimeType.Application)) {
-            upstreamBrokerMetadata = compositeMetadata.getMetadata(RSocketMimeType.Application);
+        if (compositeMetadata.contains(RSocketMimeType.APPLICATION)) {
+            upstreamBrokerMetadata = compositeMetadata.getMetadata(RSocketMimeType.APPLICATION);
         } else {
             AppMetadata.Builder builder = AppMetadata.builder();
             builder.name("unknown peer broker");
@@ -65,7 +65,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
             gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
             if (gsvRoutingMetadata == null) {
                 return Mono.error(new InvalidException("No Routing metadata"));
             }
@@ -90,7 +90,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
             gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
             if (gsvRoutingMetadata == null) {
                 return Mono.error(new InvalidException("No Routing metadata"));
             }
@@ -114,7 +114,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
             gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
             if (gsvRoutingMetadata == null) {
                 return Flux.error(new InvalidException("No Routing metadata"));
             }
@@ -142,7 +142,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
             gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
         } else {
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.Routing);
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
             if (gsvRoutingMetadata == null) {
                 return Flux.error(new InvalidException("No Routing metadata"));
             }

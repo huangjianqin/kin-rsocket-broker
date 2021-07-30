@@ -14,6 +14,6 @@ public class HessianCodec extends AbstractSerializationCodec {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Hessian;
+        return RSocketMimeType.HESSIAN;
     }
 }

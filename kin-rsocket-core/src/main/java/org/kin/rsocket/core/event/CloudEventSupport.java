@@ -64,8 +64,8 @@ public interface CloudEventSupport extends Serializable {
         } else {
             //composite metadata
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            if (compositeMetadata.contains(RSocketMimeType.CloudEventsJson)) {
-                jsonText = compositeMetadata.getMetadataBytes(RSocketMimeType.CloudEventsJson).toString(StandardCharsets.UTF_8);
+            if (compositeMetadata.contains(RSocketMimeType.CLOUD_EVENTS_JSON)) {
+                jsonText = compositeMetadata.getMetadataBytes(RSocketMimeType.CLOUD_EVENTS_JSON).toString(StandardCharsets.UTF_8);
             }
         }
         if (jsonText != null) {

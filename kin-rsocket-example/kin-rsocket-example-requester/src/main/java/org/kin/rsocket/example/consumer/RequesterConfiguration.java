@@ -15,10 +15,10 @@ public class RequesterConfiguration {
      * 方式1. 通过@Bean, 根据用户API手动注册
      */
 //    @Bean
-//    public UserService userService(@Autowired RSocketServiceConnector connector) {
+//    public UserService userService(@Autowired RSocketServiceRequester requester) {
 //        return RSocketServiceReferenceBuilder
 //                .requester(UserService.class)
-//                .upstreamClusterManager(connector)
+//                .upstreamClusterManager(requester)
 //                .build();
 //    }
 }

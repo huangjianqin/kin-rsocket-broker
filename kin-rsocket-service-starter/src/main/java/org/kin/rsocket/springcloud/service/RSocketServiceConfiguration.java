@@ -4,8 +4,8 @@ import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RSocketServiceAnnoProcessor;
 import org.kin.rsocket.core.health.HealthCheck;
-import org.kin.rsocket.service.RSocketServiceConnector;
 import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
+import org.kin.rsocket.service.RSocketServiceRequester;
 import org.kin.rsocket.springcloud.service.health.HealthIndicator;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
@@ -34,10 +34,10 @@ import java.util.stream.Collectors;
 @Import(RSocketCloudEventConsumerConfiguration.class)
 public class RSocketServiceConfiguration {
     @Bean(destroyMethod = "close")
-    public RSocketServiceConnector rsocketServiceConnector(@Autowired Environment env,
+    public RSocketServiceRequester rsocketServiceRequester(@Autowired Environment env,
                                                            @Autowired RSocketServiceProperties config) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new RSocketServiceConnector(appName, config);
+        return new RSocketServiceRequester(appName, config);
     }
 
     //----------------------------spring----------------------------
@@ -65,8 +65,8 @@ public class RSocketServiceConfiguration {
      */
     @Bean
     public RSocketEndpoint rsocketEndpoint(@Autowired RSocketServiceProperties config,
-                                           @Autowired RSocketServiceConnector connector) {
-        return new RSocketEndpoint(config, connector);
+                                           @Autowired RSocketServiceRequester requester) {
+        return new RSocketEndpoint(config, requester);
     }
 
     /**
@@ -116,11 +116,11 @@ public class RSocketServiceConfiguration {
 
     //----------------------------service reference----------------------------
     @Bean("healthCheckRef")
-    public HealthCheck healthCheckRef(@Autowired RSocketServiceConnector connector) {
+    public HealthCheck healthCheckRef(@Autowired RSocketServiceRequester requester) {
         return RSocketServiceReferenceBuilder
                 .requester(HealthCheck.class)
                 .nativeImage()
-                .upstreamClusterManager(connector)
+                .upstreamClusterManager(requester)
                 .build();
     }
 }

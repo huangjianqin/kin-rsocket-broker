@@ -23,17 +23,17 @@ final class MetadataAwares {
     static {
         Map<RSocketMimeType, Class<? extends MetadataAware>> map = new HashMap<>(16);
 
-        map.put(RSocketMimeType.Application, AppMetadata.class);
-        map.put(RSocketMimeType.CacheControl, CacheControlMetadata.class);
-        map.put(RSocketMimeType.ServiceRegistry, RSocketServiceRegistryMetadata.class);
-        map.put(RSocketMimeType.BearerToken, BearerTokenMetadata.class);
-        map.put(RSocketMimeType.Routing, GSVRoutingMetadata.class);
-        map.put(RSocketMimeType.BinaryRouting, BinaryRoutingMetadata.class);
-        map.put(RSocketMimeType.MessageMimeType, MessageMimeTypeMetadata.class);
-        map.put(RSocketMimeType.MessageAcceptMimeTypes, MessageAcceptMimeTypesMetadata.class);
-        map.put(RSocketMimeType.CompositeMetadata, RSocketCompositeMetadata.class);
-        map.put(RSocketMimeType.MessageTags, MessageTagsMetadata.class);
-        map.put(RSocketMimeType.MessageOrigin, OriginMetadata.class);
+        map.put(RSocketMimeType.APPLICATION, AppMetadata.class);
+        map.put(RSocketMimeType.CACHE_CONTROL, CacheControlMetadata.class);
+        map.put(RSocketMimeType.SERVICE_REGISTRY, RSocketServiceRegistryMetadata.class);
+        map.put(RSocketMimeType.BEARER_TOKEN, BearerTokenMetadata.class);
+        map.put(RSocketMimeType.ROUTING, GSVRoutingMetadata.class);
+        map.put(RSocketMimeType.BINARY_ROUTING, BinaryRoutingMetadata.class);
+        map.put(RSocketMimeType.MESSAGE_MIME_TYPE, MessageMimeTypeMetadata.class);
+        map.put(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES, MessageAcceptMimeTypesMetadata.class);
+        map.put(RSocketMimeType.COMPOSITE_METADATA, RSocketCompositeMetadata.class);
+        map.put(RSocketMimeType.MESSAGE_TAGS, MessageTagsMetadata.class);
+        map.put(RSocketMimeType.MESSAGE_ORIGIN, OriginMetadata.class);
 
         //todo 优化:Tracing未处理
 

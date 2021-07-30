@@ -50,9 +50,9 @@ public final class RSocketServiceReferenceBuilder<T> {
     /** 服务接口 */
     private Class<T> serviceInterface;
     /** 数据编码类型 */
-    private RSocketMimeType encodingType = RSocketMimeType.Java_Object;
+    private RSocketMimeType encodingType = RSocketMimeType.JAVA_OBJECT;
     /** accept 编码类型 */
-    private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.Java_Object};
+    private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.JAVA_OBJECT};
     /** 对应的upstream cluster */
     private UpstreamCluster upstreamCluster;
 
@@ -187,11 +187,14 @@ public final class RSocketServiceReferenceBuilder<T> {
      * GraalVM nativeImage support: set encodeType and acceptEncodingType to Json
      */
     public RSocketServiceReferenceBuilder<T> nativeImage() {
-        encodingType(RSocketMimeType.Json);
-        acceptEncodingTypes(RSocketMimeType.Json);
+        encodingType(RSocketMimeType.JSON);
+        acceptEncodingTypes(RSocketMimeType.JSON);
         return this;
     }
 
+    /**
+     * 如果配置了rsocket service endpoint, 则使用该connection, 否则使用broker connection, 然后路由回对应的rsocket service app处理
+     */
     public RSocketServiceReferenceBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
         String serviceId = ServiceLocator.gsv(group, service, version);
         UpstreamCluster upstream = upstreamClusterManager.get(serviceId);

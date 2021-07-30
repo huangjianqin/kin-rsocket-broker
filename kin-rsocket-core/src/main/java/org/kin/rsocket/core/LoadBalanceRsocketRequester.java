@@ -44,8 +44,8 @@ import java.util.function.Predicate;
  * @date 2021/3/27
  */
 @SuppressWarnings("unchecked")
-public class LoadBalanceRequester extends AbstractRSocket implements CloudEventRSocket, RequesterRsocket {
-    private static final Logger log = LoggerFactory.getLogger(LoadBalanceRequester.class);
+public class LoadBalanceRsocketRequester extends AbstractRSocket implements CloudEventRSocket, RequesterRsocket {
+    private static final Logger log = LoggerFactory.getLogger(LoadBalanceRsocketRequester.class);
     /** health check interval seconds */
     private static final int HEALTH_CHECK_INTERVAL_SECONDS = 15;
     /** unhealth uris reconnect minutes */
@@ -90,25 +90,25 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     /**
      * load balance rule为random的requester
      */
-    public static LoadBalanceRequester random(String serviceId,
-                                              Flux<Collection<String>> urisFactory,
-                                              RequesterSupport requesterSupport) {
-        return new LoadBalanceRequester(serviceId, Selector.RANDOM, urisFactory, requesterSupport);
+    public static LoadBalanceRsocketRequester random(String serviceId,
+                                                     Flux<Collection<String>> urisFactory,
+                                                     RequesterSupport requesterSupport) {
+        return new LoadBalanceRsocketRequester(serviceId, Selector.RANDOM, urisFactory, requesterSupport);
     }
 
     /**
      * load balance rule为round robin的requester
      */
-    public static LoadBalanceRequester roundRobin(String serviceId,
-                                                  Flux<Collection<String>> urisFactory,
-                                                  RequesterSupport requesterSupport) {
-        return new LoadBalanceRequester(serviceId, new RoundRobinSelector(), urisFactory, requesterSupport);
+    public static LoadBalanceRsocketRequester roundRobin(String serviceId,
+                                                         Flux<Collection<String>> urisFactory,
+                                                         RequesterSupport requesterSupport) {
+        return new LoadBalanceRsocketRequester(serviceId, new RoundRobinSelector(), urisFactory, requesterSupport);
     }
 
-    public LoadBalanceRequester(String serviceId,
-                                Selector selector,
-                                Flux<Collection<String>> urisFactory,
-                                RequesterSupport requesterSupport) {
+    public LoadBalanceRsocketRequester(String serviceId,
+                                       Selector selector,
+                                       Flux<Collection<String>> urisFactory,
+                                       RequesterSupport requesterSupport) {
         this.serviceId = serviceId;
         this.selector = selector;
         this.requesterSupport = requesterSupport;
@@ -204,11 +204,13 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     }
 
     /**
-     * 根据{@link LoadBalanceRequester#selector}选择一个有效的RSocket
+     * 根据{@link LoadBalanceRsocketRequester#selector}选择一个有效的RSocket
      */
     private RSocket next() {
         if (activeRSockets.isEmpty()) {
-            //RSocketServiceConnector构建后快速调用service reference时, 会存在connection还未建立问题
+            /**
+             * {@link RSocketServiceRequester} 构建后快速调用service reference时, 会存在connection还未建立问题
+             */
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
@@ -451,7 +453,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
                 .delayElements(Duration.ofSeconds(5))
                 .filter(id -> activeRSockets.isEmpty() || !activeRSockets.containsKey(rsocketUri))
                 .subscribe(count -> {
-                    if (LoadBalanceRequester.this.isDisposed()) {
+                    if (LoadBalanceRsocketRequester.this.isDisposed()) {
                         return;
                     }
                     connect(rsocketUri)
@@ -493,7 +495,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
             return rsocketConnector
                     .setupPayload(payload)
                     //metadata编码类型
-                    .metadataMimeType(RSocketMimeType.CompositeMetadata.getType())
+                    .metadataMimeType(RSocketMimeType.COMPOSITE_METADATA.getType())
                     //setup data编码类型, remote默认的编码类型, 之所以使用json, 因为其平台无关性
                     .dataMimeType(RSocketMimeType.defaultEncodingType().getType())
                     .acceptor(requesterSupport.socketAcceptor())
@@ -505,7 +507,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     }
 
     /**
-     * 每{@link LoadBalanceRequester#HEALTH_CHECK_INTERVAL_SECONDS}秒检查connection是否连接
+     * 每{@link LoadBalanceRsocketRequester#HEALTH_CHECK_INTERVAL_SECONDS}秒检查connection是否连接
      */
     private void startHealthCheck() {
         this.lastHealthCheckTimestamp = System.currentTimeMillis();
@@ -525,7 +527,7 @@ public class LoadBalanceRequester extends AbstractRSocket implements CloudEventR
     }
 
     /**
-     * 每{@link LoadBalanceRequester#UNHEALTH_URIS_RECONNECT_MINS}分钟尝试重连
+     * 每{@link LoadBalanceRsocketRequester#UNHEALTH_URIS_RECONNECT_MINS}分钟尝试重连
      */
     private void startUnhealthyUrisCheck() {
         unhealthUrisCheckDisposable = Flux.interval(Duration.ofMinutes(UNHEALTH_URIS_RECONNECT_MINS))

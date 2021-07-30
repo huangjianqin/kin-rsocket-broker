@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public final class RSocketServiceConnector implements UpstreamClusterManager {
-    private static final Logger log = LoggerFactory.getLogger(RSocketServiceConnector.class);
+public final class RSocketServiceRequester implements UpstreamClusterManager {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRequester.class);
     /** app name */
     private final String appName;
     /** 配置 */
@@ -31,7 +31,7 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
     /** rsocket binder */
     private RSocketBinder binder;
 
-    public RSocketServiceConnector(String appName,
+    public RSocketServiceRequester(String appName,
                                    RSocketServiceProperties config) {
         this.appName = appName;
         this.config = config;
@@ -115,14 +115,14 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
     /**
      * 注册service
      */
-    public RSocketServiceConnector registerService(Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerService(Class<?> serviceInterface, Object provider) {
         return registerService("", "", serviceInterface, provider);
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceConnector registerService(String group, String version, Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerService(String group, String version, Class<?> serviceInterface, Object provider) {
         RSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider);
         return this;
     }
@@ -130,14 +130,14 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
     /**
      * 注册service
      */
-    public RSocketServiceConnector registerService(String serviceName, Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerService(String serviceName, Class<?> serviceInterface, Object provider) {
         return registerService("", serviceName, "", serviceInterface, provider);
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceConnector registerService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
         RSocketServiceRegistry.INSTANCE.addProvider(group, serviceName, version, serviceInterface, provider);
         return this;
     }
@@ -145,14 +145,14 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
     /**
      * 注册并发布service
      */
-    public RSocketServiceConnector registerAndPubService(Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerAndPubService(Class<?> serviceInterface, Object provider) {
         return registerAndPubService("", "", serviceInterface, provider);
     }
 
     /**
      * 注册并发布service
      */
-    public RSocketServiceConnector registerAndPubService(String group, String version, Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerAndPubService(String group, String version, Class<?> serviceInterface, Object provider) {
         registerService(group, version, serviceInterface, provider);
         publishService(group, serviceInterface.getCanonicalName(), version);
         return this;
@@ -161,14 +161,14 @@ public final class RSocketServiceConnector implements UpstreamClusterManager {
     /**
      * 注册并发布service
      */
-    public RSocketServiceConnector registerAndPubService(String serviceName, Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerAndPubService(String serviceName, Class<?> serviceInterface, Object provider) {
         return registerAndPubService("", serviceName, "", serviceInterface, provider);
     }
 
     /**
      * 注册并发布service
      */
-    public RSocketServiceConnector registerAndPubService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
+    public RSocketServiceRequester registerAndPubService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
         registerService(group, serviceName, version, serviceInterface, provider);
         publishService(group, serviceName, version);
         return this;

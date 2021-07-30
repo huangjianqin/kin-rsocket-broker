@@ -68,7 +68,7 @@ public final class AppMetadata implements MetadataAware {
 
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Application;
+        return RSocketMimeType.APPLICATION;
     }
 
     @Override

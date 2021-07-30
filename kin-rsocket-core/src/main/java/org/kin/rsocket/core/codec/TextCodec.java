@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 public class TextCodec implements Codec {
     @Override
     public RSocketMimeType mimeType() {
-        return RSocketMimeType.Text;
+        return RSocketMimeType.TEXT;
     }
 
     @Override

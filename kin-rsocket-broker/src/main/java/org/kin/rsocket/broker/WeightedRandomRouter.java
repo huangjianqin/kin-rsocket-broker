@@ -2,10 +2,8 @@ package org.kin.rsocket.broker;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
-import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.ServiceLocator;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +23,7 @@ public class WeightedRandomRouter implements Router {
     @Override
     public Integer route(int serviceId) {
         int instanceId;
-        List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
+        List<Integer> instanceIds = getAllInstanceIds0(serviceId);
         int handlerCount = instanceIds.size();
         if (handlerCount > 1) {
             try {
@@ -44,12 +42,14 @@ public class WeightedRandomRouter implements Router {
 
     @Override
     public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
-        for (ServiceLocator serviceLocator : services) {
-            int serviceId = serviceLocator.getId();
+        synchronized (serviceId2InstanceIds) {
+            for (ServiceLocator serviceLocator : services) {
+                int serviceId = serviceLocator.getId();
 
-            for (int i = 0; i < weight; i++) {
-                //put n个
-                serviceId2InstanceIds.put(serviceId, instanceId);
+                for (int i = 0; i < weight; i++) {
+                    //put n个
+                    serviceId2InstanceIds.put(serviceId, instanceId);
+                }
             }
         }
     }
@@ -57,21 +57,25 @@ public class WeightedRandomRouter implements Router {
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds) {
-        for (Integer serviceId : serviceIds) {
-            //移除所有相同的instanceId
-            while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
-                //do nothing
+        synchronized (serviceId2InstanceIds) {
+            for (Integer serviceId : serviceIds) {
+                //移除所有相同的instanceId
+                while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
+                    //do nothing
+                }
             }
+        }
+    }
+
+    private List<Integer> getAllInstanceIds0(int serviceId) {
+        synchronized (serviceId2InstanceIds) {
+            //不允许修改原始list
+            return Collections.unmodifiableList(serviceId2InstanceIds.get(serviceId));
         }
     }
 
     @Override
     public Collection<Integer> getAllInstanceIds(int serviceId) {
-        List<Integer> routerWeights = serviceId2InstanceIds.get(serviceId);
-        if (CollectionUtils.isNonEmpty(routerWeights)) {
-            return new ArrayList<>(serviceId2InstanceIds.get(serviceId));
-        }
-
-        return Collections.emptyList();
+        return getAllInstanceIds0(serviceId);
     }
 }
