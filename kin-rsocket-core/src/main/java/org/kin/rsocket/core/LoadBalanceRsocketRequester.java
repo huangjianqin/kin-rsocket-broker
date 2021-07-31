@@ -18,7 +18,6 @@ import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
-import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.transport.UriTransportRegistry;
 import org.kin.rsocket.core.utils.Symbols;
@@ -119,9 +118,10 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         }
         urisFactory.subscribe(this::refreshRSockets);
         //health check composite metadata
+        //这里没有设置MessageMimeTypeMetadata, 是因为缺省的情况使用rsocket connector设置的dataMimeType来encode,
+        //因为双端默认都是使用RSocketMimeType.defaultEncodingType进行数据序列化和反序列化, 所以没必要设置了, 还可以节省内存占用和socket bytes
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
-                GSVRoutingMetadata.of(null, HealthCheck.class.getCanonicalName(), "check", null),
-                MessageMimeTypeMetadata.of(RSocketMimeType.defaultEncodingType()));
+                GSVRoutingMetadata.of(null, HealthCheck.class.getCanonicalName(), "check", null));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.healthCheckCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);
         ReferenceCountUtil.safeRelease(compositeMetadataContent);
