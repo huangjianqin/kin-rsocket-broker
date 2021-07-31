@@ -72,10 +72,13 @@ final class BrokerRequestHandler extends AbstractRSocket {
         }
 
         //request filters
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+        Mono<RSocket> destination;
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            destination = filterChain.filter(filterContext).then(destination);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
         }
 
         //call destination
@@ -97,11 +100,15 @@ final class BrokerRequestHandler extends AbstractRSocket {
         }
 
         //request filters
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+        Mono<RSocket> destination;
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            destination = filterChain.filter(filterContext).then(destination);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
         }
+
         //call destination
         return destination.flatMap(rsocket -> rsocket.requestResponse(payload));
     }
@@ -120,11 +127,16 @@ final class BrokerRequestHandler extends AbstractRSocket {
             }
         }
 
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+        //request filters
+        Mono<RSocket> destination;
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            destination = filterChain.filter(filterContext).then(destination);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
         }
+
         return destination.flatMapMany(rsocket -> rsocket.requestStream(payload));
     }
 
@@ -177,7 +189,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
     private Mono<RSocket> findDestination(GSVRoutingMetadata routingMetaData) {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
-            Integer serviceId = routingMetaData.serviceId();
+            int serviceId = routingMetaData.serviceId();
             BrokerResponder targetResponder;
             RSocket rsocket = null;
             Exception error = null;

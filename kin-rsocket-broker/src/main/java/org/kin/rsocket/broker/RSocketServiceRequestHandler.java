@@ -121,11 +121,15 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         }
 
         //request filters
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+        Mono<RSocket> destination;
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.appMetadata, payload);
-            destination = filterChain.filter(filterContext).then(destination);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
         }
+
         //call destination
         MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
         return destination.flatMap(rsocket -> {
@@ -171,11 +175,15 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         }
 
         //request filters
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+        Mono<RSocket> destination;
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.appMetadata, payload);
-            destination = filterChain.filter(filterContext).then(destination);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
         }
+
         //call destination
         MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
         return destination.flatMap(rsocket -> {
@@ -225,11 +233,16 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             return localRequestStream(gsvRoutingMetadata, messageMimeTypeMetadata, acceptMimeTypesMetadata, payload);
         }
 
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+        //request filters
+        Mono<RSocket> destination;
         if (this.filterChain.isFiltersPresent()) {
             RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.appMetadata, payload);
-            destination = filterChain.filter(filterContext).then(destination);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
         }
+
         MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
         return destination.flatMapMany(rsocket -> {
             recordServiceInvoke(gsvRoutingMetadata.gsv());
