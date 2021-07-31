@@ -1,5 +1,7 @@
 package org.kin.rsocket.core.domain;
 
+import org.kin.framework.utils.CollectionUtils;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +12,9 @@ import java.util.List;
  */
 public class RSocketServiceInfo implements Serializable {
     private static final long serialVersionUID = -2955933836182324398L;
+    /** 空tags */
+    private static final String[] EMPTY_TAGS = new String[0];
+
     /** package */
     private String namespace;
     /** interface name */
@@ -26,6 +31,8 @@ public class RSocketServiceInfo implements Serializable {
     private boolean deprecated;
     /** 方法信息 */
     private List<ReactiveMethodInfo> methods = Collections.emptyList();
+    /** 服务标签 */
+    private String[] tags = EMPTY_TAGS;
 
     //--------------------------------builder--------------------------------
     public static Builder builder() {
@@ -73,6 +80,13 @@ public class RSocketServiceInfo implements Serializable {
 
         public Builder methods(List<ReactiveMethodInfo> operations) {
             reactiveServiceInfo.methods = operations;
+            return this;
+        }
+
+        public Builder tags(String[] tags) {
+            if (CollectionUtils.isNonEmpty(tags)) {
+                reactiveServiceInfo.tags = tags;
+            }
             return this;
         }
 
@@ -144,5 +158,13 @@ public class RSocketServiceInfo implements Serializable {
 
     public void setDeprecated(boolean deprecated) {
         this.deprecated = deprecated;
+    }
+
+    public String[] getTags() {
+        return tags;
+    }
+
+    public void setTags(String[] tags) {
+        this.tags = tags;
     }
 }

@@ -3,6 +3,7 @@ package org.kin.rsocket.core.metadata;
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.rsocket.core.domain.AppVO;
 import org.kin.rsocket.core.utils.JSON;
 import org.kin.rsocket.core.utils.Topologys;
 
@@ -119,6 +120,20 @@ public final class AppMetadata implements MetadataAware {
 
     public void updateConnectedAt(Date connectedAt) {
         this.connectedAt = connectedAt;
+    }
+
+    public AppVO toVo() {
+        return AppVO.builder()
+                .id(id).uuid(uuid).weight(weight)
+                .name(name).nameSpace(nameSpace)
+                .description(description).device(device)
+                .rsocketPorts(rsocketPorts).ip(ip)
+                .brokers(brokers).topology(topology)
+                .secure(secure).webPort(webPort)
+                .managementPort(managementPort)
+                .sdk(sdk).developers(developers)
+                .metadata(metadata).connectedAt(connectedAt)
+                .build();
     }
 
     //----------------------------------------------------------------builder----------------------------------------------------------------

@@ -122,23 +122,23 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String group, String version, Class<?> serviceInterface, Object provider) {
-        RSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider);
+    public RSocketServiceRequester registerService(String group, String version, Class<?> serviceInterface, Object provider, String... tags) {
+        RSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider, tags);
         return this;
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String serviceName, Class<?> serviceInterface, Object provider) {
-        return registerService("", serviceName, "", serviceInterface, provider);
+    public RSocketServiceRequester registerService(String serviceName, Class<?> serviceInterface, Object provider, String... tags) {
+        return registerService("", serviceName, "", serviceInterface, provider, tags);
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
-        RSocketServiceRegistry.INSTANCE.addProvider(group, serviceName, version, serviceInterface, provider);
+    public RSocketServiceRequester registerService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider, String... tags) {
+        RSocketServiceRegistry.INSTANCE.addProvider(group, serviceName, version, serviceInterface, provider, tags);
         return this;
     }
 

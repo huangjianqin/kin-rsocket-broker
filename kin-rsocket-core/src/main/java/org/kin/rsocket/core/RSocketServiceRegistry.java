@@ -68,7 +68,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
 
     private RSocketServiceRegistry() {
         //用于broker可以请求service instance访问其指定服务详细信息
-        addProvider("", "", RSocketServiceInfoSupport.class, this);
+        addProvider("", "", RSocketServiceInfoSupport.class, this, "暴露Rsocket Service信息的服务");
     }
 
     /**
@@ -139,14 +139,16 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /**
      * 注册service, 不会主动往broker注册新增服务
      */
-    public void addProvider(String group, String version, Class<?> interfaceClass, Object provider) {
-        addProvider(group, interfaceClass.getCanonicalName(), version, interfaceClass, provider);
+    public void addProvider(String group, String version, Class<?> interfaceClass, Object provider, String... tags) {
+        addProvider(group, interfaceClass.getCanonicalName(), version, interfaceClass, provider, tags);
     }
 
     /**
      * 注册service, 不会主动往broker注册新增服务
+     *
+     * @param tags 对应{@link RSocketService#tags()}
      */
-    public void addProvider(String group, String serviceName, String version, Class<?> interfaceClass, Object provider) {
+    public void addProvider(String group, String serviceName, String version, Class<?> interfaceClass, Object provider, String... tags) {
         Lock writeLock = this.lock.writeLock();
         writeLock.lock();
         try {
@@ -164,7 +166,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
 
                     serviceName2Provider.put(serviceName, provider);
                     handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
-                    serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass));
+                    serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass, tags));
                 }
             }
         } finally {
@@ -195,7 +197,8 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 创建reactive service信息, 用于后台访问服务接口具体信息
      */
     private RSocketServiceInfo newReactiveServiceInfo(String group, String serviceName,
-                                                      String version, Class<?> interfaceClass) {
+                                                      String version, Class<?> interfaceClass,
+                                                      String[] tags) {
         RSocketServiceInfo.Builder builder = RSocketServiceInfo.builder();
         builder.group(group);
         builder.version(version);
@@ -225,6 +228,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
             methodInfos.add(newReactiveMethodInfo(method));
         }
         builder.methods(methodInfos);
+        builder.tags(tags);
 
         return builder.build();
     }

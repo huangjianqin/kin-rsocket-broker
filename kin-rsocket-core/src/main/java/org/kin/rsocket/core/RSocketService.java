@@ -40,16 +40,8 @@ public @interface RSocketService {
     String version() default "";
 
     /**
-     * encoding strategies
-     * todo
-     *
-     * @return encoding names
-     */
-    String[] encoding() default {"hessian", "json", "protobuf"};
-
-    /**
      * service tags
-     * todo
+     *
      * @return labels
      */
     String[] tags() default {};
