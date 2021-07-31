@@ -25,7 +25,13 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * distributed messaging: RSocket本身就是基于消息推送的, 而且是分布式的.
 * 多语言支持: RSocket是一套标准协议, 主流语言的SDK都有支持.
 
+### **实现细节**
+
+gsv: group!serviceName:version serviceId: hash(gsv)
+handleId: hash(serviceName.handlerName)
+
 ## **实现模块**
+
 * **kin-rsocket-auth**: 权限校验模块
   * **kin-rsocket-auth-api**: 权限校验接口api模块
   * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
