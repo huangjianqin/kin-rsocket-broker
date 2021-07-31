@@ -463,9 +463,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                                 log.error(String.format("reconnect '%s' error %d times", rsocketUri, count), e);
                                 unhealthyUris.add(rsocketUri);
                             })
-                            .subscribe(rsocket -> {
-                                onRSocketReconnected(rsocketUri, rsocket);
-                            });
+                            .subscribe(rsocket -> onRSocketReconnected(rsocketUri, rsocket));
                 });
     }
 
@@ -481,15 +479,11 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
             //requesterInterceptors
             RSocketConnector rsocketConnector = RSocketConnector.create();
             for (RSocketInterceptor requestInterceptor : requesterSupport.requesterInterceptors()) {
-                rsocketConnector.interceptors(interceptorRegistry -> {
-                    interceptorRegistry.forRequester(requestInterceptor);
-                });
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(requestInterceptor));
             }
             //responderInterceptors
             for (RSocketInterceptor responderInterceptor : requesterSupport.responderInterceptors()) {
-                rsocketConnector.interceptors(interceptorRegistry -> {
-                    interceptorRegistry.forResponder(responderInterceptor);
-                });
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(responderInterceptor));
             }
             Payload payload = requesterSupport.setupPayload().get();
             return rsocketConnector
@@ -541,9 +535,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                             connect(unhealthyUri)
                                     .flatMap(rsocket -> healthCheck(rsocket, unhealthyUri).map(payload -> rsocket))
                                     .publishOn(REFRESH_SCHEDULER)
-                                    .subscribe(rsocket -> {
-                                        onRSocketReconnected(unhealthyUri, rsocket);
-                                    });
+                                    .subscribe(rsocket -> onRSocketReconnected(unhealthyUri, rsocket));
                         }
                     }
                 });
