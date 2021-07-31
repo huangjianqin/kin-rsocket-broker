@@ -88,6 +88,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
 
         GSVRoutingMetadata gsvRoutingMetadata;
+        //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
         boolean encodingMetadataIncluded;
         MessageMimeTypeMetadata messageMimeTypeMetadata;
         if (Objects.isNull(binaryRoutingMetadata)) {
@@ -140,6 +141,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
 
         GSVRoutingMetadata gsvRoutingMetadata;
+        //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
         boolean encodingMetadataIncluded;
         MessageMimeTypeMetadata messageMimeTypeMetadata;
         if (Objects.isNull(binaryRoutingMetadata)) {
@@ -192,6 +194,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
 
         GSVRoutingMetadata gsvRoutingMetadata;
+        //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
         boolean encodingMetadataIncluded;
         MessageMimeTypeMetadata messageMimeTypeMetadata;
         if (Objects.isNull(binaryRoutingMetadata)) {
