@@ -7,6 +7,7 @@ import java.util.Set;
 
 /**
  * service mesh 拦截器, 用于校验认证是否通过
+ * todo 是否允许binary route metadata, 因为其isAllowed方法需要gsv
  *
  * @author huangjianqin
  * @date 2021/3/30

@@ -8,22 +8,44 @@ import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.NumberUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.rsocket.core.utils.ByteBufUtils;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
+ * 仅仅用于broker快速route, 在目标rsocket service端还是需要{@link GSVRoutingMetadata}
+ * broker仅仅需要读取少量整形即可进行route, 而不用解析大量string, 提高broker一丢丢性能
+ *
  * @author huangjianqin
  * @date 2021/4/23
  */
 public final class BinaryRoutingMetadata implements MetadataAware {
     private static final byte BINARY_ROUTING_MARK = (byte) (WellKnownMimeType.MESSAGE_RSOCKET_BINARY_ROUTING.getIdentifier() | 0x80);
-    /** 相当于{@link GSVRoutingMetadata#genRoutingKey()} */
-    private String routeKey;
+    /** 空flags */
+    private static final boolean[] EMPTY_FLAGS = new boolean[0];
+    /** sticky 在flags数值里面的 plot */
+    private static final byte STICKY_PLOT = 0;
 
-    public static BinaryRoutingMetadata of(String routeKey) {
+    /** 仅仅用于调试, 相当于{@link GSVRoutingMetadata#genRoutingKey()} */
+    private transient String routeKey;
+    /** 参考{@link org.kin.rsocket.core.ServiceLocator} */
+    private int serviceId;
+    private int handlerId;
+    private boolean[] flags = EMPTY_FLAGS;
+
+    public static BinaryRoutingMetadata of(GSVRoutingMetadata gsvRoutingMetadata) {
+        return of(gsvRoutingMetadata.genRoutingKey(), gsvRoutingMetadata.serviceId(), gsvRoutingMetadata.handlerId(), gsvRoutingMetadata.isSticky());
+    }
+
+    public static BinaryRoutingMetadata of(String routeKey, int serviceId, int handlerId, boolean... flags) {
         Preconditions.checkArgument(StringUtils.isNotBlank(routeKey), "routeKey must be not blank");
         BinaryRoutingMetadata inst = new BinaryRoutingMetadata();
         inst.routeKey = routeKey;
+        inst.serviceId = serviceId;
+        inst.handlerId = handlerId;
+        if (Objects.nonNull(flags) && flags.length > 0) {
+            inst.flags = flags;
+        }
         return inst;
     }
 
@@ -55,18 +77,26 @@ public final class BinaryRoutingMetadata implements MetadataAware {
 
     @Override
     public ByteBuf getContent() {
-        byte[] routeKeybytes = routeKey.getBytes(StandardCharsets.UTF_8);
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(routeKeybytes.length, routeKeybytes.length);
-        byteBuf.writeBytes(routeKeybytes);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer();
+        //利用protobuf压缩整形机制, 减少bytes体积, 提高性能
+        ByteBufUtils.writeRawVarInt32(byteBuf, serviceId);
+        ByteBufUtils.writeRawVarInt32(byteBuf, handlerId);
+        ByteBufUtils.writeRawVarInt32(byteBuf, flags.length);
+        for (boolean flag : flags) {
+            byteBuf.writeBoolean(flag);
+        }
         return byteBuf;
     }
 
     @Override
     public void load(ByteBuf byteBuf) {
-        int routeKeybytesLen = byteBuf.readableBytes();
-        byte[] routeKeybytes = new byte[routeKeybytesLen];
-        byteBuf.readBytes(routeKeybytes);
-        routeKey = new String(routeKeybytes, StandardCharsets.UTF_8);
+        serviceId = ByteBufUtils.readRawVarInt32(byteBuf);
+        handlerId = ByteBufUtils.readRawVarInt32(byteBuf);
+        int flagSize = ByteBufUtils.readRawVarInt32(byteBuf);
+        flags = new boolean[flagSize];
+        for (int i = 0; i < flagSize; i++) {
+            flags[i] = byteBuf.readBoolean();
+        }
     }
 
     /**
@@ -76,13 +106,13 @@ public final class BinaryRoutingMetadata implements MetadataAware {
      * 该方法主要用于将{@link BinaryRoutingMetadata}放于{@link CompositeMetadata}首部, app可以直接取其首部即可解析serviceId和handlerId
      */
     public ByteBuf getHeaderAndContent() {
-        byte[] routeKeybytes = routeKey.getBytes(StandardCharsets.UTF_8);
-        int capacity = 4 + routeKeybytes.length;
+        ByteBuf content = getContent();
+        int capacity = 4 + content.readableBytes();
 
         ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(capacity, capacity);
         byteBuf.writeByte(BINARY_ROUTING_MARK);
         NumberUtils.encodeUnsignedMedium(byteBuf, capacity - 4);
-        byteBuf.writeBytes(routeKeybytes);
+        byteBuf.writeBytes(content);
         return byteBuf;
     }
 
@@ -90,11 +120,35 @@ public final class BinaryRoutingMetadata implements MetadataAware {
      * 转换成{@link GSVRoutingMetadata}
      */
     public GSVRoutingMetadata toGSVRoutingMetadata() {
-        return GSVRoutingMetadata.of(routeKey);
+        return GSVRoutingMetadata.of(this);
     }
 
     //getter
     public String getRouteKey() {
         return routeKey;
+    }
+
+    public int getServiceId() {
+        return serviceId;
+    }
+
+    public int getHandlerId() {
+        return handlerId;
+    }
+
+    public boolean[] getFlags() {
+        return flags;
+    }
+
+    private boolean getFlag(int plot) {
+        if (flags.length <= 0) {
+            return false;
+        }
+
+        return flags[plot];
+    }
+
+    public boolean isSticky() {
+        return getFlag(STICKY_PLOT);
     }
 }

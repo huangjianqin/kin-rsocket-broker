@@ -33,6 +33,8 @@ public final class GSVRoutingMetadata implements MetadataAware {
     private boolean sticky;
     /** service ID */
     private transient int serviceId;
+    /** handler ID */
+    private transient int handlerId;
 
     public static GSVRoutingMetadata of(String group, String service, String handler, String version) {
         return of(group, service, handler, version, "", false);
@@ -73,6 +75,18 @@ public final class GSVRoutingMetadata implements MetadataAware {
     public static GSVRoutingMetadata of(String routingKey) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.parseRoutingKey(routingKey);
+        return metadata;
+    }
+
+    /**
+     * 将{@link BinaryRoutingMetadata}转换成{@link GSVRoutingMetadata}, 但实例会缺失部分服务信息细节
+     * 只用于broker寻找目标rsocket service时使用
+     */
+    public static GSVRoutingMetadata of(BinaryRoutingMetadata binaryRoutingMetadata) {
+        GSVRoutingMetadata metadata = new GSVRoutingMetadata();
+        metadata.serviceId = binaryRoutingMetadata.getServiceId();
+        metadata.handlerId = binaryRoutingMetadata.getHandlerId();
+        metadata.sticky = binaryRoutingMetadata.isSticky();
         return metadata;
     }
 
@@ -207,7 +221,10 @@ public final class GSVRoutingMetadata implements MetadataAware {
      * @return handler id
      */
     public Integer handlerId() {
-        return MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
+        if (handlerId <= 0) {
+            handlerId = MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
+        }
+        return handlerId;
     }
 
     //setter && getter

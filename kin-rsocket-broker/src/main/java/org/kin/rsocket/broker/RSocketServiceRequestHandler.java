@@ -90,7 +90,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         GSVRoutingMetadata gsvRoutingMetadata;
         boolean encodingMetadataIncluded;
         MessageMimeTypeMetadata messageMimeTypeMetadata;
-        MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata = null;
         if (Objects.isNull(binaryRoutingMetadata)) {
             //回退到取GSVRoutingMetadata
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
@@ -99,7 +98,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 return Mono.error(new InvalidException("no routing metadata"));
             }
             messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
-            acceptMimeTypesMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES);
             encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
         } else {
@@ -111,13 +109,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
 
         // broker local service call
         if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
-            if (Objects.isNull(acceptMimeTypesMetadata)) {
-                acceptMimeTypesMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES);
-            }
-
-            return localRequestResponse(gsvRoutingMetadata, messageMimeTypeMetadata, acceptMimeTypesMetadata, payload);
+            //app 与 broker通信使用rsocket connector设置的dataMimeType即可
+            return localRequestResponse(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
         }
 
         //request filters
@@ -168,10 +161,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
 
         // broker local service call
         if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
-
-            return localFireAndForget(gsvRoutingMetadata, messageMimeTypeMetadata, payload);
+            //app 与 broker通信使用rsocket connector设置的dataMimeType即可
+            return localFireAndForget(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, payload);
         }
 
         //request filters
@@ -203,7 +194,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         GSVRoutingMetadata gsvRoutingMetadata;
         boolean encodingMetadataIncluded;
         MessageMimeTypeMetadata messageMimeTypeMetadata;
-        MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata = null;
         if (Objects.isNull(binaryRoutingMetadata)) {
             //回退到取GSVRoutingMetadata
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
@@ -212,7 +202,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 return Flux.error(new InvalidException("no routing metadata"));
             }
             messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
-            acceptMimeTypesMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES);
             encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
         } else {
@@ -224,13 +213,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
 
         // broker local service call
         if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            messageMimeTypeMetadata = getDataEncodingMetadata(compositeMetadata);
-            if (Objects.isNull(acceptMimeTypesMetadata)) {
-                acceptMimeTypesMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES);
-            }
-
-            return localRequestStream(gsvRoutingMetadata, messageMimeTypeMetadata, acceptMimeTypesMetadata, payload);
+            //app 与 broker通信使用rsocket connector设置的dataMimeType即可
+            return localRequestStream(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
         }
 
         //request filters
@@ -338,6 +322,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
             Integer serviceId = routingMetaData.serviceId();
+            //错误消息提示时, 服务唯一标识显示的内容
+            String serviceErrorMsg = StringUtils.isNotBlank(gsv) ? gsv : serviceId + "";
             RSocket rsocket = null;
             Exception error = null;
             //sticky session responder
@@ -355,12 +341,12 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (StringUtils.isNotBlank(endpoint)) {
                     targetResponder = findDestinationWithEndpoint(endpoint, serviceId);
                     if (targetResponder == null) {
-                        error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
+                        error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", serviceErrorMsg, endpoint));
                     }
                 } else {
                     targetResponder = serviceManager.getByServiceId(serviceId);
                     if (Objects.isNull(targetResponder)) {
-                        error = new InvalidException(String.format("Service not found '%s'", gsv));
+                        error = new InvalidException(String.format("Service not found '%s'", serviceErrorMsg));
                     }
                 }
                 if (targetResponder != null) {
@@ -371,7 +357,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                             this.stickyServices.put(serviceId, targetResponder.getId());
                         }
                     } else {
-                        error = new ApplicationErrorException(String.format("Service request not allowed '%s'", gsv));
+                        error = new ApplicationErrorException(String.format("Service request not allowed '%s'", serviceErrorMsg));
                     }
                 }
             }
@@ -382,7 +368,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (upstreamBrokers != null && error instanceof InvalidException) {
                     sink.success(upstreamBrokers);
                 } else {
-                    sink.error(new ApplicationErrorException(String.format("Service not found '%s'", gsv), error));
+                    sink.error(new ApplicationErrorException(String.format("Service not found '%s'", serviceErrorMsg), error));
                 }
             }
         });
