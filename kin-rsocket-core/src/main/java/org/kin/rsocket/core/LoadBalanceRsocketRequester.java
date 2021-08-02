@@ -77,7 +77,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /** 上一次health check时间 */
     private volatile long lastHealthCheckTimestamp;
     /** requester配置 */
-    private final RequesterSupport requesterSupport;
+    private final RSocketRequesterSupport requesterSupport;
     /** health check 元数据bytes, 避免多次创建bytes */
     private final ByteBuf healthCheckCompositeByteBuf;
     /** 是否是service provider */
@@ -92,7 +92,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
      */
     public static LoadBalanceRsocketRequester random(String serviceId,
                                                      Flux<Collection<String>> urisFactory,
-                                                     RequesterSupport requesterSupport) {
+                                                     RSocketRequesterSupport requesterSupport) {
         return new LoadBalanceRsocketRequester(serviceId, Selector.RANDOM, urisFactory, requesterSupport);
     }
 
@@ -101,14 +101,14 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
      */
     public static LoadBalanceRsocketRequester roundRobin(String serviceId,
                                                          Flux<Collection<String>> urisFactory,
-                                                         RequesterSupport requesterSupport) {
+                                                         RSocketRequesterSupport requesterSupport) {
         return new LoadBalanceRsocketRequester(serviceId, new RoundRobinSelector(), urisFactory, requesterSupport);
     }
 
     public LoadBalanceRsocketRequester(String serviceId,
                                        Selector selector,
                                        Flux<Collection<String>> urisFactory,
-                                       RequesterSupport requesterSupport) {
+                                       RSocketRequesterSupport requesterSupport) {
         this.serviceId = serviceId;
         this.selector = selector;
         this.requesterSupport = requesterSupport;

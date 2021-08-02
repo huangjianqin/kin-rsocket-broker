@@ -42,28 +42,28 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     /**
      * broker upstream cluster
      */
-    public static UpstreamCluster brokerUpstreamCluster(RequesterSupport requesterSupport) {
+    public static UpstreamCluster brokerUpstreamCluster(RSocketRequesterSupport requesterSupport) {
         return brokerUpstreamCluster(requesterSupport, Collections.emptyList());
     }
 
     /**
      * broker upstream cluster
      */
-    public static UpstreamCluster brokerUpstreamCluster(RequesterSupport requesterSupport, List<String> uris) {
+    public static UpstreamCluster brokerUpstreamCluster(RSocketRequesterSupport requesterSupport, List<String> uris) {
         return new UpstreamCluster("", Symbols.BROKER, "", requesterSupport, uris);
     }
 
     public UpstreamCluster(String group,
                            String serviceName,
                            String version,
-                           RequesterSupport requesterSupport) {
+                           RSocketRequesterSupport requesterSupport) {
         this(group, serviceName, version, requesterSupport, Collections.emptyList());
     }
 
     public UpstreamCluster(String group,
                            String serviceName,
                            String version,
-                           RequesterSupport requesterSupport,
+                           RSocketRequesterSupport requesterSupport,
                            List<String> uris) {
         this.group = group;
         this.serviceName = serviceName;

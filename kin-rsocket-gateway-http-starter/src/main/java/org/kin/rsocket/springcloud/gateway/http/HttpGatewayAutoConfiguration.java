@@ -3,7 +3,7 @@ package org.kin.rsocket.springcloud.gateway.http;
 import io.rsocket.RSocket;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.core.UpstreamCluster;
-import org.kin.rsocket.service.RequesterSupportImpl;
+import org.kin.rsocket.service.RSocketRequesterSupportImpl;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.kin.rsocket.springcloud.gateway.http.converter.ByteBufDecoder;
 import org.kin.rsocket.springcloud.gateway.http.converter.ByteBufEncoder;
@@ -45,7 +45,7 @@ public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
             //配置有UpstreamClusterManager bean
             brokerRSocket = upstreamClusterManager.getBroker();
         } else {
-            brokerRSocket = UpstreamCluster.brokerUpstreamCluster(new RequesterSupportImpl(serviceConfig, appName), serviceConfig.getBrokers());
+            brokerRSocket = UpstreamCluster.brokerUpstreamCluster(new RSocketRequesterSupportImpl(serviceConfig, appName), serviceConfig.getBrokers());
         }
 
         if (Objects.isNull(brokerRSocket)) {

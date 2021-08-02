@@ -9,8 +9,8 @@ import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.RSocketServiceRegistry;
-import org.kin.rsocket.core.RequesterSupport;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.*;
 import reactor.core.publisher.Mono;
@@ -30,18 +30,16 @@ import java.util.stream.Collectors;
  * @date 2021/3/28
  */
 @SuppressWarnings({"ConstantConditions", "rawtypes"})
-public final class RequesterSupportImpl implements RequesterSupport {
+public final class RSocketRequesterSupportImpl implements RSocketRequesterSupport {
     /** spring rsocket config */
     private final RSocketServiceProperties config;
     /** app name */
     private final String appName;
-    /** requester connection responder interceptors */
     private List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
-    /** requester connection requester interceptors */
     private List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
 
-    public RequesterSupportImpl(RSocketServiceProperties config,
-                                String appName) {
+    public RSocketRequesterSupportImpl(RSocketServiceProperties config,
+                                       String appName) {
         this.config = config;
         this.appName = appName;
     }

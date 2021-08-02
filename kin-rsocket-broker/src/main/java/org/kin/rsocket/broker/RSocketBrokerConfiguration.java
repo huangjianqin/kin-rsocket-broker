@@ -11,7 +11,6 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,7 +27,7 @@ import reactor.core.publisher.Sinks;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * @author huangjianqin
@@ -51,8 +50,8 @@ public class RSocketBrokerConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean(destroyMethod = "close")
-    public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
+    public CloudEventConsumers cloudEventConsumers(@Autowired List<CloudEventConsumer> consumers) {
+        CloudEventConsumers.INSTANCE.addConsumers(consumers);
         return CloudEventConsumers.INSTANCE;
     }
 
@@ -95,8 +94,8 @@ public class RSocketBrokerConfiguration {
     //----------------------------------------------
 
     @Bean
-    public RSocketFilterChain rsocketFilterChain(ObjectProvider<AbstractRSocketFilter> filters) {
-        return new RSocketFilterChain(filters.orderedStream().collect(Collectors.toList()));
+    public RSocketFilterChain rsocketFilterChain(@Autowired List<AbstractRSocketFilter> filters) {
+        return new RSocketFilterChain(filters);
     }
 
     /**
@@ -134,15 +133,15 @@ public class RSocketBrokerConfiguration {
 
     //----------------------------------------------broker binder相关----------------------------------------------
     @Bean(initMethod = "bind", destroyMethod = "close")
-    public RSocketBinder rSocketBinder(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
+    public RSocketBinder rsocketBinder(@Autowired List<RSocketBinderCustomizer> customizers) {
         RSocketBinder.Builder builder = RSocketBinder.builder();
-        customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
+        customizers.forEach((customizer) -> customizer.customize(builder));
         return builder.build();
     }
 
     @Bean
-    public RSocketBinderBuilderCustomizer defaultRSocketBinderBuilderCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
-                                                                                @Autowired RSocketServiceManager serviceManager) {
+    public RSocketBinderCustomizer defaultRSocketBinderCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
+                                                                  @Autowired RSocketServiceManager serviceManager) {
         return builder -> {
             builder.acceptor(serviceManager.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
@@ -151,8 +150,8 @@ public class RSocketBrokerConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.ssl.key-store")
-    public RSocketBinderBuilderCustomizer rsocketSSLCustomizer(@Autowired ResourceLoader resourceLoader,
-                                                               @Autowired RSocketBrokerProperties brokerConfig) {
+    public RSocketBinderCustomizer rsocketSSLCustomizer(@Autowired ResourceLoader resourceLoader,
+                                                        @Autowired RSocketBrokerProperties brokerConfig) {
         return builder -> {
             RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
             if (rsocketSSL != null && rsocketSSL.isEnabled() && StringUtils.isNotBlank(rsocketSSL.getKeyStore())) {

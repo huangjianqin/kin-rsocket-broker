@@ -1,7 +1,7 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.Closeable;
-import org.kin.rsocket.core.RequesterSupport;
+import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
 
 import java.util.Collection;
@@ -56,7 +56,7 @@ public interface UpstreamClusterManager extends Closeable {
     void refresh(String serviceId, List<String> uris);
 
     /**
-     * @return 底层connection使用的 {@link RequesterSupport}实例
+     * @return 底层connection使用的 {@link RSocketRequesterSupport}实例
      */
-    RequesterSupport getRequesterSupport();
+    RSocketRequesterSupport getRequesterSupport();
 }

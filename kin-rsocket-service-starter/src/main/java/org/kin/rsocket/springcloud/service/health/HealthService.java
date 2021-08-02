@@ -2,9 +2,11 @@ package org.kin.rsocket.springcloud.service.health;
 
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.context.annotation.Lazy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,11 +18,17 @@ import java.util.List;
  */
 @RSocketService(HealthCheck.class)
 public final class HealthService implements HealthCheck {
-    private final List<ReactiveHealthIndicator> healthIndicators;
-
-    public HealthService(List<ReactiveHealthIndicator> healthIndicators) {
-        this.healthIndicators = healthIndicators;
-    }
+    /**
+     * 使用延迟加载, 为了解决循环依赖
+     * {@link org.kin.rsocket.service.RSocketServiceRequester} ----> {@link HealthService} ----> {@link HealthIndicator} ----> {@link RSocketEndpoint}
+     * ^                                                                                                              |
+     * |                                                                                                              |
+     * |                                                                                                              |
+     * <--------------------------------------------------------------------------------------------------------------|
+     */
+    @Lazy
+    @Autowired
+    private List<ReactiveHealthIndicator> healthIndicators;
 
     @Override
     public Mono<Integer> check(String serviceName) {

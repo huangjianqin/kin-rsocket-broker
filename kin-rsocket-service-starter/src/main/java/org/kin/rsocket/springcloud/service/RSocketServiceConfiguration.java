@@ -1,19 +1,19 @@
 package org.kin.rsocket.springcloud.service;
 
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.RSocketBinderCustomizer;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.RSocketServiceAnnoProcessor;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.RSocketRequesterSupportCustomizer;
 import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.service.RSocketServiceRequester;
 import org.kin.rsocket.springcloud.service.health.HealthIndicator;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * @author huangjianqin
@@ -35,9 +35,16 @@ import java.util.stream.Collectors;
 public class RSocketServiceConfiguration {
     @Bean(destroyMethod = "close")
     public RSocketServiceRequester rsocketServiceRequester(@Autowired Environment env,
-                                                           @Autowired RSocketServiceProperties config) {
+                                                           @Autowired RSocketServiceProperties config,
+                                                           @Autowired List<RSocketBinderCustomizer> binderCustomizers,
+                                                           @Autowired List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
+                                                           @Autowired HealthService healthService) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new RSocketServiceRequester(appName, config);
+        return RSocketServiceRequester.builder(appName, config)
+                .binderCustomizers(binderCustomizers)
+                .requesterSupportBuilderCustomizers(requesterSupportCustomizers)
+                .healthCheck(healthService)
+                .build();
     }
 
     //----------------------------spring----------------------------
@@ -84,8 +91,8 @@ public class RSocketServiceConfiguration {
      * 自带的health checker rsocket service
      */
     @Bean
-    public HealthService healthService(@Autowired ObjectProvider<ReactiveHealthIndicator> healthIndicators) {
-        return new HealthService(healthIndicators.orderedStream().collect(Collectors.toList()));
+    public HealthService healthService() {
+        return new HealthService();
     }
 
     /**

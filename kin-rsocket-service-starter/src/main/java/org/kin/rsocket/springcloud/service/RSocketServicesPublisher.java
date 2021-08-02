@@ -1,28 +1,21 @@
 package org.kin.rsocket.springcloud.service;
 
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RSocketBinderBuilderCustomizer;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
 import org.kin.rsocket.service.RSocketServiceRequester;
-import org.kin.rsocket.service.RequesterSupportBuilderCustomizer;
-import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.annotation.Order;
 
-import java.util.stream.Collectors;
-
 /**
- * 1. RSocketServiceRequester构建
- * 2. send cloud event to broker, 其中包括服务暴露事件
+ * 更新broker app端口元数据以及暴露已注册的所有服务
  * <p>
  * spring容器refresh完就执行处理, 使用者可以在{@link ApplicationListener<ContextRefreshedEvent>}实例
  * 或者更高优先级的spring boot事件({@link ApplicationStartedEvent}之前触发的Application事件)处理自定义逻辑
@@ -36,22 +29,10 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
     @Autowired
     private RSocketServiceRequester requester;
     @Autowired
-    private ObjectProvider<RSocketBinderBuilderCustomizer> binderBuilderCustomizers;
-    @Autowired
-    private ObjectProvider<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers;
-    @Autowired
-    private HealthService healthService;
-    @Autowired
     private RSocketServiceProperties serviceConfig;
 
     @Override
     public void onApplicationEvent(ApplicationStartedEvent event) {
-        //connect
-        requester.connect(
-                binderBuilderCustomizers.orderedStream().collect(Collectors.toList()),
-                requesterSupportBuilderCustomizers.orderedStream().collect(Collectors.toList()),
-                healthService);
-
         UpstreamCluster brokerCluster = requester.getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务

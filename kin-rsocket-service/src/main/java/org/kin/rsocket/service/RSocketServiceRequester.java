@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 /**
  * all in one
+ * broker requester, 包含绑定rsocket server, 连接broker, 注册服务, 注销服务, 添加cloud event consumer和broker连接管理等功能
  *
  * @author huangjianqin
  * @date 2021/3/28
@@ -27,89 +28,14 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /** upstream cluster manager */
     private UpstreamClusterManagerImpl upstreamClusterManager;
     /** requester连接配置 */
-    private RequesterSupport requesterSupport;
+    private RSocketRequesterSupportImpl requesterSupport;
     /** rsocket binder */
     private RSocketBinder binder;
 
-    public RSocketServiceRequester(String appName,
-                                   RSocketServiceProperties config) {
+    private RSocketServiceRequester(String appName,
+                                    RSocketServiceProperties config) {
         this.appName = appName;
         this.config = config;
-
-        //create requester support
-        requesterSupport = new RequesterSupportImpl(config, appName);
-
-        //init upstream manager
-        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport);
-        add(config);
-    }
-
-    /**
-     * 初始化, 并创建connection
-     */
-    public void connect() {
-        connect(Collections.emptyList(), Collections.emptyList());
-    }
-
-    /**
-     * 初始化, 并创建connection
-     */
-    public void connect(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
-                        List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers) {
-        connect(binderBuilderCustomizers, requesterSupportBuilderCustomizers, null);
-    }
-
-    /**
-     * 初始化, 并创建connection
-     */
-    public void connect(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
-                        List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers,
-                        HealthCheck customHealthCheck) {
-        //bind
-        if (config.getPort() > 0) {
-            RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
-            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload)));
-            binderBuilder.listen(config.getSchema(), config.getPort());
-            binderBuilderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
-            binder = binderBuilder.build();
-            binder.bind();
-        }
-
-        //custom requester support
-        requesterSupportBuilderCustomizers.forEach((customizer) -> customizer.customize((RequesterSupportImpl) requesterSupport));
-
-        CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
-
-        //register health check
-        if (Objects.isNull(customHealthCheck)) {
-            customHealthCheck = new HealthCheckImpl();
-        }
-        registerService(HealthCheck.class, customHealthCheck);
-    }
-
-    /**
-     * 初始化, 然后创建connection, 并向broker暴露服务
-     */
-    public void connectAndPub() {
-        connectAndPub(Collections.emptyList(), Collections.emptyList());
-    }
-
-    /**
-     * 初始化, 然后创建connection, 并向broker暴露服务
-     */
-    public void connectAndPub(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
-                              List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers) {
-        connectAndPub(binderBuilderCustomizers, requesterSupportBuilderCustomizers, null);
-    }
-
-    /**
-     * 初始化, 然后创建connection, 并向broker暴露服务
-     */
-    public void connectAndPub(List<RSocketBinderBuilderCustomizer> binderBuilderCustomizers,
-                              List<RequesterSupportBuilderCustomizer> requesterSupportBuilderCustomizers,
-                              HealthCheck customHealthCheck) {
-        connect(binderBuilderCustomizers, requesterSupportBuilderCustomizers, customHealthCheck);
-        publishServices();
     }
 
     /**
@@ -175,21 +101,16 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     }
 
     /**
+     * 获取broker urls字符串, 以,分割
+     */
+    private String getBrokerUris() {
+        return String.join(",", config.getBrokers());
+    }
+
+    /**
      * 发布(暴露)服务
      */
     public void publishServices() {
-        //broker uris
-        String brokerUris = String.join(",", config.getBrokers());
-
-        CloudEventData<AppStatusEvent> appStatusEventCloudEvent = CloudEventBuilder
-                .builder(AppStatusEvent.serving(RSocketAppContext.ID))
-                .build();
-
-        // app status
-        getBroker().broadcastCloudEvent(appStatusEventCloudEvent)
-                .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", brokerUris)))
-                .subscribe();
-
         // service exposed
         CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent = RSocketServiceRegistry.servicesExposedEvent();
         if (servicesExposedEventCloudEvent != null) {
@@ -206,7 +127,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
                     String exposedServiceGsvs = RSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
-                    log.info(String.format("services(%s) published on Brokers(%s)!.", exposedServiceGsvs, brokerUris));
+                    log.info(String.format("services(%s) published on Brokers(%s)!", exposedServiceGsvs, brokerUris));
                 }).subscribe();
     }
 
@@ -303,21 +224,95 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     }
 
     @Override
-    public RequesterSupport getRequesterSupport() {
+    public RSocketRequesterSupport getRequesterSupport() {
         return upstreamClusterManager.getRequesterSupport();
     }
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
 
     //--------------------------------------------------内部类----------------------------------------------------------------------
+    public static Builder builder(String appName, RSocketServiceProperties config) {
+        return new Builder(appName, config);
+    }
+
+    /** builder **/
+    public static class Builder {
+        private final RSocketServiceRequester requester;
+        private List<RSocketBinderCustomizer> binderCustomizers = Collections.emptyList();
+        private List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers = Collections.emptyList();
+        private HealthCheck customHealthCheck;
+
+        public Builder(String appName, RSocketServiceProperties config) {
+            requester = new RSocketServiceRequester(appName, config);
+        }
+
+        public Builder binderCustomizers(List<RSocketBinderCustomizer> binderCustomizers) {
+            this.binderCustomizers = binderCustomizers;
+            return this;
+        }
+
+        public Builder requesterSupportBuilderCustomizers(List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers) {
+            this.requesterSupportCustomizers = requesterSupportCustomizers;
+            return this;
+        }
+
+        public Builder healthCheck(HealthCheck customHealthCheck) {
+            this.customHealthCheck = customHealthCheck;
+            return this;
+        }
+
+        public RSocketServiceRequester build() {
+            RSocketServiceProperties config = requester.config;
+            //1. bind
+            if (config.getPort() > 0) {
+                RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
+                binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload)));
+                binderBuilder.listen(config.getSchema(), config.getPort());
+                binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
+                requester.binder = binderBuilder.build();
+                requester.binder.bind();
+            }
+
+            //2. connect
+            //2.1 create requester support
+            requester.requesterSupport = new RSocketRequesterSupportImpl(config, requester.appName);
+
+            //2.2 custom requester support
+            requesterSupportCustomizers.forEach((customizer) -> customizer.customize(requester.requesterSupport));
+
+            //2.3 init upstream manager
+            requester.upstreamClusterManager = new UpstreamClusterManagerImpl(requester.requesterSupport);
+            requester.add(config);
+
+            //2.4 add internal consumer
+            CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(requester.upstreamClusterManager));
+
+            //3. register health check
+            if (Objects.isNull(customHealthCheck)) {
+                customHealthCheck = new HealthCheckImpl(requester.upstreamClusterManager);
+            }
+            requester.registerService(HealthCheck.class, customHealthCheck);
+
+            //4. notify broker app status update
+            CloudEventData<AppStatusEvent> appStatusEventCloudEvent = CloudEventBuilder
+                    .builder(AppStatusEvent.serving(RSocketAppContext.ID))
+                    .build();
+
+            requester.getBroker().broadcastCloudEvent(appStatusEventCloudEvent)
+                    .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", requester.getBrokerUris())))
+                    .subscribe();
+
+            return requester;
+        }
+    }
 
     /**
      * 内置health check, 只要broker正常, 本application就可以对外提供服务
      */
-    private class HealthCheckImpl implements HealthCheck {
+    private static class HealthCheckImpl implements HealthCheck {
         /** broker health check */
         private final HealthCheck brokerHealthCheck;
 
-        public HealthCheckImpl() {
+        public HealthCheckImpl(UpstreamClusterManagerImpl upstreamClusterManager) {
             brokerHealthCheck = RSocketServiceReferenceBuilder
                     .requester(HealthCheck.class)
                     .nativeImage()
@@ -327,7 +322,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
         @Override
         public Mono<Integer> check(String serviceName) {
-            return Mono.just(AppStatus.SERVING.equals(brokerHealthCheck.check(null)) ? 1 : 0);
+            return brokerHealthCheck.check(null).map(r -> AppStatus.SERVING.getId() == r ? 1 : 0);
         }
     }
 }

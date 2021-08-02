@@ -7,7 +7,7 @@ import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RequesterSupport;
+import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.MetadataAware;
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  * @author huangjianqin
  * @date 2021/3/30
  */
-final class UpstreamBrokerRequester implements RequesterSupport {
+final class UpstreamBrokerRequester implements RSocketRequesterSupport {
     /** broker config */
     private final RSocketBrokerProperties brokerConfig;
     /** app name */

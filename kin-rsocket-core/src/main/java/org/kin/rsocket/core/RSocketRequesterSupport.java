@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  * @author huangjianqin
  * @date 2021/3/23
  */
-public interface RequesterSupport {
+public interface RSocketRequesterSupport {
     /**
      * 原始uri
      */
@@ -25,6 +25,7 @@ public interface RequesterSupport {
      * set up rsocket connector payload
      */
     Supplier<Payload> setupPayload();
+
     /**
      * @return rsocket connector acceptor
      */

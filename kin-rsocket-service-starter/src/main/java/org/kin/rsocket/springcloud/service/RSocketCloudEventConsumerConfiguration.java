@@ -4,12 +4,12 @@ import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.springcloud.service.event.CloudEvent2ApplicationEventConsumer;
 import org.kin.rsocket.springcloud.service.event.InvalidCacheEventConsumer;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.stream.Collectors;
+import java.util.List;
 
 /**
  * 注册cloud event consumer相关bean
@@ -25,8 +25,8 @@ public class RSocketCloudEventConsumerConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean(destroyMethod = "close")
-    public CloudEventConsumers cloudEventConsumers(ObjectProvider<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers.orderedStream().collect(Collectors.toList()));
+    public CloudEventConsumers cloudEventConsumers(@Autowired List<CloudEventConsumer> consumers) {
+        CloudEventConsumers.INSTANCE.addConsumers(consumers);
         return CloudEventConsumers.INSTANCE;
     }
 

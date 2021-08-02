@@ -1,7 +1,7 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.core.RequesterSupport;
+import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.utils.Symbols;
 import org.slf4j.Logger;
@@ -22,13 +22,13 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     private static final Logger log = LoggerFactory.getLogger(UpstreamClusterManagerImpl.class);
 
     /** upstream requester配置 */
-    private final RequesterSupport requesterSupport;
+    private final RSocketRequesterSupport requesterSupport;
     /** upstream clusters */
     private final Map<String, UpstreamCluster> clusters = new ConcurrentHashMap<>();
     /** broker upstream cluster */
     private UpstreamCluster brokerCluster;
 
-    UpstreamClusterManagerImpl(RequesterSupport requesterSupport) {
+    UpstreamClusterManagerImpl(RSocketRequesterSupport requesterSupport) {
         this.requesterSupport = requesterSupport;
     }
 
@@ -114,7 +114,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     }
 
     @Override
-    public RequesterSupport getRequesterSupport() {
+    public RSocketRequesterSupport getRequesterSupport() {
         return requesterSupport;
     }
 }

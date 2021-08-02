@@ -30,7 +30,7 @@ public final class RSocketEndpoint {
     /** app status */
     private AppStatus serviceStatus = AppStatus.SERVING;
     /** 下线的服务 */
-    private Set<String> offlineServices = new HashSet<>();
+    private final Set<String> offlineServices = new HashSet<>();
 
     public RSocketEndpoint(RSocketServiceProperties config,
                            UpstreamClusterManager upstreamClusterManager) {
