@@ -2,15 +2,13 @@ package org.kin.rsocket.springcloud.service.health;
 
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
-import org.springframework.context.annotation.Lazy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 /**
  * @author huangjianqin
@@ -26,9 +24,8 @@ public final class HealthService implements HealthCheck {
      * |                                                                                                              |
      * <--------------------------------------------------------------------------------------------------------------|
      */
-    @Lazy
     @Autowired
-    private List<ReactiveHealthIndicator> healthIndicators;
+    private ObjectProvider<ReactiveHealthIndicator> healthIndicators;
 
     @Override
     public Mono<Integer> check(String serviceName) {
