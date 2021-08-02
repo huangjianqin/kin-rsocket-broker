@@ -6,7 +6,7 @@ import org.kin.rsocket.core.ReactiveMethodInvoker;
 import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.service.RSocketServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.cloud.function.context.FunctionRegistry;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
 import org.springframework.context.ApplicationListener;
@@ -22,15 +22,15 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/5/21
  */
-@Order(-99)
-public class RSocketCloudFunctionRegistrar implements ApplicationListener<ApplicationReadyEvent> {
+@Order(99)
+public class RSocketCloudFunctionRegistrar implements ApplicationListener<ApplicationStartedEvent> {
     @Autowired
     private FunctionRegistry functionRegistry;
     @Autowired
     private RSocketServiceProperties serviceConfig;
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
+    public void onApplicationEvent(ApplicationStartedEvent event) {
         //所有function name
         //function name = service name + '.' + method
         Set<String> functionNames = functionRegistry.getNames(null).stream()

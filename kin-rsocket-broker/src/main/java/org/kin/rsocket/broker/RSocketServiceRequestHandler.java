@@ -353,7 +353,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                     }
                 }
                 if (targetResponder != null) {
-                    if (serviceMeshInspector.isAllowed(this.principal, gsv, targetResponder.getPrincipal())) {
+                    if (serviceMeshInspector.isAllowed(this.principal, serviceId, targetResponder.getPrincipal())) {
                         rsocket = targetResponder;
                         //save responder id if sticky
                         if (sticky) {

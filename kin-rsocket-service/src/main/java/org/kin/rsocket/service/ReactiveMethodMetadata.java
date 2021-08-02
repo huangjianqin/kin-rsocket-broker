@@ -159,9 +159,6 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         //routing metadata
         GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handler, version, endpoint, sticky);
 
-        //binary routing metadata
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata);
-
         //encoding mime type
         MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataEncodingType);
 
@@ -176,11 +173,14 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
 
         if (StringUtils.isNotBlank(endpoint)) {
-            //因为route需要endpoint信息, 故不使用快速路由
-            this.compositeMetadata.addMetadata(binaryRoutingMetadata);
             compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
         } else {
             compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
+
+            //使用快速路由
+            //binary routing metadata
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata);
+
             //add BinaryRoutingMetadata as first
             compositeMetadataBytes.addComponent(true, 0, binaryRoutingMetadata.getHeaderAndContent());
         }

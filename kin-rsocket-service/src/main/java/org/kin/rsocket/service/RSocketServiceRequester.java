@@ -72,7 +72,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
             binderBuilder.listen(config.getSchema(), config.getPort());
             binderBuilderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
             binder = binderBuilder.build();
-            binder.start();
+            binder.bind();
         }
 
         //custom requester support

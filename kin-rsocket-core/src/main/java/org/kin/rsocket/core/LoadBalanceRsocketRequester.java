@@ -7,6 +7,7 @@ import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.exceptions.ConnectionErrorException;
+import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
@@ -493,6 +494,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                     //setup data编码类型, remote默认的编码类型, 之所以使用json, 因为其平台无关性
                     .dataMimeType(RSocketMimeType.defaultEncodingType().getType())
                     .acceptor(requesterSupport.socketAcceptor())
+                    //zero copy
+                    .payloadDecoder(PayloadDecoder.ZERO_COPY)
                     .connect(UriTransportRegistry.INSTANCE.client(uri));
         } catch (Exception e) {
             log.error(String.format("connect '%s' error", uri), e);

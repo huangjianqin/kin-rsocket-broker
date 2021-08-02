@@ -133,16 +133,16 @@ public class RSocketBrokerConfiguration {
     }
 
     //----------------------------------------------broker binder相关----------------------------------------------
-    @Bean(initMethod = "start", destroyMethod = "close")
-    public RSocketBinder rsocketListener(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
+    @Bean(initMethod = "bind", destroyMethod = "close")
+    public RSocketBinder rSocketBinder(ObjectProvider<RSocketBinderBuilderCustomizer> customizers) {
         RSocketBinder.Builder builder = RSocketBinder.builder();
         customizers.orderedStream().forEach((customizer) -> customizer.customize(builder));
         return builder.build();
     }
 
     @Bean
-    public RSocketBinderBuilderCustomizer defaultRSocketListenerCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
-                                                                           @Autowired RSocketServiceManager serviceManager) {
+    public RSocketBinderBuilderCustomizer defaultRSocketBinderBuilderCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
+                                                                                @Autowired RSocketServiceManager serviceManager) {
         return builder -> {
             builder.acceptor(serviceManager.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
@@ -151,8 +151,8 @@ public class RSocketBrokerConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.ssl.key-store")
-    public RSocketBinderBuilderCustomizer rsocketListenerSSLCustomizer(@Autowired ResourceLoader resourceLoader,
-                                                                       @Autowired RSocketBrokerProperties brokerConfig) {
+    public RSocketBinderBuilderCustomizer rsocketSSLCustomizer(@Autowired ResourceLoader resourceLoader,
+                                                               @Autowired RSocketBrokerProperties brokerConfig) {
         return builder -> {
             RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
             if (rsocketSSL != null && rsocketSSL.isEnabled() && StringUtils.isNotBlank(rsocketSSL.getKeyStore())) {

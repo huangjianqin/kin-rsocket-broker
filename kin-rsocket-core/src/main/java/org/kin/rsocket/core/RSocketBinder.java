@@ -5,6 +5,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.core.RSocketServer;
+import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.DuplexConnectionInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.plugins.SocketAcceptorInterceptor;
@@ -56,7 +57,7 @@ public class RSocketBinder implements Closeable {
     /**
      * bind
      */
-    public void start() {
+    public void bind() {
         if (!stopped) {
             responders = new ArrayList<>(schemas.size());
             for (Map.Entry<Integer, String> entry : schemas.entrySet()) {
@@ -122,6 +123,8 @@ public class RSocketBinder implements Closeable {
 
                 Disposable disposable = rsocketServer
                         .acceptor(acceptor)
+                        //zero copy
+                        .payloadDecoder(PayloadDecoder.ZERO_COPY)
                         .bind(transport)
                         .onTerminateDetach()
                         .subscribe();

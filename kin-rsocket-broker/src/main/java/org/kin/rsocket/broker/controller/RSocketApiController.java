@@ -66,7 +66,7 @@ public class RSocketApiController {
             if (Objects.nonNull(responder)) {
                 if (authRequired) {
                     RSocketAppPrincipal principal = authenticationService.auth(token);
-                    if (principal == null || !serviceMeshInspector.isAllowed(principal, routingMetadata.gsv(), responder.getPrincipal())) {
+                    if (principal == null || !serviceMeshInspector.isAllowed(principal, serviceId, responder.getPrincipal())) {
                         return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));
                     }
                 }
