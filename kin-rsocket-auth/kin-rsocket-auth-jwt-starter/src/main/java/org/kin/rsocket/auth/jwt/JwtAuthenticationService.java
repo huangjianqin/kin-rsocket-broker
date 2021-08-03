@@ -150,6 +150,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
             byte[] keyBytes = toBytes(inputStream);
             X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
             //以x509编码
+            //rsa public key 只能以X509EncodedKeySpec和DSAPublicKeySpec编码
             return (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(spec);
         }
     }
@@ -184,6 +185,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
             return;
         }
 
+        //生成的是原始key, 需要套编码才能使用或者组合成KeyPair
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
         KeyPair keyPair = kpg.generateKeyPair();
