@@ -10,6 +10,7 @@ import org.kin.framework.utils.JSON;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -43,9 +44,23 @@ public interface CloudEventSupport extends Serializable {
     /**
      * cloud event转换成payload
      */
+    @Nonnull
     static Payload cloudEvent2Payload(CloudEventData<?> cloudEvent) {
         try {
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, Unpooled.wrappedBuffer(org.kin.rsocket.core.utils.JSON.serialize(cloudEvent)));
+        } catch (Exception e) {
+            ExceptionUtils.throwExt(e);
+        }
+        return null;
+    }
+
+    /**
+     * cloud event转换成payload
+     */
+    @Nonnull
+    static Payload cloudEvent2Payload(String cloudEventJson) {
+        try {
+            return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, Unpooled.wrappedBuffer(cloudEventJson.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
         }

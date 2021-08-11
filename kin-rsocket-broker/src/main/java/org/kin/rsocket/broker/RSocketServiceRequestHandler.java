@@ -275,6 +275,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             if (payload.metadata().readableBytes() > 0) {
                 CloudEventData<?> cloudEvent = CloudEventSupport.extractCloudEventsFromMetadata(payload);
                 if (cloudEvent != null) {
+                    //如果downstream没有设置, 则设置默认的
+                    cloudEvent.updateSourceIfEmpty("downstream::*");
                     /**
                      * 如果不是该responder对应的app uuid的cloud event, 则不处理
                      * 因为broker需要做拦截处理, 防止该app修改别的app

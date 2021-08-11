@@ -14,4 +14,9 @@ public interface CloudEventRSocket extends RSocket {
      * 广播cloud event
      */
     Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent);
+
+    /**
+     * 广播cloud event json
+     */
+    Mono<Void> fireCloudEvent(String cloudEventJson);
 }

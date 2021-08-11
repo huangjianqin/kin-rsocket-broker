@@ -271,7 +271,6 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                 });
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
         if (isDisposed()) {
@@ -279,6 +278,19 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         }
         try {
             Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
+            return metadataPush(payload);
+        } catch (Exception e) {
+            return Mono.error(e);
+        }
+    }
+
+    @Override
+    public Mono<Void> fireCloudEvent(String cloudEventJson) {
+        if (isDisposed()) {
+            return (Mono<Void>) disposedMono();
+        }
+        try {
+            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEventJson);
             return metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);
@@ -493,7 +505,18 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                     .metadataMimeType(RSocketMimeType.COMPOSITE_METADATA.getType())
                     //setup data编码类型, remote默认的编码类型, 之所以使用json, 因为其平台无关性
                     .dataMimeType(RSocketMimeType.defaultEncodingType().getType())
-                    .acceptor(requesterSupport.socketAcceptor())
+                    .acceptor((setup, sendingSocket) -> requesterSupport.socketAcceptor().accept(setup, sendingSocket).doOnNext(responder -> {
+                        //设置remote 推过来的cloud event source
+                        if (responder instanceof RequestHandlerSupport) {
+                            String sourcing = "upstream:";
+                            if (this.serviceId.equals(Symbols.BROKER)) {
+                                sourcing = sourcing + "broker:*";
+                            } else {
+                                sourcing = sourcing + ":" + serviceId;
+                            }
+                            ((RequestHandlerSupport) responder).setCloudEventSource(sourcing);
+                        }
+                    }))
                     //zero copy
                     .payloadDecoder(PayloadDecoder.ZERO_COPY)
                     .connect(UriTransportRegistry.INSTANCE.client(uri));

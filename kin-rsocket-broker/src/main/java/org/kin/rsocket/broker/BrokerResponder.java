@@ -138,6 +138,16 @@ public final class BrokerResponder implements CloudEventRSocket {
     }
 
     @Override
+    public Mono<Void> fireCloudEvent(String cloudEventJson) {
+        try {
+            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEventJson);
+            return metadataPush(payload);
+        } catch (Exception e) {
+            return Mono.error(e);
+        }
+    }
+
+    @Override
     public Mono<Void> onClose() {
         return this.comboOnClose;
     }

@@ -21,6 +21,9 @@ import reactor.core.publisher.Mono;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class RequestHandlerSupport extends AbstractRSocket implements LoggerOprs {
+    /** cloud event source */
+    protected volatile String cloudEventSource;
+
     /**
      * 用于log 或者返回异常tips
      *
@@ -262,6 +265,11 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
             }
         }
         return defaultEncodingType;
+    }
+
+    //setter
+    public void setCloudEventSource(String cloudEventSource) {
+        this.cloudEventSource = cloudEventSource;
     }
 }
 
