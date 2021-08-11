@@ -75,6 +75,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
                     }
                     //标识app使用了配置中心
                     confs.setProperty(ConfigMetadataKeys.CONF, "true");
+                    //自动刷新配置的key
                     String autoRefreshKey = "kin.rsocket.conf.auto-refresh";
                     if ("true".equalsIgnoreCase(confs.getProperty(autoRefreshKey))) {
                         confs.setProperty(ConfigMetadataKeys.AUTO_REFRESH, "true");

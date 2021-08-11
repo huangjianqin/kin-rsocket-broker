@@ -8,5 +8,5 @@ package org.kin.rsocket.core;
  */
 public interface MetadataKeys {
     /** app元数据配置前缀 */
-    String Base = "kin.rsocket.metadata";
+    String Base = "kin.rsocket.metadata.";
 }
