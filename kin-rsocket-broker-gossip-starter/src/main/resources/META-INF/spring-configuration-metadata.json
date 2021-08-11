@@ -12,7 +12,7 @@
       "type": "java.lang.String[]",
       "description": "集群中rsocket gossip broker节点uris",
       "sourceType": "org.kin.rsocket.springcloud.broker.cluster.gossip.RSocketBrokerGossipProperties",
-      "defaultValue": ""
+      "defaultValue": "[]"
     }
   ]
 }

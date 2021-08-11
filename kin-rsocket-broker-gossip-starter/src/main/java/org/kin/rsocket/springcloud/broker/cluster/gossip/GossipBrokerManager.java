@@ -57,7 +57,7 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
     private BrokerInfo localBrokerInfo;
     /** key -> ip address, value -> rsocket brokers数据 */
     private final Map<String, BrokerInfo> brokers = new HashMap<>();
-    /** brokers changes emitter processor */
+    /** 集群broker信息变化sink, 使用者可以监听集群变化并作出响应 */
     private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
 
     public GossipBrokerManager(RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
