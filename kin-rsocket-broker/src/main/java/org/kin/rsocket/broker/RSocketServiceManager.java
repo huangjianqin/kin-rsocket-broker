@@ -244,7 +244,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new HashSet<>(appResponders.keySet());
+            return Collections.unmodifiableCollection(appResponders.keySet());
         } finally {
             readLock.unlock();
         }
@@ -257,7 +257,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new ArrayList<>(uuid2Responder.values());
+            return Collections.unmodifiableCollection(uuid2Responder.values());
         } finally {
             readLock.unlock();
         }
@@ -270,7 +270,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new ArrayList<>(appResponders.get(appName));
+            return Collections.unmodifiableCollection(appResponders.get(appName));
         } finally {
             readLock.unlock();
         }
@@ -542,7 +542,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new HashSet<>(instanceId2ServiceIds.get(instanceId));
+            return Collections.unmodifiableSet(instanceId2ServiceIds.get(instanceId));
         } finally {
             readLock.unlock();
         }
@@ -594,7 +594,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return router.getAllInstanceIds(serviceId);
+            return Collections.unmodifiableCollection(router.getAllInstanceIds(serviceId));
         } finally {
             readLock.unlock();
         }
@@ -635,7 +635,7 @@ public final class RSocketServiceManager {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new ArrayList<>(services.values());
+            return Collections.unmodifiableCollection(services.values());
         } finally {
             readLock.unlock();
         }

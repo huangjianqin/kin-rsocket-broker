@@ -35,11 +35,10 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
     private final RSocketServiceProperties config;
     /** app name */
     private final String appName;
-    private List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
-    private List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
+    private final List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
+    private final List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
 
-    public RSocketRequesterSupportImpl(RSocketServiceProperties config,
-                                       String appName) {
+    public RSocketRequesterSupportImpl(RSocketServiceProperties config, String appName) {
         this.config = config;
         this.appName = appName;
     }

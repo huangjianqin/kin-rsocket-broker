@@ -19,7 +19,7 @@ final class RSocketFilterChain {
 
     public RSocketFilterChain(List<AbstractRSocketFilter> filters) {
         if (filters != null && !filters.isEmpty()) {
-            this.filters = filters;
+            this.filters = Collections.unmodifiableList(filters);
             this.filterFlux = Flux.fromIterable(filters);
         }
     }
