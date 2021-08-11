@@ -1,0 +1,18 @@
+{
+  "properties": [
+    {
+      "name": "kin.rsocket.broker.k8s.serviceName",
+      "type": "java.lang.String",
+      "description": "spring cloud k8s服务实例名",
+      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryProperties",
+      "defaultValue": "rsocket-broker"
+    },
+    {
+      "name": "kin.rsocket.broker.k8s.refreshInternal",
+      "type": "java.lang.Integer",
+      "description": "集群broker信息刷新间隔(秒)",
+      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryProperties",
+      "defaultValue": "5"
+    }
+  ]
+}

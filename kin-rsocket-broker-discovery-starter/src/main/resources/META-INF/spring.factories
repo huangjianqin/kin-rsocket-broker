@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryAutoConfiguration
