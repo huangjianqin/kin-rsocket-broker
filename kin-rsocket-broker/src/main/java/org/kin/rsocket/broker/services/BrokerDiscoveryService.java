@@ -2,12 +2,15 @@ package org.kin.rsocket.broker.services;
 
 import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.cluster.BrokerInfo;
+import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.metadata.AppMetadata;
+import org.kin.rsocket.core.utils.Symbols;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 
@@ -19,9 +22,27 @@ import reactor.core.publisher.Flux;
 public class BrokerDiscoveryService implements DiscoveryService {
     @Autowired
     private RSocketServiceManager serviceManager;
+    @Autowired
+    private BrokerManager rsocketBrokerManager;
 
     @Override
     public Flux<RSocketServiceInstance> getInstances(String serviceId) {
+        if (serviceId.equals(Symbols.BROKER)) {
+            //支持查询broker集群信息
+            return Flux.fromIterable(rsocketBrokerManager.all())
+                    .filter(BrokerInfo::isActive)
+                    .map(broker -> {
+                        RSocketServiceInstance instance = new RSocketServiceInstance();
+                        instance.setInstanceId(broker.getId());
+                        instance.setHost(broker.getIp());
+                        instance.setServiceId(Symbols.BROKER);
+                        instance.setPort(broker.getPort());
+                        instance.setSchema(broker.getSchema());
+                        instance.setUri(broker.getUrl());
+                        instance.setSecure(broker.isActive());
+                        return instance;
+                    });
+        }
         return findServicesInstancesByAppName(serviceId);
     }
 

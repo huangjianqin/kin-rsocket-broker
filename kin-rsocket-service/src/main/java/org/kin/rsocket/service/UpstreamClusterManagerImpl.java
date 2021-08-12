@@ -1,16 +1,23 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.utils.Symbols;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
+import java.net.URI;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * 管理broker或者上流服务的rsocket connection
@@ -20,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     private static final Logger log = LoggerFactory.getLogger(UpstreamClusterManagerImpl.class);
+    /** 每N min请求broker discovery service 获取broker集群信息 */
+    private static final int BROKER_URIS_REFRESH_INTERNAL = 120;
 
     /** upstream requester配置 */
     private final RSocketRequesterSupport requesterSupport;
@@ -27,6 +36,8 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     private final Map<String, UpstreamCluster> clusters = new ConcurrentHashMap<>();
     /** broker upstream cluster */
     private UpstreamCluster brokerCluster;
+    /** broker的服务发现reference, 用于获取broker集群信息 */
+    private volatile DiscoveryService brokerDiscoveryService;
 
     UpstreamClusterManagerImpl(RSocketRequesterSupport requesterSupport) {
         this.requesterSupport = requesterSupport;
@@ -44,6 +55,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
         clusters.put(cluster.getServiceId(), cluster);
         if (cluster.isBroker()) {
             this.brokerCluster = cluster;
+            monitorClusters();
         }
     }
 
@@ -116,5 +128,44 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     @Override
     public RSocketRequesterSupport getRequesterSupport() {
         return requesterSupport;
+    }
+
+    private DiscoveryService findBrokerDiscoveryService() {
+        if (Objects.nonNull(brokerCluster) && Objects.isNull(brokerDiscoveryService)) {
+            this.brokerDiscoveryService = RSocketServiceReferenceBuilder.requester(DiscoveryService.class)
+                    .callTimeout(3000)
+                    .encodingType(RSocketMimeType.JSON)
+                    .acceptEncodingTypes(RSocketMimeType.JSON)
+                    .upstreamClusterManager(this)
+                    .build();
+        }
+        return brokerDiscoveryService;
+    }
+
+    /**
+     * 监控broker集群
+     */
+    private void monitorClusters() {
+        if (Objects.nonNull(brokerCluster)) {
+            //broker 与service不在同一台机器, 则downstream需要开启定时刷新broker uris, 防止broker挂了, 一直不刷新broker集群信息
+            boolean refresh = false;
+            List<String> brokerUris = brokerCluster.getUris();
+            if (brokerUris != null && brokerUris.size() == 1) {
+                String host = URI.create(brokerUris.get(0)).getHost();
+                refresh = !host.equals("127.0.0.1") && !host.equals("localhost");
+            }
+
+            if (refresh) {
+                /**
+                 * 支持幂等监控broker集群信息变化
+                 * 每N min请求broker获取broker集群信息, 以防{@link org.kin.rsocket.core.event.UpstreamClusterChangedEvent}事件丢失
+                 */
+                Flux.interval(Duration.ofSeconds(BROKER_URIS_REFRESH_INTERNAL))
+                        .flatMap(timestamp -> findBrokerDiscoveryService().getInstances(Symbols.BROKER).collectList())
+                        .map(serviceInstances -> serviceInstances.stream().map(serviceInstance -> serviceInstance.getUri().toString()).collect(Collectors.toList()))
+                        .subscribe(uris -> brokerCluster.refreshUris(uris));
+
+            }
+        }
     }
 }

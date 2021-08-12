@@ -92,6 +92,7 @@ public final class RSocketServiceManager {
         this.authRequired = authRequired;
         this.upstreamBrokers = upstreamBrokers;
         if (!brokerManager.isStandAlone()) {
+            //broker集群变化通知downstream
             this.brokerManager.brokersChangedFlux().flatMap(this::broadcastClusterTopology).subscribe();
         }
         this.router = router;
@@ -416,7 +417,6 @@ public final class RSocketServiceManager {
 
         UpstreamClusterChangedEvent upstreamClusterChangedEvent = new UpstreamClusterChangedEvent();
         upstreamClusterChangedEvent.setGroup("");
-        //仅仅广播broker
         upstreamClusterChangedEvent.setInterfaceName(Symbols.BROKER);
         upstreamClusterChangedEvent.setVersion("");
         upstreamClusterChangedEvent.setUris(uris);
