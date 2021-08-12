@@ -66,8 +66,8 @@ public @interface RSocketServiceReference {
     boolean sticky() default false;
 
     /** 数据编码类型 */
-    RSocketMimeType encodingType() default RSocketMimeType.JAVA_OBJECT;
+    RSocketMimeType encodingType() default RSocketMimeType.JSON;
 
     /** accept 编码类型 */
-    RSocketMimeType[] acceptEncodingTypes() default {RSocketMimeType.JAVA_OBJECT};
+    RSocketMimeType[] acceptEncodingTypes() default {RSocketMimeType.JSON};
 }

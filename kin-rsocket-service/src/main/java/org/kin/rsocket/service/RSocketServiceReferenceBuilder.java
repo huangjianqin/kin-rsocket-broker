@@ -50,9 +50,9 @@ public final class RSocketServiceReferenceBuilder<T> {
     /** 服务接口 */
     private Class<T> serviceInterface;
     /** 数据编码类型 */
-    private RSocketMimeType encodingType = RSocketMimeType.JAVA_OBJECT;
+    private RSocketMimeType encodingType = RSocketMimeType.JSON;
     /** accept 编码类型 */
-    private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.JAVA_OBJECT};
+    private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.JSON};
     /** 对应的upstream cluster */
     private UpstreamCluster upstreamCluster;
 

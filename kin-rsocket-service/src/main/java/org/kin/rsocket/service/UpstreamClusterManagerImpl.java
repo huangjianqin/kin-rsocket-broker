@@ -1,7 +1,6 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.discovery.DiscoveryService;
@@ -134,8 +133,6 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
         if (Objects.nonNull(brokerCluster) && Objects.isNull(brokerDiscoveryService)) {
             this.brokerDiscoveryService = RSocketServiceReferenceBuilder.requester(DiscoveryService.class)
                     .callTimeout(3000)
-                    .encodingType(RSocketMimeType.JSON)
-                    .acceptEncodingTypes(RSocketMimeType.JSON)
                     .upstreamClusterManager(this)
                     .build();
         }

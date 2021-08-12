@@ -21,11 +21,11 @@ public @interface ServiceMapping {
     /** 版本号 */
     String version() default "";
 
-    /** 参数编码 MIME Type, 默认{@link RSocketMimeType#JAVA_OBJECT} */
-    String paramEncoding() default "application/x-java-object";
+    /** 参数编码 mime type, 默认{@link RSocketMimeType#JSON} */
+    String paramEncoding() default "application/json";
 
-    /** 返回值编码 MIME Type, 默认{@link RSocketMimeType#JAVA_OBJECT} */
-    String[] resultEncoding() default {"application/x-java-object"};
+    /** 返回值编码 mime type, 默认{@link RSocketMimeType#JSON} */
+    String[] resultEncoding() default {"application/json"};
 
     /** endpoint, such as id:xxxx,  ip:192.168.1.2 */
     String endpoint() default "";
