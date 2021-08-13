@@ -217,7 +217,6 @@ public class RequesterConfiguration {
             .build();
   }
 }
-
 ```
 
 创建main class
@@ -232,6 +231,21 @@ public class RequesterSpringApplication {
   }
 }
 ```
+
+另外还支持使用注解, 构建rsocket service reference
+
+* ```@RSocketServiceReference```注解用法
+  ```java
+  @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+  public interface UserService {
+      //....
+  }
+  ```
+  
+* ```@EnableRSocketServiceReference```注解用法
+  ```java
+  @EnableRSocketServiceReference(references = @RSocketServiceReference(name = "org.kin.rsocket.example.UserService"))
+  ```
 
 ## **整合Spring Cloud**
 
