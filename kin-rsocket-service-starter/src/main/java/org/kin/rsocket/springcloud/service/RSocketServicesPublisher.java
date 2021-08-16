@@ -1,5 +1,6 @@
 package org.kin.rsocket.springcloud.service;
 
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.AppStatusEvent;
@@ -46,7 +47,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
         }
 
         //ports update
-        if (RSocketAppContext.webPort > 0 || RSocketAppContext.managementPort > 0 || RSocketAppContext.rsocketPorts != null) {
+        if (RSocketAppContext.webPort > 0 || RSocketAppContext.managementPort > 0 || CollectionUtils.isNonEmpty(RSocketAppContext.rsocketPorts)) {
             PortsUpdateEvent portsUpdateEvent = new PortsUpdateEvent();
             portsUpdateEvent.setAppId(RSocketAppContext.ID);
             portsUpdateEvent.setWebPort(RSocketAppContext.webPort);
