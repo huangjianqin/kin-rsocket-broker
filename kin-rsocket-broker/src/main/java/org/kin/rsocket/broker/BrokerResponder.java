@@ -93,7 +93,6 @@ public final class BrokerResponder implements CloudEventRSocket {
             }
         }
 
-
         //remote ip
         this.remoteIp = getRemoteAddress(requester);
         this.requestHandler = requestHandler;

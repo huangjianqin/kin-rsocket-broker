@@ -82,6 +82,26 @@ public class ServiceLocator {
         return inst;
     }
 
+    public static ServiceLocator parse(String gsv) {
+        ServiceLocator serviceLocator = new ServiceLocator();
+
+        serviceLocator.gsv = gsv;
+        String temp = gsv;
+        if (temp.contains(Separators.GROUP_SERVICE)) {
+            int index = temp.indexOf(Separators.GROUP_SERVICE);
+            serviceLocator.group = temp.substring(0, index);
+            temp = temp.substring(index + 1);
+        }
+        if (temp.contains(Separators.SERVICE_VERSION)) {
+            int index = temp.indexOf(Separators.SERVICE_VERSION);
+            serviceLocator.version = temp.substring(index + 1);
+            temp = temp.substring(0, index);
+        }
+        serviceLocator.service = temp;
+
+        return serviceLocator;
+    }
+
     //----------------------------------------------------------------------------------------------------------------
     public boolean hasTag(String tag) {
         if (this.tags != null && this.tags.length > 0) {

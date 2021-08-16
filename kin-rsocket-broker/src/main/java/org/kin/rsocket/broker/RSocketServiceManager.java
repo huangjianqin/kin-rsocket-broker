@@ -20,10 +20,7 @@ import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.domain.AppStatus;
-import org.kin.rsocket.core.event.AppStatusEvent;
-import org.kin.rsocket.core.event.CloudEventBuilder;
-import org.kin.rsocket.core.event.CloudEventData;
-import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
+import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -55,6 +52,8 @@ public final class RSocketServiceManager {
     private static final Logger log = LoggerFactory.getLogger(RSocketServiceManager.class);
     private final RSocketFilterChain rsocketFilterChain;
     private final Sinks.Many<String> notificationSink;
+    /** 监听p2p服务实例变化 */
+    private final Sinks.Many<String> p2pServiceNotificationSink;
     private final AuthenticationService authenticationService;
     private final BrokerManager brokerManager;
     private final RSocketServiceMeshInspector serviceMeshInspector;
@@ -70,6 +69,8 @@ public final class RSocketServiceManager {
     private final Map<String, BrokerResponder> uuid2Responder = new HashMap<>();
     /** key -> app name, value -> responder list */
     private final ListMultimap<String, BrokerResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
+    /** key -> service id(gsv), value -> app instance UUID list */
+    private final ListMultimap<String, Integer> p2pServiceConsumers = MultimapBuilder.hashKeys().arrayListValues().build();
 
     /** key -> serviceId, value -> service info */
     private final IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
@@ -83,7 +84,8 @@ public final class RSocketServiceManager {
                                  RSocketServiceMeshInspector serviceMeshInspector,
                                  boolean authRequired,
                                  UpstreamCluster upstreamBrokers,
-                                 Router router) {
+                                 Router router,
+                                 Sinks.Many<String> p2pServiceNotificationSink) {
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
@@ -96,6 +98,7 @@ public final class RSocketServiceManager {
             this.brokerManager.brokersChangedFlux().flatMap(this::broadcastClusterTopology).subscribe();
         }
         this.router = router;
+        this.p2pServiceNotificationSink = p2pServiceNotificationSink;
     }
 
     /**
@@ -203,8 +206,14 @@ public final class RSocketServiceManager {
         writeLock.lock();
         try {
             uuid2Responder.put(appMetadata.getUuid(), responder);
-            instanceId2Responder.put(responder.getId(), responder);
+            Integer instanceId = responder.getId();
+            instanceId2Responder.put(instanceId, responder);
             appResponders.put(appMetadata.getName(), responder);
+
+            for (String p2pService : appMetadata.getP2pServices()) {
+                p2pServiceConsumers.put(p2pService, instanceId);
+                responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
+            }
         } finally {
             writeLock.unlock();
         }
@@ -212,7 +221,7 @@ public final class RSocketServiceManager {
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
-            responder.fireCloudEvent(newBrokerClustersChangedEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
+            responder.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
         }
         notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' online now!", appMetadata.getName(), appMetadata.getIp()));
     }
@@ -227,8 +236,13 @@ public final class RSocketServiceManager {
         writeLock.lock();
         try {
             uuid2Responder.remove(responder.getUuid());
-            instanceId2Responder.remove(responder.getId());
+            Integer instanceId = responder.getId();
+            instanceId2Responder.remove(instanceId);
             appResponders.remove(appMetadata.getName(), responder);
+
+            for (String p2pService : appMetadata.getP2pServices()) {
+                p2pServiceConsumers.remove(p2pService, instanceId);
+            }
         } finally {
             writeLock.unlock();
         }
@@ -401,7 +415,7 @@ public final class RSocketServiceManager {
     /**
      * 创建upstream broker变化的cloud event
      */
-    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedEvent(Collection<BrokerInfo> rsocketBrokerInfos, String topology) {
+    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedCloudEvent(Collection<BrokerInfo> rsocketBrokerInfos, String topology) {
         List<String> uris;
         if (Topologys.INTERNET.equals(topology)) {
             uris = rsocketBrokerInfos.stream()
@@ -430,8 +444,8 @@ public final class RSocketServiceManager {
      * 广播集群broker拓扑事件
      */
     private Flux<Void> broadcastClusterTopology(Collection<BrokerInfo> brokerInfos) {
-        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedEvent(brokerInfos, Topologys.INTRANET);
-        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedEvent(brokerInfos, Topologys.INTERNET);
+        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTRANET);
+        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTERNET);
         return Flux.fromIterable(getAllResponders()).flatMap(responder -> {
             String topology = responder.getAppMetadata().getTopology();
             Mono<Void> fireEvent;
@@ -478,10 +492,16 @@ public final class RSocketServiceManager {
         try {
             for (ServiceLocator serviceLocator : services) {
                 int serviceId = serviceLocator.getId();
+                String gsv = serviceLocator.getGsv();
 
                 if (!instanceId2ServiceIds.get(instanceId).contains(serviceId)) {
                     instanceId2ServiceIds.put(instanceId, serviceId);
                     this.services.put(serviceId, serviceLocator);
+
+                    //p2p service notification
+                    if (p2pServiceConsumers.containsKey(gsv)) {
+                        p2pServiceNotificationSink.tryEmitNext(gsv);
+                    }
                 }
             }
             router.onAppRegistered(instanceId, weight, services);
@@ -501,7 +521,13 @@ public final class RSocketServiceManager {
                 Set<Integer> serviceIds = instanceId2ServiceIds.get(instanceId);
                 for (Integer serviceId : serviceIds) {
                     //没有该serviceId对应instanceId了
-                    services.remove(serviceId);
+                    ServiceLocator serviceLocator = services.remove(serviceId);
+                    if (Objects.nonNull(serviceLocator)) {
+                        String gsv = serviceLocator.getGsv();
+                        if (p2pServiceConsumers.containsKey(gsv)) {
+                            p2pServiceNotificationSink.tryEmitNext(gsv);
+                        }
+                    }
                 }
                 //移除该instanceId对应的所有serviceId
                 instanceId2ServiceIds.removeAll(instanceId);
@@ -639,6 +665,66 @@ public final class RSocketServiceManager {
         } finally {
             readLock.unlock();
         }
+    }
+
+    /**
+     * 获取p2p服务实例变化事件
+     */
+    private CloudEventData<ServiceInstanceChangedEvent> newServiceInstanceChangedCloudEvent(String gsv) {
+        ServiceLocator serviceLocator = ServiceLocator.parse(gsv);
+        Collection<Integer> instanceIdList = getAllInstanceIds(serviceLocator.getId());
+
+        List<String> uris = new ArrayList<>(8);
+        for (Integer instanceId : instanceIdList) {
+            BrokerResponder responder = getByInstanceId(instanceId);
+            if (Objects.isNull(responder)) {
+                continue;
+            }
+
+            Map<Integer, String> rsocketPorts = responder.getAppMetadata().getRsocketPorts();
+            if (rsocketPorts != null && !rsocketPorts.isEmpty()) {
+                //组装成uri
+                Map.Entry<Integer, String> entry = rsocketPorts.entrySet().stream().findFirst().get();
+                String uri = entry.getValue() + "://" + responder.getAppMetadata().getIp() + ":" + entry.getKey();
+                uris.add(uri);
+            }
+        }
+        ServiceInstanceChangedEvent event = ServiceInstanceChangedEvent.of(
+                serviceLocator.getGroup(),
+                serviceLocator.getService(),
+                serviceLocator.getVersion(),
+                uris);
+        return event.toCloudEvent();
+    }
+
+    /**
+     * 获取指定rsocket服务的p2p consumer端 instance id list
+     */
+    private List<Integer> getP2pServiceConsumerInstanceIds(String gsv) {
+        Lock readLock = lock.readLock();
+        readLock.lock();
+        try {
+            return p2pServiceConsumers.get(gsv);
+        } finally {
+            readLock.unlock();
+        }
+
+    }
+
+    /**
+     * 广播rsocket服务实例变化
+     */
+    private Flux<Void> broadcastServiceInstanceChanged(String gsv) {
+        CloudEventData<ServiceInstanceChangedEvent> cloudEvent = newServiceInstanceChangedCloudEvent(gsv);
+        return Flux.fromIterable(getP2pServiceConsumerInstanceIds(gsv))
+                .flatMap(instanceId -> {
+                    BrokerResponder responder = getByInstanceId(instanceId);
+                    if (Objects.nonNull(responder)) {
+                        return responder.fireCloudEvent(cloudEvent);
+                    } else {
+                        return Mono.empty();
+                    }
+                }).subscribeOn(Schedulers.parallel());
     }
 }
 

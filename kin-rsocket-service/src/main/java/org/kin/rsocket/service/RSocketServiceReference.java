@@ -70,4 +70,7 @@ public @interface RSocketServiceReference {
 
     /** accept 编码类型 */
     RSocketMimeType[] acceptEncodingTypes() default {RSocketMimeType.JSON};
+
+    /** consumer 是否开启p2p直连模式 */
+    boolean p2p() default false;
 }

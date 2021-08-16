@@ -53,8 +53,10 @@ public final class RSocketServiceReferenceBuilder<T> {
     private RSocketMimeType encodingType = RSocketMimeType.JSON;
     /** accept 编码类型 */
     private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.JSON};
-    /** 对应的upstream cluster */
-    private UpstreamCluster upstreamCluster;
+    /** 选择一个合适的UpstreamCluster(可broker可直连)的selector */
+    private UpstreamClusterSelector selector;
+    /** consumer是否开启p2p */
+    private boolean p2p;
 
     private RSocketServiceReferenceBuilder() {
     }
@@ -121,7 +123,7 @@ public final class RSocketServiceReferenceBuilder<T> {
 
         boolean sticky = annoAttrs.getBoolean("sticky");
         if (sticky) {
-            referenceBuilder.sticky(sticky);
+            referenceBuilder.sticky();
         }
 
         RSocketMimeType encodingType = annoAttrs.getEnum("encodingType");
@@ -131,6 +133,12 @@ public final class RSocketServiceReferenceBuilder<T> {
         if (CollectionUtils.isNonEmpty(acceptEncodingTypes)) {
             referenceBuilder.acceptEncodingTypes(acceptEncodingTypes);
         }
+
+        boolean p2p = annoAttrs.getBoolean("p2p");
+        if (p2p) {
+            referenceBuilder.p2p();
+        }
+
         return referenceBuilder;
     }
 
@@ -160,8 +168,11 @@ public final class RSocketServiceReferenceBuilder<T> {
         return this;
     }
 
-    public RSocketServiceReferenceBuilder<T> sticky(boolean sticky) {
-        this.sticky = sticky;
+    /**
+     * 该consumer全部接口方法都开启sticky session
+     */
+    public RSocketServiceReferenceBuilder<T> sticky() {
+        this.sticky = true;
         return this;
     }
 
@@ -169,7 +180,10 @@ public final class RSocketServiceReferenceBuilder<T> {
      * 一般使用{@link #upstreamClusterManager(UpstreamClusterManager)}, 因为其会自动寻找对应serviceId的UpstreamCluster
      */
     public RSocketServiceReferenceBuilder<T> upstream(UpstreamCluster upstreamCluster) {
-        this.upstreamCluster = upstreamCluster;
+        this.selector = upstreamCluster;
+        group(upstreamCluster.getGroup());
+        service(upstreamCluster.getServiceName());
+        version(upstreamCluster.getVersion());
         return this;
     }
 
@@ -196,22 +210,46 @@ public final class RSocketServiceReferenceBuilder<T> {
      * 如果配置了rsocket service endpoint, 则使用该connection, 否则使用broker connection, 然后路由回对应的rsocket service app处理
      */
     public RSocketServiceReferenceBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
-        String serviceId = ServiceLocator.gsv(group, service, version);
-        UpstreamCluster upstream = upstreamClusterManager.get(serviceId);
-        if (upstream == null) {
-            upstream = upstreamClusterManager.getBroker();
-        }
-        this.upstreamCluster = upstream;
+        this.selector = upstreamClusterManager;
         this.sourceUri = upstreamClusterManager.getRequesterSupport().originUri();
         return this;
     }
 
+    /**
+     * consumer开启p2p直连
+     */
+    public RSocketServiceReferenceBuilder<T> p2p() {
+        this.p2p = true;
+        return this;
+    }
+
     public T build() {
-        CONSUMED_SERVICES.add(ServiceLocator.of(group, service, version));
+        ServiceLocator serviceLocator = ServiceLocator.of(group, service, version);
+
+        check(serviceLocator);
+
+        if (selector instanceof UpstreamClusterManager && p2p) {
+            ((UpstreamClusterManager) serviceLocator).openP2p(serviceLocator.getGsv());
+        }
+
+        CONSUMED_SERVICES.add(serviceLocator);
         if (RSocketAppContext.ENHANCE) {
             return buildByteBuddyProxy();
         } else {
             return buildJdkProxy();
+        }
+    }
+
+    /**
+     * 合法性检查
+     */
+    private void check(ServiceLocator serviceLocator) {
+        if (selector instanceof UpstreamCluster) {
+            UpstreamCluster upstreamCluster = (UpstreamCluster) this.selector;
+            if (!serviceLocator.getGsv().equals(upstreamCluster.getServiceId())) {
+                //检查构建的服务reference service gsv与builder指定的gsv是否一致
+                throw new IllegalStateException("UpstreamCluster's service gsv must be match RSocketServiceReferenceBuilder's service gsv");
+            }
         }
     }
 
@@ -283,7 +321,11 @@ public final class RSocketServiceReferenceBuilder<T> {
         return acceptEncodingTypes;
     }
 
-    public UpstreamCluster getUpstreamCluster() {
-        return upstreamCluster;
+    public UpstreamClusterSelector getSelector() {
+        return selector;
+    }
+
+    public boolean isP2p() {
+        return p2p;
     }
 }

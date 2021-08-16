@@ -21,7 +21,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Closeable, org.kin.framework.Closeable {
+public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Closeable, org.kin.framework.Closeable, UpstreamClusterSelector {
     private static final Logger log = LoggerFactory.getLogger(UpstreamCluster.class);
 
     /** group */
@@ -161,7 +161,28 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, serviceName, version)));
     }
 
+    @Override
+    public UpstreamCluster select(String serviceId) {
+        String sourceServiceId = getServiceId();
+        if (!sourceServiceId.equals(serviceId)) {
+            throw new IllegalStateException(String.format("serviceId '%s' is not matched, should be '%s' ", serviceId, sourceServiceId));
+        }
+        return this;
+    }
+
     //getter
+    public String getGroup() {
+        return group;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
     public String getServiceId() {
         return ServiceLocator.gsv(group, serviceName, version);
     }

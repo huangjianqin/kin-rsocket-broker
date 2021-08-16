@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.Payload;
-import io.rsocket.RSocket;
 import io.rsocket.frame.FrameType;
 import io.rsocket.util.ByteBufPayload;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
@@ -42,8 +41,7 @@ import java.util.concurrent.TimeoutException;
  */
 public final class RequesterProxy implements InvocationHandler {
     private static final Logger log = LoggerFactory.getLogger(RequesterProxy.class);
-    /** 绑定的{@link UpstreamCluster} */
-    protected final RSocket rsocket;
+    protected final UpstreamClusterSelector selector;
     /** service interface */
     protected final Class<?> serviceInterface;
     /** group */
@@ -52,6 +50,8 @@ public final class RequesterProxy implements InvocationHandler {
     protected final String service;
     /** service version */
     protected final String version;
+    /** service gsv */
+    protected final String serviceId;
     /** endpoint of service */
     protected final String endpoint;
     /** sticky session */
@@ -77,7 +77,7 @@ public final class RequesterProxy implements InvocationHandler {
     }
 
     public RequesterProxy(RSocketServiceReferenceBuilder<?> builder) {
-        rsocket = builder.getUpstreamCluster();
+        selector = builder.getSelector();
         serviceInterface = builder.getServiceInterface();
         if (StringUtils.isBlank(builder.getService())) {
             service = serviceInterface.getCanonicalName();
@@ -87,6 +87,7 @@ public final class RequesterProxy implements InvocationHandler {
 
         group = builder.getGroup();
         version = builder.getVersion();
+        serviceId = ServiceLocator.gsv(group, service, version);
         endpoint = builder.getEndpoint();
         sticky = builder.isSticky();
         sourceUri = builder.getSourceUri();
@@ -147,7 +148,7 @@ public final class RequesterProxy implements InvocationHandler {
                         Codecs.INSTANCE.encodeResult(obj, finalMethodMetadata.getDataEncodingType()),
                         finalMethodMetadata.getCompositeMetadataBytes());
             });
-            Flux<Payload> payloads = rsocket.requestChannel(payloadFlux);
+            Flux<Payload> payloads = selector.select(serviceId).requestChannel(payloadFlux);
             //handle return
             Flux<Object> fluxReturn = payloads.concatMap(payload -> {
                 try {
@@ -171,7 +172,7 @@ public final class RequesterProxy implements InvocationHandler {
             if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-                Mono<Payload> payloadMono = rsocket.requestResponse(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()))
+                Mono<Payload> payloadMono = selector.select(serviceId).requestResponse(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()))
                         .name(methodMetadata.getFullName())
                         .metrics()
                         .timeout(timeout)
@@ -196,11 +197,11 @@ public final class RequesterProxy implements InvocationHandler {
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
-                return rsocket.fireAndForget(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
+                return selector.select(serviceId).fireAndForget(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_STREAM) {
                 //request stream
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-                Flux<Payload> flux = rsocket.requestStream(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
+                Flux<Payload> flux = selector.select(serviceId).requestStream(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
                 Flux<Object> result = flux.concatMap((payload) -> {
                     try {
                         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());

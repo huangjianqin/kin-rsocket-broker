@@ -44,6 +44,10 @@ public class RSocketBrokerConfiguration {
         return Sinks.many().multicast().onBackpressureBuffer(8);
     }
 
+    @Bean
+    public Sinks.Many<String> p2pServiceNotificationSink() {
+        return Sinks.many().multicast().onBackpressureBuffer(10000);
+    }
     //----------------------------------------------cloud event consumers----------------------------------------------
 
     /**
@@ -91,6 +95,11 @@ public class RSocketBrokerConfiguration {
         return new FilterEnableEventConsumer();
     }
 
+    @Bean
+    public P2pServiceChangedEventConsumer p2pServiceChangedEventConsumer() {
+        return new P2pServiceChangedEventConsumer();
+    }
+
     //----------------------------------------------
 
     @Bean
@@ -114,12 +123,13 @@ public class RSocketBrokerConfiguration {
     @Bean
     public RSocketServiceManager serviceManager(@Autowired RSocketBrokerProperties brokerConfig,
                                                 @Autowired RSocketFilterChain chain,
-                                                @Autowired Sinks.Many<String> notificationSink,
+                                                @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
                                                 @Autowired AuthenticationService authenticationService,
                                                 @Autowired BrokerManager brokerManager,
                                                 @Autowired RSocketServiceMeshInspector serviceMeshInspector,
                                                 @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
-                                                @Autowired Router router) {
+                                                @Autowired Router router,
+                                                @Autowired @Qualifier("p2pServiceNotificationSink") Sinks.Many<String> p2pServiceNotificationSink) {
         return new RSocketServiceManager(
                 chain,
                 notificationSink,
@@ -128,7 +138,8 @@ public class RSocketBrokerConfiguration {
                 serviceMeshInspector,
                 brokerConfig.isAuth(),
                 upstreamBrokerCluster,
-                router);
+                router,
+                p2pServiceNotificationSink);
     }
 
     //----------------------------------------------broker binder相关----------------------------------------------

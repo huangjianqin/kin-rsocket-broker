@@ -4,6 +4,7 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.event.ServiceInstanceChangedEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +27,77 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /** 配置 */
     private final RSocketServiceProperties config;
     /** upstream cluster manager */
-    private UpstreamClusterManagerImpl upstreamClusterManager;
+    private final UpstreamClusterManagerImpl upstreamClusterManager;
     /** requester连接配置 */
-    private RSocketRequesterSupportImpl requesterSupport;
+    private final RSocketRequesterSupportImpl requesterSupport;
     /** rsocket binder */
-    private RSocketBinder binder;
+    private final RSocketBinder binder;
+    /** 是否已初始化 */
+    private volatile boolean inited;
 
     private RSocketServiceRequester(String appName,
-                                    RSocketServiceProperties config) {
+                                    RSocketServiceProperties config,
+                                    List<RSocketBinderCustomizer> binderCustomizers,
+                                    List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
+                                    HealthCheck customHealthCheck) {
         this.appName = appName;
         this.config = config;
+
+        //1. create binder
+        if (config.getPort() > 0) {
+            RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
+            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload)));
+            binderBuilder.listen(config.getSchema(), config.getPort());
+            binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
+            binder = binderBuilder.build();
+        } else {
+            binder = null;
+        }
+
+        //2.1 create requester support
+        requesterSupport = new RSocketRequesterSupportImpl(config, appName);
+        //2.2 custom requester support
+        requesterSupportCustomizers.forEach((customizer) -> customizer.customize(requesterSupport));
+        //2.3 init upstream manager
+        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport);
+
+        //3. register health check
+        if (Objects.isNull(customHealthCheck)) {
+            customHealthCheck = new HealthCheckImpl(upstreamClusterManager);
+        }
+        registerService(HealthCheck.class, customHealthCheck);
+
+        //4. add internal cloud event consumer
+        CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
+        CloudEventConsumers.INSTANCE.addConsumer(new ServiceInstanceChangedEventConsumer(upstreamClusterManager));
+    }
+
+    /**
+     * 初始化requester
+     */
+    public void init() {
+        if (inited) {
+            return;
+        }
+        //1. bind
+        if (Objects.nonNull(binder)) {
+            binder.bind();
+        }
+
+        //2. connect
+        add(config);
+
+        //3. mark
+        inited = true;
+    }
+
+    /**
+     * 某些接口调用需要检查是否已初始化
+     */
+    private void checkInit() {
+        if (!inited) {
+            throw new IllegalStateException("RSocketServiceRequester doesn't init");
+        }
     }
 
     /**
@@ -122,7 +184,12 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 通知broker暴露新服务
      */
     private void publishServices(CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent) {
-        getBroker().broadcastCloudEvent(servicesExposedEventCloudEvent)
+        UpstreamCluster broker = getBroker();
+        if (Objects.isNull(broker)) {
+            return;
+        }
+
+        broker.broadcastCloudEvent(servicesExposedEventCloudEvent)
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
@@ -141,19 +208,23 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     }
 
     /**
-     * 移除服务
+     * 下线服务
      */
-    public void removeService(String serviceName, Class<?> serviceInterface) {
-        removeService("", serviceName, "", serviceInterface);
+    public void hideService(String serviceName, Class<?> serviceInterface) {
+        hideService("", serviceName, "", serviceInterface);
     }
 
     /**
-     * 移除服务
+     * 下线服务
      */
-    public void removeService(String group, String serviceName, String version, Class<?> serviceInterface) {
+    public void hideService(String group, String serviceName, String version, Class<?> serviceInterface) {
+        UpstreamCluster broker = getBroker();
+        if (Objects.isNull(broker)) {
+            return;
+        }
         ServiceLocator targetServiceLocator = ServiceLocator.of(group, serviceName, version);
         CloudEventData<RSocketServicesHiddenEvent> cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
-        getBroker().broadcastCloudEvent(cloudEvent)
+        broker.broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
@@ -205,27 +276,61 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     @Override
     public Collection<UpstreamCluster> getAll() {
+        checkInit();
         return upstreamClusterManager.getAll();
     }
 
     @Override
     public UpstreamCluster get(String serviceId) {
+        checkInit();
         return upstreamClusterManager.get(serviceId);
     }
 
     @Override
     public UpstreamCluster getBroker() {
+        checkInit();
         return upstreamClusterManager.getBroker();
     }
 
     @Override
     public void refresh(String serviceId, List<String> uris) {
+        checkInit();
         upstreamClusterManager.refresh(serviceId, uris);
     }
 
     @Override
     public RSocketRequesterSupport getRequesterSupport() {
         return upstreamClusterManager.getRequesterSupport();
+    }
+
+    @Override
+    public void remove(String serviceId) {
+        checkInit();
+        upstreamClusterManager.remove(serviceId);
+    }
+
+    @Override
+    public void openP2p(String... gsvs) {
+        upstreamClusterManager.openP2p(gsvs);
+
+        //通知broker更新开启的p2p服务
+        CloudEventData<CloudEventSupport> cloudEventData = P2pServiceChangedEvent.of(RSocketAppContext.ID, upstreamClusterManager.getP2pServices()).toCloudEvent();
+        UpstreamCluster broker = getBroker();
+        if (Objects.isNull(broker)) {
+            return;
+        }
+        broker.broadcastCloudEvent(cloudEventData);
+    }
+
+    @Override
+    public Set<String> getP2pServices() {
+        return upstreamClusterManager.getP2pServices();
+    }
+
+    @Override
+    public UpstreamCluster select(String serviceId) {
+        checkInit();
+        return upstreamClusterManager.select(serviceId);
     }
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
 
@@ -236,13 +341,15 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     /** builder **/
     public static class Builder {
-        private final RSocketServiceRequester requester;
+        private final String appName;
+        private final RSocketServiceProperties config;
         private List<RSocketBinderCustomizer> binderCustomizers = Collections.emptyList();
         private List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers = Collections.emptyList();
         private HealthCheck customHealthCheck;
 
         public Builder(String appName, RSocketServiceProperties config) {
-            requester = new RSocketServiceRequester(appName, config);
+            this.appName = appName;
+            this.config = config;
         }
 
         public Builder binderCustomizers(List<RSocketBinderCustomizer> binderCustomizers) {
@@ -261,46 +368,12 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         public RSocketServiceRequester build() {
-            RSocketServiceProperties config = requester.config;
-            //1. bind
-            if (config.getPort() > 0) {
-                RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
-                binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload)));
-                binderBuilder.listen(config.getSchema(), config.getPort());
-                binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
-                requester.binder = binderBuilder.build();
-                requester.binder.bind();
-            }
+            return new RSocketServiceRequester(appName, config, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
+        }
 
-            //2. connect
-            //2.1 create requester support
-            requester.requesterSupport = new RSocketRequesterSupportImpl(config, requester.appName);
-
-            //2.2 custom requester support
-            requesterSupportCustomizers.forEach((customizer) -> customizer.customize(requester.requesterSupport));
-
-            //2.3 init upstream manager
-            requester.upstreamClusterManager = new UpstreamClusterManagerImpl(requester.requesterSupport);
-            requester.add(config);
-
-            //2.4 add internal consumer
-            CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(requester.upstreamClusterManager));
-
-            //3. register health check
-            if (Objects.isNull(customHealthCheck)) {
-                customHealthCheck = new HealthCheckImpl(requester.upstreamClusterManager);
-            }
-            requester.registerService(HealthCheck.class, customHealthCheck);
-
-            //4. notify broker app status update
-            CloudEventData<AppStatusEvent> appStatusEventCloudEvent = CloudEventBuilder
-                    .builder(AppStatusEvent.serving(RSocketAppContext.ID))
-                    .build();
-
-            requester.getBroker().broadcastCloudEvent(appStatusEventCloudEvent)
-                    .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", requester.getBrokerUris())))
-                    .subscribe();
-
+        public RSocketServiceRequester buildAndInit() {
+            RSocketServiceRequester requester = build();
+            requester.init();
             return requester;
         }
     }

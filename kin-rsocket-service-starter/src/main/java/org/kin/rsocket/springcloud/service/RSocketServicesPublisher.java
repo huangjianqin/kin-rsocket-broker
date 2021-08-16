@@ -2,6 +2,7 @@ package org.kin.rsocket.springcloud.service;
 
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
@@ -33,6 +34,9 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
 
     @Override
     public void onApplicationEvent(ApplicationStartedEvent event) {
+        //requester init
+        requester.init();
+
         UpstreamCluster brokerCluster = requester.getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
@@ -53,6 +57,15 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
                     .build();
             brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent).subscribe();
         }
+
+        //4. notify broker app status update
+        CloudEventData<AppStatusEvent> appStatusEventCloudEvent = CloudEventBuilder
+                .builder(AppStatusEvent.serving(RSocketAppContext.ID))
+                .build();
+
+        brokerCluster.broadcastCloudEvent(appStatusEventCloudEvent)
+                .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", serviceConfig.getBrokers()))))
+                .subscribe();
 
         if (serviceConfig.getPort() > 0) {
             //没有绑定rsocket port, 则是无法调用该app 服务, 那么没必要暴露服务

@@ -37,6 +37,8 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
     private final String appName;
     private final List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
     private final List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
+    /** 用于获取开启p2p服务gsv */
+    private UpstreamClusterManager upstreamClusterManager;
 
     public RSocketRequesterSupportImpl(RSocketServiceProperties config, String appName) {
         this.config = config;
@@ -84,6 +86,9 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
         builder.device("SpringBootApp");
         //brokers
         builder.brokers(config.getBrokers());
+        if (Objects.nonNull(upstreamClusterManager)) {
+            builder.p2pServices(upstreamClusterManager.getP2pServices());
+        }
         builder.topology(config.getTopology());
         builder.rsocketPorts(RSocketAppContext.rsocketPorts);
         //web port
@@ -155,5 +160,10 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
 
     public void addResponderInterceptors(RSocketInterceptor... interceptors) {
         addResponderInterceptors(Arrays.asList(interceptors));
+    }
+
+    //setter && getter
+    void setUpstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
+        this.upstreamClusterManager = upstreamClusterManager;
     }
 }

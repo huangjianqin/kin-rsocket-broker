@@ -3,16 +3,15 @@ package org.kin.rsocket.service;
 import org.kin.framework.Closeable;
 import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.UpstreamClusterSelector;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author huangjianqin
  * @date 2021/4/18
  */
-public interface UpstreamClusterManager extends Closeable {
+public interface UpstreamClusterManager extends UpstreamClusterSelector, Closeable {
     /**
      * 添加upstream cluster
      */
@@ -59,4 +58,32 @@ public interface UpstreamClusterManager extends Closeable {
      * @return 底层connection使用的 {@link RSocketRequesterSupport}实例
      */
     RSocketRequesterSupport getRequesterSupport();
+
+    /**
+     * 移除指定{@link UpstreamCluster}
+     */
+    default void remove(UpstreamCluster upstreamCluster) {
+        if (Objects.isNull(upstreamCluster)) {
+            return;
+        }
+
+        remove(upstreamCluster.getServiceId());
+    }
+
+    /**
+     * 移除指定serviceId的{@link UpstreamCluster}
+     */
+    void remove(String serviceId);
+
+    /**
+     * 添加需要开启p2p的服务gsv
+     *
+     * @param gsvs 需要开启p2p的服务gsv列表
+     */
+    void openP2p(String... gsvs);
+
+    /**
+     * @return 开启p2p的服务gsv
+     */
+    Set<String> getP2pServices();
 }

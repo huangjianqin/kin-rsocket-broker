@@ -38,13 +38,12 @@ public class RSocketServiceConfiguration {
                                                            @Autowired RSocketServiceProperties config,
                                                            @Autowired List<RSocketBinderCustomizer> binderCustomizers,
                                                            @Autowired List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
-                                                           @Autowired HealthService healthService) {
+                                                           @Autowired(required = false) HealthService healthService) {
         String appName = env.getProperty("spring.application.name", "unknown");
         return RSocketServiceRequester.builder(appName, config)
                 .binderCustomizers(binderCustomizers)
                 .requesterSupportBuilderCustomizers(requesterSupportCustomizers)
-                .healthCheck(healthService)
-                .build();
+                .healthCheck(healthService).build();
     }
 
     //----------------------------spring----------------------------

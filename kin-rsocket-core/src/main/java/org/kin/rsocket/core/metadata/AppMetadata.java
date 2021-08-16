@@ -7,10 +7,7 @@ import org.kin.rsocket.core.domain.AppVO;
 import org.kin.rsocket.core.utils.JSON;
 import org.kin.rsocket.core.utils.Topologys;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * application metadata, json format
@@ -39,6 +36,8 @@ public final class AppMetadata implements MetadataAware {
     private String ip;
     /** connected brokers */
     private List<String> brokers;
+    /** 需要开启p2p的服务gsv */
+    private volatile Set<String> p2pServices = Collections.emptySet();
     /** topology, such as intranet or internet */
     private String topology = Topologys.INTRANET;
     /** secure or not */
@@ -122,6 +121,10 @@ public final class AppMetadata implements MetadataAware {
         this.connectedAt = connectedAt;
     }
 
+    public void updateP2pServices(Set<String> p2pServices) {
+        this.p2pServices = p2pServices;
+    }
+
     public AppVO toVo() {
         return AppVO.builder()
                 .id(id).uuid(uuid).weight(weight)
@@ -193,6 +196,11 @@ public final class AppMetadata implements MetadataAware {
 
         public Builder brokers(List<String> brokers) {
             appMetadata.brokers = brokers;
+            return this;
+        }
+
+        public Builder p2pServices(Set<String> p2pServices) {
+            appMetadata.p2pServices = p2pServices;
             return this;
         }
 
@@ -293,6 +301,10 @@ public final class AppMetadata implements MetadataAware {
 
     public List<String> getBrokers() {
         return brokers;
+    }
+
+    public Set<String> getP2pServices() {
+        return p2pServices;
     }
 
     public String getTopology() {
