@@ -35,7 +35,7 @@ public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
 
     //-------------------------------controller-------------------------------
     @Bean
-    public HttpGatewayController httpGatewayController(@Autowired UpstreamClusterManager upstreamClusterManager,
+    public HttpGatewayController httpGatewayController(@Autowired(required = false) UpstreamClusterManager upstreamClusterManager,
                                                        @Autowired AuthenticationService authenticationService,
                                                        @Autowired RSocketBrokerHttpGatewayProperties httpGatewayConfig,
                                                        @Autowired RSocketServiceProperties serviceConfig,
