@@ -210,6 +210,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     private RSocket next() {
         if (activeRSockets.isEmpty()) {
             /**
+             * TODO 解决延迟问题
              * {@link RSocketServiceRequester} 构建后快速调用service reference时, 会存在connection还未建立问题
              */
             try {

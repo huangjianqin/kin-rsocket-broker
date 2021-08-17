@@ -70,7 +70,7 @@ public final class RSocketServiceManager {
     /** key -> app name, value -> responder list */
     private final ListMultimap<String, BrokerResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
     /** key -> service id(gsv), value -> app instance UUID list */
-    private final ListMultimap<String, Integer> p2pServiceConsumers = MultimapBuilder.hashKeys().arrayListValues().build();
+    private final SetMultimap<String, Integer> p2pServiceConsumers = MultimapBuilder.hashKeys().hashSetValues().build();
 
     /** key -> serviceId, value -> service info */
     private final IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
@@ -210,7 +210,7 @@ public final class RSocketServiceManager {
             instanceId2Responder.put(instanceId, responder);
             appResponders.put(appMetadata.getName(), responder);
 
-            for (String p2pService : appMetadata.getP2pServices()) {
+            for (String p2pService : appMetadata.getP2pServiceGsvs()) {
                 p2pServiceConsumers.put(p2pService, instanceId);
                 responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
             }
@@ -240,7 +240,7 @@ public final class RSocketServiceManager {
             instanceId2Responder.remove(instanceId);
             appResponders.remove(appMetadata.getName(), responder);
 
-            for (String p2pService : appMetadata.getP2pServices()) {
+            for (String p2pService : appMetadata.getP2pServiceGsvs()) {
                 p2pServiceConsumers.remove(p2pService, instanceId);
             }
         } finally {
@@ -700,7 +700,7 @@ public final class RSocketServiceManager {
     /**
      * 获取指定rsocket服务的p2p consumer端 instance id list
      */
-    private List<Integer> getP2pServiceConsumerInstanceIds(String gsv) {
+    private Set<Integer> getP2pServiceConsumerInstanceIds(String gsv) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
@@ -725,6 +725,29 @@ public final class RSocketServiceManager {
                         return Mono.empty();
                     }
                 }).subscribeOn(Schedulers.parallel());
+    }
+
+    /**
+     * 更新指定app应用开启的p2p服务gsv
+     */
+    public void updateP2pServiceConsumers(String appId, Set<String> p2pServiceGsvs) {
+        BrokerResponder responder = getByUUID(appId);
+        if (responder != null) {
+            AppMetadata appMetadata = responder.getAppMetadata();
+            Integer instanceId = responder.getId();
+            appMetadata.updateP2pServiceGsvs(p2pServiceGsvs);
+
+            Lock writeLock = lock.writeLock();
+            writeLock.lock();
+            try {
+                for (String p2pService : appMetadata.getP2pServiceGsvs()) {
+                    p2pServiceConsumers.put(p2pService, instanceId);
+                    responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
+                }
+            } finally {
+                writeLock.unlock();
+            }
+        }
     }
 }
 

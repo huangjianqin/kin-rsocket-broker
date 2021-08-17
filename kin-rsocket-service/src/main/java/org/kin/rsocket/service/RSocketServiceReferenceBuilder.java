@@ -229,7 +229,7 @@ public final class RSocketServiceReferenceBuilder<T> {
         check(serviceLocator);
 
         if (selector instanceof UpstreamClusterManager && p2p) {
-            ((UpstreamClusterManager) serviceLocator).openP2p(serviceLocator.getGsv());
+            ((UpstreamClusterManager) selector).openP2p(serviceLocator.getGsv());
         }
 
         CONSUMED_SERVICES.add(serviceLocator);

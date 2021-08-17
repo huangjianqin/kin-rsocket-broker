@@ -312,14 +312,6 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     @Override
     public void openP2p(String... gsvs) {
         upstreamClusterManager.openP2p(gsvs);
-
-        //通知broker更新开启的p2p服务
-        CloudEventData<CloudEventSupport> cloudEventData = P2pServiceChangedEvent.of(RSocketAppContext.ID, upstreamClusterManager.getP2pServices()).toCloudEvent();
-        UpstreamCluster broker = getBroker();
-        if (Objects.isNull(broker)) {
-            return;
-        }
-        broker.broadcastCloudEvent(cloudEventData);
     }
 
     @Override

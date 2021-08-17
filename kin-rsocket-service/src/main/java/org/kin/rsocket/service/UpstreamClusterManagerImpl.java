@@ -3,9 +3,13 @@ package org.kin.rsocket.service;
 import com.google.common.collect.ImmutableSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.discovery.DiscoveryService;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventSupport;
+import org.kin.rsocket.core.event.P2pServiceChangedEvent;
 import org.kin.rsocket.core.utils.Symbols;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,6 +137,15 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     @Override
     public void openP2p(String... gsvs) {
         p2pServiceGsvs.addAll(Arrays.asList(gsvs));
+
+        //通知broker更新开启的p2p服务
+        CloudEventData<CloudEventSupport> cloudEventData = P2pServiceChangedEvent.of(RSocketAppContext.ID, getP2pServices()).toCloudEvent();
+        UpstreamCluster broker = getBroker();
+        if (Objects.isNull(broker)) {
+            //与broker建立了连接才通知
+            return;
+        }
+        broker.broadcastCloudEvent(cloudEventData).subscribe();
     }
 
     @Override

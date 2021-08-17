@@ -98,7 +98,7 @@ public class ServiceLocator {
             temp = temp.substring(0, index);
         }
         serviceLocator.service = temp;
-
+        serviceLocator.id = MurmurHash3.hash32(gsv);
         return serviceLocator;
     }
 

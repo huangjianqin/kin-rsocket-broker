@@ -37,7 +37,7 @@ public final class AppMetadata implements MetadataAware {
     /** connected brokers */
     private List<String> brokers;
     /** 需要开启p2p的服务gsv */
-    private volatile Set<String> p2pServices = Collections.emptySet();
+    private volatile Set<String> p2pServiceGsvs = Collections.emptySet();
     /** topology, such as intranet or internet */
     private String topology = Topologys.INTRANET;
     /** secure or not */
@@ -121,8 +121,8 @@ public final class AppMetadata implements MetadataAware {
         this.connectedAt = connectedAt;
     }
 
-    public void updateP2pServices(Set<String> p2pServices) {
-        this.p2pServices = p2pServices;
+    public void updateP2pServiceGsvs(Set<String> p2pServices) {
+        this.p2pServiceGsvs = p2pServices;
     }
 
     public AppVO toVo() {
@@ -200,7 +200,7 @@ public final class AppMetadata implements MetadataAware {
         }
 
         public Builder p2pServices(Set<String> p2pServices) {
-            appMetadata.p2pServices = p2pServices;
+            appMetadata.p2pServiceGsvs = p2pServices;
             return this;
         }
 
@@ -303,8 +303,8 @@ public final class AppMetadata implements MetadataAware {
         return brokers;
     }
 
-    public Set<String> getP2pServices() {
-        return p2pServices;
+    public Set<String> getP2pServiceGsvs() {
+        return p2pServiceGsvs;
     }
 
     public String getTopology() {
