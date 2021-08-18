@@ -23,8 +23,6 @@ import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.UriUtils;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,7 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/4/21
  */
 public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
-    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRequestHandler.class);
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;
     /** app metadata */
@@ -85,182 +82,233 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
 
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        String frameType = FrameType.REQUEST_RESPONSE.name();
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
 
-        GSVRoutingMetadata gsvRoutingMetadata;
-        //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
-        boolean encodingMetadataIncluded;
-        MessageMimeTypeMetadata messageMimeTypeMetadata;
-        if (Objects.isNull(binaryRoutingMetadata)) {
-            //回退到取GSVRoutingMetadata
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (Objects.isNull(gsvRoutingMetadata)) {
-                return Mono.error(new InvalidException("no routing metadata"));
-            }
-            messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
-            encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
+            GSVRoutingMetadata gsvRoutingMetadata;
+            //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
+            boolean encodingMetadataIncluded;
+            MessageMimeTypeMetadata messageMimeTypeMetadata;
+            if (Objects.isNull(binaryRoutingMetadata)) {
+                //回退到取GSVRoutingMetadata
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (Objects.isNull(gsvRoutingMetadata)) {
+                    return Mono.error(new InvalidException("no routing metadata"));
+                }
+                messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
+                encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
-        } else {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-            //默认认为带了消息编码元数据
-            encodingMetadataIncluded = true;
-            messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
-        }
-
-        // broker local service call
-        if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            //app 与 broker通信使用rsocket connector设置的dataMimeType即可
-            return localRequestResponse(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
-        }
-
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.appMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
-
-        //call destination
-        MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
-        return destination.flatMap(rsocket -> {
-            recordServiceInvoke(gsvRoutingMetadata.gsv());
-            if (encodingMetadataIncluded) {
-                return rsocket.requestResponse(payload);
             } else {
-                return rsocket.requestResponse(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+                //默认认为带了消息编码元数据
+                encodingMetadataIncluded = true;
+                messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
             }
-        });
+
+            // broker local service call
+            if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+                //app 与 broker通信使用rsocket connector设置的dataMimeType即可
+                return localRequestResponse(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
+            }
+
+            //request filters
+            Mono<RSocket> destination;
+            if (this.filterChain.isFiltersPresent()) {
+                RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.appMetadata, payload);
+                //filter可能会改变gsv metadata的数据, 影响路由结果
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+            } else {
+                destination = findDestination(gsvRoutingMetadata);
+            }
+
+            //call destination
+            MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
+            return destination.flatMap(rsocket -> {
+                recordServiceInvoke(gsvRoutingMetadata.gsv());
+                if (Objects.isNull(binaryRoutingMetadata)) {
+                    MetricsUtils.metrics(gsvRoutingMetadata, frameType);
+                } else {
+                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                }
+
+                if (encodingMetadataIncluded) {
+                    return rsocket.requestResponse(payload);
+                } else {
+                    return rsocket.requestResponse(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                }
+            }).doOnError(t -> error(failCallLog(frameType), t));
+        } catch (Exception e) {
+            error(failCallLog(frameType), e);
+            ReferenceCountUtil.safeRelease(payload);
+            return Mono.error(new InvalidException(failCallTips(frameType, e)));
+        }
     }
 
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        String frameType = FrameType.REQUEST_FNF.name();
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
 
-        GSVRoutingMetadata gsvRoutingMetadata;
-        //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
-        boolean encodingMetadataIncluded;
-        MessageMimeTypeMetadata messageMimeTypeMetadata;
-        if (Objects.isNull(binaryRoutingMetadata)) {
-            //回退到取GSVRoutingMetadata
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (Objects.isNull(gsvRoutingMetadata)) {
-                return Mono.error(new InvalidException("no routing metadata"));
-            }
-            messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
-            encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
+            GSVRoutingMetadata gsvRoutingMetadata;
+            //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
+            boolean encodingMetadataIncluded;
+            MessageMimeTypeMetadata messageMimeTypeMetadata;
+            if (Objects.isNull(binaryRoutingMetadata)) {
+                //回退到取GSVRoutingMetadata
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (Objects.isNull(gsvRoutingMetadata)) {
+                    return Mono.error(new InvalidException("no routing metadata"));
+                }
+                messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
+                encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
-        } else {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-            //默认认为带了消息编码元数据
-            encodingMetadataIncluded = true;
-            messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
-        }
-
-        // broker local service call
-        if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            //app 与 broker通信使用rsocket connector设置的dataMimeType即可
-            return localFireAndForget(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, payload);
-        }
-
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.appMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
-
-        //call destination
-        MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
-        return destination.flatMap(rsocket -> {
-            recordServiceInvoke(gsvRoutingMetadata.gsv());
-            if (encodingMetadataIncluded) {
-                return rsocket.fireAndForget(payload);
             } else {
-                return rsocket.fireAndForget(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+                //默认认为带了消息编码元数据
+                encodingMetadataIncluded = true;
+                messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
             }
-        });
+
+            // broker local service call
+            if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+                //app 与 broker通信使用rsocket connector设置的dataMimeType即可
+                return localFireAndForget(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, payload);
+            }
+
+            //request filters
+            Mono<RSocket> destination;
+            if (this.filterChain.isFiltersPresent()) {
+                RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.appMetadata, payload);
+                //filter可能会改变gsv metadata的数据, 影响路由结果
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+            } else {
+                destination = findDestination(gsvRoutingMetadata);
+            }
+
+            //call destination
+            MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
+            return destination.flatMap(rsocket -> {
+                recordServiceInvoke(gsvRoutingMetadata.gsv());
+                if (Objects.isNull(binaryRoutingMetadata)) {
+                    MetricsUtils.metrics(gsvRoutingMetadata, frameType);
+                } else {
+                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                }
+                if (encodingMetadataIncluded) {
+                    return rsocket.fireAndForget(payload);
+                } else {
+                    return rsocket.fireAndForget(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                }
+            }).doOnError(t -> error(failCallLog(frameType), t));
+        } catch (Exception e) {
+            error(failCallLog(frameType), e);
+            ReferenceCountUtil.safeRelease(payload);
+            return Mono.error(new InvalidException(failCallTips(frameType, e)));
+        }
+
     }
 
     @Override
     public Flux<Payload> requestStream(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        String frameType = FrameType.REQUEST_STREAM.name();
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
 
-        GSVRoutingMetadata gsvRoutingMetadata;
-        //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
-        boolean encodingMetadataIncluded;
-        MessageMimeTypeMetadata messageMimeTypeMetadata;
-        if (Objects.isNull(binaryRoutingMetadata)) {
-            //回退到取GSVRoutingMetadata
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (Objects.isNull(gsvRoutingMetadata)) {
-                return Flux.error(new InvalidException("no routing metadata"));
-            }
-            messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
-            encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
+            GSVRoutingMetadata gsvRoutingMetadata;
+            //为了兼容, 其余开发者rsocket broker client调用rsocket服务, 缺省部分信息, 也不会导致异常
+            boolean encodingMetadataIncluded;
+            MessageMimeTypeMetadata messageMimeTypeMetadata;
+            if (Objects.isNull(binaryRoutingMetadata)) {
+                //回退到取GSVRoutingMetadata
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (Objects.isNull(gsvRoutingMetadata)) {
+                    return Flux.error(new InvalidException("no routing metadata"));
+                }
+                messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
+                encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
 
-        } else {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-            //默认认为带了消息编码元数据
-            encodingMetadataIncluded = true;
-            messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
-        }
-
-        // broker local service call
-        if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
-            //app 与 broker通信使用rsocket connector设置的dataMimeType即可
-            return localRequestStream(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
-        }
-
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.appMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
-
-        MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
-        return destination.flatMapMany(rsocket -> {
-            recordServiceInvoke(gsvRoutingMetadata.gsv());
-            if (encodingMetadataIncluded) {
-                return rsocket.requestStream(payload);
             } else {
-                return rsocket.requestStream(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+                //默认认为带了消息编码元数据
+                encodingMetadataIncluded = true;
+                messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
             }
-        });
+
+            // broker local service call
+            if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+                //app 与 broker通信使用rsocket connector设置的dataMimeType即可
+                return localRequestStream(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
+            }
+
+            //request filters
+            Mono<RSocket> destination;
+            if (this.filterChain.isFiltersPresent()) {
+                RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.appMetadata, payload);
+                //filter可能会改变gsv metadata的数据, 影响路由结果
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+            } else {
+                destination = findDestination(gsvRoutingMetadata);
+            }
+
+            MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
+            return destination.flatMapMany(rsocket -> {
+                recordServiceInvoke(gsvRoutingMetadata.gsv());
+                if (Objects.isNull(binaryRoutingMetadata)) {
+                    MetricsUtils.metrics(gsvRoutingMetadata, frameType);
+                } else {
+                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                }
+                if (encodingMetadataIncluded) {
+                    return rsocket.requestStream(payload);
+                } else {
+                    return rsocket.requestStream(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                }
+            }).doOnError(t -> error(failCallLog(frameType), t));
+        } catch (Exception e) {
+            error(failCallLog(frameType), e);
+            ReferenceCountUtil.safeRelease(payload);
+            return Flux.error(new InvalidException(failCallTips(frameType, e)));
+        }
     }
 
     private Flux<Payload> requestChannel(Payload signal, Flux<Payload> payloads) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(signal.metadata());
+        String frameType = FrameType.REQUEST_CHANNEL.name();
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(signal.metadata());
 
-        GSVRoutingMetadata gsvRoutingMetadata;
-        if (Objects.isNull(binaryRoutingMetadata)) {
-            //回退到取GSVRoutingMetadata
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (Objects.isNull(gsvRoutingMetadata)) {
-                return Flux.error(new InvalidException("no routing metadata"));
+            GSVRoutingMetadata gsvRoutingMetadata;
+            if (Objects.isNull(binaryRoutingMetadata)) {
+                //回退到取GSVRoutingMetadata
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (Objects.isNull(gsvRoutingMetadata)) {
+                    return Flux.error(new InvalidException("no routing metadata"));
+                }
+            } else {
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
             }
-        } else {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-        }
 
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
-        return destination.flatMapMany(rsocket -> {
-            recordServiceInvoke(gsvRoutingMetadata.gsv());
-            return rsocket.requestChannel(payloads);
-        });
+            Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+            return destination.flatMapMany(rsocket -> {
+                recordServiceInvoke(gsvRoutingMetadata.gsv());
+                if (Objects.isNull(binaryRoutingMetadata)) {
+                    MetricsUtils.metrics(gsvRoutingMetadata, frameType);
+                } else {
+                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                }
+                return rsocket.requestChannel(payloads);
+            }).doOnError(t -> error(failCallLog(frameType), t));
+        } catch (Exception e) {
+            error(failCallLog(frameType), e);
+            ReferenceCountUtil.safeRelease(signal);
+            payloads.subscribe(ReferenceCountUtil::safeRelease);
+            return Flux.error(new InvalidException(failCallTips(frameType, e)));
+        }
     }
 
     @Override
@@ -288,7 +336,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 }
             }
         } catch (Exception e) {
-            log.error(String.format("Failed to parse Cloud Event: %s", e.getMessage()), e);
+            error(String.format("Failed to parse Cloud Event: %s", e.getMessage()), e);
         } finally {
             ReferenceCountUtil.safeRelease(payload);
         }
@@ -422,6 +470,20 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         } else {
             return dataEncodingMetadata;
         }
+    }
+
+    /**
+     * 路由失败信息
+     */
+    private String failCallLog(String frameType) {
+        return String.format("handle %s request error", frameType);
+    }
+
+    /**
+     * 路由失败返回提示信息
+     */
+    private String failCallTips(String frameType, Throwable throwable) {
+        return failCallLog(frameType).concat(": ").concat(throwable.getMessage());
     }
 
     //getter

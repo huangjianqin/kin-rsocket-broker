@@ -3,6 +3,7 @@ package org.kin.rsocket.broker;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.SetMultimap;
+import io.micrometer.core.instrument.Metrics;
 import io.netty.util.collection.IntObjectHashMap;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
@@ -15,10 +16,7 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
-import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -99,6 +97,14 @@ public final class RSocketServiceManager {
         }
         this.router = router;
         this.p2pServiceNotificationSink = p2pServiceNotificationSink;
+
+        Metrics.globalRegistry.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appResponders.size());
+        Metrics.globalRegistry.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_COUNT, this,
+                manager -> manager.appResponders.values()
+                        .stream()
+                        .mapToInt(responder -> (responder.isPublishServicesOnly() || responder.isConsumeAndPublishServices()) ? 0 : 1)
+                        .sum());
+        Metrics.globalRegistry.gauge(MetricsNames.BROKER_SERVICE_COUNT, this, manager -> manager.services.size());
     }
 
     /**
@@ -178,7 +184,6 @@ public final class RSocketServiceManager {
         }
         //create responder
         try {
-
             RSocketServiceRequestHandler requestHandler = new RSocketServiceRequestHandler(setupPayload, appMetadata, principal,
                     this, serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
             BrokerResponder responder = new BrokerResponder(compositeMetadata, appMetadata, requester, this, requestHandler);

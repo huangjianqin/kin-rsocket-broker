@@ -1,5 +1,6 @@
 package org.kin.rsocket.springcloud.broker.cluster.gossip;
 
+import io.micrometer.core.instrument.Metrics;
 import io.scalecube.cluster.Cluster;
 import io.scalecube.cluster.ClusterImpl;
 import io.scalecube.cluster.ClusterMessageHandler;
@@ -16,6 +17,7 @@ import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
@@ -86,6 +88,8 @@ public class GossipBrokerManager extends AbstractBrokerManager implements Broker
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         brokers.put(localIp, localBrokerInfo);
         log.info("start cluster with Gossip support");
+
+        Metrics.globalRegistry.gauge(MetricsNames.CLUSTER_BROKER_COUNT, this, manager -> manager.brokers.size());
     }
 
     /**

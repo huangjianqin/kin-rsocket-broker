@@ -1,10 +1,12 @@
 package org.kin.rsocket.springcloud.broker.cluster.standalone;
 
+import io.micrometer.core.instrument.Metrics;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
@@ -40,6 +42,8 @@ public final class StandAloneBrokerManager extends AbstractBrokerManager impleme
         this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, schema,
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         log.info("start standalone cluster");
+
+        Metrics.globalRegistry.gauge(MetricsNames.CLUSTER_BROKER_COUNT, brokerConfig.getUpstreamBrokers().size());
     }
 
     @Override

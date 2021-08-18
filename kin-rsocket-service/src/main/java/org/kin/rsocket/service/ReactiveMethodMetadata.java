@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import io.micrometer.core.instrument.Tag;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
@@ -19,7 +20,9 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * 服务接口方法元数据
@@ -58,6 +61,8 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     private ByteBuf compositeMetadataBytes;
     /** 返回值是否是{@link Mono} */
     private boolean monoChannel = false;
+    /** metrics tags */
+    private List<Tag> metricsTags = new ArrayList<>();
 
     ReactiveMethodMetadata(String group,
                            String service,
@@ -119,6 +124,16 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
                 rsocketFrameType = FrameType.REQUEST_RESPONSE;
             }
         }
+
+        //metrics tags for micrometer
+        if (StringUtils.isNotBlank(this.group)) {
+            metricsTags.add(Tag.of("group", this.group));
+        }
+        if (StringUtils.isNotBlank(this.version)) {
+            metricsTags.add(Tag.of("version", this.version));
+        }
+        metricsTags.add(Tag.of("method", this.handler));
+        metricsTags.add(Tag.of("frame", this.rsocketFrameType.name()));
     }
 
     /**
@@ -250,5 +265,9 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
 
     public boolean isMonoChannel() {
         return monoChannel;
+    }
+
+    public List<Tag> getMetricsTags() {
+        return metricsTags;
     }
 }

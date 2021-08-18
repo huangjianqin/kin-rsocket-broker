@@ -203,7 +203,7 @@ public final class BrokerResponder implements CloudEventRSocket {
      * @return requester publish services only
      */
     public boolean isPublishServicesOnly() {
-        return requestHandler.everConsumed() && CollectionUtils.isNonEmpty(peerServices);
+        return !requestHandler.everConsumed() && CollectionUtils.isNonEmpty(peerServices);
     }
 
     /**

@@ -58,34 +58,6 @@ final class BrokerRequestHandler extends AbstractRSocket {
     }
 
     @Override
-    public Mono<Void> fireAndForget(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata;
-        if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-        } else {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (gsvRoutingMetadata == null) {
-                return Mono.error(new InvalidException("No Routing metadata"));
-            }
-        }
-
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
-
-        //call destination
-        return destination.flatMap(rsocket -> rsocket.fireAndForget(payload));
-    }
-
-    @Override
     public Mono<Payload> requestResponse(Payload payload) {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
         GSVRoutingMetadata gsvRoutingMetadata;
@@ -110,7 +82,41 @@ final class BrokerRequestHandler extends AbstractRSocket {
         }
 
         //call destination
-        return destination.flatMap(rsocket -> rsocket.requestResponse(payload));
+        return destination.flatMap(rsocket -> {
+            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_RESPONSE.name());
+            return rsocket.requestResponse(payload);
+        });
+    }
+
+    @Override
+    public Mono<Void> fireAndForget(Payload payload) {
+        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+        GSVRoutingMetadata gsvRoutingMetadata;
+        if (binaryRoutingMetadata != null) {
+            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+        } else {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+            if (gsvRoutingMetadata == null) {
+                return Mono.error(new InvalidException("No Routing metadata"));
+            }
+        }
+
+        //request filters
+        Mono<RSocket> destination;
+        if (this.filterChain.isFiltersPresent()) {
+            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
+            //filter可能会改变gsv metadata的数据, 影响路由结果
+            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+        } else {
+            destination = findDestination(gsvRoutingMetadata);
+        }
+
+        //call destination
+        return destination.flatMap(rsocket -> {
+            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_FNF.name());
+            return rsocket.fireAndForget(payload);
+        });
     }
 
     @Override
@@ -137,7 +143,10 @@ final class BrokerRequestHandler extends AbstractRSocket {
             destination = findDestination(gsvRoutingMetadata);
         }
 
-        return destination.flatMapMany(rsocket -> rsocket.requestStream(payload));
+        return destination.flatMapMany(rsocket -> {
+            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_STREAM.name());
+            return rsocket.requestStream(payload);
+        });
     }
 
     @Override
@@ -161,7 +170,10 @@ final class BrokerRequestHandler extends AbstractRSocket {
         }
 
         Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
-        return destination.flatMapMany(rsocket -> rsocket.requestChannel(payloads));
+        return destination.flatMapMany(rsocket -> {
+            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_CHANNEL.name());
+            return rsocket.requestChannel(payloads);
+        });
     }
 
     @Override

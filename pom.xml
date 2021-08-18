@@ -49,6 +49,7 @@
         <byte-buddy.version>1.10.18</byte-buddy.version>
         <guava.version>30.1-jre</guava.version>
         <feign-reactor.version>3.0.0</feign-reactor.version>
+        <micrometer.version>1.7.3</micrometer.version>
     </properties>
 
     <dependencyManagement>

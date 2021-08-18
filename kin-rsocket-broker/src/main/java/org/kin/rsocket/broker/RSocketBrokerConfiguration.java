@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.BrokerManager;
@@ -13,6 +14,8 @@ import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -258,5 +261,12 @@ public class RSocketBrokerConfiguration {
     @Bean
     public RSocketServiceQueryController serviceQueryController() {
         return new RSocketServiceQueryController();
+    }
+
+    //----------------------------------------------metrics----------------------------------------------
+    @Bean
+    MeterRegistryCustomizer<MeterRegistry> defaultRegistryCustomizer(@Value("${spring.application.name}") String springAppName) {
+        //根据应用区分监控指标
+        return registry -> registry.config().commonTags("application", "kin-rsocket-broker-".concat(springAppName));
     }
 }

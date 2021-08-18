@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import io.micrometer.core.instrument.Metrics;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
@@ -126,6 +127,7 @@ public final class RequesterProxy implements InvocationHandler {
 
         if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_CHANNEL) {
             //request channel
+            metrics(methodMetadata);
             Payload routePayload;
             Flux<Object> source;
             if (args.length == 1) {
@@ -171,13 +173,17 @@ public final class RequesterProxy implements InvocationHandler {
             ByteBuf paramBodyBytes = Codecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
             if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
+                metrics(methodMetadata);
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
                 Mono<Payload> payloadMono = selector.select(serviceId).requestResponse(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()))
                         .name(methodMetadata.getFullName())
                         .metrics()
                         .timeout(timeout)
                         .doOnError(TimeoutException.class,
-                                e -> log.error(String.format("Timeout to call %s in %s seconds", finalMethodMetadata.getFullName(), timeout), e));
+                                e -> {
+                                    metricsTimeout(finalMethodMetadata);
+                                    log.error(String.format("Timeout to call %s in %s seconds", finalMethodMetadata.getFullName(), timeout), e);
+                                });
 
                 Mono<Object> result = payloadMono.handle((payload, sink) -> {
                     try {
@@ -197,9 +203,11 @@ public final class RequesterProxy implements InvocationHandler {
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
+                metrics(methodMetadata);
                 return selector.select(serviceId).fireAndForget(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
             } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_STREAM) {
                 //request stream
+                metrics(methodMetadata);
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
                 Flux<Payload> flux = selector.select(serviceId).requestStream(ByteBufPayload.create(paramBodyBytes, methodMetadata.getCompositeMetadataBytes()));
                 Flux<Object> result = flux.concatMap((payload) -> {
@@ -230,5 +238,13 @@ public final class RequesterProxy implements InvocationHandler {
             return mimeTypeMetadata.getMessageMimeType();
         }
         return defaultEncodingType;
+    }
+
+    private void metrics(ReactiveMethodMetadata methodMetadata) {
+        Metrics.counter(this.service.concat(MetricsNames.COUNT_SUFFIX), methodMetadata.getMetricsTags()).increment();
+    }
+
+    private void metricsTimeout(ReactiveMethodMetadata methodMetadata) {
+        Metrics.counter(MetricsNames.RSOCKET_TIMEOUT_ERROR_COUNT, methodMetadata.getMetricsTags()).increment();
     }
 }
