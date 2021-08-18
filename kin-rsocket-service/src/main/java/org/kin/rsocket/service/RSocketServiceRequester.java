@@ -193,8 +193,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", config.getBrokers());
-                    String exposedServiceGsvs = RSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
-                    log.info(String.format("services(%s) published on Brokers(%s)!", exposedServiceGsvs, brokerUris));
+                    String exposedServiceIds = RSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
+                    log.info(String.format("services(%s) published on Brokers(%s)!", exposedServiceIds, brokerUris));
                 }).subscribe();
     }
 

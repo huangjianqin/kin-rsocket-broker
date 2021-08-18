@@ -14,12 +14,12 @@ public class P2pServiceChangedEvent implements CloudEventSupport {
     /** application id */
     private String appId;
     /** 开启p2p服务的gsv */
-    private Set<String> p2pServiceGsvs;
+    private Set<String> p2pServiceIds;
 
-    public static P2pServiceChangedEvent of(String appId, Set<String> p2pServiceGsvs) {
+    public static P2pServiceChangedEvent of(String appId, Set<String> p2pServiceIds) {
         P2pServiceChangedEvent inst = new P2pServiceChangedEvent();
         inst.appId = appId;
-        inst.p2pServiceGsvs = p2pServiceGsvs;
+        inst.p2pServiceIds = p2pServiceIds;
         return inst;
     }
 
@@ -32,11 +32,11 @@ public class P2pServiceChangedEvent implements CloudEventSupport {
         this.appId = appId;
     }
 
-    public Set<String> getP2pServiceGsvs() {
-        return p2pServiceGsvs;
+    public Set<String> getP2pServiceIds() {
+        return p2pServiceIds;
     }
 
-    public void setP2pServiceGsvs(Set<String> p2pServiceGsvs) {
-        this.p2pServiceGsvs = p2pServiceGsvs;
+    public void setP2pServiceIds(Set<String> p2pServiceIds) {
+        this.p2pServiceIds = p2pServiceIds;
     }
 }

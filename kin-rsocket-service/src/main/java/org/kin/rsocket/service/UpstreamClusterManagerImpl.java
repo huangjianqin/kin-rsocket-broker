@@ -46,7 +46,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     /** broker的服务发现reference, 用于获取broker集群信息 */
     private volatile DiscoveryService brokerDiscoveryService;
     /** 开启p2p的服务gsv */
-    private final CopyOnWriteArraySet<String> p2pServiceGsvs = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<String> p2pServiceIds = new CopyOnWriteArraySet<>();
 
     UpstreamClusterManagerImpl(RSocketRequesterSupport requesterSupport) {
         this.requesterSupport = requesterSupport;
@@ -136,7 +136,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
 
     @Override
     public void openP2p(String... gsvs) {
-        p2pServiceGsvs.addAll(Arrays.asList(gsvs));
+        p2pServiceIds.addAll(Arrays.asList(gsvs));
 
         //通知broker更新开启的p2p服务
         CloudEventData<CloudEventSupport> cloudEventData = P2pServiceChangedEvent.of(RSocketAppContext.ID, getP2pServices()).toCloudEvent();
@@ -150,7 +150,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
 
     @Override
     public Set<String> getP2pServices() {
-        return ImmutableSet.copyOf(p2pServiceGsvs);
+        return ImmutableSet.copyOf(p2pServiceIds);
     }
 
     private DiscoveryService findBrokerDiscoveryService() {
@@ -201,10 +201,10 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
      * 监控broker集群
      */
     private void monitorP2pService() {
-        if (CollectionUtils.isNonEmpty(p2pServiceGsvs)) {
+        if (CollectionUtils.isNonEmpty(p2pServiceIds)) {
             // interval sync to p2p service instances list
             Flux.interval(Duration.ofSeconds(P2P_URIS_REFRESH_INTERNAL))
-                    .flatMap(timestamp -> Flux.fromIterable(p2pServiceGsvs).flatMap(gsv -> findBrokerDiscoveryService()
+                    .flatMap(timestamp -> Flux.fromIterable(p2pServiceIds).flatMap(gsv -> findBrokerDiscoveryService()
                             .getInstances(gsv)
                             .collectList()
                             .map(serviceInstances -> Tuples.of(gsv, serviceInstances.stream().map(serviceInstance -> serviceInstance.getUri().toString()).collect(Collectors.toList())))))

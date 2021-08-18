@@ -18,7 +18,7 @@ public final class P2pServiceChangedEventConsumer extends AbstractCloudEventCons
     @Override
     protected Mono<Void> consume(CloudEventData<?> cloudEventData, P2pServiceChangedEvent cloudEvent) {
         if (cloudEvent != null) {
-           serviceManager.updateP2pServiceConsumers(cloudEvent.getAppId(), cloudEvent.getP2pServiceGsvs());
+           serviceManager.updateP2pServiceConsumers(cloudEvent.getAppId(), cloudEvent.getP2pServiceIds());
         }
         return Mono.empty();
     }

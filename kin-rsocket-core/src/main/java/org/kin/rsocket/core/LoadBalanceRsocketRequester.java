@@ -60,7 +60,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /** 刷新uri时连接失败, 则1分钟内尝试12重连, 间隔5s */
     private static final int RETRY_COUNT = 12;
     /** upstream uri刷新逻辑单线程处理 */
-    private static final Scheduler REFRESH_SCHEDULER = Schedulers.newSingle("LoadBalanceRequester-refreshRSockets");
+    private static final Scheduler REFRESH_SCHEDULER = Schedulers.newSingle("LoadBalanceRequester-RefreshRSockets");
 
     /** load balance rule */
     private final Selector selector;
@@ -142,6 +142,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         this.lastRefreshTimestamp = System.currentTimeMillis();
         this.lastRefreshRSocketUris = rsocketUris;
         Flux.fromIterable(rsocketUris)
+                //多线程connect remote
                 .flatMap(rsocketUri -> {
                     if (activeRSockets.containsKey(rsocketUri)) {
                         return Mono.just(Tuples.of(rsocketUri, activeRSockets.get(rsocketUri)));
@@ -157,6 +158,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                     }
                 })
                 .collectList()
+                //单线程更新有效remote connection
                 .publishOn(REFRESH_SCHEDULER)
                 .subscribe(tupleRSockets -> {
                     if (tupleRSockets.isEmpty()) {
@@ -274,15 +276,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
 
     @Override
     public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
-        if (isDisposed()) {
-            return (Mono<Void>) disposedMono();
-        }
-        try {
-            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
-            return metadataPush(payload);
-        } catch (Exception e) {
-            return Mono.error(e);
-        }
+        return broadcastCloudEvent(cloudEvent);
     }
 
     @Override
@@ -305,8 +299,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
             return (Mono<Void>) disposedMono();
         }
         try {
-            return Flux.fromIterable(activeRSockets.values())
-                    .flatMap(rsocket -> rsocket.metadataPush(CloudEventSupport.cloudEvent2Payload(cloudEvent)))
+            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
+            return metadataPush(payload)
                     .doOnError(throwable -> log.error("Failed to fire event to all upstream nodes", throwable))
                     .then();
         } catch (Exception e) {

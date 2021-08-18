@@ -208,19 +208,19 @@ public class RSocketBrokerConfiguration {
     //----------------------------------------------upstream broker requester相关----------------------------------------------
     @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public UpstreamBrokerRequester upStreamBrokerRequester(@Autowired Environment env,
-                                                           @Autowired RSocketBrokerProperties brokerConfig,
-                                                           @Autowired RSocketServiceManager serviceManager,
-                                                           @Autowired RSocketFilterChain chain) {
+    public UpstreamBrokerRequesterSupport upstreamBrokerRequesterSupport(@Autowired Environment env,
+                                                                         @Autowired RSocketBrokerProperties brokerConfig,
+                                                                         @Autowired RSocketServiceManager serviceManager,
+                                                                         @Autowired RSocketFilterChain chain) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new UpstreamBrokerRequester(brokerConfig, appName, serviceManager, chain);
+        return new UpstreamBrokerRequesterSupport(brokerConfig, appName, serviceManager, chain);
     }
 
     @Bean
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
-    public UpstreamCluster upstreamBrokerCluster(@Autowired UpstreamBrokerRequester upStreamBrokerRequester,
+    public UpstreamCluster upstreamBrokerCluster(@Autowired UpstreamBrokerRequesterSupport upStreamBrokerRequesterSupport,
                                                  @Autowired RSocketBrokerProperties brokerConfig) {
-        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequester, brokerConfig.getUpstreamBrokers());
+        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequesterSupport, brokerConfig.getUpstreamBrokers());
     }
 
     //----------------------------------------------services----------------------------------------------

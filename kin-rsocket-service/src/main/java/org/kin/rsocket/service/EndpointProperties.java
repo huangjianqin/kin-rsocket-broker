@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * endpoint配置
+ * endpoint配置, 主要用于直连测试
  *
  * @author huangjianqin
  * @date 2021/3/27
