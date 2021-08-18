@@ -4,8 +4,6 @@ import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.AppStatusEvent;
-import org.kin.rsocket.core.event.CloudEventBuilder;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
 import org.kin.rsocket.service.RSocketServiceRequester;
 import org.slf4j.Logger;
@@ -53,18 +51,11 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
             portsUpdateEvent.setWebPort(RSocketAppContext.webPort);
             portsUpdateEvent.setManagementPort(RSocketAppContext.managementPort);
             portsUpdateEvent.setRsocketPorts(RSocketAppContext.rsocketPorts);
-            CloudEventData<PortsUpdateEvent> portsUpdateCloudEvent = CloudEventBuilder
-                    .builder(portsUpdateEvent)
-                    .build();
-            brokerCluster.broadcastCloudEvent(portsUpdateCloudEvent).subscribe();
+            brokerCluster.broadcastCloudEvent(portsUpdateEvent.toCloudEvent()).subscribe();
         }
 
         //4. notify broker app status update
-        CloudEventData<AppStatusEvent> appStatusEventCloudEvent = CloudEventBuilder
-                .builder(AppStatusEvent.serving(RSocketAppContext.ID))
-                .build();
-
-        brokerCluster.broadcastCloudEvent(appStatusEventCloudEvent)
+        brokerCluster.broadcastCloudEvent(AppStatusEvent.serving(RSocketAppContext.ID).toCloudEvent())
                 .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", serviceConfig.getBrokers()))))
                 .subscribe();
 

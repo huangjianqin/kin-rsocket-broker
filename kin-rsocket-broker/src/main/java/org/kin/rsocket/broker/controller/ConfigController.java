@@ -8,7 +8,6 @@ import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.conf.ConfDiamond;
-import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.slf4j.Logger;
@@ -56,7 +55,7 @@ public class ConfigController {
 
         boolean refreshAll = StringUtils.isBlank(ip) && StringUtils.isBlank(id);
         return confDiamond.findKeyValuesByGroup(appName)
-                .map(content -> CloudEventBuilder.builder(ConfigChangedEvent.of(appName, content)).build())
+                .map(content -> ConfigChangedEvent.of(appName, content).toCloudEvent())
                 .flatMap(event -> Flux.fromIterable(serviceManager.getByAppName(appName))
                         .filter(handler -> {
                             AppMetadata appMetadata = handler.getAppMetadata();
@@ -88,7 +87,7 @@ public class ConfigController {
                 //get latest conf
                 .flatMap(l -> confDiamond.findKeyValuesByGroup(appName))
                 //build ConfigChangedEvent
-                .map(content -> CloudEventBuilder.builder(ConfigChangedEvent.of(appName, content)).build())
+                .map(content -> ConfigChangedEvent.of(appName, content).toCloudEvent())
                 //broadcast event to all broker
                 .flatMap(eventData -> brokerManager.broadcast(eventData).then(Mono.just("success")));
     }

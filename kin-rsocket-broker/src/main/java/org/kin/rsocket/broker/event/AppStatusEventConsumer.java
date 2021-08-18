@@ -6,7 +6,10 @@ import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.domain.AppStatus;
-import org.kin.rsocket.core.event.*;
+import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
+import org.kin.rsocket.core.event.AppStatusEvent;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.utils.UriUtils;
 import org.springframework.beans.factory.DisposableBean;
@@ -74,8 +77,7 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
 
                 String propertiesContent = PropertiesUtils.writePropertiesContent(properties);
 
-                CloudEventData<ConfigChangedEvent> configChangedEvent =
-                        CloudEventBuilder.builder(ConfigChangedEvent.of(appName, propertiesContent)).build();
+                CloudEventData<ConfigChangedEvent> configChangedEvent = ConfigChangedEvent.of(appName, propertiesContent).toCloudEvent();
                 serviceManager.broadcast(appName, configChangedEvent).subscribe();
             }));
         }

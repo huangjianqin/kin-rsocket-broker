@@ -407,9 +407,7 @@ public final class RSocketServiceManager {
      * 创建{@link AppStatusEvent} cloud event
      */
     private CloudEventData<AppStatusEvent> newAppStatusEvent(AppMetadata appMetadata, AppStatus status) {
-        return CloudEventBuilder
-                .builder(AppStatusEvent.of(appMetadata.getUuid(), status))
-                .build();
+        return AppStatusEvent.of(appMetadata.getUuid(), status).toCloudEvent();
     }
 
     /**

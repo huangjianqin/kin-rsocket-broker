@@ -95,6 +95,5 @@ public interface CloudEventSupport extends Serializable {
     default <T extends CloudEventSupport> CloudEventData<T> toCloudEvent() {
         return CloudEventBuilder.builder((T) this).build();
     }
-
 }
 

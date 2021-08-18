@@ -13,7 +13,7 @@ public class AppStatusEventConsumerTest {
         AppStatusEventConsumer consumer = new AppStatusEventConsumer();
 
         AppStatusEvent event = AppStatusEvent.connected(UUID.randomUUID().toString());
-        consumer.consume(CloudEventBuilder.builder(event).build());
+        consumer.consume(event.toCloudEvent());
     }
 
     private static class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> {

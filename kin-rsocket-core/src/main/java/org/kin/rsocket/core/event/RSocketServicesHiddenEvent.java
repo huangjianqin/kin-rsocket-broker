@@ -26,9 +26,7 @@ public final class RSocketServicesHiddenEvent implements CloudEventSupport {
         inst.appId = RSocketAppContext.ID;
         inst.services = new HashSet<>(serviceLocators.size());
         inst.services.addAll(serviceLocators);
-        return CloudEventBuilder
-                .builder(inst)
-                .build();
+        return inst.toCloudEvent();
     }
 
     //setter && getter

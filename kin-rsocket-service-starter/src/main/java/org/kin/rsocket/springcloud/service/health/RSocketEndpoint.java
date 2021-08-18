@@ -2,7 +2,10 @@ package org.kin.rsocket.springcloud.service.health;
 
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
-import org.kin.rsocket.core.event.*;
+import org.kin.rsocket.core.event.AppStatusEvent;
+import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
+import org.kin.rsocket.core.event.RSocketServicesHiddenEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketServiceProperties;
 import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
@@ -135,10 +138,9 @@ public final class RSocketEndpoint {
      * 向所有upstream更新app status
      */
     private Mono<Void> updateAppStatus(AppStatus status) {
-        CloudEventData<AppStatusEvent> cloudEventData = CloudEventBuilder
-                .builder(AppStatusEvent.of(RSocketAppContext.ID, status))
-                .build();
-        return Flux.fromIterable(upstreamClusterManager.getAll()).flatMap(upstreamCluster -> upstreamCluster.broadcastCloudEvent(cloudEventData)).then();
+        return Flux.fromIterable(upstreamClusterManager.getAll())
+                .flatMap(upstreamCluster -> upstreamCluster.broadcastCloudEvent(AppStatusEvent.of(RSocketAppContext.ID, status).toCloudEvent()))
+                .then();
     }
 
     /**

@@ -5,7 +5,6 @@ import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -58,8 +57,7 @@ public class OprController {
         UpstreamClusterChangedEvent upstreamClusterChangedEvent =
                 UpstreamClusterChangedEvent.of("", Symbols.BROKER, "", Arrays.asList(uris.split(",")));
 
-        CloudEventData<UpstreamClusterChangedEvent> cloudEvent =
-                CloudEventBuilder.builder(upstreamClusterChangedEvent).build();
+        CloudEventData<UpstreamClusterChangedEvent> cloudEvent = upstreamClusterChangedEvent.toCloudEvent();
 
         return serviceManager.broadcast(Symbols.BROKER, cloudEvent);
     }

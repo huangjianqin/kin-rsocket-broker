@@ -40,7 +40,7 @@ public class CloudEventBuilder<T> {
      * 带UUID, application/json, now timestamp, Class full name as type和default sources的builder
      *
      * @param data data
-     * @param <T>  cloud event datat type
+     * @param <T>  cloud event data type
      * @return cloud event builder
      */
     public static <T> CloudEventBuilder<T> builder(T data) {

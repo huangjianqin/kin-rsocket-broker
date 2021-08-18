@@ -29,9 +29,7 @@ public final class RSocketServicesExposedEvent implements CloudEventSupport {
         RSocketServicesExposedEvent servicesExposedEvent = new RSocketServicesExposedEvent();
         servicesExposedEvent.services.addAll(serviceLocators);
         servicesExposedEvent.setAppId(RSocketAppContext.ID);
-        return CloudEventBuilder
-                .builder(servicesExposedEvent)
-                .build();
+        return servicesExposedEvent.toCloudEvent();
     }
 
     //setter && getter
