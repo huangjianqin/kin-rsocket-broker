@@ -35,8 +35,6 @@ final class MetadataAwares {
         map.put(RSocketMimeType.MESSAGE_TAGS, MessageTagsMetadata.class);
         map.put(RSocketMimeType.MESSAGE_ORIGIN, OriginMetadata.class);
 
-        //todo 优化:Tracing未处理
-
         TYPE_2_METADATA_CLASS = map;
     }
 

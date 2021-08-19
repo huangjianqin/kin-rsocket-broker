@@ -95,10 +95,17 @@
             <artifactId>spring-beans</artifactId>
         </dependency>
 
+        <!-- metrics -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
             <version>${micrometer.version}</version>
+        </dependency>
+
+        <!-- zipkin -->
+        <dependency>
+            <groupId>io.zipkin.brave</groupId>
+            <artifactId>brave</artifactId>
         </dependency>
     </dependencies>
 </project>

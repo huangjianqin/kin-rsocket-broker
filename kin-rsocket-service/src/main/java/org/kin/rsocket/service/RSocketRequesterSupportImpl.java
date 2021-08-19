@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import brave.Tracer;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.SocketAcceptor;
@@ -39,10 +40,17 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
     private final List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
     /** 用于获取开启p2p服务gsv */
     private UpstreamClusterManager upstreamClusterManager;
+    /** zipkin */
+    private final Tracer tracer;
 
     public RSocketRequesterSupportImpl(RSocketServiceProperties config, String appName) {
+        this(config, appName, null);
+    }
+
+    public RSocketRequesterSupportImpl(RSocketServiceProperties config, String appName, Tracer tracer) {
         this.config = config;
         this.appName = appName;
+        this.tracer = tracer;
     }
 
     @Override
@@ -125,7 +133,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload));
+        return (setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload, tracer));
     }
 
     @Override

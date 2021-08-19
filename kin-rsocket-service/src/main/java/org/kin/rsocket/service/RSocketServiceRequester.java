@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import brave.Tracer;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
@@ -26,6 +27,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     private final String appName;
     /** 配置 */
     private final RSocketServiceProperties config;
+    /** zipkin */
+    private final Tracer tracer;
     /** upstream cluster manager */
     private final UpstreamClusterManagerImpl upstreamClusterManager;
     /** requester连接配置 */
@@ -37,16 +40,18 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     private RSocketServiceRequester(String appName,
                                     RSocketServiceProperties config,
+                                    Tracer tracer,
                                     List<RSocketBinderCustomizer> binderCustomizers,
                                     List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
                                     HealthCheck customHealthCheck) {
         this.appName = appName;
         this.config = config;
+        this.tracer = tracer;
 
         //1. create binder
         if (config.getPort() > 0) {
             RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
-            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload)));
+            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload, tracer)));
             binderBuilder.listen(config.getSchema(), config.getPort());
             binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
             binder = binderBuilder.build();
@@ -55,7 +60,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         //2.1 create requester support
-        requesterSupport = new RSocketRequesterSupportImpl(config, appName);
+        requesterSupport = new RSocketRequesterSupportImpl(config, appName, tracer);
         //2.2 custom requester support
         requesterSupportCustomizers.forEach((customizer) -> customizer.customize(requesterSupport));
         //2.3 init upstream manager
@@ -338,6 +343,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         private List<RSocketBinderCustomizer> binderCustomizers = Collections.emptyList();
         private List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers = Collections.emptyList();
         private HealthCheck customHealthCheck;
+        /** zipkin */
+        private Tracer tracer;
 
         public Builder(String appName, RSocketServiceProperties config) {
             this.appName = appName;
@@ -359,8 +366,13 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
             return this;
         }
 
+        public Builder tracer(Tracer tracer) {
+            this.tracer = tracer;
+            return this;
+        }
+
         public RSocketServiceRequester build() {
-            return new RSocketServiceRequester(appName, config, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
+            return new RSocketServiceRequester(appName, config, tracer, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
         }
 
         public RSocketServiceRequester buildAndInit() {

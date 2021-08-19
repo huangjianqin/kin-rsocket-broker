@@ -1,5 +1,6 @@
 package org.kin.rsocket.springcloud.service;
 
+import brave.Tracing;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketBinderCustomizer;
 import org.kin.rsocket.core.RSocketService;
@@ -24,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
@@ -38,12 +40,18 @@ public class RSocketServiceConfiguration {
                                                            @Autowired RSocketServiceProperties config,
                                                            @Autowired List<RSocketBinderCustomizer> binderCustomizers,
                                                            @Autowired List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
-                                                           @Autowired(required = false) HealthService healthService) {
+                                                           @Autowired(required = false) HealthService healthService,
+                                                           @Autowired(required = false) Tracing tracing) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return RSocketServiceRequester.builder(appName, config)
+        RSocketServiceRequester.Builder builder = RSocketServiceRequester.builder(appName, config)
                 .binderCustomizers(binderCustomizers)
                 .requesterSupportBuilderCustomizers(requesterSupportCustomizers)
-                .healthCheck(healthService).build();
+                .healthCheck(healthService);
+        if (Objects.nonNull(tracing)) {
+            builder.tracer(tracing.tracer());
+        }
+
+        return builder.build();
     }
 
     //----------------------------spring----------------------------

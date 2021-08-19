@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import brave.Tracing;
 import com.google.common.base.Preconditions;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
@@ -57,6 +58,8 @@ public final class RSocketServiceReferenceBuilder<T> {
     private UpstreamClusterSelector selector;
     /** consumer是否开启p2p */
     private boolean p2p;
+    /** zipkin */
+    private Tracing tracing;
 
     private RSocketServiceReferenceBuilder() {
     }
@@ -223,6 +226,14 @@ public final class RSocketServiceReferenceBuilder<T> {
         return this;
     }
 
+    /**
+     * 开启zipkin
+     */
+    public RSocketServiceReferenceBuilder<T> tracing(Tracing tracing) {
+        this.tracing = tracing;
+        return this;
+    }
+
     public T build() {
         ServiceLocator serviceLocator = ServiceLocator.of(group, service, version);
 
@@ -327,5 +338,9 @@ public final class RSocketServiceReferenceBuilder<T> {
 
     public boolean isP2p() {
         return p2p;
+    }
+
+    public Tracing getTracing() {
+        return tracing;
     }
 }

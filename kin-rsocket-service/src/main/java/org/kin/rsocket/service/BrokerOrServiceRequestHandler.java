@@ -1,5 +1,8 @@
 package org.kin.rsocket.service;
 
+import brave.Span;
+import brave.Tracer;
+import brave.propagation.TraceContext;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
@@ -10,13 +13,11 @@ import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.RequestHandlerSupport;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.metadata.AppMetadata;
-import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
-import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
-import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
+import org.kin.rsocket.core.metadata.*;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.util.Objects;
 
@@ -38,8 +39,10 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
     private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
     /** combo onClose from responder and requester */
     private final Mono<Void> comboOnClose;
+    /** zipkin */
+    private final Tracer tracer;
 
-    BrokerOrServiceRequestHandler(RSocket requester, ConnectionSetupPayload setupPayload) {
+    BrokerOrServiceRequestHandler(RSocket requester, ConnectionSetupPayload setupPayload, Tracer tracer) {
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 
@@ -59,6 +62,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         }
 
         this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataMimeType);
+        this.tracer = tracer;
     }
 
     /**
@@ -102,7 +106,8 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
             ReferenceCountUtil.safeRelease(payload);
             return noEncodingDataErrorMono();
         }
-        return localRequestResponse(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
+        Mono<Payload> payloadMono = localRequestResponse(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
+        return injectTraceContext(payloadMono, compositeMetadata);
     }
 
     @Override
@@ -118,7 +123,8 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
             ReferenceCountUtil.safeRelease(payload);
             return noEncodingDataErrorMono();
         }
-        return localFireAndForget(routingMetaData, dataEncodingMetadata, payload);
+        Mono<Void> voidMono = localFireAndForget(routingMetaData, dataEncodingMetadata, payload);
+        return injectTraceContext(voidMono, compositeMetadata);
     }
 
     @Override
@@ -134,7 +140,8 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
             ReferenceCountUtil.safeRelease(payload);
             return noEncodingDataErrorFlux();
         }
-        return localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
+        Flux<Payload> payloadFlux = localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
+        return injectTraceContext(payloadFlux, compositeMetadata);
     }
 
     private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
@@ -201,5 +208,53 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
      */
     private GSVRoutingMetadata getGsvRoutingMetadata(RSocketCompositeMetadata compositeMetadata) {
         return compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+    }
+
+    /**
+     * 根据{@link TracingMetadata}构建{@link TraceContext}
+     */
+    private TraceContext constructTraceContext(TracingMetadata tracingMetadata) {
+        return TraceContext.newBuilder()
+                .parentId(tracingMetadata.getParentId())
+                .spanId(tracingMetadata.getSpanId())
+                .traceIdHigh(tracingMetadata.getTraceIdHigh())
+                .traceId(tracingMetadata.getTraceId())
+                .build();
+    }
+
+    /**
+     * 给{@link Mono}context写入{@link TraceContext}
+     */
+    private <T> Mono<T> injectTraceContext(Mono<T> payloadMono, RSocketCompositeMetadata compositeMetadata) {
+        if (Objects.nonNull(tracer)) {
+            TracingMetadata tracingMetadata = compositeMetadata.getMetadata(RSocketMimeType.TRACING);
+            if (Objects.nonNull(tracingMetadata)) {
+                TraceContext traceContext = constructTraceContext(tracingMetadata);
+                Span span = tracer.newChild(traceContext);
+                return payloadMono
+                        .doOnError(span::error)
+                        .doOnSuccess(payload -> span.finish())
+                        .contextWrite(Context.of(TraceContext.class, traceContext));
+            }
+        }
+        return payloadMono;
+    }
+
+    /**
+     * 给{@link Flux}context写入{@link TraceContext}
+     */
+    private Flux<Payload> injectTraceContext(Flux<Payload> payloadFlux, RSocketCompositeMetadata compositeMetadata) {
+        if (Objects.nonNull(tracer)) {
+            TracingMetadata tracingMetadata = compositeMetadata.getMetadata(RSocketMimeType.TRACING);
+            if (Objects.nonNull(tracingMetadata)) {
+                TraceContext traceContext = constructTraceContext(tracingMetadata);
+                Span span = tracer.newChild(traceContext);
+                return payloadFlux
+                        .doOnError(span::error)
+                        .doOnComplete(span::finish)
+                        .contextWrite(Context.of(TraceContext.class, traceContext));
+            }
+        }
+        return payloadFlux;
     }
 }
