@@ -130,7 +130,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
 
                 if (encodingMetadataIncluded) {
@@ -138,7 +139,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 } else {
                     return rsocket.requestResponse(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
                 }
-            }).doOnError(t -> error(failCallLog(frameType), t));
+            });
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
@@ -196,14 +197,15 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
                 if (encodingMetadataIncluded) {
                     return rsocket.fireAndForget(payload);
                 } else {
                     return rsocket.fireAndForget(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
                 }
-            }).doOnError(t -> error(failCallLog(frameType), t));
+            });
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
@@ -261,14 +263,15 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
                 if (encodingMetadataIncluded) {
                     return rsocket.requestStream(payload);
                 } else {
                     return rsocket.requestStream(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
                 }
-            }).doOnError(t -> error(failCallLog(frameType), t));
+            });
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
@@ -299,10 +302,11 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    MetricsUtils.metrics(binaryRoutingMetadata, frameType);
+                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
                 return rsocket.requestChannel(payloads);
-            }).doOnError(t -> error(failCallLog(frameType), t));
+            });
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(signal);

@@ -10,6 +10,7 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.utils.ByteBufUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -30,19 +31,24 @@ public final class BinaryRoutingMetadata implements MetadataAware {
     private transient String routeKey;
     /** 参考{@link org.kin.rsocket.core.ServiceLocator} */
     private int serviceId;
+    /** 参考{@link GSVRoutingMetadata#handlerId()} */
     private int handlerId;
+    /** 标签 */
     private boolean[] flags = EMPTY_FLAGS;
+    /** route key里面的handler, 用于metrics */
+    private String handler;
 
     public static BinaryRoutingMetadata of(GSVRoutingMetadata gsvRoutingMetadata) {
-        return of(gsvRoutingMetadata.genRoutingKey(), gsvRoutingMetadata.serviceId(), gsvRoutingMetadata.handlerId(), gsvRoutingMetadata.isSticky());
+        return of(gsvRoutingMetadata.genRoutingKey(), gsvRoutingMetadata.serviceId(), gsvRoutingMetadata.handlerId(), gsvRoutingMetadata.getHandler(), gsvRoutingMetadata.isSticky());
     }
 
-    public static BinaryRoutingMetadata of(String routeKey, int serviceId, int handlerId, boolean... flags) {
+    public static BinaryRoutingMetadata of(String routeKey, int serviceId, int handlerId, String handler, boolean... flags) {
         Preconditions.checkArgument(StringUtils.isNotBlank(routeKey), "routeKey must be not blank");
         BinaryRoutingMetadata inst = new BinaryRoutingMetadata();
         inst.routeKey = routeKey;
         inst.serviceId = serviceId;
         inst.handlerId = handlerId;
+        inst.handler = handler;
         if (Objects.nonNull(flags) && flags.length > 0) {
             inst.flags = flags;
         }
@@ -85,6 +91,10 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         for (boolean flag : flags) {
             byteBuf.writeBoolean(flag);
         }
+        //write hanlder
+        byte[] handlerBytes = handler.getBytes(StandardCharsets.UTF_8);
+        ByteBufUtils.writeRawVarInt32(byteBuf, handlerBytes.length);
+        byteBuf.writeBytes(handlerBytes);
         return byteBuf;
     }
 
@@ -97,6 +107,11 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         for (int i = 0; i < flagSize; i++) {
             flags[i] = byteBuf.readBoolean();
         }
+
+        int handlerBytesLen = ByteBufUtils.readRawVarInt32(byteBuf);
+        byte[] handlerBytes = new byte[handlerBytesLen];
+        byteBuf.readBytes(handlerBytes);
+        handler = new String(handlerBytes, StandardCharsets.UTF_8);
     }
 
     /**
@@ -134,6 +149,10 @@ public final class BinaryRoutingMetadata implements MetadataAware {
 
     public int getHandlerId() {
         return handlerId;
+    }
+
+    public String getHandler() {
+        return handler;
     }
 
     public boolean[] getFlags() {
