@@ -17,7 +17,6 @@ import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.core.*;
-import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
@@ -223,7 +222,7 @@ public final class RSocketServiceManager {
             writeLock.unlock();
         }
         //广播事件
-        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.CONNECTED));
+        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(AppStatusEvent.connected(appMetadata.getUuid()).toCloudEvent());
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
             responder.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
@@ -253,18 +252,18 @@ public final class RSocketServiceManager {
         }
 
         log.info(String.format("succeed to remove connection from application '%s'", appMetadata.getName()));
-        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(newAppStatusEvent(appMetadata, AppStatus.STOPPED));
+        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(AppStatusEvent.stopped(appMetadata.getUuid()).toCloudEvent());
         this.notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' offline now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
     /**
      * 获取所有app names
      */
-    public Collection<String> getAllAppNames() {
+    public Set<String> getAllAppNames() {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return Collections.unmodifiableCollection(appResponders.keySet());
+            return Collections.unmodifiableSet(appResponders.keySet());
         } finally {
             readLock.unlock();
         }
@@ -406,13 +405,6 @@ public final class RSocketServiceManager {
         } finally {
             readLock.unlock();
         }
-    }
-
-    /**
-     * 创建{@link AppStatusEvent} cloud event
-     */
-    private CloudEventData<AppStatusEvent> newAppStatusEvent(AppMetadata appMetadata, AppStatus status) {
-        return AppStatusEvent.of(appMetadata.getUuid(), status).toCloudEvent();
     }
 
     /**

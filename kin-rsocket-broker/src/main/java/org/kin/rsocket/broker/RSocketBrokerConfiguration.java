@@ -269,4 +269,11 @@ public class RSocketBrokerConfiguration {
         //根据应用区分监控指标
         return registry -> registry.config().commonTags("application", "kin-rsocket-broker-".concat(springAppName));
     }
+
+    //----------------------------------------------conf----------------------------------------------
+    @Bean
+    public ConfWatcher confWatcher() {
+        return new ConfWatcher();
+    }
+
 }
