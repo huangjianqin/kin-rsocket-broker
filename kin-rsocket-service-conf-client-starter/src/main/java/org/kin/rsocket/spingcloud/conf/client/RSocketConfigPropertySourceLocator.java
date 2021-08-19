@@ -89,7 +89,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
             }
         }
 
-        String errorMsg = "Please setup spring.application.name, kin.rsocket.jwt-token and kin.rsocket.brokers in application.yml";
+        String errorMsg = "Please setup spring.application.name, kin.rsocket.jwt-token and kin.rsocket.brokers in bootstrap.yml";
         log.error(errorMsg);
         throw new RuntimeException(errorMsg);
     }
