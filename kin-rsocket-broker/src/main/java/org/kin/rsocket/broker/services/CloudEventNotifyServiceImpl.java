@@ -19,7 +19,6 @@ public class CloudEventNotifyServiceImpl implements CloudEventNotifyService {
     @Autowired
     private RSocketServiceManager serviceManager;
 
-
     @Override
     public Mono<Void> notify(String appId, String cloudEventJson) {
         BrokerResponder responder = serviceManager.getByUUID(appId);

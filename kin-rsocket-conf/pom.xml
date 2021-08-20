@@ -14,6 +14,7 @@
         <module>kin-rsocket-conf-api</module>
         <module>kin-rsocket-conf-memory-starter</module>
         <module>kin-rsocket-conf-h2-starter</module>
+        <module>kin-rsocket-conf-redis-starter</module>
     </modules>
 
     <dependencies>
@@ -29,6 +30,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

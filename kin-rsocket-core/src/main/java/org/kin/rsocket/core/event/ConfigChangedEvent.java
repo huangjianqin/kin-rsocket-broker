@@ -20,7 +20,7 @@ public final class ConfigChangedEvent implements CloudEventSupport {
     /** event time(millis) */
     private long time;
 
-    public ConfigChangedEvent() {
+    private ConfigChangedEvent() {
         this.id = UUID.randomUUID().toString();
         this.time = System.currentTimeMillis();
     }

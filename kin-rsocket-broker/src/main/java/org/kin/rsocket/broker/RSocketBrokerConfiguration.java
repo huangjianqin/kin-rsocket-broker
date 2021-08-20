@@ -7,11 +7,13 @@ import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.kin.rsocket.broker.controller.*;
 import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
+import org.kin.rsocket.broker.services.CloudEventNotifyServiceImpl;
 import org.kin.rsocket.broker.services.HealthService;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
+import org.kin.rsocket.core.event.CloudEventNotifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -235,6 +237,11 @@ public class RSocketBrokerConfiguration {
     @Bean
     public HealthService healthService() {
         return new HealthService();
+    }
+
+    @Bean
+    public CloudEventNotifyService cloudEventNotifyService() {
+        return new CloudEventNotifyServiceImpl();
     }
 
     //----------------------------------------------controller----------------------------------------------
