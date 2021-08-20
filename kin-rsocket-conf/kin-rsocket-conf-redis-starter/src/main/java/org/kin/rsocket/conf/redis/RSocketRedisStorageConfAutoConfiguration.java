@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
  * @date 2021/8/20
  */
 @RSocketConfDiamondConfiguration
-public class RsocketRedisStorageConfAutoConfiguration {
+public class RSocketRedisStorageConfAutoConfiguration {
     @Bean
     @ConditionalOnProperty("spring.redis.port")
     public ConfDiamond configurationService() {

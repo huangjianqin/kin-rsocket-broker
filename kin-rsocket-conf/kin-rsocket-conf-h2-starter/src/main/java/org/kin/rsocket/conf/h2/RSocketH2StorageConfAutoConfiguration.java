@@ -14,7 +14,7 @@ import java.io.File;
  * @date 2021/4/3
  */
 @RSocketConfDiamondConfiguration
-public class RsocketH2StorageConfAutoConfiguration {
+public class RSocketH2StorageConfAutoConfiguration {
     @Bean
     @ConditionalOnProperty("kin.rsocket.broker.conf.h2.dbPath")
     public ConfDiamond configurationService(@Value("${kin.rsocket.broker.conf.h2.dbPath}") String dbPath) {

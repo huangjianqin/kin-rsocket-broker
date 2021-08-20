@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
  * @date 2021/4/2
  */
 @RSocketConfDiamondConfiguration
-public class RsocketMemoryStorageConfAutoConfiguration {
+public class RSocketMemoryStorageConfAutoConfiguration {
     /**
      * 默认基于内存的配置中心实现
      */

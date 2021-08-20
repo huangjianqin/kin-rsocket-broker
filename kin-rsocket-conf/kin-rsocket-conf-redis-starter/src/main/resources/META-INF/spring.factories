@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.conf.redis.RsocketRedisStorageConfAutoConfiguration
+org.kin.rsocket.conf.redis.RSocketRedisStorageConfAutoConfiguration
