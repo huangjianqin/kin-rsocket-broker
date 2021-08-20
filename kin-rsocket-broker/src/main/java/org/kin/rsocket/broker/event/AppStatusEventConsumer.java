@@ -12,6 +12,8 @@ import org.kin.rsocket.core.utils.UriUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 /**
  * @author huangjianqin
  * @date 2021/3/30
@@ -19,7 +21,7 @@ import reactor.core.publisher.Mono;
 public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> {
     @Autowired
     private RSocketServiceManager serviceManager;
-    @Autowired
+    @Autowired(required = false)
     private ConfWatcher confWatcher;
 
     @Override
@@ -33,10 +35,12 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                     AppMetadata appMetadata = responder.getAppMetadata();
                     if (event.getStatus().equals(AppStatus.CONNECTED)) {
                         //app connected
-                        String autoRefreshKey = "auto-refresh";
-                        if ("true".equalsIgnoreCase(appMetadata.getMetadata(autoRefreshKey))) {
-                            //broker主动监听配置变化, 并通知app refresh context
-                            confWatcher.listenConfChange(appMetadata);
+                        if (Objects.nonNull(confWatcher)) {
+                            String autoRefreshKey = "auto-refresh";
+                            if ("true".equalsIgnoreCase(appMetadata.getMetadata(autoRefreshKey))) {
+                                //broker主动监听配置变化, 并通知app refresh context
+                                confWatcher.listenConfChange(appMetadata);
+                            }
                         }
                     } else if (event.getStatus().equals(AppStatus.SERVING)) {
                         //app serving
@@ -48,7 +52,9 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                         //app stopped
                         responder.hideServices();
                         responder.setAppStatus(AppStatus.STOPPED);
-                        confWatcher.tryRemoveInvalidListen();
+                        if (Objects.nonNull(confWatcher)) {
+                            confWatcher.tryRemoveInvalidListen();
+                        }
                     }
                 }
             }

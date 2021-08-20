@@ -23,6 +23,12 @@
             <artifactId>kin-rsocket-broker-standalone-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-conf-memory-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

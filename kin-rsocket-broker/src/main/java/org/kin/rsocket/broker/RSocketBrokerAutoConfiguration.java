@@ -9,6 +9,7 @@ import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
 import org.kin.rsocket.broker.services.CloudEventNotifyServiceImpl;
 import org.kin.rsocket.broker.services.HealthService;
+import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.event.CloudEventConsumer;
@@ -35,12 +36,15 @@ import java.security.cert.Certificate;
 import java.util.List;
 
 /**
+ * 设计成auto configuration, 是为了参与auto configuration排序, 进而让配置中心的auto configuration排在前面, 优先加载
+ *
  * @author huangjianqin
  * @date 2021/2/15
  */
 @Configuration
+@ConditionalOnBean(RSocketBrokerMarkerConfiguration.Marker.class)
 @EnableConfigurationProperties(RSocketBrokerProperties.class)
-public class RSocketBrokerConfiguration {
+public class RSocketBrokerAutoConfiguration {
     /**
      * 接受tips的flux
      */
@@ -91,6 +95,7 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(ConfDiamond.class)
     public BrokerConfigChangedEventConsumer brokerConfigChangedEventConsumer() {
         return new BrokerConfigChangedEventConsumer();
     }
@@ -251,6 +256,7 @@ public class RSocketBrokerConfiguration {
     }
 
     @Bean
+    @ConditionalOnBean(ConfDiamond.class)
     public ConfigController configController() {
         return new ConfigController();
     }
@@ -279,6 +285,7 @@ public class RSocketBrokerConfiguration {
 
     //----------------------------------------------conf----------------------------------------------
     @Bean
+    @ConditionalOnBean(ConfDiamond.class)
     public ConfWatcher confWatcher() {
         return new ConfWatcher();
     }

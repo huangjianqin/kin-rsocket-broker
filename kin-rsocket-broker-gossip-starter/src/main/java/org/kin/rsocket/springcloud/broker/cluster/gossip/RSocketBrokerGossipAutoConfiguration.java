@@ -1,8 +1,10 @@
 package org.kin.rsocket.springcloud.broker.cluster.gossip;
 
+import org.kin.rsocket.broker.RSocketBrokerAutoConfiguration;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.BrokerManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -19,6 +21,7 @@ import org.springframework.core.annotation.Order;
 @ConditionalOnProperty(prefix = "kin.rsocket.broker.gossip", name = {"port", "seeds[0]"})
 @Configuration
 @EnableConfigurationProperties(RSocketBrokerGossipProperties.class)
+@AutoConfigureAfter(RSocketBrokerAutoConfiguration.class)
 public class RSocketBrokerGossipAutoConfiguration {
     /**
      * 配置了gossip cluster绑定端口, 并且至少有一个seed, 也就是member, 才有效启动gossip 集群模式

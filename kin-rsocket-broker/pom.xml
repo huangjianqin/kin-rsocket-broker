@@ -26,7 +26,7 @@
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-conf-memory-starter</artifactId>
+            <artifactId>kin-rsocket-conf-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 

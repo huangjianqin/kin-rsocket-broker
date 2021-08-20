@@ -11,6 +11,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import({RSocketBrokerConfiguration.class})
+@Import({RSocketBrokerMarkerConfiguration.class})
 public @interface EnableRSocketBroker {
 }

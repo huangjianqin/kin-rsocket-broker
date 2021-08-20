@@ -2,10 +2,10 @@ package org.kin.rsocket.conf.h2;
 
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.conf.ConfDiamond;
+import org.kin.rsocket.conf.RSocketConfDiamondConfiguration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.io.File;
 
@@ -13,7 +13,7 @@ import java.io.File;
  * @author huangjianqin
  * @date 2021/4/3
  */
-@Configuration
+@RSocketConfDiamondConfiguration
 public class RsocketH2StorageConfAutoConfiguration {
     @Bean
     @ConditionalOnProperty("kin.rsocket.broker.conf.h2.dbPath")
