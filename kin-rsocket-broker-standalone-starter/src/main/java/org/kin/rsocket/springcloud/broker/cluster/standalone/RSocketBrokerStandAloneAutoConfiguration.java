@@ -1,7 +1,7 @@
 package org.kin.rsocket.springcloud.broker.cluster.standalone;
 
 import org.kin.rsocket.broker.RSocketBrokerAutoConfiguration;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -15,11 +15,11 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter(RSocketBrokerAutoConfiguration.class)
 public class RSocketBrokerStandAloneAutoConfiguration {
     /**
-     * 默认{@link BrokerManager}实现, 可通过maven依赖配置其他starter来使用自定义{@link BrokerManager}实现
+     * 默认{@link RSocketBrokerManager}实现, 可通过maven依赖配置其他starter来使用自定义{@link RSocketBrokerManager}实现
      */
     @Bean
-    @ConditionalOnMissingBean(BrokerManager.class)
-    public BrokerManager brokerManager() {
+    @ConditionalOnMissingBean(RSocketBrokerManager.class)
+    public RSocketBrokerManager brokerManager() {
         return new StandAloneBrokerManager();
     }
 }

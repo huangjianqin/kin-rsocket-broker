@@ -3,9 +3,9 @@ package org.kin.rsocket.springcloud.broker.cluster.standalone;
 import io.micrometer.core.instrument.Metrics;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
-import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
+import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventData;
@@ -24,7 +24,7 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public final class StandAloneBrokerManager extends AbstractBrokerManager implements BrokerManager {
+public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager {
     private static final Logger log = LoggerFactory.getLogger(StandAloneBrokerManager.class);
     /** 本机broker */
     private BrokerInfo localBrokerInfo;

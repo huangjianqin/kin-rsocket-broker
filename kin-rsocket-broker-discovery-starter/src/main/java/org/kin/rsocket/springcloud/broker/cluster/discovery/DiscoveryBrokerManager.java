@@ -2,9 +2,9 @@ package org.kin.rsocket.springcloud.broker.cluster.discovery;
 
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
-import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
+import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/8/12
  */
-public class DiscoveryBrokerManager extends AbstractBrokerManager implements BrokerManager, DisposableBean {
+public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(DiscoveryBrokerManager.class);
 
     /** 每N秒刷新一下rsocket broker集群信息 */

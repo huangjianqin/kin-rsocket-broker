@@ -14,9 +14,9 @@ import org.kin.framework.event.HandleEvent;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
-import org.kin.rsocket.broker.cluster.AbstractBrokerManager;
+import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventBuilder;
@@ -41,7 +41,7 @@ import java.util.stream.Stream;
  * @date 2021/3/29
  */
 @HandleEvent
-public class GossipBrokerManager extends AbstractBrokerManager implements BrokerManager, ClusterMessageHandler, DisposableBean {
+public class GossipBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, ClusterMessageHandler, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
     /** 请求新增broker数据(也就是{@link BrokerInfo})的gossip header key */
     private static final String BROKER_INFO_HEADER = "brokerInfo";

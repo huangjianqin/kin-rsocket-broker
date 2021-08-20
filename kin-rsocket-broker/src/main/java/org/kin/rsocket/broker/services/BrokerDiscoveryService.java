@@ -3,7 +3,7 @@ package org.kin.rsocket.broker.services;
 import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.discovery.DiscoveryService;
@@ -23,7 +23,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
     @Autowired
     private RSocketServiceManager serviceManager;
     @Autowired
-    private BrokerManager rsocketBrokerManager;
+    private RSocketBrokerManager rsocketBrokerManager;
 
     @Override
     public Flux<RSocketServiceInstance> getInstances(String serviceId) {

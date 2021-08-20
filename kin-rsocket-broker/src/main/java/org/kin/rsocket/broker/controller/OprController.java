@@ -3,7 +3,7 @@ package org.kin.rsocket.broker.controller;
 import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
@@ -33,7 +33,7 @@ public class OprController {
     @Autowired
     private RSocketServiceManager serviceManager;
     @Autowired
-    private BrokerManager brokerManager;
+    private RSocketBrokerManager brokerManager;
 
     @RequestMapping("/services")
     public Mono<Collection<ServiceLocator>> services() {

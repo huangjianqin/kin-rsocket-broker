@@ -3,7 +3,7 @@ package org.kin.rsocket.broker;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.broker.controller.*;
 import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.BrokerDiscoveryService;
@@ -135,7 +135,7 @@ public class RSocketBrokerAutoConfiguration {
                                                 @Autowired RSocketFilterChain chain,
                                                 @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
                                                 @Autowired AuthenticationService authenticationService,
-                                                @Autowired BrokerManager brokerManager,
+                                                @Autowired RSocketBrokerManager brokerManager,
                                                 @Autowired RSocketServiceMeshInspector serviceMeshInspector,
                                                 @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
                                                 @Autowired ProviderRouter router,

@@ -7,7 +7,7 @@ import org.kin.rsocket.core.event.CloudEventData;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public abstract class AbstractBrokerManager implements BrokerManager {
+public abstract class AbstractRSocketBrokerManager implements RSocketBrokerManager {
     /**
      * 处理通过gossip广播的cloud event
      */

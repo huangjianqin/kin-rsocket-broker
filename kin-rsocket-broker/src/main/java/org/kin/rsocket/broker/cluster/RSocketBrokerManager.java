@@ -11,7 +11,7 @@ import java.util.Collection;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public interface BrokerManager extends Closeable {
+public interface RSocketBrokerManager extends Closeable {
     /**
      * broker信息发生变更时, 会触发subscriber操作(subscribe数据为所有broker信息)
      */

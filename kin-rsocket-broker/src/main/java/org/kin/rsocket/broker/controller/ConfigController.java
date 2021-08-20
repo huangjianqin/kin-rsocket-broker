@@ -6,7 +6,7 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.RSocketServiceManager;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -39,7 +39,7 @@ public class ConfigController {
     @Autowired
     private RSocketBrokerProperties brokerConfig;
     @Autowired
-    private BrokerManager brokerManager;
+    private RSocketBrokerManager brokerManager;
 
     /**
      * 刷新指定app配置

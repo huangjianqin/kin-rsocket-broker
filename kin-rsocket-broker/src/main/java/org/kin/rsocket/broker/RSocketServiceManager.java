@@ -15,7 +15,7 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
-import org.kin.rsocket.broker.cluster.BrokerManager;
+import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -52,7 +52,7 @@ public final class RSocketServiceManager {
     /** 监听p2p服务实例变化 */
     private final Sinks.Many<String> p2pServiceNotificationSink;
     private final AuthenticationService authenticationService;
-    private final BrokerManager brokerManager;
+    private final RSocketBrokerManager brokerManager;
     private final RSocketServiceMeshInspector serviceMeshInspector;
     private final boolean authRequired;
     private final UpstreamCluster upstreamBrokers;
@@ -77,7 +77,7 @@ public final class RSocketServiceManager {
     public RSocketServiceManager(RSocketFilterChain filterChain,
                                  Sinks.Many<String> notificationSink,
                                  AuthenticationService authenticationService,
-                                 BrokerManager brokerManager,
+                                 RSocketBrokerManager brokerManager,
                                  RSocketServiceMeshInspector serviceMeshInspector,
                                  boolean authRequired,
                                  UpstreamCluster upstreamBrokers,
