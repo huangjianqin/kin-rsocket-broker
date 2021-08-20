@@ -8,7 +8,7 @@ import org.kin.rsocket.core.RSocketMimeType;
  * @author huangjianqin
  * @date 2021/3/26
  */
-@SPI
+@SPI(key = "codec")
 public interface Codec {
     /**
      * rsocket mime type

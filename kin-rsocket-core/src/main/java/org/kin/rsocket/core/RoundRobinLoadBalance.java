@@ -9,7 +9,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RoundRobinSelector implements Selector {
+public class RoundRobinLoadBalance implements UpstreamRSocketLoadBalance {
     /** 计数器 */
     private int counter;
 

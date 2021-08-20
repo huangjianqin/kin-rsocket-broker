@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author huangjianqin
  * @date 2021/5/7
  */
-public class WeightedRandomRouter implements Router {
+public class WeightedRandomRouter implements ProviderRouter {
     /** key -> serviceId, value -> list(instanceId, 也就是hash(app uuid) (会重复的, 数量=权重, 用于随机获取对应的instanceId)) */
     private final ListMultimap<Integer, Integer> serviceId2InstanceIds = MultimapBuilder.hashKeys().arrayListValues().build();
 

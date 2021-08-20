@@ -56,7 +56,7 @@ public final class RSocketServiceManager {
     private final RSocketServiceMeshInspector serviceMeshInspector;
     private final boolean authRequired;
     private final UpstreamCluster upstreamBrokers;
-    private final Router router;
+    private final ProviderRouter router;
 
     /** 修改数据需加锁 */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -81,7 +81,7 @@ public final class RSocketServiceManager {
                                  RSocketServiceMeshInspector serviceMeshInspector,
                                  boolean authRequired,
                                  UpstreamCluster upstreamBrokers,
-                                 Router router,
+                                 ProviderRouter router,
                                  Sinks.Many<String> p2pServiceNotificationSink) {
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;

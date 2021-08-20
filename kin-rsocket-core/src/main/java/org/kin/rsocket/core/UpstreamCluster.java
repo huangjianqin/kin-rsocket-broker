@@ -69,7 +69,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         this.serviceName = serviceName;
         this.version = version;
 
-        this.loadBalanceRequester = LoadBalanceRsocketRequester.roundRobin(ServiceLocator.gsv(group, serviceName, version), urisSink.asFlux(), requesterSupport);
+        this.loadBalanceRequester = new LoadBalanceRsocketRequester(ServiceLocator.gsv(group, serviceName, version), urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {
             refreshUris(uris);
         }

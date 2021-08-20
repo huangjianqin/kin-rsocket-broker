@@ -64,7 +64,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     private static final Scheduler REFRESH_SCHEDULER = Schedulers.newSingle("LoadBalanceRequester-RefreshRSockets");
 
     /** load balance rule */
-    private final Selector selector;
+    private final UpstreamRSocketLoadBalance loadBalance;
     /** service id */
     private final String serviceId;
     /** 上一次refresh uri 时间 */
@@ -90,30 +90,21 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /** 首次创建时, 用于等待连接建立成功, 然后释放掉 */
     private volatile CountDownLatch latch = new CountDownLatch(1);
 
-    /**
-     * load balance rule为random的requester
-     */
-    public static LoadBalanceRsocketRequester random(String serviceId,
-                                                     Flux<Collection<String>> urisFactory,
-                                                     RSocketRequesterSupport requesterSupport) {
-        return new LoadBalanceRsocketRequester(serviceId, Selector.RANDOM, urisFactory, requesterSupport);
-    }
-
-    /**
-     * load balance rule为round robin的requester
-     */
-    public static LoadBalanceRsocketRequester roundRobin(String serviceId,
-                                                         Flux<Collection<String>> urisFactory,
-                                                         RSocketRequesterSupport requesterSupport) {
-        return new LoadBalanceRsocketRequester(serviceId, new RoundRobinSelector(), urisFactory, requesterSupport);
+    public LoadBalanceRsocketRequester(String serviceId,
+                                       Flux<Collection<String>> urisFactory,
+                                       RSocketRequesterSupport requesterSupport) {
+        this(serviceId, null, urisFactory, requesterSupport);
     }
 
     public LoadBalanceRsocketRequester(String serviceId,
-                                       Selector selector,
+                                       UpstreamRSocketLoadBalanceStrategy loadBalanceStrategy,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
         this.serviceId = serviceId;
-        this.selector = selector;
+        if (Objects.isNull(loadBalanceStrategy)) {
+            loadBalanceStrategy = tryLoadLoadBalanceStrategy();
+        }
+        this.loadBalance = loadBalanceStrategy.strategy();
         this.requesterSupport = requesterSupport;
         if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceId) ||
                 !RSocketServiceRegistry.exposedServices().isEmpty()) {
@@ -134,6 +125,19 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         startHealthCheck();
         //start check and reconnect unhealthy uris
         startUnhealthyUrisCheck();
+    }
+
+    /**
+     * 通过kin-spi机制加载, 如果没有, 则默认round-robin
+     */
+    private UpstreamRSocketLoadBalanceStrategy tryLoadLoadBalanceStrategy() {
+        UpstreamRSocketLoadBalanceStrategy strategy = RSocketAppContext.LOADER.getAdaptiveExtension(UpstreamRSocketLoadBalanceStrategy.class);
+        if (Objects.isNull(strategy)) {
+            //默认round-robin
+            strategy = UpstreamRSocketLoadBalanceStrategy.ROUND_ROBIN;
+        }
+
+        return strategy;
     }
 
     /** 刷新Rsocket实例 */
@@ -229,12 +233,12 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     }
 
     /**
-     * 根据{@link LoadBalanceRsocketRequester#selector}选择一个有效的RSocket
+     * 根据{@link LoadBalanceRsocketRequester#loadBalance}选择一个有效的RSocket
      */
     private Mono<RSocket> next() {
         return Mono.fromSupplier(() -> {
             awaitFirstConnect();
-            RSocket selected = selector.select(new ArrayList<>(activeRSockets.values()));
+            RSocket selected = loadBalance.select(new ArrayList<>(activeRSockets.values()));
             if (Objects.isNull(selected)) {
                 throw new NoAvailableConnectionException(serviceId);
             }

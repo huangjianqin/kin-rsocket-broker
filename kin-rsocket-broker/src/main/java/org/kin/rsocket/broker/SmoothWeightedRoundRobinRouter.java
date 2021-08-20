@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/5/7
  */
-public class SmoothWeightedRoundRobinRouter implements Router {
+public class SmoothWeightedRoundRobinRouter implements ProviderRouter {
     /** key -> serviceId, value -> list(RouterWeight) */
     private final ListMultimap<Integer, RouterWeight> serviceId2InstanceRouterWeights = MultimapBuilder.hashKeys().arrayListValues().build();
 

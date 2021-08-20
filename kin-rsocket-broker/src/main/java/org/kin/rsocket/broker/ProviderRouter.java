@@ -5,12 +5,12 @@ import org.kin.rsocket.core.ServiceLocator;
 import java.util.Collection;
 
 /**
- * 路由规则
+ * provider路由规则
  *
  * @author huangjianqin
  * @date 2021/5/7
  */
-public interface Router {
+public interface ProviderRouter {
     /**
      * 根据实现的路由规则选择出一个app instance Id
      * {@link RSocketServiceManager#lock}加锁下完成

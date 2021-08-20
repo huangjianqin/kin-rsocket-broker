@@ -131,7 +131,7 @@ public class RSocketBrokerConfiguration {
                                                 @Autowired BrokerManager brokerManager,
                                                 @Autowired RSocketServiceMeshInspector serviceMeshInspector,
                                                 @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
-                                                @Autowired Router router,
+                                                @Autowired ProviderRouter router,
                                                 @Autowired @Qualifier("p2pServiceNotificationSink") Sinks.Many<String> p2pServiceNotificationSink) {
         return new RSocketServiceManager(
                 chain,
@@ -193,7 +193,7 @@ public class RSocketBrokerConfiguration {
     @Bean("router")
     @ConditionalOnMissingBean
     @ConditionalOnExpression("'roundRobin'.equals('${kin.rsocket.broker.route}')")
-    public Router smoothWeightedRoundRobinRouter() {
+    public ProviderRouter smoothWeightedRoundRobinRouter() {
         return new SmoothWeightedRoundRobinRouter();
     }
 
@@ -204,7 +204,7 @@ public class RSocketBrokerConfiguration {
     @Bean("router")
     @ConditionalOnMissingBean
     @ConditionalOnExpression("'random'.equals('${kin.rsocket.broker.route:random}')")
-    public Router weightedRandomRouter() {
+    public ProviderRouter weightedRandomRouter() {
         return new WeightedRandomRouter();
     }
 
