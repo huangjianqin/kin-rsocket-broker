@@ -150,7 +150,16 @@ public class RequesterProxy implements InvocationHandler {
                         Codecs.INSTANCE.encodeResult(obj, finalMethodMetadata.getDataEncodingType()),
                         finalMethodMetadata.getCompositeMetadataBytes());
             });
-            Flux<Payload> payloads = selector.select(serviceId).requestChannel(payloadFlux);
+            Flux<Payload> payloads = selector.select(serviceId)
+                    .requestChannel(payloadFlux)
+                    .name(methodMetadata.getFullName())
+                    .metrics()
+                    .timeout(timeout)
+                    .doOnError(TimeoutException.class,
+                            e -> {
+                                metricsTimeout(finalMethodMetadata);
+                                log.error(String.format("Timeout to call %s in %s seconds", finalMethodMetadata.getFullName(), timeout), e);
+                            });
             //handle return
             Flux<Object> fluxReturn = payloads.concatMap(payload -> {
                 try {
@@ -224,7 +233,8 @@ public class RequesterProxy implements InvocationHandler {
      * requestResponse请求封装, 用于子类扩展
      */
     protected Mono<Payload> requestResponse(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
-        return selector.select(serviceId).requestResponse(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
+        return selector.select(serviceId)
+                .requestResponse(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
                 .name(methodMetadata.getFullName())
                 .metrics()
                 .timeout(timeout)
@@ -239,14 +249,32 @@ public class RequesterProxy implements InvocationHandler {
      * fireAndForget请求封装, 用于子类扩展
      */
     protected Mono<Void> fireAndForget(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
-        return selector.select(serviceId).fireAndForget(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes));
+        return selector.select(serviceId)
+                .fireAndForget(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
+                .name(methodMetadata.getFullName())
+                .metrics()
+                .timeout(timeout)
+                .doOnError(TimeoutException.class,
+                        e -> {
+                            metricsTimeout(methodMetadata);
+                            log.error(String.format("Timeout to call %s in %s seconds", methodMetadata.getFullName(), timeout), e);
+                        });
     }
 
     /**
      * requestStream请求封装, 用于子类扩展
      */
     protected Flux<Payload> requestStream(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
-        return selector.select(serviceId).requestStream(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes));
+        return selector.select(serviceId)
+                .requestStream(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
+                .name(methodMetadata.getFullName())
+                .metrics()
+                .timeout(timeout)
+                .doOnError(TimeoutException.class,
+                        e -> {
+                            metricsTimeout(methodMetadata);
+                            log.error(String.format("Timeout to call %s in %s seconds", methodMetadata.getFullName(), timeout), e);
+                        });
     }
 
     /**
