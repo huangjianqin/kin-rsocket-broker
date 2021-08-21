@@ -1,11 +1,10 @@
 package org.kin.rsocket.springcloud.service;
 
 import brave.Tracing;
-import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.RSocketBinderCustomizer;
-import org.kin.rsocket.core.RSocketService;
-import org.kin.rsocket.core.RSocketServiceAnnoProcessor;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.MetricsServicePrometheusImpl;
 import org.kin.rsocket.service.RSocketRequesterSupportCustomizer;
 import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.service.RSocketServiceRequester;
@@ -15,6 +14,7 @@ import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.context.WebServerInitializedEvent;
@@ -95,14 +95,6 @@ public class RSocketServiceConfiguration {
     }
 
     /**
-     * 自带的health checker rsocket service
-     */
-    @Bean
-    public HealthService healthService() {
-        return new HealthService();
-    }
-
-    /**
      * 用于初始化{@link RSocketAppContext}端口赋值
      */
     @SuppressWarnings("ConstantConditions")
@@ -126,6 +118,22 @@ public class RSocketServiceConfiguration {
     @Bean
     public JwtTokenFailureAnalyzer jwtTokenFailureAnalyzer() {
         return new JwtTokenFailureAnalyzer();
+    }
+
+    //----------------------------internal service----------------------------
+
+    /**
+     * 自带的health checker rsocket service
+     */
+    @Bean
+    public HealthService healthService() {
+        return new HealthService();
+    }
+
+    @Bean
+    @ConditionalOnBean(PrometheusMeterRegistry.class)
+    public MetricsService metricsService() {
+        return new MetricsServicePrometheusImpl();
     }
 
     //----------------------------service reference----------------------------

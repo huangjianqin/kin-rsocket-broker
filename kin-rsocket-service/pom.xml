@@ -32,6 +32,11 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- zipkin -->
         <dependency>
             <groupId>io.zipkin.brave</groupId>

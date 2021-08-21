@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'kin-rsocket-brokers'
+    metrics_path: /metrics/prometheus/broker/targets
+    static_configs:
+      - targets: [ "localhost:9998" ]
+  - job_name: 'kin-rsocket-apps'
+    metrics_path: /metrics/prometheus/app/targets
+    static_configs:
+      - targets: [ "localhost:9998" ]

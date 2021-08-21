@@ -276,6 +276,10 @@ public class RSocketBrokerAutoConfiguration {
         return new RSocketServiceQueryController();
     }
 
+    public MetricsScrapeController metricsScrapeController() {
+        return new MetricsScrapeController();
+    }
+
     //----------------------------------------------metrics----------------------------------------------
     @Bean
     MeterRegistryCustomizer<MeterRegistry> defaultRegistryCustomizer(@Value("${spring.application.name}") String springAppName) {
