@@ -31,7 +31,7 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
             String appId = event.getId();
             if (appId.equals(UriUtils.getAppUUID(cloudEventData.getAttributes().getSource()))) {
                 BrokerResponder responder = serviceManager.getByUUID(appId);
-                if (responder != null) {
+                if (Objects.nonNull(responder)) {
                     AppMetadata appMetadata = responder.getAppMetadata();
                     if (event.getStatus().equals(AppStatus.CONNECTED)) {
                         //app connected
@@ -52,6 +52,14 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                         //app stopped
                         responder.hideServices();
                         responder.setAppStatus(AppStatus.STOPPED);
+                        if (Objects.nonNull(confWatcher)) {
+                            confWatcher.tryRemoveInvalidListen();
+                        }
+                    }
+                } else {
+                    //upstream断开连接时, 先移除responder, 再广播事件, 所以此次要特殊处理一下
+                    if (event.getStatus().equals(AppStatus.STOPPED)) {
+                        //app stopped
                         if (Objects.nonNull(confWatcher)) {
                             confWatcher.tryRemoveInvalidListen();
                         }
