@@ -23,6 +23,7 @@
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
             <version>${byte-buddy.version}</version>
+            <!-- 因为核心代码只用到btyebuddy注解, 所以在不使用bytebuddy下, app也可以运行成功 -->
             <optional>true</optional>
         </dependency>
 
