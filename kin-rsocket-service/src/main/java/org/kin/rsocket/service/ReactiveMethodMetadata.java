@@ -95,8 +95,9 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         serviceId = MurmurHash3.hash32(ServiceLocator.gsv(this.group, this.service, this.version));
         handlerId = MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
         //byte buffer binary encoding
+        Class<?>[] parameterTypes = method.getParameterTypes();
         if (paramCount == 1) {
-            Class<?> parameterType = method.getParameterTypes()[0];
+            Class<?> parameterType = parameterTypes[0];
             if (BINARY_CLASS_LIST.contains(parameterType)) {
                 this.dataEncodingType = RSocketMimeType.BINARY;
             }
@@ -104,9 +105,9 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         //初始化方法调用的元数据
         initCompositeMetadata(origin);
         //检查第一二个参数是否是Flux
-        if (paramCount == 1 && Flux.class.isAssignableFrom(method.getParameterTypes()[0])) {
+        if (paramCount == 1 && Flux.class.isAssignableFrom(parameterTypes[0])) {
             frameType = FrameType.REQUEST_CHANNEL;
-        } else if (paramCount == 2 && Flux.class.isAssignableFrom(method.getParameterTypes()[1])) {
+        } else if (paramCount == 2 && Flux.class.isAssignableFrom(parameterTypes[1])) {
             frameType = FrameType.REQUEST_CHANNEL;
         }
         if (frameType != null && frameType == FrameType.REQUEST_CHANNEL) {
