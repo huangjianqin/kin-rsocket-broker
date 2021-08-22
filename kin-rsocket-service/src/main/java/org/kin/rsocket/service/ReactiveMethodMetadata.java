@@ -50,7 +50,7 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /** sticky */
     private boolean sticky;
     /** rsocket frame type */
-    private FrameType rsocketFrameType;
+    private FrameType frameType;
     /** parameters encoding type */
     private RSocketMimeType dataEncodingType;
     /** accept encoding */
@@ -105,23 +105,23 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         initCompositeMetadata(origin);
         //检查第一二个参数是否是Flux
         if (paramCount == 1 && Flux.class.isAssignableFrom(method.getParameterTypes()[0])) {
-            rsocketFrameType = FrameType.REQUEST_CHANNEL;
+            frameType = FrameType.REQUEST_CHANNEL;
         } else if (paramCount == 2 && Flux.class.isAssignableFrom(method.getParameterTypes()[1])) {
-            rsocketFrameType = FrameType.REQUEST_CHANNEL;
+            frameType = FrameType.REQUEST_CHANNEL;
         }
-        if (rsocketFrameType != null && rsocketFrameType == FrameType.REQUEST_CHANNEL) {
+        if (frameType != null && frameType == FrameType.REQUEST_CHANNEL) {
             if (Mono.class.isAssignableFrom(returnType)) {
                 monoChannel = true;
             }
         }
         //参数不含Flux
-        if (rsocketFrameType == null) {
+        if (frameType == null) {
             if (returnType.equals(Void.TYPE) || (returnType.equals(Mono.class) && inferredClassForReturn.equals(Void.TYPE))) {
-                rsocketFrameType = FrameType.REQUEST_FNF;
+                frameType = FrameType.REQUEST_FNF;
             } else if (Flux.class.isAssignableFrom(returnType)) {
-                rsocketFrameType = FrameType.REQUEST_STREAM;
+                frameType = FrameType.REQUEST_STREAM;
             } else {
-                rsocketFrameType = FrameType.REQUEST_RESPONSE;
+                frameType = FrameType.REQUEST_RESPONSE;
             }
         }
 
@@ -133,7 +133,7 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
             metricsTags.add(Tag.of("version", this.version));
         }
         metricsTags.add(Tag.of("method", this.handler));
-        metricsTags.add(Tag.of("frame", this.rsocketFrameType.name()));
+        metricsTags.add(Tag.of("frame", this.frameType.name()));
     }
 
     /**
@@ -242,8 +242,8 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         return sticky;
     }
 
-    public FrameType getRsocketFrameType() {
-        return rsocketFrameType;
+    public FrameType getFrameType() {
+        return frameType;
     }
 
     public RSocketMimeType getDataEncodingType() {

@@ -125,7 +125,7 @@ public class RequesterProxy implements InvocationHandler {
         MutableContext mutableContext = new MutableContext();
         mutableContext.put(ReactiveMethodMetadata.class, methodMetadata);
 
-        if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_CHANNEL) {
+        if (methodMetadata.getFrameType() == FrameType.REQUEST_CHANNEL) {
             //request channel
             metrics(methodMetadata);
             Payload routePayload;
@@ -180,7 +180,7 @@ public class RequesterProxy implements InvocationHandler {
         } else {
             //body content
             ByteBuf paramBodyBytes = Codecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
-            if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_RESPONSE) {
+            if (methodMetadata.getFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
                 metrics(methodMetadata);
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
@@ -201,11 +201,11 @@ public class RequesterProxy implements InvocationHandler {
                     }
                 });
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
-            } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_FNF) {
+            } else if (methodMetadata.getFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
                 metrics(methodMetadata);
                 return fireAndForget(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes);
-            } else if (methodMetadata.getRsocketFrameType() == FrameType.REQUEST_STREAM) {
+            } else if (methodMetadata.getFrameType() == FrameType.REQUEST_STREAM) {
                 //request stream
                 metrics(methodMetadata);
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
@@ -224,7 +224,7 @@ public class RequesterProxy implements InvocationHandler {
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else {
                 ReferenceCountUtil.safeRelease(paramBodyBytes);
-                return Mono.error(new Exception("Unknown RSocket Frame type: " + methodMetadata.getRsocketFrameType().name()));
+                return Mono.error(new Exception("Unknown RSocket Frame type: " + methodMetadata.getFrameType().name()));
             }
         }
     }
