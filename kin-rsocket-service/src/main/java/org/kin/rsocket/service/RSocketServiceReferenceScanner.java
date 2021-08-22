@@ -29,7 +29,7 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
      * 注册filter, 指定classpath扫描策略
      */
     private void registerFilters() {
-        // 扫描@KinRpcReference注解的top-level class
+        // 扫描@RSocketServiceReference注解的top-level class
         addIncludeFilter(new AnnotationTypeFilter(RSocketServiceReference.class));
 
         // exclude package-info.java
@@ -75,14 +75,14 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
             return true;
         } else {
             warn("skipping RSocketServiceReferenceFactoryBean with name '" + beanName + "' and '"
-                    + beanDefinition.getBeanClassName() + "' Interface" + ". Bean already defined with the same name!");
+                    + beanDefinition.getBeanClassName() + "' interface" + ". bean already defined with the same name!");
             return false;
         }
     }
 
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
-        //@RSocketServiceReference && 接口 && top-level class, 即pulic class 或者 内部static类
+        //@RSocketServiceReference && 接口 && top-level class
         AnnotationMetadata metadata = beanDefinition.getMetadata();
         return metadata.getAnnotationTypes().contains(RSocketServiceReference.class.getName()) &&
                 metadata.isInterface() &&

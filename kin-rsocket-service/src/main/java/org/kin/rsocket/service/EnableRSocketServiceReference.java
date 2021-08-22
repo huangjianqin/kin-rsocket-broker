@@ -17,7 +17,7 @@ import java.lang.annotation.*;
 @Import(RSocketServiceReferenceRegistrar.class)
 public @interface EnableRSocketServiceReference {
     /**
-     * 指定扫描定义有@KinRpcReference的服务接口的classpath
+     * 指定扫描定义有{@link RSocketServiceReference}的服务接口的classpath
      */
     String[] basePackages() default {};
 

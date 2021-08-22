@@ -39,7 +39,7 @@ class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar 
     }
 
     /**
-     * 注册KinRpcReferenceScannerConfiguration bean
+     * 注册{@link RSocketServiceReferenceRegistryPostProcessor} bean
      */
     void registerScanner(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(RSocketServiceReferenceRegistryPostProcessor.class);
