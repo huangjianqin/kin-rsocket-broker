@@ -59,7 +59,7 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
         for (BeanDefinitionHolder holder : beanDefinitions) {
             GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
             //factory bean constructor args
-            definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName());
+            definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClass());
             //factory bean class
             definition.setBeanClass(RSocketServiceReferenceFactoryBean.class);
             //enable autowire

@@ -13,6 +13,7 @@ import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -268,7 +269,11 @@ public final class RSocketServiceReferenceBuilder<T> {
      * 构建requester proxy
      */
     private RequesterProxy buildRequesterProxy() {
-        return new RequesterProxy(this);
+        if (Objects.nonNull(tracing)) {
+            return new ZipkinRequesterProxy(this);
+        } else {
+            return new RequesterProxy(this);
+        }
     }
 
     /**
