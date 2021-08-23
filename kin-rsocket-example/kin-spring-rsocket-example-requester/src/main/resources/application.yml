@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: spring-rsocket-responder
+server:
+  port: 8089
+
+#logging
+logging:
+  level:
+    root: info

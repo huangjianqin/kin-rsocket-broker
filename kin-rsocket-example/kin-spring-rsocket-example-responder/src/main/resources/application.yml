@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: spring-rsocket-responder
+  rsocket:
+    server:
+      port: 9000
+      transport: tcp
+server:
+  port: 8088
+
+#logging
+logging:
+  level:
+    root: info

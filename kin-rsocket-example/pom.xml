@@ -17,6 +17,8 @@
         <module>kin-rsocket-example-broker</module>
         <module>kin-rsocket-example-springcloud</module>
         <module>kin-spring-rsocket-example-requester</module>
+        <module>kin-spring-rsocket-example-responder</module>
+        <module>kin-spring-rsocket-example-api</module>
     </modules>
 
 </project>
