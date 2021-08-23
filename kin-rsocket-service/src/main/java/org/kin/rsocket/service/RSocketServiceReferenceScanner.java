@@ -1,6 +1,7 @@
 package org.kin.rsocket.service;
 
 import org.kin.framework.log.LoggerOprs;
+import org.kin.framework.utils.StringUtils;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -59,7 +60,11 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
         for (BeanDefinitionHolder holder : beanDefinitions) {
             GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
             //factory bean constructor args
-            definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClass());
+            String beanClassName = definition.getBeanClassName();
+            if (StringUtils.isBlank(beanClassName)) {
+                throw new IllegalStateException("rsocket service reference interface class is null");
+            }
+            definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
             //factory bean class
             definition.setBeanClass(RSocketServiceReferenceFactoryBean.class);
             //enable autowire
