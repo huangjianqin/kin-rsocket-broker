@@ -16,7 +16,7 @@ class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     @Autowired
     private RSocketServiceRequester requester;
     /** 缓存rsocket service reference builder */
-    private final RSocketServiceReferenceBuilder<T> builder;
+    private RSocketServiceReferenceBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
     private volatile T reference;
     @Autowired(required = false)
@@ -60,6 +60,8 @@ class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
             builder.upstreamClusterManager(requester);
             builder.tracing(tracing);
             reference = builder.build();
+            //release
+            builder = null;
         }
 
         return reference;
