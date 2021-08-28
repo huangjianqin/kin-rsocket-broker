@@ -36,6 +36,7 @@
         <revision>0.1.0.0</revision>
 
         <kin-framework.version>0.1.0.0</kin-framework.version>
+        <kin-transport-netty-utils.version>0.1.0.0</kin-transport-netty-utils.version>
         <jmh.version>1.21</jmh.version>
         <jackson.version>2.10.1</jackson.version>
         <javassist.version>3.25.0-GA</javassist.version>

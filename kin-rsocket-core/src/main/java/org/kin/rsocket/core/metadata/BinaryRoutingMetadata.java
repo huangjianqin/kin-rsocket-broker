@@ -8,7 +8,7 @@ import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.NumberUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.utils.ByteBufUtils;
+import org.kin.transport.netty.utils.VarIntUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -85,30 +85,30 @@ public final class BinaryRoutingMetadata implements MetadataAware {
     public ByteBuf getContent() {
         ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer();
         //利用protobuf压缩整形机制, 减少bytes体积, 提高性能
-        ByteBufUtils.writeRawVarInt32(byteBuf, serviceId);
-        ByteBufUtils.writeRawVarInt32(byteBuf, handlerId);
-        ByteBufUtils.writeRawVarInt32(byteBuf, flags.length);
+        VarIntUtils.writeRawVarInt32(byteBuf, serviceId);
+        VarIntUtils.writeRawVarInt32(byteBuf, handlerId);
+        VarIntUtils.writeRawVarInt32(byteBuf, flags.length);
         for (boolean flag : flags) {
             byteBuf.writeBoolean(flag);
         }
         //write hanlder
         byte[] handlerBytes = handler.getBytes(StandardCharsets.UTF_8);
-        ByteBufUtils.writeRawVarInt32(byteBuf, handlerBytes.length);
+        VarIntUtils.writeRawVarInt32(byteBuf, handlerBytes.length);
         byteBuf.writeBytes(handlerBytes);
         return byteBuf;
     }
 
     @Override
     public void load(ByteBuf byteBuf) {
-        serviceId = ByteBufUtils.readRawVarInt32(byteBuf);
-        handlerId = ByteBufUtils.readRawVarInt32(byteBuf);
-        int flagSize = ByteBufUtils.readRawVarInt32(byteBuf);
+        serviceId = VarIntUtils.readRawVarInt32(byteBuf);
+        handlerId = VarIntUtils.readRawVarInt32(byteBuf);
+        int flagSize = VarIntUtils.readRawVarInt32(byteBuf);
         flags = new boolean[flagSize];
         for (int i = 0; i < flagSize; i++) {
             flags[i] = byteBuf.readBoolean();
         }
 
-        int handlerBytesLen = ByteBufUtils.readRawVarInt32(byteBuf);
+        int handlerBytesLen = VarIntUtils.readRawVarInt32(byteBuf);
         byte[] handlerBytes = new byte[handlerBytesLen];
         byteBuf.readBytes(handlerBytes);
         handler = new String(handlerBytes, StandardCharsets.UTF_8);

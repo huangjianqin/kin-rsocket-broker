@@ -17,6 +17,12 @@
             <artifactId>kin-framework-java</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-transport-netty-utils</artifactId>
+            <version>${kin-transport-netty-utils.version}</version>
+        </dependency>
+
         <!-- codec -->
         <dependency>
             <groupId>org.kin</groupId>
