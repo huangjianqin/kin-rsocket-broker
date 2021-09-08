@@ -31,11 +31,5 @@
             <artifactId>spring-boot-starter</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 </project>
