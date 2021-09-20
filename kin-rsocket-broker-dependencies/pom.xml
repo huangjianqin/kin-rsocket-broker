@@ -11,7 +11,7 @@
 
     <properties>
         <kin-framework.version>0.1.0.0</kin-framework.version>
-        <kin-transport-netty-utils.version>0.1.0.0</kin-transport-netty-utils.version>
+        <kin-transport.version>0.1.0.0</kin-transport.version>
         <jmh.version>1.21</jmh.version>
         <jackson.version>2.10.1</jackson.version>
         <javassist.version>3.25.0-GA</javassist.version>
@@ -139,8 +139,10 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-transport-netty-utils</artifactId>
-                <version>${kin-transport-netty-utils.version}</version>
+                <artifactId>kin-transport-bom</artifactId>
+                <version>${kin-transport.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
             </dependency>
         </dependencies>
     </dependencyManagement>
