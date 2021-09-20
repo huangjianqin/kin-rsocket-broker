@@ -22,13 +22,11 @@
         <dependency>
             <groupId>io.scalecube</groupId>
             <artifactId>scalecube-cluster</artifactId>
-            <version>${scalecube-cluster.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.scalecube</groupId>
             <artifactId>scalecube-codec-jackson</artifactId>
-            <version>${scalecube-cluster.version}</version>
         </dependency>
     </dependencies>
 

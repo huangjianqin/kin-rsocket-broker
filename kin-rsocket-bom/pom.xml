@@ -126,14 +126,6 @@
                 <artifactId>kin-rsocket-service-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
-            <!-- 外部依赖库, 使用者不需要指定版本信息, 减少冲突 -->
-            <!-- byte buddy(基于ASM) -->
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>${byte-buddy.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

@@ -20,38 +20,32 @@
         <dependency>
             <groupId>org.kin</groupId>
             <artifactId>kin-transport-netty-utils</artifactId>
-            <version>${kin-transport-netty-utils.version}</version>
         </dependency>
 
         <!-- codec -->
         <dependency>
             <groupId>org.kin</groupId>
             <artifactId>kin-rpc-serialization-json</artifactId>
-            <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
             <artifactId>kin-rpc-serialization-protobuf</artifactId>
-            <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
             <artifactId>kin-rpc-serialization-avro</artifactId>
-            <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
             <artifactId>kin-rpc-serialization-hessian2</artifactId>
-            <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
             <artifactId>kin-rpc-serialization-kryo</artifactId>
-            <version>${kin-rpc-serialization.version}</version>
         </dependency>
 
         <!-- 物联网专用, 编码紧凑, 轻量, 并且兼容JSON -->
@@ -80,13 +74,11 @@
         <dependency>
             <groupId>io.cloudevents</groupId>
             <artifactId>cloudevents-core</artifactId>
-            <version>${cloudevents.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.cloudevents</groupId>
             <artifactId>cloudevents-json-jackson</artifactId>
-            <version>${cloudevents.version}</version>
         </dependency>
 
         <!-- spring -->
@@ -104,7 +96,6 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
-            <version>${micrometer.version}</version>
         </dependency>
 
         <!-- zipkin -->

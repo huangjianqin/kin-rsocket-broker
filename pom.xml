@@ -34,76 +34,16 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <revision>0.1.0.0</revision>
-
-        <kin-framework.version>0.1.0.0</kin-framework.version>
-        <kin-transport-netty-utils.version>0.1.0.0</kin-transport-netty-utils.version>
-        <jmh.version>1.21</jmh.version>
-        <jackson.version>2.10.1</jackson.version>
-        <javassist.version>3.25.0-GA</javassist.version>
-        <spring-cloud-release.version>2020.0.2</spring-cloud-release.version>
-        <springboot.version>2.5.0</springboot.version>
-        <reactor.version>2020.0.0</reactor.version>
-        <rsocket.version>1.1.0</rsocket.version>
-        <cloudevents.version>2.0.0.RC2</cloudevents.version>
-        <java-jwt.version>3.12.1</java-jwt.version>
-        <scalecube-cluster.version>2.6.9</scalecube-cluster.version>
-        <kin-rpc-serialization.version>0.1.0.0</kin-rpc-serialization.version>
-        <byte-buddy.version>1.10.18</byte-buddy.version>
-        <guava.version>30.1-jre</guava.version>
-        <feign-reactor.version>3.0.0</feign-reactor.version>
-        <micrometer.version>1.7.3</micrometer.version>
-        <zipkin-brave.version>5.13.3</zipkin-brave.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.rsocket</groupId>
-                <!-- bom, maven的一个特性, 用于解决依赖冲突, 由依赖提供者维护版本依赖, 使用者不需要再指定版本-->
-                <artifactId>rsocket-bom</artifactId>
-                <version>${rsocket.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud-release.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${springboot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>com.playtika.reactivefeign</groupId>
-                <artifactId>feign-reactor-bom</artifactId>
-                <version>${feign-reactor.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>io.zipkin.brave</groupId>
-                <artifactId>brave-bom</artifactId>
-                <version>${zipkin-brave.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-
-            <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-framework-bom</artifactId>
-                <version>${kin-framework.version}</version>
-                <scope>import</scope>
+                <artifactId>kin-rsocket-broker-dependencies</artifactId>
+                <version>${project.version}</version>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
