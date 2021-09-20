@@ -4,4 +4,4 @@
 **/target/*
 **/*.docx
 **/*.DS_Store
-**/.flattened-pom.xml
+**/**/.flattened-pom.xml
