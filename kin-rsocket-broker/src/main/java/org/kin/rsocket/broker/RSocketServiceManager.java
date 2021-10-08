@@ -1,8 +1,5 @@
 package org.kin.rsocket.broker;
 
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.MultimapBuilder;
-import com.google.common.collect.SetMultimap;
 import io.micrometer.core.instrument.Metrics;
 import io.netty.util.collection.IntObjectHashMap;
 import io.rsocket.ConnectionSetupPayload;
@@ -10,6 +7,9 @@ import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.exceptions.ApplicationErrorException;
 import io.rsocket.exceptions.RejectedSetupException;
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.eclipse.collections.impl.multimap.list.FastListMultimap;
+import org.eclipse.collections.impl.multimap.set.UnifiedSetMultimap;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
@@ -40,7 +40,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
- * broker 路由器, 负责根据downstream请求元数据将请求路由到目标upstream
+ * broker 路由数据管理, 缓存service provider的信息
+ * <p>
+ * 1. 基于copy on write更新数据
+ * 2. 因为加锁, 对服务注册性能有影响, 但不影响路由性能
+ * 3. 同时注册服务数量较多数, 对瞬时内存(新生代)要求比较高, 因为每次注册需要全量复制缓存数据
+ * 4. 为了追求更高性能, 不保证读立即可见性
  *
  * @author huangjianqin
  * @date 2021/3/30
@@ -61,18 +66,18 @@ public final class RSocketServiceManager {
     /** 修改数据需加锁 */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     /** key -> hash(app instance UUID), value -> 对应responder */
-    private final Map<Integer, BrokerResponder> instanceId2Responder = new HashMap<>();
+    private Map<Integer, BrokerResponder> instanceId2Responder = new UnifiedMap<>();
     /** key -> app instance UUID, value -> 对应responder */
-    private final Map<String, BrokerResponder> uuid2Responder = new HashMap<>();
+    private Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>();
     /** key -> app name, value -> responder list */
-    private final ListMultimap<String, BrokerResponder> appResponders = MultimapBuilder.hashKeys().arrayListValues().build();
+    private FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>();
     /** key -> service id(gsv), value -> app instance UUID list */
-    private final SetMultimap<String, Integer> p2pServiceConsumers = MultimapBuilder.hashKeys().hashSetValues().build();
+    private UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>();
 
     /** key -> serviceId, value -> service info */
-    private final IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
+    private IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
     /** key -> instanceId, value -> list(serviceId) */
-    private final SetMultimap<Integer, Integer> instanceId2ServiceIds = MultimapBuilder.hashKeys().linkedHashSetValues().build();
+    private UnifiedSetMultimap<Integer, Integer> instanceId2ServiceIds = new UnifiedSetMultimap<>();
 
     public RSocketServiceManager(RSocketFilterChain filterChain,
                                  Sinks.Many<String> notificationSink,
@@ -99,10 +104,8 @@ public final class RSocketServiceManager {
 
         Metrics.globalRegistry.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appResponders.size());
         Metrics.globalRegistry.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_COUNT, this,
-                manager -> manager.appResponders.values()
-                        .stream()
-                        .mapToInt(responder -> (responder.isPublishServicesOnly() || responder.isConsumeAndPublishServices()) ? 0 : 1)
-                        .sum());
+                manager -> manager.appResponders.valuesView()
+                        .sumOfInt(responder -> (responder.isPublishServicesOnly() || responder.isConsumeAndPublishServices()) ? 0 : 1));
         Metrics.globalRegistry.gauge(MetricsNames.BROKER_SERVICE_COUNT, this, manager -> manager.services.size());
     }
 
@@ -209,15 +212,28 @@ public final class RSocketServiceManager {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
+            //copy on write
+            Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>(this.uuid2Responder);
             uuid2Responder.put(appMetadata.getUuid(), responder);
+
             Integer instanceId = responder.getId();
+
+            Map<Integer, BrokerResponder> instanceId2Responder = new UnifiedMap<>(this.instanceId2Responder);
             instanceId2Responder.put(instanceId, responder);
+
+            FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>(this.appResponders);
             appResponders.put(appMetadata.getName(), responder);
 
+            UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>(this.p2pServiceConsumers);
             for (String p2pService : appMetadata.getP2pServiceIds()) {
                 p2pServiceConsumers.put(p2pService, instanceId);
                 responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
             }
+
+            this.uuid2Responder = uuid2Responder;
+            this.instanceId2Responder = instanceId2Responder;
+            this.appResponders = appResponders;
+            this.p2pServiceConsumers = p2pServiceConsumers;
         } finally {
             writeLock.unlock();
         }
@@ -239,14 +255,27 @@ public final class RSocketServiceManager {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
+            //copy on write
+            Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>(this.uuid2Responder);
             uuid2Responder.remove(responder.getUuid());
+
             Integer instanceId = responder.getId();
+
+            Map<Integer, BrokerResponder> instanceId2Responder = new UnifiedMap<>(this.instanceId2Responder);
             instanceId2Responder.remove(instanceId);
+
+            FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>(this.appResponders);
             appResponders.remove(appMetadata.getName(), responder);
 
+            UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>(this.p2pServiceConsumers);
             for (String p2pService : appMetadata.getP2pServiceIds()) {
                 p2pServiceConsumers.remove(p2pService, instanceId);
             }
+
+            this.uuid2Responder = uuid2Responder;
+            this.instanceId2Responder = instanceId2Responder;
+            this.appResponders = appResponders;
+            this.p2pServiceConsumers = p2pServiceConsumers;
         } finally {
             writeLock.unlock();
         }
@@ -260,82 +289,46 @@ public final class RSocketServiceManager {
      * 获取所有app names
      */
     public Set<String> getAllAppNames() {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return Collections.unmodifiableSet(appResponders.keySet());
-        } finally {
-            readLock.unlock();
-        }
+        return appResponders.keySet().toSet();
     }
 
     /**
      * 获取所有已注册的{@link BrokerResponder}
      */
     public Collection<BrokerResponder> getAllResponders() {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return Collections.unmodifiableCollection(uuid2Responder.values());
-        } finally {
-            readLock.unlock();
-        }
+        return Collections.unmodifiableCollection(uuid2Responder.values());
     }
 
     /**
      * 根据app name 获取所有已注册的{@link BrokerResponder}
      */
     public Collection<BrokerResponder> getByAppName(String appName) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return Collections.unmodifiableCollection(appResponders.get(appName));
-        } finally {
-            readLock.unlock();
-        }
+        return Collections.unmodifiableCollection(appResponders.get(appName));
     }
 
     /**
      * 根据app uuid 获取已注册的{@link BrokerResponder}
      */
     public BrokerResponder getByUUID(String uuid) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return uuid2Responder.get(uuid);
-        } finally {
-            readLock.unlock();
-        }
+        return uuid2Responder.get(uuid);
     }
 
     /**
      * 根据app instanceId 获取已注册的{@link BrokerResponder}
      */
     public BrokerResponder getByInstanceId(int instanceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return instanceId2Responder.get(instanceId);
-        } finally {
-            readLock.unlock();
-        }
+        return instanceId2Responder.get(instanceId);
     }
 
     /**
      * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
     public BrokerResponder getByServiceId(int serviceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            Integer instanceId = router.route(serviceId);
-            if (Objects.nonNull(instanceId)) {
-                return instanceId2Responder.get(instanceId);
-            } else {
-                return null;
-            }
-        } finally {
-            readLock.unlock();
+        Integer instanceId = router.route(serviceId);
+        if (Objects.nonNull(instanceId)) {
+            return instanceId2Responder.get(instanceId);
+        } else {
+            return null;
         }
     }
 
@@ -345,26 +338,14 @@ public final class RSocketServiceManager {
     public Mono<Void> broadcast(String appName, CloudEventData<?> cloudEvent) {
         if (appName.equals(Symbols.BROKER)) {
             return Flux.<BrokerResponder>create(s -> {
-                Lock readLock = lock.readLock();
-                readLock.lock();
-                try {
-                    for (BrokerResponder brokerResponder : instanceId2Responder.values()) {
-                        s.next(brokerResponder);
-                    }
-                } finally {
-                    readLock.unlock();
+                for (BrokerResponder brokerResponder : instanceId2Responder.values()) {
+                    s.next(brokerResponder);
                 }
             }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
         } else if (appResponders.containsKey(appName)) {
             return Flux.<BrokerResponder>create(s -> {
-                Lock readLock = lock.readLock();
-                readLock.lock();
-                try {
-                    for (BrokerResponder brokerResponder : appResponders.get(appName)) {
-                        s.next(brokerResponder);
-                    }
-                } finally {
-                    readLock.unlock();
+                for (BrokerResponder brokerResponder : appResponders.get(appName)) {
+                    s.next(brokerResponder);
                 }
             }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
         } else {
@@ -377,14 +358,8 @@ public final class RSocketServiceManager {
      */
     public Mono<Void> broadcast(CloudEventData<?> cloudEvent) {
         return Flux.<BrokerResponder>create(s -> {
-            Lock readLock = lock.readLock();
-            readLock.lock();
-            try {
-                for (BrokerResponder brokerResponder : appResponders.values()) {
-                    s.next(brokerResponder);
-                }
-            } finally {
-                readLock.unlock();
+            for (BrokerResponder brokerResponder : appResponders.valuesView()) {
+                s.next(brokerResponder);
             }
         }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
     }
@@ -393,17 +368,11 @@ public final class RSocketServiceManager {
      * 向指定uuid的app广播cloud event
      */
     public Mono<Void> send(String uuid, CloudEventData<?> cloudEvent) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            BrokerResponder responder = uuid2Responder.get(uuid);
-            if (responder != null) {
-                return responder.fireCloudEvent(cloudEvent);
-            } else {
-                return Mono.error(new ApplicationErrorException("Application not found: app uuid=" + uuid));
-            }
-        } finally {
-            readLock.unlock();
+        BrokerResponder responder = uuid2Responder.get(uuid);
+        if (responder != null) {
+            return responder.fireCloudEvent(cloudEvent);
+        } else {
+            return Mono.error(new ApplicationErrorException("Application not found: app uuid=" + uuid));
         }
     }
 
@@ -481,17 +450,22 @@ public final class RSocketServiceManager {
     /**
      * 注册app instance及其服务
      */
-    public void register(int instanceId, int weight, Collection<ServiceLocator> services) {
+    public void register(int instanceId, int weight, Collection<ServiceLocator> serviceLocators) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
-            for (ServiceLocator serviceLocator : services) {
+            //copy on write
+            UnifiedSetMultimap<Integer, Integer> instanceId2ServiceIds = new UnifiedSetMultimap<>(this.instanceId2ServiceIds);
+            IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
+            services.putAll(this.services);
+
+            for (ServiceLocator serviceLocator : serviceLocators) {
                 int serviceId = serviceLocator.getId();
                 String gsv = serviceLocator.getGsv();
 
                 if (!instanceId2ServiceIds.get(instanceId).contains(serviceId)) {
                     instanceId2ServiceIds.put(instanceId, serviceId);
-                    this.services.put(serviceId, serviceLocator);
+                    services.put(serviceId, serviceLocator);
 
                     //p2p service notification
                     if (p2pServiceConsumers.containsKey(gsv)) {
@@ -499,7 +473,11 @@ public final class RSocketServiceManager {
                     }
                 }
             }
-            router.onAppRegistered(instanceId, weight, services);
+
+            this.instanceId2ServiceIds = instanceId2ServiceIds;
+            this.services = services;
+
+            router.onAppRegistered(instanceId, weight, serviceLocators);
         } finally {
             writeLock.unlock();
         }
@@ -513,6 +491,11 @@ public final class RSocketServiceManager {
         writeLock.lock();
         try {
             if (instanceId2ServiceIds.containsKey(instanceId)) {
+                //copy on write
+                UnifiedSetMultimap<Integer, Integer> instanceId2ServiceIds = new UnifiedSetMultimap<>(this.instanceId2ServiceIds);
+                IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
+                services.putAll(this.services);
+
                 Set<Integer> serviceIds = instanceId2ServiceIds.get(instanceId);
                 for (Integer serviceId : serviceIds) {
                     //没有该serviceId对应instanceId了
@@ -526,6 +509,10 @@ public final class RSocketServiceManager {
                 }
                 //移除该instanceId对应的所有serviceId
                 instanceId2ServiceIds.removeAll(instanceId);
+
+                this.instanceId2ServiceIds = instanceId2ServiceIds;
+                this.services = services;
+
                 router.onServiceUnregistered(instanceId, serviceIds);
             }
         } finally {
@@ -541,6 +528,11 @@ public final class RSocketServiceManager {
         writeLock.lock();
         try {
             if (instanceId2ServiceIds.containsKey(instanceId)) {
+                //copy on write
+                UnifiedSetMultimap<Integer, Integer> instanceId2ServiceIds = new UnifiedSetMultimap<>(this.instanceId2ServiceIds);
+                IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
+                services.putAll(this.services);
+
                 //没有该serviceId对应instanceId了
                 services.remove(serviceId);
 
@@ -549,6 +541,10 @@ public final class RSocketServiceManager {
                 if (!instanceId2ServiceIds.containsKey(instanceId)) {
                     instanceId2ServiceIds.removeAll(instanceId);
                 }
+
+                this.instanceId2ServiceIds = instanceId2ServiceIds;
+                this.services = services;
+
                 router.onServiceUnregistered(instanceId, Collections.singleton(serviceId));
             }
         } finally {
@@ -560,65 +556,35 @@ public final class RSocketServiceManager {
      * 根据instanceId获取其所有serviceId
      */
     public Set<Integer> getServiceIds(int instanceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return Collections.unmodifiableSet(instanceId2ServiceIds.get(instanceId));
-        } finally {
-            readLock.unlock();
-        }
+        return Collections.unmodifiableSet(instanceId2ServiceIds.get(instanceId));
     }
 
     /**
      * instanceId是否已注册
      */
     public boolean containsInstanceId(int instanceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return instanceId2ServiceIds.containsKey(instanceId);
-        } finally {
-            readLock.unlock();
-        }
+        return instanceId2ServiceIds.containsKey(instanceId);
     }
 
     /**
      * serviceId是否已注册
      */
     public boolean containsServiceId(int serviceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return services.containsKey(serviceId);
-        } finally {
-            readLock.unlock();
-        }
+        return services.containsKey(serviceId);
     }
 
     /**
      * 根据serviceId获取其数据, 即{@link ServiceLocator}
      */
     public ServiceLocator getServiceLocator(int serviceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return services.get(serviceId);
-        } finally {
-            readLock.unlock();
-        }
+        return services.get(serviceId);
     }
 
     /**
      * 根据serviceId获取其所有instanceId
      */
     public Collection<Integer> getAllInstanceIds(int serviceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return Collections.unmodifiableCollection(router.getAllInstanceIds(serviceId));
-        } finally {
-            readLock.unlock();
-        }
+        return Collections.unmodifiableCollection(router.getAllInstanceIds(serviceId));
     }
 
     /**
@@ -635,31 +601,19 @@ public final class RSocketServiceManager {
      * 统计serviceId对应instanceId数量
      */
     public Integer countInstanceIds(int serviceId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            //有重复
-            Collection<Integer> instanceIds = getAllInstanceIds(serviceId);
-            if (CollectionUtils.isNonEmpty(instanceIds)) {
-                return instanceIds.size();
-            }
-            return 0;
-        } finally {
-            readLock.unlock();
+        //有重复
+        Collection<Integer> instanceIds = getAllInstanceIds(serviceId);
+        if (CollectionUtils.isNonEmpty(instanceIds)) {
+            return instanceIds.size();
         }
+        return 0;
     }
 
     /**
      * 获取所有服务数据
      */
     public Collection<ServiceLocator> getAllServices() {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return Collections.unmodifiableCollection(services.values());
-        } finally {
-            readLock.unlock();
-        }
+        return Collections.unmodifiableCollection(services.values());
     }
 
     /**
@@ -696,14 +650,7 @@ public final class RSocketServiceManager {
      * 获取指定rsocket服务的p2p consumer端 instance id list
      */
     private Set<Integer> getP2pServiceConsumerInstanceIds(String gsv) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return p2pServiceConsumers.get(gsv);
-        } finally {
-            readLock.unlock();
-        }
-
+        return p2pServiceConsumers.get(gsv);
     }
 
     /**
@@ -735,10 +682,15 @@ public final class RSocketServiceManager {
             Lock writeLock = lock.writeLock();
             writeLock.lock();
             try {
+                //copy on write
+                UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>(this.p2pServiceConsumers);
+
                 for (String p2pService : appMetadata.getP2pServiceIds()) {
                     p2pServiceConsumers.put(p2pService, instanceId);
                     responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
                 }
+
+                this.p2pServiceConsumers = p2pServiceConsumers;
             } finally {
                 writeLock.unlock();
             }

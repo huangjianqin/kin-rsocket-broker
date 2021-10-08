@@ -200,8 +200,8 @@ public class RSocketBrokerAutoConfiguration {
     @Bean("router")
     @ConditionalOnMissingBean
     @ConditionalOnExpression("'roundRobin'.equals('${kin.rsocket.broker.route}')")
-    public ProviderRouter smoothWeightedRoundRobinRouter() {
-        return new SmoothWeightedRoundRobinRouter();
+    public ProviderRouter roundRobinRouter() {
+        return new RoundRobinRouter();
     }
 
     /**
