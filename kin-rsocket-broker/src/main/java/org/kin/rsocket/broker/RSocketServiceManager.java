@@ -99,6 +99,8 @@ public final class RSocketServiceManager {
             //broker集群变化通知downstream
             this.brokerManager.brokersChangedFlux().flatMap(this::broadcastClusterTopology).subscribe();
             this.brokerManager.brokersChangedFlux().subscribe(this::refreshClusterUpstreamBrokers);
+            //先刷新一次
+            refreshClusterUpstreamBrokers(brokerManager.all());
         }
         this.router = router;
         this.p2pServiceNotificationSink = p2pServiceNotificationSink;
