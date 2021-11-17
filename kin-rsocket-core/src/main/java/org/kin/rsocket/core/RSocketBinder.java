@@ -14,6 +14,7 @@ import io.rsocket.transport.local.LocalServerTransport;
 import io.rsocket.transport.netty.server.TcpServerTransport;
 import io.rsocket.transport.netty.server.WebsocketServerTransport;
 import org.kin.framework.Closeable;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.utils.Schemas;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import reactor.core.Disposable;
 import reactor.netty.http.server.HttpServer;
 import reactor.netty.tcp.TcpServer;
 
+import javax.net.ssl.SSLException;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -76,11 +78,18 @@ public class RSocketBinder implements Closeable {
                     TcpServer tcpServer = TcpServer.create()
                             .host(host)
                             .port(port)
-                            .secure(ssl -> ssl.sslContext(
-                                    SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
-                                            .protocols(PROTOCOLS)
-                                            .sslProvider(getSslProvider())
-                            ));
+                            .secure(ssl -> {
+                                try {
+                                    ssl.sslContext(
+                                            SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
+                                                    .protocols(PROTOCOLS)
+                                                    .sslProvider(getSslProvider())
+                                                    .build()
+                                    );
+                                } catch (SSLException e) {
+                                    ExceptionUtils.throwExt(e);
+                                }
+                            });
                     transport = TcpServerTransport.create(tcpServer);
                 } else if (schema.equals(Schemas.WS)) {
                     transport = WebsocketServerTransport.create(host, port);
@@ -88,11 +97,18 @@ public class RSocketBinder implements Closeable {
                     HttpServer httpServer = HttpServer.create()
                             .host(host)
                             .port(port)
-                            .secure(ssl -> ssl.sslContext(
-                                    SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
-                                            .protocols(PROTOCOLS)
-                                            .sslProvider(getSslProvider())
-                            ));
+                            .secure(ssl -> {
+                                try {
+                                    ssl.sslContext(
+                                            SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
+                                                    .protocols(PROTOCOLS)
+                                                    .sslProvider(getSslProvider())
+                                                    .build()
+                                    );
+                                } catch (SSLException e) {
+                                    ExceptionUtils.throwExt(e);
+                                }
+                            });
                     transport = WebsocketServerTransport.create(httpServer);
                 } else {
                     log.warn(String.format("unknown schema '%s', just retry to bind with tcp", schema));

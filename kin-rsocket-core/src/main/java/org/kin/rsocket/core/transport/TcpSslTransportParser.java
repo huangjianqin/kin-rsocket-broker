@@ -11,11 +11,13 @@ import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.ServerTransport;
 import io.rsocket.transport.netty.client.TcpClientTransport;
 import io.rsocket.transport.netty.server.TcpServerTransport;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.utils.Schemas;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
 import javax.net.ssl.ManagerFactoryParameters;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.*;
@@ -129,11 +131,18 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
             TcpServer tcpServer = TcpServer.create()
                     .host(uri.getHost())
                     .port(uri.getPort())
-                    .secure(ssl -> ssl.sslContext(
-                            SslContextBuilder.forServer(privateKey, certificate)
-                                    .protocols(PROTOCOLS)
-                                    .sslProvider(getSslProvider())
-                    ));
+                    .secure(ssl -> {
+                        try {
+                            ssl.sslContext(
+                                    SslContextBuilder.forServer(privateKey, certificate)
+                                            .protocols(PROTOCOLS)
+                                            .sslProvider(getSslProvider())
+                                            .build()
+                            );
+                        } catch (SSLException e) {
+                            ExceptionUtils.throwExt(e);
+                        }
+                    });
             return Optional.of(TcpServerTransport.create(tcpServer));
         } catch (Exception ignore) {
             return Optional.empty();
