@@ -22,10 +22,6 @@ management:
     web:
       exposure:
         include: "*"
-      health:
-        show-details: always
-      shutdown:
-        enabled: true
   metrics:
     enable:
       http: false

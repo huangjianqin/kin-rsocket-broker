@@ -66,7 +66,7 @@ public final class RSocketServiceReferenceBuilder<T> {
     }
 
     public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface) {
-        RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<T>();
+        RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getCanonicalName();
         //解析interface class 上的@ServiceMapping注解

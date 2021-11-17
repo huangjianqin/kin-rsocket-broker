@@ -15,7 +15,7 @@ import java.util.List;
  */
 public abstract class AbstractCloudEventConsumer<T extends CloudEventSupport> implements CloudEventConsumer {
     /** 目标cloud event class */
-    private Class<? extends CloudEventSupport> cloudEventClass;
+    private final Class<? extends CloudEventSupport> cloudEventClass;
 
     @SuppressWarnings("unchecked")
     public AbstractCloudEventConsumer() {

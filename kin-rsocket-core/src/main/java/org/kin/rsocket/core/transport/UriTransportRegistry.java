@@ -27,7 +27,7 @@ public final class UriTransportRegistry {
     /** 单例 */
     public static final UriTransportRegistry INSTANCE = new UriTransportRegistry();
     /** classpath中UriHandler实现类实例 */
-    private List<Uri2TransportParser> handlers;
+    private final List<Uri2TransportParser> handlers;
 
     private UriTransportRegistry() {
         List<Uri2TransportParser> extensions = RSocketAppContext.LOADER.getExtensions(Uri2TransportParser.class);

@@ -26,6 +26,7 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -80,8 +81,10 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         this.filterChain = filterChain;
     }
 
+    @SuppressWarnings("ConstantConditions")
+    @Nonnull
     @Override
-    public Mono<Payload> requestResponse(Payload payload) {
+    public Mono<Payload> requestResponse(@Nonnull Payload payload) {
         String frameType = FrameType.REQUEST_RESPONSE.name();
         try {
             BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
@@ -124,7 +127,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             }
 
             //call destination
-            MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
             return destination.flatMap(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
                 if (Objects.isNull(binaryRoutingMetadata)) {
@@ -137,7 +139,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (encodingMetadataIncluded) {
                     return rsocket.requestResponse(payload);
                 } else {
-                    return rsocket.requestResponse(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                    return rsocket.requestResponse(payloadWithDataEncoding(payload, messageMimeTypeMetadata));
                 }
             });
         } catch (Exception e) {
@@ -147,8 +149,10 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
+    @Nonnull
     @Override
-    public Mono<Void> fireAndForget(Payload payload) {
+    public Mono<Void> fireAndForget(@Nonnull Payload payload) {
         String frameType = FrameType.REQUEST_FNF.name();
         try {
             BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
@@ -191,7 +195,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             }
 
             //call destination
-            MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
             return destination.flatMap(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
                 if (Objects.isNull(binaryRoutingMetadata)) {
@@ -203,7 +206,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (encodingMetadataIncluded) {
                     return rsocket.fireAndForget(payload);
                 } else {
-                    return rsocket.fireAndForget(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                    return rsocket.fireAndForget(payloadWithDataEncoding(payload, messageMimeTypeMetadata));
                 }
             });
         } catch (Exception e) {
@@ -214,8 +217,10 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
 
     }
 
+    @SuppressWarnings("ConstantConditions")
+    @Nonnull
     @Override
-    public Flux<Payload> requestStream(Payload payload) {
+    public Flux<Payload> requestStream(@Nonnull Payload payload) {
         String frameType = FrameType.REQUEST_STREAM.name();
         try {
             BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
@@ -257,7 +262,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 destination = findDestination(gsvRoutingMetadata);
             }
 
-            MessageMimeTypeMetadata finalMessageMimeTypeMetadata = messageMimeTypeMetadata;
             return destination.flatMapMany(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
                 if (Objects.isNull(binaryRoutingMetadata)) {
@@ -269,7 +273,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (encodingMetadataIncluded) {
                     return rsocket.requestStream(payload);
                 } else {
-                    return rsocket.requestStream(payloadWithDataEncoding(payload, finalMessageMimeTypeMetadata));
+                    return rsocket.requestStream(payloadWithDataEncoding(payload, messageMimeTypeMetadata));
                 }
             });
         } catch (Exception e) {
@@ -315,14 +319,16 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
         }
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+    public Flux<Payload> requestChannel(@Nonnull Publisher<Payload> payloads) {
         Flux<Payload> payloadsWithSignalRouting = (Flux<Payload>) payloads;
         return payloadsWithSignalRouting.switchOnFirst((signal, flux) -> requestChannel(signal.get(), flux));
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> metadataPush(Payload payload) {
+    public Mono<Void> metadataPush(@Nonnull Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
                 CloudEventData<?> cloudEvent = CloudEventSupport.extractCloudEventsFromMetadata(payload);

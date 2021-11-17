@@ -53,7 +53,7 @@ public class EndpointProperties {
 
     /** builder **/
     public static class Builder {
-        private EndpointProperties endpointProperties = new EndpointProperties();
+        private final EndpointProperties endpointProperties = new EndpointProperties();
 
         public Builder group(String group) {
             endpointProperties.group = group;

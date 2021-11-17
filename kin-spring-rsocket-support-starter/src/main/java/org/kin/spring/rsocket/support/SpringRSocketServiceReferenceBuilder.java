@@ -23,13 +23,13 @@ public final class SpringRSocketServiceReferenceBuilder<T> {
     private Duration timeout = Duration.ofSeconds(3);
 
     public static <T> SpringRSocketServiceReferenceBuilder<T> requester(RSocketRequester rsocketRequester) {
-        SpringRSocketServiceReferenceBuilder<T> builder = new SpringRSocketServiceReferenceBuilder<T>();
+        SpringRSocketServiceReferenceBuilder<T> builder = new SpringRSocketServiceReferenceBuilder<>();
         builder.rsocketRequester = rsocketRequester;
         return builder;
     }
 
     public static <T> SpringRSocketServiceReferenceBuilder<T> requester(RSocketRequester rsocketRequester, Class<T> serviceInterface) {
-        SpringRSocketServiceReferenceBuilder<T> builder = new SpringRSocketServiceReferenceBuilder<T>();
+        SpringRSocketServiceReferenceBuilder<T> builder = new SpringRSocketServiceReferenceBuilder<>();
         builder.rsocketRequester = rsocketRequester;
         builder.service(serviceInterface);
         return builder;

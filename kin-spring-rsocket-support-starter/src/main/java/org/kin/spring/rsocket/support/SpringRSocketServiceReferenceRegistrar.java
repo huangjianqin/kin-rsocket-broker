@@ -8,6 +8,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
  */
 class SpringRSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
     @Override
-    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry) {
         AnnotationAttributes annoAttrs = AnnotationAttributes
                 .fromMap(importingClassMetadata.getAnnotationAttributes(EnableSpringRSocketServiceReference.class.getName()));
         if (Objects.nonNull(annoAttrs)) {

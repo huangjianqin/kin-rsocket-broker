@@ -16,7 +16,7 @@ public class RSocketBrokerMarkerConfiguration {
         return new RSocketBrokerMarkerConfiguration.Marker();
     }
 
-    class Marker {
+    static class Marker {
         Marker() {
         }
     }

@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public final class FilterEnableEventConsumer extends AbstractCloudEventConsumer<FilterEnableEvent> {
     @Autowired
-    protected ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, FilterEnableEvent event) {

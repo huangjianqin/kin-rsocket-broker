@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -72,7 +71,7 @@ public class ConfigController {
     public Mono<String> update(@PathVariable(name = "appName") String appName,
                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token,
                                //properties形式
-                               @RequestBody String body) throws IOException {
+                               @RequestBody String body) {
         if (!isAuthenticated(token)) {
             return Mono.error(new InvalidException("Failed to validate JWT token, please supply correct token."));
         }

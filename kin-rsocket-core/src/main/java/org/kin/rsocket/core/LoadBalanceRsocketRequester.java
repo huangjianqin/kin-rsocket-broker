@@ -33,6 +33,7 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+import javax.annotation.Nonnull;
 import java.net.ConnectException;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
@@ -260,9 +261,9 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         return Flux.error(new IllegalStateException("requester is disposed"));
     }
 
-
+    @Nonnull
     @Override
-    public Mono<Payload> requestResponse(Payload payload) {
+    public Mono<Payload> requestResponse(@Nonnull Payload payload) {
         if (isDisposed()) {
             return (Mono<Payload>) disposedMono();
         }
@@ -275,9 +276,9 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
 
     }
 
-
+    @Nonnull
     @Override
-    public Mono<Void> fireAndForget(Payload payload) {
+    public Mono<Void> fireAndForget(@Nonnull Payload payload) {
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
@@ -307,7 +308,6 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     @Override
     public Mono<Void> broadcastCloudEvent(CloudEventData<?> cloudEvent) {
         if (isDisposed()) {
@@ -323,8 +323,9 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         }
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestStream(Payload payload) {
+    public Flux<Payload> requestStream(@Nonnull Payload payload) {
         if (isDisposed()) {
             return (Flux<Payload>) disposedFlux();
         }
@@ -336,8 +337,9 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                         }));
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+    public Flux<Payload> requestChannel(@Nonnull Publisher<Payload> payloads) {
         if (isDisposed()) {
             return (Flux<Payload>) disposedFlux();
         }
@@ -349,8 +351,9 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                         }));
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> metadataPush(Payload payload) {
+    public Mono<Void> metadataPush(@Nonnull Payload payload) {
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
@@ -413,7 +416,6 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /**
      * 重连成功后, 刷新数据, 并注册暴露的服务
      */
-    @SuppressWarnings("ConstantConditions")
     private void onRSocketReconnected(String rsocketUri, RSocket rsocket) {
         Map<String, RSocket> activeRSockets = new HashMap<>(getActiveRSockets());
         activeRSockets.put(rsocketUri, rsocket);

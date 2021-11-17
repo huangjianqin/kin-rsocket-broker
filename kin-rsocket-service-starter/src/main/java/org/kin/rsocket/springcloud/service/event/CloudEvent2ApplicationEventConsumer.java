@@ -32,9 +32,7 @@ public final class CloudEvent2ApplicationEventConsumer implements CloudEventCons
         } catch (ClassNotFoundException e) {
             throw new IllegalStateException(String.format("unknown cloud event class '%s'", className));
         }
-        return Mono.fromRunnable(() -> {
-            eventPublisher.publishEvent(CloudEventSupport.unwrapData(cloudEventData, cloudEventClass));
-        });
+        return Mono.fromRunnable(() -> eventPublisher.publishEvent(CloudEventSupport.unwrapData(cloudEventData, cloudEventClass)));
     }
 }
 

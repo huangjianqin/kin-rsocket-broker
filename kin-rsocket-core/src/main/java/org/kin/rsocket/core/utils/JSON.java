@@ -294,6 +294,7 @@ public class JSON {
     /**
      * 将cloud event序列化成json
      */
+    @SuppressWarnings("ConstantConditions")
     public static byte[] serialize(CloudEventData<?> event) {
         return EVENT_FORMAT.serialize(event.getCloudEvent());
     }
@@ -301,6 +302,7 @@ public class JSON {
     /**
      * 从json中反序列化出cloud event
      */
+    @SuppressWarnings("ConstantConditions")
     public static CloudEventData<JsonNode> decodeValue(String str) {
         CloudEvent cloudEvent = EVENT_FORMAT.deserialize(str.getBytes(StandardCharsets.UTF_8));
         if (cloudEvent.getData() instanceof JsonCloudEventData) {

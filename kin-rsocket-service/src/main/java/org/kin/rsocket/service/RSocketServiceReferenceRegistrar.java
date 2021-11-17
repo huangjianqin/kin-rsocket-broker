@@ -9,6 +9,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.ClassUtils;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
  */
 class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
     @Override
-    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry) {
         AnnotationAttributes annoAttrs = AnnotationAttributes
                 .fromMap(importingClassMetadata.getAnnotationAttributes(EnableRSocketServiceReference.class.getName()));
         if (Objects.nonNull(annoAttrs)) {
@@ -32,8 +33,8 @@ class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar 
 
             //处理直接配置的rsocket service reference
             AnnotationAttributes[] rsocketServiceReferenceAttrs = annoAttrs.getAnnotationArray("references");
-            for (int i = 0; i < rsocketServiceReferenceAttrs.length; i++) {
-                registerBeanDefinition(rsocketServiceReferenceAttrs[i], registry);
+            for (AnnotationAttributes rsocketServiceReferenceAttr : rsocketServiceReferenceAttrs) {
+                registerBeanDefinition(rsocketServiceReferenceAttr, registry);
             }
         }
     }
@@ -41,7 +42,7 @@ class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar 
     /**
      * 注册{@link RSocketServiceReferenceRegistryPostProcessor} bean
      */
-    void registerScanner(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
+    void registerScanner(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(RSocketServiceReferenceRegistryPostProcessor.class);
         List<String> basePackages = new ArrayList<>();
 

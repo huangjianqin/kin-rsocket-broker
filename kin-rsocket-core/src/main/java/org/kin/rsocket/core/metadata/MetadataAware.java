@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.rsocket.metadata.CompositeMetadata;
 import org.kin.rsocket.core.RSocketMimeType;
 
+import javax.annotation.Nonnull;
+
 /**
  * @author huangjianqin
  * @date 2021/3/24
@@ -22,13 +24,12 @@ public interface MetadataAware extends CompositeMetadata.Entry {
         return mimeType().getType();
     }
 
-    ;
-
     /**
      * 获取metadata bytes
      *
      * @return metadata bytes
      */
+    @Nonnull
     @Override
     ByteBuf getContent();
 
@@ -38,6 +39,6 @@ public interface MetadataAware extends CompositeMetadata.Entry {
      * @param byteBuf byte buf
      * @throws Exception exception
      */
-    void load(ByteBuf byteBuf) throws Exception;
+    void load(ByteBuf byteBuf);
 
 }

@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 
 /**
@@ -93,6 +94,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         return Flux.error(new InvalidException("No encoding metadata"));
     }
 
+    @Nonnull
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
@@ -110,6 +112,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         return injectTraceContext(payloadMono, compositeMetadata);
     }
 
+    @Nonnull
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
@@ -127,6 +130,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         return injectTraceContext(voidMono, compositeMetadata);
     }
 
+    @Nonnull
     @Override
     public Flux<Payload> requestStream(Payload payload) {
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
@@ -163,14 +167,16 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
     }
 
     @SuppressWarnings("ConstantConditions")
+    @Nonnull
     @Override
-    public final Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+    public Flux<Payload> requestChannel(@Nonnull Publisher<Payload> payloads) {
         Flux<Payload> payloadsWithSignalRouting = (Flux<Payload>) payloads;
         return payloadsWithSignalRouting.switchOnFirst((signal, flux) -> requestChannel(signal.get(), flux));
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> metadataPush(Payload payload) {
+    public Mono<Void> metadataPush(@Nonnull Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
                 CloudEventData<?> cloudEvent = CloudEventSupport.extractCloudEventsFromMetadata(payload);
@@ -186,6 +192,7 @@ final class BrokerOrServiceRequestHandler extends RequestHandlerSupport {
         return Mono.empty();
     }
 
+    @Nonnull
     @Override
     public Mono<Void> onClose() {
         return this.comboOnClose;

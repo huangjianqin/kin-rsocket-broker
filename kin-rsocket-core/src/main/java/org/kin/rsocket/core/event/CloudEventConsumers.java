@@ -27,13 +27,12 @@ public final class CloudEventConsumers implements Closeable {
     private static final Scheduler CLOUD_EVENT_CONSUMER_SCHEDULER = Schedulers.newBoundedElastic(3, Integer.MAX_VALUE, "cloudEventConsumer");
 
     public CloudEventConsumers() {
-        disposable = RSocketAppContext.CLOUD_EVENT_SINK.asFlux().subscribe(cloudEvent -> {
-            Flux.fromIterable(consumers)
-                    .publishOn(CLOUD_EVENT_CONSUMER_SCHEDULER)
-                    .filter(consumer -> consumer.shouldAccept(cloudEvent))
-                    .flatMap(consumer -> consumer.consume(cloudEvent))
-                    .subscribe();
-        });
+        disposable = RSocketAppContext.CLOUD_EVENT_SINK.asFlux().subscribe(cloudEvent ->
+                Flux.fromIterable(consumers)
+                        .publishOn(CLOUD_EVENT_CONSUMER_SCHEDULER)
+                        .filter(consumer -> consumer.shouldAccept(cloudEvent))
+                        .flatMap(consumer -> consumer.consume(cloudEvent))
+                        .subscribe());
     }
 
     /**

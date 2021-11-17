@@ -12,6 +12,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
+import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.Collections;
@@ -118,28 +119,33 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         return loadBalanceRequester.fireCloudEvent(cloudEventJson);
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> fireAndForget(Payload payload) {
+    public Mono<Void> fireAndForget(@Nonnull Payload payload) {
         return loadBalanceRequester.fireAndForget(payload);
     }
 
+    @Nonnull
     @Override
-    public Mono<Payload> requestResponse(Payload payload) {
+    public Mono<Payload> requestResponse(@Nonnull Payload payload) {
         return loadBalanceRequester.requestResponse(payload);
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestStream(Payload payload) {
+    public Flux<Payload> requestStream(@Nonnull Payload payload) {
         return loadBalanceRequester.requestStream(payload);
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+    public Flux<Payload> requestChannel(@Nonnull Publisher<Payload> payloads) {
         return loadBalanceRequester.requestChannel(payloads);
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> metadataPush(Payload payload) {
+    public Mono<Void> metadataPush(@Nonnull Payload payload) {
         return loadBalanceRequester.metadataPush(payload);
     }
 

@@ -18,10 +18,6 @@ final class ByteBuddySupport {
             //ignore
         }
 
-        if (Objects.nonNull(byteBuddyClass)) {
-            ENHANCE = true;
-        } else {
-            ENHANCE = false;
-        }
+        ENHANCE = Objects.nonNull(byteBuddyClass);
     }
 }

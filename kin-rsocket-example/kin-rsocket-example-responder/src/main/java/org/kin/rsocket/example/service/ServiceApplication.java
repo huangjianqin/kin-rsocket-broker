@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableRSocketService
 @SpringBootApplication
 public class ServiceApplication {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         SpringApplication.run(ServiceApplication.class, args);
     }
 }

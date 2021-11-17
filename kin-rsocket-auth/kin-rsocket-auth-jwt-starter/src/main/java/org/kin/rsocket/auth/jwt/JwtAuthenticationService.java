@@ -59,6 +59,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
      * @param autoGen 是否自动生成RSAKeyPairs
      * @param authDir 密钥目录
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public JwtAuthenticationService(boolean autoGen, File authDir) throws Exception {
         if (autoGen) {
             if (Objects.nonNull(authDir) && !authDir.exists()) {
@@ -104,7 +105,7 @@ public final class JwtAuthenticationService implements AuthenticationService {
     public String generateCredentials(String id, String[] organizations,
                                       String[] serviceAccounts, String[] roles,
                                       String[] authorities, String sub,
-                                      String[] audience) throws Exception {
+                                      String[] audience) {
         Arrays.sort(audience);
         Arrays.sort(organizations);
         JWTCreator.Builder builder = JWT.create()

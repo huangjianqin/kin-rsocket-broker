@@ -146,7 +146,7 @@ public final class AppMetadata implements MetadataAware {
 
     /** builder **/
     public static class Builder {
-        private AppMetadata appMetadata = new AppMetadata();
+        private final AppMetadata appMetadata = new AppMetadata();
 
         public Builder id(Integer id) {
             appMetadata.id = id;
@@ -160,7 +160,6 @@ public final class AppMetadata implements MetadataAware {
 
         public Builder weight(int weight) {
             appMetadata.weight = Math.max(1, weight);
-            ;
             return this;
         }
 

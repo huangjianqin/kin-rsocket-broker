@@ -6,6 +6,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 
 /**
@@ -54,8 +55,9 @@ class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
         return builder.getServiceInterface();
     }
 
+    @Nonnull
     @Override
-    protected T createInstance() throws Exception {
+    protected T createInstance() {
         if (Objects.isNull(reference)) {
             builder.upstreamClusterManager(requester);
             builder.tracing(tracing);

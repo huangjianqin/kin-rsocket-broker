@@ -18,9 +18,9 @@ import java.util.Set;
  */
 public final class RSocketServiceRegistryMetadata implements MetadataAware {
     /** published services */
-    private Set<ServiceLocator> published = new HashSet<>();
+    private final Set<ServiceLocator> published = new HashSet<>();
     /** subscribed services */
-    private Set<ServiceLocator> subscribed = new HashSet<>();
+    private final Set<ServiceLocator> subscribed = new HashSet<>();
 
     public static RSocketServiceRegistryMetadata of(ByteBuf content) {
         RSocketServiceRegistryMetadata temp = new RSocketServiceRegistryMetadata();
@@ -35,7 +35,7 @@ public final class RSocketServiceRegistryMetadata implements MetadataAware {
      * @return 是否包含published services
      */
     public boolean containPublishedServices() {
-        return published != null && !published.isEmpty();
+        return !published.isEmpty();
     }
 
     @Override
@@ -60,7 +60,7 @@ public final class RSocketServiceRegistryMetadata implements MetadataAware {
 
     /** builder **/
     public static class Builder {
-        private RSocketServiceRegistryMetadata serviceRegistryMetadata = new RSocketServiceRegistryMetadata();
+        private final RSocketServiceRegistryMetadata serviceRegistryMetadata = new RSocketServiceRegistryMetadata();
 
         public Builder addPublishedService(ServiceLocator publishedService) {
             serviceRegistryMetadata.published.add(publishedService);

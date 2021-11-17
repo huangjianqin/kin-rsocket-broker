@@ -31,7 +31,6 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
     /** 方法参数是否required or not */
     private boolean[] required;
 
-    @SuppressWarnings("unchecked")
     ReactiveMethodInvoker(Method method, Object provider) {
         super(method);
 
@@ -41,14 +40,7 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
             this.invoker = Proxys.reflection().enhanceMethod(new MethodDefinition<>(provider, method));
         }
 
-        if (Flux.class.isAssignableFrom(this.returnType) ||
-                Mono.class.isAssignableFrom(this.returnType) ||
-                CompletableFuture.class.isAssignableFrom(this.returnType)) {
-            this.asyncReturn = true;
-        } else {
-            this.asyncReturn = false;
-        }
-        this.binaryReturn = this.inferredClassForReturn != null && BINARY_CLASS_LIST.contains(this.inferredClassForReturn);
+        initReturn();
 
         this.parametersTypes = this.method.getParameterTypes();
 
@@ -69,16 +61,16 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
         super.returnType = rawReturnType;
         super.inferredClassForReturn = ClassUtils.getInferredClassForGeneric(returnType);
 
-        if (Flux.class.isAssignableFrom(this.returnType) ||
-                Mono.class.isAssignableFrom(this.returnType) ||
-                CompletableFuture.class.isAssignableFrom(this.returnType)) {
-            this.asyncReturn = true;
-        } else {
-            this.asyncReturn = false;
-        }
-        this.binaryReturn = this.inferredClassForReturn != null && BINARY_CLASS_LIST.contains(this.inferredClassForReturn);
+        initReturn();
         this.parametersTypes = parametersTypes;
         this.required = new boolean[0];
+    }
+
+    private void initReturn() {
+        this.asyncReturn = Flux.class.isAssignableFrom(this.returnType) ||
+                Mono.class.isAssignableFrom(this.returnType) ||
+                CompletableFuture.class.isAssignableFrom(this.returnType);
+        this.binaryReturn = this.inferredClassForReturn != null && BINARY_CLASS_LIST.contains(this.inferredClassForReturn);
     }
 
     /**

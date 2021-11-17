@@ -37,10 +37,6 @@ public class RSocketAppContext {
             //ignore
         }
 
-        if (Objects.nonNull(byteBuddyClass)) {
-            ENHANCE = true;
-        } else {
-            ENHANCE = false;
-        }
+        ENHANCE = Objects.nonNull(byteBuddyClass);
     }
 }

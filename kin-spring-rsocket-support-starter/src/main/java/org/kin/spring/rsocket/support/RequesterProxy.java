@@ -47,7 +47,7 @@ public class RequesterProxy implements InvocationHandler {
 
     @Override
     @RuntimeType
-    public Object invoke(@This Object proxy, @Origin Method method, @AllArguments Object[] args) throws Throwable {
+    public Object invoke(@This Object proxy, @Origin Method method, @AllArguments Object[] args) {
         if (!ByteBuddySupport.ENHANCE && method.isDefault()) {
             //jdk代理下, 如果是调用default方法, 直接使用句柄掉漆
             try {

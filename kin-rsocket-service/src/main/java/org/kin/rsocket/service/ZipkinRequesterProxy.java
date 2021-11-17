@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  * @date 2021/8/19
  */
 public class ZipkinRequesterProxy extends RequesterProxy {
-    private Tracer tracer;
+    private final Tracer tracer;
 
     public ZipkinRequesterProxy(RSocketServiceReferenceBuilder<?> builder) {
         super(builder);

@@ -15,6 +15,7 @@ import java.io.File;
  */
 @RSocketConfDiamondConfiguration
 public class RSocketH2StorageConfAutoConfiguration {
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Bean
     @ConditionalOnProperty("kin.rsocket.broker.conf.h2.dbPath")
     public ConfDiamond configurationService(@Value("${kin.rsocket.broker.conf.h2.dbPath}") String dbPath) {

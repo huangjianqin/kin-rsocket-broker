@@ -40,11 +40,7 @@ public final class RSocketEndpoint {
         this.config = config;
         this.upstreamClusterManager = upstreamClusterManager;
         Set<ServiceLocator> exposedServices = RSocketServiceRegistry.exposedServices();
-        if (!exposedServices.isEmpty()) {
-            this.serviceProvider = true;
-        } else {
-            this.serviceProvider = false;
-        }
+        this.serviceProvider = !exposedServices.isEmpty();
     }
 
     @ReadOperation

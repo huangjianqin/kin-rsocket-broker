@@ -31,6 +31,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
+import javax.annotation.Nonnull;
 import java.net.URI;
 import java.time.Duration;
 import java.util.*;
@@ -122,6 +123,8 @@ public final class RSocketServiceManager {
     /**
      * service responder acceptor逻辑
      */
+    @SuppressWarnings("ConstantConditions")
+    @Nonnull
     private Mono<RSocket> acceptor(ConnectionSetupPayload setupPayload, RSocket requester) {
         //parse setup payload
         RSocketCompositeMetadata compositeMetadata = null;

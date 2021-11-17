@@ -145,7 +145,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         }
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public void onGossip(Message gossip) {
         String cloudEventHeader = gossip.header(CLOUD_EVENT_HEADER);

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 
 /**
@@ -57,6 +58,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         }
     }
 
+    @Nonnull
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
@@ -88,6 +90,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         });
     }
 
+    @Nonnull
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
@@ -119,6 +122,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
         });
     }
 
+    @Nonnull
     @Override
     public Flux<Payload> requestStream(Payload payload) {
         BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
@@ -149,8 +153,9 @@ final class BrokerRequestHandler extends AbstractRSocket {
         });
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+    public Flux<Payload> requestChannel(@Nonnull Publisher<Payload> payloads) {
         Flux<Payload> payloadsWithSignalRouting = (Flux<Payload>) payloads;
         //noinspection ConstantConditions
         return payloadsWithSignalRouting.switchOnFirst((signal, flux) -> requestChannel(signal.get(), flux));
@@ -176,8 +181,9 @@ final class BrokerRequestHandler extends AbstractRSocket {
         });
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> metadataPush(Payload payload) {
+    public Mono<Void> metadataPush(@Nonnull Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
                 CloudEventData<JsonNode> cloudEvent = JSON.decodeValue(payload.getMetadataUtf8());

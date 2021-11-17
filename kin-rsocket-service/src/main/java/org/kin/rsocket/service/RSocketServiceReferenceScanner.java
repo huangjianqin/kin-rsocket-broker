@@ -12,6 +12,7 @@ import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
+import javax.annotation.Nonnull;
 import java.util.Set;
 
 /**
@@ -40,8 +41,9 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
         });
     }
 
+    @Nonnull
     @Override
-    protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
+    protected Set<BeanDefinitionHolder> doScan(@Nonnull String... basePackages) {
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
         if (beanDefinitions.isEmpty()) {
@@ -75,7 +77,7 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
     }
 
     @Override
-    protected boolean checkCandidate(String beanName, BeanDefinition beanDefinition) throws IllegalStateException {
+    protected boolean checkCandidate(@Nonnull String beanName, @Nonnull BeanDefinition beanDefinition) throws IllegalStateException {
         if (super.checkCandidate(beanName, beanDefinition)) {
             return true;
         } else {

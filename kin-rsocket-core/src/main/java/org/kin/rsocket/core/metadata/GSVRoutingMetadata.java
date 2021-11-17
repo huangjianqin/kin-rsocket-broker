@@ -54,7 +54,7 @@ public final class GSVRoutingMetadata implements MetadataAware {
      * @param serviceHandlerKey service.handler
      */
     public static GSVRoutingMetadata of(String group, String serviceHandlerKey, String version) {
-        String service = "";
+        String service;
         String handler = "";
         int methodSymbolPosition = serviceHandlerKey.lastIndexOf(Separators.SERVICE_HANDLER);
         if (methodSymbolPosition > 0) {

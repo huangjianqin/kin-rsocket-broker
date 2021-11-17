@@ -31,6 +31,7 @@ public final class ServiceInstanceChangedEventConsumer extends AbstractCloudEven
         return Mono.fromRunnable(() -> consume0(cloudEvent));
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void consume0(ServiceInstanceChangedEvent cloudEvent) {
         if (Objects.isNull(cloudEvent)) {
             return;

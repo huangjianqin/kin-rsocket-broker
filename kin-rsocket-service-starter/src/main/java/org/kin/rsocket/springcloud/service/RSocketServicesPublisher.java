@@ -14,6 +14,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.annotation.Order;
 
+import javax.annotation.Nonnull;
+
 /**
  * 更新broker app端口元数据以及暴露已注册的所有服务
  * <p>
@@ -32,7 +34,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
     private RSocketServiceProperties serviceConfig;
 
     @Override
-    public void onApplicationEvent(ApplicationStartedEvent event) {
+    public void onApplicationEvent(@Nonnull ApplicationStartedEvent event) {
         //requester init
         requester.init();
 

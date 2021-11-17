@@ -12,6 +12,7 @@ import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ public class RSocketCloudFunctionRegistrar implements ApplicationListener<Applic
     private RSocketServiceProperties serviceConfig;
 
     @Override
-    public void onApplicationEvent(ApplicationStartedEvent event) {
+    public void onApplicationEvent(@Nonnull ApplicationStartedEvent event) {
         //所有function name
         //function name = service name + '.' + method
         Set<String> functionNames = functionRegistry.getNames(null).stream()
@@ -44,7 +45,7 @@ public class RSocketCloudFunctionRegistrar implements ApplicationListener<Applic
                 //寻找其apply方法
                 Method method = function.getClass().getMethod("apply", Object.class);
                 String serviceName = functionName.substring(0, functionName.lastIndexOf("."));
-                String handlerName = functionName.substring(functionName.lastIndexOf(".") + 1, functionName.length());
+                String handlerName = functionName.substring(functionName.lastIndexOf(".") + 1);
 
                 //将其封装成invoker
                 ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(

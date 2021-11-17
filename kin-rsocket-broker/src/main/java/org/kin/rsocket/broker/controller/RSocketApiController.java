@@ -56,7 +56,7 @@ public class RSocketApiController {
             int serviceId = routingMetadata.serviceId();
 
             BrokerResponder responder;
-            if (!endpoint.isEmpty() && endpoint.startsWith("id:")) {
+            if (endpoint.startsWith("id:")) {
                 //存在endpoint
                 int instanceId = Integer.parseInt(endpoint.substring(3).trim());
                 responder = serviceManager.getByInstanceId(instanceId);

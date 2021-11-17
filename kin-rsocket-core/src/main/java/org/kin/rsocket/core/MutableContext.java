@@ -2,6 +2,7 @@ package org.kin.rsocket.core;
 
 import reactor.util.context.Context;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -18,23 +19,26 @@ public class MutableContext implements Context {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> T get(Object key) {
+    public <T> T get(@Nonnull Object key) {
         return (T) holder.get(key);
     }
 
+    @Nonnull
     @Override
-    public boolean hasKey(Object key) {
+    public boolean hasKey(@Nonnull Object key) {
         return holder.containsKey(key);
     }
 
+    @Nonnull
     @Override
-    public Context put(Object key, Object value) {
+    public Context put(@Nonnull Object key, @Nonnull Object value) {
         holder.put(key, value);
         return this;
     }
 
+    @Nonnull
     @Override
-    public Context delete(Object key) {
+    public Context delete(@Nonnull Object key) {
         holder.remove(key);
         return this;
     }
@@ -44,6 +48,7 @@ public class MutableContext implements Context {
         return holder.size();
     }
 
+    @Nonnull
     @Override
     public Stream<Map.Entry<Object, Object>> stream() {
         return holder.entrySet().stream();

@@ -6,6 +6,7 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -18,7 +19,7 @@ class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T>
     @Autowired
     private RSocketRequester rsocketRequester;
     /** 服务接口 */
-    private Class<T> serviceInterface;
+    private final Class<T> serviceInterface;
     /** rsocket service 服务reference, 仅仅build一次 */
     private volatile T reference;
 
@@ -49,8 +50,9 @@ class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T>
         return serviceInterface;
     }
 
+    @Nonnull
     @Override
-    protected T createInstance() throws Exception {
+    protected T createInstance() {
         if (Objects.isNull(reference)) {
             reference = builder().build();
         }

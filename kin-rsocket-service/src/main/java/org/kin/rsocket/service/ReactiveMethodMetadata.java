@@ -36,15 +36,15 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /** handler name, 默认=method name */
     private String handler;
     /** full name, service and name */
-    private String fullName;
+    private final String fullName;
     /** service group */
     private String group;
     /** service version */
     private String version;
     /** service ID */
-    private Integer serviceId;
+    private final Integer serviceId;
     /** method handler id */
-    private Integer handlerId;
+    private final Integer handlerId;
     /** endpoint */
     private String endpoint;
     /** sticky */
@@ -62,7 +62,7 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /** 返回值是否是{@link Mono} */
     private boolean monoChannel = false;
     /** metrics tags */
-    private List<Tag> metricsTags = new ArrayList<>();
+    private final List<Tag> metricsTags = new ArrayList<>();
 
     ReactiveMethodMetadata(String group,
                            String service,

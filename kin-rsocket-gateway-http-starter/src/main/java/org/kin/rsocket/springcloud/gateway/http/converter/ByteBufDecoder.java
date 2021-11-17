@@ -10,6 +10,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 
+import javax.annotation.Nonnull;
 import java.util.Map;
 
 /**
@@ -30,7 +31,7 @@ public class ByteBufDecoder extends AbstractDataBufferDecoder<ByteBuf> {
     }
 
     @Override
-    public ByteBuf decode(DataBuffer dataBuffer, ResolvableType elementType,
+    public ByteBuf decode(@Nonnull DataBuffer dataBuffer, @Nonnull ResolvableType elementType,
                           @Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
         if (dataBuffer instanceof NettyDataBuffer) {
             return ((NettyDataBuffer) dataBuffer).getNativeBuffer();

@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-@SuppressWarnings({"ConstantConditions", "rawtypes"})
 public final class RSocketRequesterSupportImpl implements RSocketRequesterSupport {
     /** spring rsocket config */
     private final RSocketServiceProperties config;
@@ -85,6 +84,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
     }
 
     /** 获取app元数据 */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private AppMetadata getAppMetadata() {
         //app metadata
         AppMetadata.Builder builder = AppMetadata.builder();

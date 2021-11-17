@@ -20,7 +20,7 @@ public interface AuthenticationService {
                                        String[] roles,
                                        String[] authorities,
                                        String sub,
-                                       String[] audience) throws Exception {
+                                       String[] audience) {
         //默认不要求实现
         throw new UnsupportedOperationException();
     }

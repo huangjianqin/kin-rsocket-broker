@@ -121,7 +121,7 @@ public class RSocketServiceProperties {
 
     /** builder **/
     public static class Builder {
-        private RSocketServiceProperties rsocketServiceProperties = new RSocketServiceProperties();
+        private final RSocketServiceProperties rsocketServiceProperties = new RSocketServiceProperties();
 
         public Builder schema(String schema) {
             rsocketServiceProperties.schema = schema;

@@ -5,6 +5,8 @@ import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
+import javax.annotation.Nonnull;
+
 /**
  * RSocket通信抽象父类
  *
@@ -26,6 +28,7 @@ public class AbstractRSocket implements RSocket {
         return onClose.scan(Scannable.Attr.TERMINATED);
     }
 
+    @Nonnull
     @Override
     public Mono<Void> onClose() {
         return onClose.asMono();

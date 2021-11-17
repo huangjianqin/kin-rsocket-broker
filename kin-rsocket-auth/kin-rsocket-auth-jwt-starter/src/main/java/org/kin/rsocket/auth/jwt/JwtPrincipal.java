@@ -15,19 +15,19 @@ import java.util.*;
  */
 public class JwtPrincipal implements RSocketAppPrincipal {
     /** token id */
-    private String tokenId;
+    private final String tokenId;
     /** application */
-    private String subject;
+    private final String subject;
     /** 订阅者 */
-    private List<String> audience;
+    private final List<String> audience;
     /** 角色 */
     private Set<String> roles;
     /** 作者 */
     private Set<String> authorities;
     /** accounts */
-    private Set<String> serviceAccounts;
+    private final Set<String> serviceAccounts;
     /** organizations */
-    private Set<String> organizations;
+    private final Set<String> organizations;
 
     public JwtPrincipal(DecodedJWT decodedJWT) {
         this.tokenId = decodedJWT.getClaim("id").asString();

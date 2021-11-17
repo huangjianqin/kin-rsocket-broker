@@ -130,7 +130,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         close();
     }
 }

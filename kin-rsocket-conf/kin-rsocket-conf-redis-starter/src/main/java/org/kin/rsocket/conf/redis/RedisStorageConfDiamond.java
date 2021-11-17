@@ -59,7 +59,7 @@ public class RedisStorageConfDiamond extends AbstractConfDiamond {
             if (StringUtils.isNotBlank(group) && StringUtils.isNotBlank(key)) {
                 log.info("received events from Redis stream {} for {}", message.getStream(), group);
                 get(group, key).map(value -> {
-                    ConfigChangedEvent configChangedEvent = ConfigChangedEvent.of(group, value.toString());
+                    ConfigChangedEvent configChangedEvent = ConfigChangedEvent.of(group, value);
                     return configChangedEvent.toCloudEvent();
                 }).subscribe(cloudEvent -> {
                     String jsonText = JSON.write(cloudEvent);

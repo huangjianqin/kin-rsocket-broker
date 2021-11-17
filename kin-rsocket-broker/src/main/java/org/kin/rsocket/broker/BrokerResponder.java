@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
@@ -52,7 +53,7 @@ public final class BrokerResponder implements CloudEventRSocket {
     /** remote requester ip */
     private final String remoteIp;
     /** peer RSocket暴露的服务 */
-    private Set<ServiceLocator> peerServices;
+    private final Set<ServiceLocator> peerServices;
     /** app status */
     private AppStatus appStatus = AppStatus.CONNECTED;
     /** requester请求处理handler */
@@ -101,28 +102,33 @@ public final class BrokerResponder implements CloudEventRSocket {
         this.comboOnClose.doOnTerminate(this::hideServices).subscribeOn(Schedulers.parallel()).subscribe();
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> fireAndForget(Payload payload) {
+    public Mono<Void> fireAndForget(@Nonnull Payload payload) {
         return requester.fireAndForget(payload);
     }
 
+    @Nonnull
     @Override
-    public Mono<Payload> requestResponse(Payload payload) {
+    public Mono<Payload> requestResponse(@Nonnull Payload payload) {
         return requester.requestResponse(payload);
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestStream(Payload payload) {
+    public Flux<Payload> requestStream(@Nonnull Payload payload) {
         return requester.requestStream(payload);
     }
 
+    @Nonnull
     @Override
-    public Flux<Payload> requestChannel(Publisher<Payload> payloads) {
+    public Flux<Payload> requestChannel(@Nonnull Publisher<Payload> payloads) {
         return requester.requestChannel(payloads);
     }
 
+    @Nonnull
     @Override
-    public Mono<Void> metadataPush(Payload payload) {
+    public Mono<Void> metadataPush(@Nonnull Payload payload) {
         return requester.metadataPush(payload);
     }
 
@@ -146,6 +152,7 @@ public final class BrokerResponder implements CloudEventRSocket {
         }
     }
 
+    @Nonnull
     @Override
     public Mono<Void> onClose() {
         return this.comboOnClose;
