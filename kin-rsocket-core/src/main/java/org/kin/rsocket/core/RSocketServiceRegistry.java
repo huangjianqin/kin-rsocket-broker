@@ -1,6 +1,7 @@
 package org.kin.rsocket.core;
 
 import org.kin.framework.utils.ClassUtils;
+import org.kin.framework.utils.MurmurHash3;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodInfo;
@@ -8,7 +9,6 @@ import org.kin.rsocket.core.domain.ReactiveMethodParameterInfo;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
-import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
 
 import java.lang.reflect.Method;

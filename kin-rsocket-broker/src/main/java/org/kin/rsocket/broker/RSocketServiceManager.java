@@ -11,6 +11,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.eclipse.collections.impl.multimap.set.UnifiedSetMultimap;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.MurmurHash3;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
@@ -21,7 +22,6 @@ import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.kin.rsocket.core.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.core.utils.Topologys;
 import org.slf4j.Logger;
@@ -165,6 +165,8 @@ public final class RSocketServiceManager {
                     //illegal application id, appID should be UUID
                     errorMsg = String.format("'%s' is not legal application ID, please supply legal UUID as Application ID", appId == null ? "" : appId);
                 }
+            } else {
+                errorMsg = "Can not found application metadata";
             }
             if (errorMsg == null) {
                 //Security authentication
@@ -194,15 +196,16 @@ public final class RSocketServiceManager {
             BrokerResponder responder = new BrokerResponder(compositeMetadata, appMetadata, requester, this, requestHandler);
             responder.onClose()
                     .doOnTerminate(() -> onResponderDisposed(responder))
-                    .subscribeOn(Schedulers.parallel()).subscribe();
+                    .subscribeOn(Schedulers.parallel())
+                    .subscribe();
             //handler registration notify
             registerResponder(responder);
             log.info(String.format("succeed to accept connection from application '%s'", appMetadata.getName()));
             return Mono.just(requestHandler);
         } catch (Exception e) {
-            String formatedErrorMsg = String.format("failed to accept the connection: %s", e.getMessage());
-            log.error(formatedErrorMsg, e);
-            return returnRejectedRSocket(formatedErrorMsg, requester);
+            String formattedErrorMsg = String.format("failed to accept the connection: %s", e.getMessage());
+            log.error(formattedErrorMsg, e);
+            return returnRejectedRSocket(formattedErrorMsg, requester);
         }
     }
 

@@ -1,6 +1,6 @@
 package org.kin.rsocket.core;
 
-import org.kin.rsocket.core.utils.MurmurHash3;
+import org.kin.framework.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
 
 import java.util.Objects;
