@@ -3,8 +3,9 @@ package org.kin.rsocket.service;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.kin.rsocket.core.MetricsService;
 import org.kin.rsocket.core.RSocketService;
-import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
+
+import javax.annotation.Resource;
 
 /**
  * metrics rsocket service Prometheus implementation
@@ -14,7 +15,7 @@ import reactor.core.publisher.Mono;
  */
 @RSocketService(MetricsService.class)
 public class MetricsServicePrometheusImpl implements MetricsService {
-    @Autowired
+    @Resource
     private PrometheusMeterRegistry meterRegistry;
 
     @Override

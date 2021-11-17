@@ -4,10 +4,10 @@ import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.event.CloudEventNotifyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 @RSocketService(CloudEventNotifyService.class)
 public class CloudEventNotifyServiceImpl implements CloudEventNotifyService {
-    @Autowired
+    @Resource
     private RSocketServiceManager serviceManager;
 
     @Override

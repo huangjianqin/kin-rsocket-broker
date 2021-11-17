@@ -15,7 +15,6 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageAcceptMimeTypesMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,11 +40,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/metrics")
 public class MetricsScrapeController {
     private final ByteBuf metricsScrapeCompositeByteBuf;
-    @Autowired
+    @Resource
     private RSocketServiceManager serviceManager;
-    @Autowired
+    @Resource
     private Environment env;
-    @Autowired
+    @Resource
     private RSocketBrokerManager brokerManager;
 
     public MetricsScrapeController() {

@@ -1,12 +1,12 @@
 package org.kin.rsocket.service;
 
 import brave.Tracing;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -14,13 +14,13 @@ import java.util.Objects;
  * @date 2021/5/19
  */
 class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
-    @Autowired
+    @Resource
     private RSocketServiceRequester requester;
     /** 缓存rsocket service reference builder */
     private RSocketServiceReferenceBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
     private volatile T reference;
-    @Autowired(required = false)
+    @Resource
     private Tracing tracing;
 
     RSocketServiceReferenceFactoryBean(RSocketServiceReferenceBuilder<T> builder) {

@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
+import javax.annotation.Resource;
+
 /**
  * @author huangjianqin
  * @date 2021/8/12
@@ -19,7 +21,7 @@ import org.springframework.core.annotation.Order;
 @Configuration
 @EnableConfigurationProperties(RSocketBrokerDiscoveryProperties.class)
 public class RSocketBrokerDiscoveryAutoConfiguration {
-    @Autowired
+    @Resource
     private RSocketBrokerDiscoveryProperties discoveryProperties;
 
     @Bean

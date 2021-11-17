@@ -1,12 +1,12 @@
 package org.kin.spring.rsocket.support;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Resource;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  */
 class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     /** 底层remote requester */
-    @Autowired
+    @Resource
     private RSocketRequester rsocketRequester;
     /** 服务接口 */
     private final Class<T> serviceInterface;
