@@ -21,6 +21,8 @@ import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.transport.UriTransportRegistry;
+import org.kin.rsocket.core.upstream.loadbalance.RoundRobinUpstreamLoadBalance;
+import org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance;
 import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -65,7 +67,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     private static final Scheduler REFRESH_SCHEDULER = Schedulers.newSingle("LoadBalanceRequester-RefreshRSockets");
 
     /** load balance rule */
-    private final UpstreamRSocketLoadBalance loadBalance;
+    private final UpstreamLoadBalance loadBalance;
     /** service id */
     private final String serviceId;
     /** 上一次refresh uri 时间 */
@@ -98,14 +100,14 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     }
 
     public LoadBalanceRsocketRequester(String serviceId,
-                                       UpstreamRSocketLoadBalanceStrategy loadBalanceStrategy,
+                                       UpstreamLoadBalance loadBalance,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
         this.serviceId = serviceId;
-        if (Objects.isNull(loadBalanceStrategy)) {
-            loadBalanceStrategy = tryLoadLoadBalanceStrategy();
+        if (Objects.isNull(loadBalance)) {
+            loadBalance = tryLoadUpstreamLoadBalance();
         }
-        this.loadBalance = loadBalanceStrategy.strategy();
+        this.loadBalance = loadBalance;
         this.requesterSupport = requesterSupport;
         if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceId) ||
                 !RSocketServiceRegistry.exposedServices().isEmpty()) {
@@ -131,14 +133,14 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /**
      * 通过kin-spi机制加载, 如果没有, 则默认round-robin
      */
-    private UpstreamRSocketLoadBalanceStrategy tryLoadLoadBalanceStrategy() {
-        UpstreamRSocketLoadBalanceStrategy strategy = RSocketAppContext.LOADER.getAdaptiveExtension(UpstreamRSocketLoadBalanceStrategy.class);
-        if (Objects.isNull(strategy)) {
+    private UpstreamLoadBalance tryLoadUpstreamLoadBalance() {
+        UpstreamLoadBalance loadBalance = RSocketAppContext.LOADER.getAdaptiveExtension(UpstreamLoadBalance.class);
+        if (Objects.isNull(loadBalance)) {
             //默认round-robin
-            strategy = UpstreamRSocketLoadBalanceStrategy.ROUND_ROBIN;
+            loadBalance = new RoundRobinUpstreamLoadBalance();
         }
 
-        return strategy;
+        return loadBalance;
     }
 
     /** 刷新Rsocket实例 */
@@ -236,10 +238,11 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /**
      * 根据{@link LoadBalanceRsocketRequester#loadBalance}选择一个有效的RSocket
      */
-    private Mono<RSocket> next() {
+    private Mono<RSocket> next(ByteBuf paramBytes) {
         return Mono.fromSupplier(() -> {
             awaitFirstConnect();
-            RSocket selected = loadBalance.select(new ArrayList<>(activeRSockets.values()));
+            String targetUri = loadBalance.select(paramBytes, new ArrayList<>(activeRSockets.keySet()));
+            RSocket selected = activeRSockets.get(targetUri);
             if (Objects.isNull(selected)) {
                 throw new NoAvailableConnectionException(serviceId);
             }
@@ -267,7 +270,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Mono<Payload>) disposedMono();
         }
-        return next().doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+        return next(payload.data()).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMap(rSocket -> rSocket.requestResponse(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);
@@ -282,7 +285,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
-        return next().doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+        return next(payload.data()).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMap(rSocket -> rSocket.fireAndForget(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);
@@ -329,7 +332,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Flux<Payload>) disposedFlux();
         }
-        return next().doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+        return next(payload.data()).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMapMany(rSocket -> rSocket.requestStream(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);
@@ -343,7 +346,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Flux<Payload>) disposedFlux();
         }
-        return next().doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payloads))
+
+        return next(null).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payloads))
                 .flatMapMany(rSocket -> rSocket.requestChannel(payloads)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);

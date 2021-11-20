@@ -1,0 +1,2 @@
+#upstreamLoadBalance=org.kin.rsocket.core.upstream.loadbalance.ConsistentHashUpstreamLoadBalance
+upstreamLoadBalance=org.kin.rsocket.core.upstream.loadbalance.RoundRobinUpstreamLoadBalance
