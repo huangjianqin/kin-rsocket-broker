@@ -73,13 +73,14 @@ public final class RSocketServiceManager {
     private Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>();
     /** key -> app name, value -> responder list */
     private FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>();
-    /** key -> service id(gsv), value -> app instance UUID list */
-    private UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>();
 
     /** key -> serviceId, value -> service info */
     private IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
     /** key -> instanceId, value -> list(serviceId) */
     private UnifiedSetMultimap<Integer, Integer> instanceId2ServiceIds = new UnifiedSetMultimap<>();
+
+    /** consumer订阅p2p服务信息, key -> service id(gsv), value -> app instance UUID list */
+    private UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>();
 
     public RSocketServiceManager(RSocketFilterChain filterChain,
                                  Sinks.Many<String> notificationSink,
@@ -333,7 +334,7 @@ public final class RSocketServiceManager {
     /**
      * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
-    public BrokerResponder getByServiceId(int serviceId, ByteBuf paramBytes) {
+    public BrokerResponder routeByServiceId(int serviceId, ByteBuf paramBytes) {
         Integer instanceId = router.route(serviceId, paramBytes);
         if (Objects.nonNull(instanceId)) {
             return instanceId2Responder.get(instanceId);

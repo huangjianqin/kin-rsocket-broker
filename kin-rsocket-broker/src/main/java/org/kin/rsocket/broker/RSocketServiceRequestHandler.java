@@ -407,7 +407,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", serviceErrorMsg, endpoint));
                     }
                 } else {
-                    targetResponder = serviceManager.getByServiceId(serviceId, paramBytes);
+                    targetResponder = serviceManager.routeByServiceId(serviceId, paramBytes);
                     if (Objects.isNull(targetResponder)) {
                         error = new InvalidException(String.format("Service not found '%s'", serviceErrorMsg));
                     }

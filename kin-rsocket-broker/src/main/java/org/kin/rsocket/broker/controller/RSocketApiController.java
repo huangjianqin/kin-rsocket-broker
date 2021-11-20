@@ -62,7 +62,7 @@ public class RSocketApiController {
                 int instanceId = Integer.parseInt(endpoint.substring(3).trim());
                 responder = serviceManager.getByInstanceId(instanceId);
             } else {
-                responder = serviceManager.getByServiceId(serviceId, bodyBuf);
+                responder = serviceManager.routeByServiceId(serviceId, bodyBuf);
             }
             if (Objects.nonNull(responder)) {
                 if (authRequired) {

@@ -56,7 +56,7 @@ public class RSocketServiceQueryController {
                                         @PathVariable(name = "serviceName") String serviceName,
                                         @RequestParam(name = "version", defaultValue = "") String version) {
         ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(serviceName).concat("\"]")).getBytes(StandardCharsets.UTF_8));
-        BrokerResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId(), bodyBuf);
+        BrokerResponder brokerResponder = serviceManager.routeByServiceId(ServiceLocator.of(group, serviceName, version).getId(), bodyBuf);
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");

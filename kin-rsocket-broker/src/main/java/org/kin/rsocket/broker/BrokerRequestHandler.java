@@ -220,7 +220,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                 }
             } else {
-                targetResponder = serviceManager.getByServiceId(serviceId, paramBytes);
+                targetResponder = serviceManager.routeByServiceId(serviceId, paramBytes);
                 if (Objects.isNull(targetResponder)) {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }
