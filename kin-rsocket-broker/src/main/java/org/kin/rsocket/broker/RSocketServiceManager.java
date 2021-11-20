@@ -1,6 +1,7 @@
 package org.kin.rsocket.broker;
 
 import io.micrometer.core.instrument.Metrics;
+import io.netty.buffer.ByteBuf;
 import io.netty.util.collection.IntObjectHashMap;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
@@ -332,8 +333,8 @@ public final class RSocketServiceManager {
     /**
      * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
-    public BrokerResponder getByServiceId(int serviceId) {
-        Integer instanceId = router.route(serviceId);
+    public BrokerResponder getByServiceId(int serviceId, ByteBuf paramBytes) {
+        Integer instanceId = router.route(serviceId, paramBytes);
         if (Objects.nonNull(instanceId)) {
             return instanceId2Responder.get(instanceId);
         } else {
@@ -505,7 +506,7 @@ public final class RSocketServiceManager {
     /**
      * 注销app instance及其服务
      */
-    public void unregister(int instanceId) {
+    public void unregister(int instanceId, int weight) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
@@ -532,7 +533,7 @@ public final class RSocketServiceManager {
                 this.instanceId2ServiceIds = instanceId2ServiceIds;
                 this.services = services;
 
-                router.onServiceUnregistered(instanceId, serviceIds);
+                router.onServiceUnregistered(instanceId, weight, serviceIds);
             }
         } finally {
             writeLock.unlock();
@@ -542,7 +543,7 @@ public final class RSocketServiceManager {
     /**
      * 注销app instance及其服务
      */
-    public void unregister(int instanceId, int serviceId) {
+    public void unregister(int instanceId, int weight, int serviceId) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
@@ -564,7 +565,7 @@ public final class RSocketServiceManager {
                 this.instanceId2ServiceIds = instanceId2ServiceIds;
                 this.services = services;
 
-                router.onServiceUnregistered(instanceId, Collections.singleton(serviceId));
+                router.onServiceUnregistered(instanceId, weight, Collections.singleton(serviceId));
             }
         } finally {
             writeLock.unlock();

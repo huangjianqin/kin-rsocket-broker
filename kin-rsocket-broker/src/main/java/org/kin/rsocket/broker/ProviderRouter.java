@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.netty.buffer.ByteBuf;
 import org.kin.rsocket.core.ServiceLocator;
 
 import java.util.Collection;
@@ -13,9 +14,11 @@ import java.util.Collection;
 public interface ProviderRouter {
     /**
      * 根据实现的路由规则选择出一个app instance Id
-     * {@link RSocketServiceManager#lock}加锁下完成
+     *
+     * @param serviceId  服务gsv
+     * @param paramBytes 请求的参数序列化后bytes
      */
-    Integer route(int serviceId);
+    Integer route(int serviceId, ByteBuf paramBytes);
 
     /**
      * app注册完触发
@@ -27,7 +30,7 @@ public interface ProviderRouter {
      * app注销完触发
      * {@link RSocketServiceManager#lock}加锁下完成
      */
-    void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds);
+    void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds);
 
     /**
      * 获取所有指定服务对应的所有app instance Id

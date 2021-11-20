@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.netty.buffer.ByteBuf;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.kin.rsocket.core.ServiceLocator;
 
@@ -21,7 +22,7 @@ public class WeightedRandomRouter implements ProviderRouter {
     private FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>();
 
     @Override
-    public Integer route(int serviceId) {
+    public Integer route(int serviceId, ByteBuf paramBytes) {
         int instanceId;
         List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
         int handlerCount = instanceIds.size();
@@ -57,7 +58,7 @@ public class WeightedRandomRouter implements ProviderRouter {
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
         //copy on write
         FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>(this.serviceId2InstanceIds);
         for (Integer serviceId : serviceIds) {

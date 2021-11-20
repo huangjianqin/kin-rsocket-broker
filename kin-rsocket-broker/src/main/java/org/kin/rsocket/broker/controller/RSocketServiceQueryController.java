@@ -55,12 +55,12 @@ public class RSocketServiceQueryController {
     public Mono<String> queryDefinition(@RequestParam(name = "group", defaultValue = "") String group,
                                         @PathVariable(name = "serviceName") String serviceName,
                                         @RequestParam(name = "version", defaultValue = "") String version) {
-        BrokerResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId());
+        ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(serviceName).concat("\"]")).getBytes(StandardCharsets.UTF_8));
+        BrokerResponder brokerResponder = serviceManager.getByServiceId(ServiceLocator.of(group, serviceName, version).getId(), bodyBuf);
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
-            ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(serviceName).concat("\"]")).getBytes(StandardCharsets.UTF_8));
             return brokerResponder
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(Payload::getDataUtf8);

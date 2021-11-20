@@ -56,7 +56,7 @@ public class CanaryFilter extends AbstractRSocketFilter {
         //判断是否是金丝雀服务
         if (canaryServices.contains(routingMetadata.getService())) {
             String canaryRouting = ServiceLocator.gsv(routingMetadata.getGroup(), routingMetadata.getService(), canaryVersion);
-            if (serviceManager.getByServiceId(ServiceLocator.serviceHashCode(canaryRouting)) != null) {
+            if (serviceManager.containsServiceId(ServiceLocator.serviceHashCode(canaryRouting))) {
                 return Mono.just(true);
             }
         }

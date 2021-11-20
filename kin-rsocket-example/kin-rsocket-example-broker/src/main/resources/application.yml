@@ -9,6 +9,7 @@ kin:
     broker:
       port: 9999
       auth: false
+      route: consistentHash
 
 # management
 management:

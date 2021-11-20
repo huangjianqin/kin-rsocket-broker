@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.netty.buffer.ByteBuf;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.kin.framework.utils.CollectionUtils;
@@ -21,7 +22,7 @@ public class RoundRobinRouter implements ProviderRouter {
     private Map<Integer, AtomicInteger> serviceId2Counter = new UnifiedMap<>();
 
     @Override
-    public Integer route(int serviceId) {
+    public Integer route(int serviceId, ByteBuf paramBytes) {
         List<Integer> instanceIds = new ArrayList<>(getAllInstanceIds(serviceId));
         AtomicInteger counter = serviceId2Counter.get(serviceId);
 
@@ -56,7 +57,7 @@ public class RoundRobinRouter implements ProviderRouter {
     }
 
     @Override
-    public void onServiceUnregistered(int instanceId, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
         //copy on write
         FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>();
         Map<Integer, AtomicInteger> serviceId2Counter = new UnifiedMap<>();

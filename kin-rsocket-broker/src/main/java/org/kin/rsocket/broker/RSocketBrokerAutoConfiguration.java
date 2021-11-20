@@ -204,6 +204,13 @@ public class RSocketBrokerAutoConfiguration {
         return new RoundRobinRouter();
     }
 
+    @Bean("router")
+    @ConditionalOnMissingBean
+    @ConditionalOnExpression("'consistentHash'.equals('${kin.rsocket.broker.route}')")
+    public ProviderRouter consistentHashRouter() {
+        return new ConsistentHashRouter();
+    }
+
     /**
      * 默认router, 故优先级最低
      * 因为定义得越后面, bean优先级越低, 故放在最后面即可

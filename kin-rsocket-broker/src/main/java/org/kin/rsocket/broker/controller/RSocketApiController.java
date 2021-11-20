@@ -55,13 +55,14 @@ public class RSocketApiController {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
             int serviceId = routingMetadata.serviceId();
 
+            ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);
             BrokerResponder responder;
             if (endpoint.startsWith("id:")) {
                 //存在endpoint
                 int instanceId = Integer.parseInt(endpoint.substring(3).trim());
                 responder = serviceManager.getByInstanceId(instanceId);
             } else {
-                responder = serviceManager.getByServiceId(serviceId);
+                responder = serviceManager.getByServiceId(serviceId, bodyBuf);
             }
             if (Objects.nonNull(responder)) {
                 if (authRequired) {
@@ -71,7 +72,6 @@ public class RSocketApiController {
                     }
                 }
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
-                ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);
                 return responder.requestResponse(DefaultPayload.create(bodyBuf, compositeMetadata.getContent()))
                         .map(payload -> {
                             HttpHeaders headers = new HttpHeaders();

@@ -187,7 +187,7 @@ public final class BrokerResponder implements CloudEventRSocket {
      * 隐藏peer rsocket的服务, 并修改该app的服务状态
      */
     public void hideServices() {
-        serviceManager.unregister(appMetadata.getId());
+        serviceManager.unregister(appMetadata.getId(), appMetadata.getWeight());
         this.appStatus = AppStatus.DOWN;
     }
 
@@ -197,7 +197,7 @@ public final class BrokerResponder implements CloudEventRSocket {
             this.peerServices.removeAll(services);
         }
         for (ServiceLocator service : services) {
-            this.serviceManager.unregister(appMetadata.getId(), service.getId());
+            this.serviceManager.unregister(appMetadata.getId(), appMetadata.getWeight(), service.getId());
         }
     }
 
