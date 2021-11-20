@@ -16,9 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/11/20
  */
 public class ConsistentHashRouter implements ProviderRouter {
-    /** hash环每个节点数量(含虚拟节点) */
-    private static final int HASH_NODE_NUM = 64;
-
     /** key -> serviceId, value -> 一致性hash环 */
     private final ConcurrentHashMap<Integer, ConsistentHash> serviceId2Hash = new ConcurrentHashMap<>();
 
@@ -75,6 +72,9 @@ public class ConsistentHashRouter implements ProviderRouter {
     }
 
     private static class ConsistentHash extends org.kin.framework.utils.ConsistentHash<Integer> {
+        /** hash环每个节点数量(含虚拟节点) */
+        private static final int HASH_NODE_NUM = 64;
+
         /** 缓存所有app instance Id */
         private final ConcurrentHashSet<Integer> instanceIds = new ConcurrentHashSet<>();
 
