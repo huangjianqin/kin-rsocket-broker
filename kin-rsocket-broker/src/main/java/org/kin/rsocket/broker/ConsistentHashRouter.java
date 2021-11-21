@@ -4,10 +4,7 @@ import io.netty.buffer.ByteBuf;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.rsocket.core.ServiceLocator;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 
 /**
  * 一致性hash路由算法
@@ -17,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ConsistentHashRouter implements ProviderRouter {
     /** key -> serviceId, value -> 一致性hash环 */
-    private final ConcurrentHashMap<Integer, ConsistentHash> serviceId2Hash = new ConcurrentHashMap<>();
+    private Map<Integer, ConsistentHash> serviceId2Hash = new HashMap<>();
 
     @Override
     public Integer route(int serviceId, ByteBuf paramBytes) {
@@ -37,6 +34,8 @@ public class ConsistentHashRouter implements ProviderRouter {
 
     @Override
     public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
+        //copy on write
+        Map<Integer, ConsistentHash> serviceId2Hash = new HashMap<>(this.serviceId2Hash);
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
 
@@ -48,10 +47,13 @@ public class ConsistentHashRouter implements ProviderRouter {
             weight = Math.max(weight, 1);
             consistentHash.add(instanceId, weight);
         }
+        this.serviceId2Hash = serviceId2Hash;
     }
 
     @Override
     public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
+        //copy on write
+        Map<Integer, ConsistentHash> serviceId2Hash = new HashMap<>(this.serviceId2Hash);
         for (Integer serviceId : serviceIds) {
             ConsistentHash consistentHash = serviceId2Hash.get(serviceId);
             if (Objects.isNull(consistentHash)) {
@@ -60,6 +62,7 @@ public class ConsistentHashRouter implements ProviderRouter {
 
             consistentHash.remove(instanceId, weight);
         }
+        this.serviceId2Hash = serviceId2Hash;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class ConsistentHashRouter implements ProviderRouter {
         return consistentHash.instanceIds;
     }
 
-    private static class ConsistentHash extends org.kin.framework.utils.ConsistentHash<Integer> {
+    private static class ConsistentHash extends org.kin.framework.utils.ConcurrentConsistentHash<Integer> {
         /** hash环每个节点数量(含虚拟节点) */
         private static final int HASH_NODE_NUM = 64;
 
