@@ -71,7 +71,7 @@
       "defaultValue": "kin"
     },
     {
-      "name": "kin.rsocket.broker.route",
+      "name": "kin.rsocket.broker.router",
       "type": "java.lang.String",
       "description": "rsocket broker consumer请求路由规则",
       "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",

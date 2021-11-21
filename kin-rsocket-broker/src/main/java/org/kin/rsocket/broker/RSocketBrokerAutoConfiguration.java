@@ -199,14 +199,14 @@ public class RSocketBrokerAutoConfiguration {
     //----------------------------------------------router----------------------------------------------
     @Bean("router")
     @ConditionalOnMissingBean
-    @ConditionalOnExpression("'roundRobin'.equals('${kin.rsocket.broker.route}')")
+    @ConditionalOnExpression("'roundRobin'.equals('${kin.rsocket.broker.router}')")
     public ProviderRouter roundRobinRouter() {
         return new RoundRobinRouter();
     }
 
     @Bean("router")
     @ConditionalOnMissingBean
-    @ConditionalOnExpression("'consistentHash'.equals('${kin.rsocket.broker.route}')")
+    @ConditionalOnExpression("'consistentHash'.equals('${kin.rsocket.broker.router}')")
     public ProviderRouter consistentHashRouter() {
         return new ConsistentHashRouter();
     }
@@ -217,7 +217,7 @@ public class RSocketBrokerAutoConfiguration {
      */
     @Bean("router")
     @ConditionalOnMissingBean
-    @ConditionalOnExpression("'random'.equals('${kin.rsocket.broker.route:random}')")
+    @ConditionalOnExpression("'random'.equals('${kin.rsocket.broker.router:random}')")
     public ProviderRouter weightedRandomRouter() {
         return new WeightedRandomRouter();
     }
