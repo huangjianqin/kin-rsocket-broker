@@ -21,5 +21,5 @@ public interface UpstreamLoadBalance {
      * @param paramBytes 请求的参数序列化后bytes
      * @param uris       upstream rsocket uris
      */
-    String select(ByteBuf paramBytes, List<String> uris);
+    String select(int serviceId, ByteBuf paramBytes, List<String> uris);
 }

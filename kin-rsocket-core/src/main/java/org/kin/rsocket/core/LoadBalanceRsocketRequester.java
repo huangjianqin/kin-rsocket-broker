@@ -69,7 +69,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /** load balance rule */
     private final UpstreamLoadBalance loadBalance;
     /** service id */
-    private final String serviceId;
+    private final String serviceGsv;
     /** 上一次refresh uri 时间 */
     private volatile long lastRefreshTimestamp;
     /** 上次刷新的rsocket uris */
@@ -93,23 +93,23 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /** 首次创建时, 用于等待连接建立成功, 然后释放掉 */
     private volatile CountDownLatch latch = new CountDownLatch(1);
 
-    public LoadBalanceRsocketRequester(String serviceId,
+    public LoadBalanceRsocketRequester(String serviceGsv,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
-        this(serviceId, null, urisFactory, requesterSupport);
+        this(serviceGsv, null, urisFactory, requesterSupport);
     }
 
-    public LoadBalanceRsocketRequester(String serviceId,
+    public LoadBalanceRsocketRequester(String serviceGsv,
                                        UpstreamLoadBalance loadBalance,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
-        this.serviceId = serviceId;
+        this.serviceGsv = serviceGsv;
         if (Objects.isNull(loadBalance)) {
             loadBalance = tryLoadUpstreamLoadBalance();
         }
         this.loadBalance = loadBalance;
         this.requesterSupport = requesterSupport;
-        if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceId) ||
+        if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceGsv) ||
                 !RSocketServiceRegistry.exposedServices().isEmpty()) {
             //broker 即 provider
             this.isServiceProvider = true;
@@ -241,10 +241,10 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     private Mono<RSocket> next(ByteBuf paramBytes) {
         return Mono.fromSupplier(() -> {
             awaitFirstConnect();
-            String targetUri = loadBalance.select(paramBytes, new ArrayList<>(activeRSockets.keySet()));
+            String targetUri = loadBalance.select(serviceGsv.hashCode(), paramBytes, new ArrayList<>(activeRSockets.keySet()));
             RSocket selected = activeRSockets.get(targetUri);
             if (Objects.isNull(selected)) {
-                throw new NoAvailableConnectionException(serviceId);
+                throw new NoAvailableConnectionException(serviceGsv);
             }
             return selected;
         });
@@ -519,10 +519,10 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                         //设置remote 推过来的cloud event source
                         if (responder instanceof RequestHandlerSupport) {
                             String sourcing = "upstream:";
-                            if (this.serviceId.equals(Symbols.BROKER)) {
+                            if (this.serviceGsv.equals(Symbols.BROKER)) {
                                 sourcing = sourcing + "broker:*";
                             } else {
-                                sourcing = sourcing + ":" + serviceId;
+                                sourcing = sourcing + ":" + serviceGsv;
                             }
                             ((RequestHandlerSupport) responder).setCloudEventSource(sourcing);
                         }

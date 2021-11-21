@@ -5,27 +5,35 @@ import org.kin.framework.utils.CollectionUtils;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author huangjianqin
  * @date 2021/11/20
  */
 public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBalance {
-    private volatile ConsistentHash consistentHash;
+    private final ConcurrentHashMap<Integer, ConsistentHash> consistentHashMap = new ConcurrentHashMap<>();
 
     @Override
-    public String select(ByteBuf paramBytes, List<String> uris) {
+    public String select(int serviceId, ByteBuf paramBytes, List<String> uris) {
         if (Objects.isNull(paramBytes)) {
             //requestChannel的时候paramBytes为null, 故回退到使用round robin模式
-            return super.select(null, uris);
+            return super.select(serviceId, null, uris);
         }
+
         if (CollectionUtils.isEmpty(uris)) {
             return null;
         }
 
         int hashCode = uris.hashCode();
-        if (consistentHash == null || consistentHash.hashCode != hashCode) {
-            consistentHash = new ConsistentHash(uris, hashCode);
+        ConsistentHash consistentHash = consistentHashMap.computeIfAbsent(serviceId, k -> new ConsistentHash(uris, hashCode));
+        if (consistentHash.hashCode != hashCode) {
+            consistentHash = consistentHashMap.computeIfPresent(serviceId, (k, v) -> new ConsistentHash(uris, hashCode));
+        }
+
+        if (Objects.isNull(consistentHash)) {
+            //兜底, 理论上不会到这里
+            return uris.get(0);
         }
 
         byte[] bytes = new byte[paramBytes.readableBytes()];

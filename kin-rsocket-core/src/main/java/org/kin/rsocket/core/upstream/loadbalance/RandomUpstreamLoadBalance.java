@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class RandomUpstreamLoadBalance implements UpstreamLoadBalance {
     @Override
-    public String select(ByteBuf paramBytes, List<String> uris) {
+    public String select(int serviceId, ByteBuf paramBytes, List<String> uris) {
         int size = uris.size();
         String selected;
         if (size > 1) {
