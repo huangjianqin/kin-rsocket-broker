@@ -1,13 +1,16 @@
 package org.kin.rsocket.broker;
 
 import io.netty.buffer.ByteBuf;
-import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.ServiceLocator;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * RoundRobin(轮询)路由
@@ -16,67 +19,98 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date 2021/5/7
  */
 public class RoundRobinRouter implements ProviderRouter {
-    /** key -> serviceId, value -> list(instanceId, 也就是hash(app uuid) (不会重复的) */
-    private FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>();
-    /** key -> serviceId, value -> counter */
-    private Map<Integer, AtomicInteger> serviceId2Counter = new UnifiedMap<>();
+    /** key -> serviceId, value -> {@link WeightedRoundRobin} list */
+    private FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>();
 
     @Override
     public Integer route(int serviceId, ByteBuf paramBytes) {
-        List<Integer> instanceIds = new ArrayList<>(getAllInstanceIds(serviceId));
-        AtomicInteger counter = serviceId2Counter.get(serviceId);
-
-
-        if (CollectionUtils.isNonEmpty(instanceIds)) {
-            int count = 0;
-            if (Objects.nonNull(counter)) {
-                count = counter.getAndIncrement();
-            }
-
-            return instanceIds.get(count % instanceIds.size());
+        MutableList<WeightedRoundRobin> weightedRoundRobins = serviceId2WeightedRoundRobins.get(serviceId);
+        if (CollectionUtils.isEmpty(weightedRoundRobins)) {
+            return null;
         }
+
+        //总权重
+        int totalWeight = 0;
+        long maxCurrent = Long.MIN_VALUE;
+        WeightedRoundRobin selected = null;
+        for (WeightedRoundRobin weightedRoundRobin : weightedRoundRobins) {
+            int weight = weightedRoundRobin.weight;
+            long current = weightedRoundRobin.incrCurrent();
+            if (current > maxCurrent) {
+                maxCurrent = current;
+                selected = weightedRoundRobin;
+            }
+            totalWeight += weight;
+        }
+
+        if (Objects.nonNull(selected)) {
+            selected.descCurrent(totalWeight);
+            return selected.instanceId;
+        }
+
         return null;
     }
 
     @Override
     public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
         //copy on write
-        FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>();
-        Map<Integer, AtomicInteger> serviceId2Counter = new UnifiedMap<>();
+        FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>(this.serviceId2WeightedRoundRobins);
 
         for (ServiceLocator serviceLocator : services) {
             Integer serviceId = serviceLocator.getId();
-            serviceId2InstanceIds.put(serviceId, instanceId);
-            if (!serviceId2Counter.containsKey(serviceId)) {
-                serviceId2Counter.put(serviceId, new AtomicInteger());
-            }
+            serviceId2WeightedRoundRobins.put(serviceId, new WeightedRoundRobin(instanceId, weight));
         }
 
-        this.serviceId2InstanceIds = serviceId2InstanceIds;
-        this.serviceId2Counter = serviceId2Counter;
+        this.serviceId2WeightedRoundRobins = serviceId2WeightedRoundRobins;
     }
 
     @Override
     public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
         //copy on write
-        FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>();
-        Map<Integer, AtomicInteger> serviceId2Counter = new UnifiedMap<>();
+        FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>(this.serviceId2WeightedRoundRobins);
 
         for (Integer serviceId : serviceIds) {
-            if (serviceId2InstanceIds.remove(serviceId, instanceId)) {
-                //移除成功
-                if (CollectionUtils.isEmpty(serviceId2InstanceIds.get(serviceId))) {
-                    serviceId2Counter.remove(serviceId);
+            MutableList<WeightedRoundRobin> weightedRoundRobins = serviceId2WeightedRoundRobins.get(serviceId);
+            List<WeightedRoundRobin> newWeightedRoundRobins = new ArrayList<>();
+
+            for (WeightedRoundRobin weightedRoundRobin : weightedRoundRobins) {
+                if (weightedRoundRobin.instanceId == instanceId) {
+                    continue;
                 }
+
+                newWeightedRoundRobins.add(weightedRoundRobin);
             }
+
+            serviceId2WeightedRoundRobins.replaceValues(serviceId, newWeightedRoundRobins);
         }
 
-        this.serviceId2InstanceIds = serviceId2InstanceIds;
-        this.serviceId2Counter = serviceId2Counter;
+        this.serviceId2WeightedRoundRobins = serviceId2WeightedRoundRobins;
     }
 
     @Override
     public Collection<Integer> getAllInstanceIds(int serviceId) {
-        return serviceId2InstanceIds.get(serviceId).asUnmodifiable();
+        return serviceId2WeightedRoundRobins.get(serviceId).collect(wrr -> wrr.instanceId).asUnmodifiable();
+    }
+
+    private static class WeightedRoundRobin {
+        /** app instance id */
+        private final int instanceId;
+        /** app 权重 */
+        private final int weight;
+        /** 当前权重累计值 */
+        private AtomicLong current;
+
+        public WeightedRoundRobin(int instanceId, int weight) {
+            this.instanceId = instanceId;
+            this.weight = weight;
+        }
+
+        public long incrCurrent() {
+            return current.addAndGet(weight);
+        }
+
+        public void descCurrent(int total) {
+            current.addAndGet(-1 * total);
+        }
     }
 }
