@@ -24,6 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.time.Duration;
@@ -112,6 +113,15 @@ public class RequesterProxy implements InvocationHandler {
                 return MethodHandleUtils.getInterfaceDefaultMethodHandle(method, serviceInterface).bindTo(proxy).invokeWithArguments(args);
             } catch (Throwable throwable) {
                 ExceptionUtils.throwExt(throwable);
+            }
+        }
+
+        if (method.getDeclaringClass().equals(Object.class)) {
+            //过滤Object方法
+            try {
+                return method.invoke(this, args);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                ExceptionUtils.throwExt(e);
             }
         }
 
