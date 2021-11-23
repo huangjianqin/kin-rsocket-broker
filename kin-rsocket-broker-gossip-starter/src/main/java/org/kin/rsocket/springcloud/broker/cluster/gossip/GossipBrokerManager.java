@@ -89,7 +89,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         brokers.put(localIp, localBrokerInfo);
         log.info("start cluster with Gossip support");
 
-        Metrics.globalRegistry.gauge(MetricsNames.CLUSTER_BROKER_COUNT, this, manager -> manager.brokers.size());
+        Metrics.gauge(MetricsNames.CLUSTER_BROKER_COUNT, this, manager -> manager.brokers.size());
     }
 
     /**

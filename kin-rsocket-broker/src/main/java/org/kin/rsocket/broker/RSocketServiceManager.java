@@ -108,11 +108,11 @@ public final class RSocketServiceManager {
         this.router = router;
         this.p2pServiceNotificationSink = p2pServiceNotificationSink;
 
-        Metrics.globalRegistry.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appResponders.size());
-        Metrics.globalRegistry.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_COUNT, this,
+        Metrics.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appResponders.size());
+        Metrics.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_COUNT, this,
                 manager -> manager.appResponders.valuesView()
                         .sumOfInt(responder -> (responder.isPublishServicesOnly() || responder.isConsumeAndPublishServices()) ? 0 : 1));
-        Metrics.globalRegistry.gauge(MetricsNames.BROKER_SERVICE_COUNT, this, manager -> manager.services.size());
+        Metrics.gauge(MetricsNames.BROKER_SERVICE_COUNT, this, manager -> manager.services.size());
     }
 
     /**
