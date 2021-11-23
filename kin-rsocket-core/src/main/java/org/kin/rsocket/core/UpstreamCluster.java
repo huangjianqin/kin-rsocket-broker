@@ -51,7 +51,14 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
      * broker upstream cluster
      */
     public static UpstreamCluster brokerUpstreamCluster(RSocketRequesterSupport requesterSupport, List<String> uris) {
-        return new UpstreamCluster("", Symbols.BROKER, "", requesterSupport, uris);
+        return new UpstreamCluster("", Symbols.BROKER, "", requesterSupport, uris, null);
+    }
+
+    /**
+     * broker upstream cluster
+     */
+    public static UpstreamCluster brokerUpstreamCluster(RSocketRequesterSupport requesterSupport, List<String> uris, String loadBalanceStrategy) {
+        return new UpstreamCluster("", Symbols.BROKER, "", requesterSupport, uris, loadBalanceStrategy);
     }
 
     public UpstreamCluster(String group,
@@ -66,11 +73,20 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
                            String version,
                            RSocketRequesterSupport requesterSupport,
                            List<String> uris) {
+        this(group, serviceName, version, requesterSupport, uris, null);
+    }
+
+    public UpstreamCluster(String group,
+                           String serviceName,
+                           String version,
+                           RSocketRequesterSupport requesterSupport,
+                           List<String> uris,
+                           String loadBalanceStrategy) {
         this.group = group;
         this.serviceName = serviceName;
         this.version = version;
 
-        this.loadBalanceRequester = new LoadBalanceRsocketRequester(ServiceLocator.gsv(group, serviceName, version), urisSink.asFlux(), requesterSupport);
+        this.loadBalanceRequester = new LoadBalanceRsocketRequester(ServiceLocator.gsv(group, serviceName, version), loadBalanceStrategy, urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {
             refreshUris(uris);
         }

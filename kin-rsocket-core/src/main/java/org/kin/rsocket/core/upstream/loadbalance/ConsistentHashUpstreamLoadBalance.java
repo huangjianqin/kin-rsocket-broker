@@ -2,6 +2,7 @@ package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.Extension;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author huangjianqin
  * @date 2021/11/20
  */
+@Extension("consistentHash")
 public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBalance {
     private final ConcurrentHashMap<Integer, ConsistentHash> consistentHashMap = new ConcurrentHashMap<>();
 

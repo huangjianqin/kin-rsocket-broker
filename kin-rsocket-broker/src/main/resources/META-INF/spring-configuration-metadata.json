@@ -76,6 +76,13 @@
       "description": "rsocket broker consumer请求路由规则",
       "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
       "defaultValue": "random roundRobin"
+    },
+    {
+      "name": "kin.rsocket.broker.upstreamLoadBalance",
+      "type": "java.lang.String",
+      "description": "针对其余broker集群的loadbalance策略",
+      "sourceType": "org.kin.rsocket.broker.RSocketBrokerProperties",
+      "defaultValue": "random"
     }
   ]
 }

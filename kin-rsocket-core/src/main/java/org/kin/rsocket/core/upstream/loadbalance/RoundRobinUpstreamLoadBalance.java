@@ -2,6 +2,7 @@ package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.Extension;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author huangjianqin
  * @date 2021/3/27
  */
+@Extension("roundRobin")
 public class RoundRobinUpstreamLoadBalance implements UpstreamLoadBalance {
     /** 计数器 */
     private final ConcurrentHashMap<Integer, AtomicInteger> counters = new ConcurrentHashMap<>();

@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
+import org.kin.framework.utils.Extension;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -9,6 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author huangjianqin
  * @date 2021/11/21
  */
+@Extension("random")
 public class RandomUpstreamLoadBalance implements UpstreamLoadBalance {
     @Override
     public String select(int serviceId, ByteBuf paramBytes, List<String> uris) {

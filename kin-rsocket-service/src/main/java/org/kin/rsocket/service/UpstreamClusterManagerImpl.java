@@ -47,9 +47,20 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     private volatile DiscoveryService brokerDiscoveryService;
     /** 开启p2p的服务gsv */
     private final CopyOnWriteArraySet<String> p2pServiceIds = new CopyOnWriteArraySet<>();
+    /**
+     * loadbalance策略
+     *
+     * @see org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance
+     */
+    private final String loadBalance;
 
     UpstreamClusterManagerImpl(RSocketRequesterSupport requesterSupport) {
+        this(requesterSupport, null);
+    }
+
+    UpstreamClusterManagerImpl(RSocketRequesterSupport requesterSupport, String loadBalance) {
         this.requesterSupport = requesterSupport;
+        this.loadBalance = loadBalance;
 
         if (requesterSupport instanceof RSocketRequesterSupportImpl) {
             ((RSocketRequesterSupportImpl) requesterSupport).setUpstreamClusterManager(this);
@@ -61,7 +72,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
                     String serviceName,
                     String version,
                     List<String> uris) {
-        UpstreamCluster cluster = new UpstreamCluster(group, serviceName, version, requesterSupport, uris);
+        UpstreamCluster cluster = new UpstreamCluster(group, serviceName, version, requesterSupport, uris, loadBalance);
         clusters.put(cluster.getServiceId(), cluster);
         if (cluster.isBroker()) {
             this.brokerCluster = cluster;

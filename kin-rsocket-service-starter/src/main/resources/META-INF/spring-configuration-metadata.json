@@ -69,6 +69,13 @@
       "description": "remote rsocket endpoint信息配置",
       "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
       "defaultValue": ""
+    },
+    {
+      "name": "kin.rsocket.loadBalance",
+      "type": "java.lang.String",
+      "description": "upstream broker/p2p rsocket service的loadbalance策略",
+      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
+      "defaultValue": "roundRobin"
     }
   ]
 }

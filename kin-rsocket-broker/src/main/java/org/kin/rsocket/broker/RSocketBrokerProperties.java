@@ -39,6 +39,12 @@ public class RSocketBrokerProperties {
     private String upstreamToken;
     /** broker 路由规则 */
     private String route;
+    /**
+     * 针对其余broker集群的loadbalance策略
+     *
+     * @see org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance
+     */
+    private String upstreamLoadBalance;
 
     @PostConstruct
     public void loadUpstreamToken() throws IOException {
@@ -118,6 +124,15 @@ public class RSocketBrokerProperties {
 
     public void setRoute(String route) {
         this.route = route;
+    }
+
+    public String getUpstreamLoadBalance() {
+        return upstreamLoadBalance;
+    }
+
+    public RSocketBrokerProperties setUpstreamLoadBalance(String upstreamLoadBalance) {
+        this.upstreamLoadBalance = upstreamLoadBalance;
+        return this;
     }
 
     //-----------------------------------------------------------------------------------------------------------------

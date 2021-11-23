@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalanceStrategy;
 import org.kin.rsocket.core.utils.Topologys;
 
 import java.util.Arrays;
@@ -32,6 +33,12 @@ public class RSocketServiceProperties {
     private int timeout = 3000;
     /** endpoints: interface full name to endpoint url */
     private List<EndpointProperties> endpoints;
+    /**
+     * loadbalance策略
+     *
+     * @see org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance
+     */
+    private String loadBalance;
 
     //setter && getter
     public String getSchema() {
@@ -114,6 +121,15 @@ public class RSocketServiceProperties {
         this.timeout = timeout;
     }
 
+    public String getLoadBalance() {
+        return loadBalance;
+    }
+
+    public RSocketServiceProperties setLoadBalance(String loadBalance) {
+        this.loadBalance = loadBalance;
+        return this;
+    }
+
     //----------------------------------------------------------------------------------------------------------------------------------------
     public static Builder builder() {
         return new Builder();
@@ -179,6 +195,16 @@ public class RSocketServiceProperties {
 
         public Builder endpoints(EndpointProperties... endpoints) {
             return endpoints(Arrays.asList(endpoints));
+        }
+
+        public Builder loadBalance(String loadBalance) {
+            rsocketServiceProperties.loadBalance = loadBalance;
+            return this;
+        }
+
+        public Builder loadBalance(UpstreamLoadBalanceStrategy strategy) {
+            rsocketServiceProperties.loadBalance = strategy.getName();
+            return this;
         }
 
         public RSocketServiceProperties build() {

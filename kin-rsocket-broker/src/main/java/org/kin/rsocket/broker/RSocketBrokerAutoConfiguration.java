@@ -237,7 +237,7 @@ public class RSocketBrokerAutoConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public UpstreamCluster upstreamBrokerCluster(@Autowired UpstreamBrokerRequesterSupport upStreamBrokerRequesterSupport,
                                                  @Autowired RSocketBrokerProperties brokerConfig) {
-        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequesterSupport, brokerConfig.getUpstreamBrokers());
+        return UpstreamCluster.brokerUpstreamCluster(upStreamBrokerRequesterSupport, brokerConfig.getUpstreamBrokers(), brokerConfig.getUpstreamLoadBalance());
     }
 
     //----------------------------------------------services----------------------------------------------

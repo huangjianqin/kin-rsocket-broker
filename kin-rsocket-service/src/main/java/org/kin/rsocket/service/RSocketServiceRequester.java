@@ -64,7 +64,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         //2.2 custom requester support
         requesterSupportCustomizers.forEach((customizer) -> customizer.customize(requesterSupport));
         //2.3 init upstream manager
-        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport);
+        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport, config.getLoadBalance());
 
         //3. register health check
         if (Objects.isNull(customHealthCheck)) {

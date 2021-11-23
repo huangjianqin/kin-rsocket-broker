@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * requester端
- * 上游服务(broker)负载均衡策略
+ * 上游服务(broker|p2p service)负载均衡策略
  *
  * @author huangjianqin
  * @date 2021/3/27

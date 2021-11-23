@@ -21,7 +21,6 @@ import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.transport.UriTransportRegistry;
-import org.kin.rsocket.core.upstream.loadbalance.RoundRobinUpstreamLoadBalance;
 import org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance;
 import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
@@ -99,15 +98,15 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         this(serviceGsv, null, urisFactory, requesterSupport);
     }
 
+    /**
+     * @param loadBalanceStrategy 负载均衡策略名
+     */
     public LoadBalanceRsocketRequester(String serviceGsv,
-                                       UpstreamLoadBalance loadBalance,
+                                       String loadBalanceStrategy,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
         this.serviceGsv = serviceGsv;
-        if (Objects.isNull(loadBalance)) {
-            loadBalance = tryLoadUpstreamLoadBalance();
-        }
-        this.loadBalance = loadBalance;
+        this.loadBalance = tryLoadUpstreamLoadBalance(loadBalanceStrategy);
         this.requesterSupport = requesterSupport;
         if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceGsv) ||
                 !RSocketServiceRegistry.exposedServices().isEmpty()) {
@@ -133,14 +132,9 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /**
      * 通过kin-spi机制加载, 如果没有, 则默认round-robin
      */
-    private UpstreamLoadBalance tryLoadUpstreamLoadBalance() {
-//        UpstreamLoadBalance loadBalance = RSocketAppContext.LOADER.get(UpstreamLoadBalance.class);
-//        if (Objects.isNull(loadBalance)) {
+    private UpstreamLoadBalance tryLoadUpstreamLoadBalance(String loadBalanceStrategy) {
         //默认round-robin
-//            loadBalance = new RoundRobinUpstreamLoadBalance();
-//        }
-
-        return new RoundRobinUpstreamLoadBalance();
+        return RSocketAppContext.LOADER.getExtensionOrDefault(UpstreamLoadBalance.class, loadBalanceStrategy);
     }
 
     /** 刷新Rsocket实例 */

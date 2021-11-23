@@ -45,7 +45,7 @@ public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
             //配置有UpstreamClusterManager bean
             brokerRSocket = upstreamClusterManager.getBroker();
         } else {
-            brokerRSocket = UpstreamCluster.brokerUpstreamCluster(new RSocketRequesterSupportImpl(serviceConfig, appName), serviceConfig.getBrokers());
+            brokerRSocket = UpstreamCluster.brokerUpstreamCluster(new RSocketRequesterSupportImpl(serviceConfig, appName), serviceConfig.getBrokers(), serviceConfig.getLoadBalance());
         }
 
         if (Objects.isNull(brokerRSocket)) {

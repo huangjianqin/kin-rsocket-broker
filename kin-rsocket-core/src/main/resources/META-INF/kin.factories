@@ -11,4 +11,6 @@ codec=org.kin.rsocket.core.codec.AvroCodec,\
                             org.kin.rsocket.core.codec.TextCodec,\
                             org.kin.rsocket.core.codec.CborCodec
 
-upstreamLoadBalance=org.kin.rsocket.core.upstream.loadbalance.RoundRobinUpstreamLoadBalance
+upstreamLoadBalance=org.kin.rsocket.core.upstream.loadbalance.RoundRobinUpstreamLoadBalance,\
+                    org.kin.rsocket.core.upstream.loadbalance.RandomUpstreamLoadBalance,\
+                    org.kin.rsocket.core.upstream.loadbalance.ConsistentHashUpstreamLoadBalance
