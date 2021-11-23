@@ -12,7 +12,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-@SPI(key = "upstreamLoadBalance", value = "roundRobin")
+@SPI(alias = "upstreamLoadBalance", value = "roundRobin")
 @FunctionalInterface
 public interface UpstreamLoadBalance {
     /**

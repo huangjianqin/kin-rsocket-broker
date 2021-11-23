@@ -134,13 +134,13 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
      * 通过kin-spi机制加载, 如果没有, 则默认round-robin
      */
     private UpstreamLoadBalance tryLoadUpstreamLoadBalance() {
-        UpstreamLoadBalance loadBalance = RSocketAppContext.LOADER.getAdaptiveExtension(UpstreamLoadBalance.class);
-        if (Objects.isNull(loadBalance)) {
-            //默认round-robin
-            loadBalance = new RoundRobinUpstreamLoadBalance();
-        }
+//        UpstreamLoadBalance loadBalance = RSocketAppContext.LOADER.get(UpstreamLoadBalance.class);
+//        if (Objects.isNull(loadBalance)) {
+        //默认round-robin
+//            loadBalance = new RoundRobinUpstreamLoadBalance();
+//        }
 
-        return loadBalance;
+        return new RoundRobinUpstreamLoadBalance();
     }
 
     /** 刷新Rsocket实例 */

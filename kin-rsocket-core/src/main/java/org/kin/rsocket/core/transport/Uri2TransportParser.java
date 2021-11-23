@@ -14,7 +14,7 @@ import java.util.Optional;
  * @author huangjianqin
  * @date 2021/3/27
  */
-@SPI(key = "uri2TransportParser")
+@SPI(alias = "uri2TransportParser")
 public interface Uri2TransportParser {
     /**
      * 返回适配{@link URI}的{@link ClientTransport}
