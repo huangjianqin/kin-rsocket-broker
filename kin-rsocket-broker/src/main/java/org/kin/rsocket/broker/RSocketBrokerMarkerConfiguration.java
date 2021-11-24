@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class RSocketBrokerMarkerConfiguration {
     @Bean
-    public RSocketBrokerMarkerConfiguration.Marker eurekaServerMarkerBean() {
+    public RSocketBrokerMarkerConfiguration.Marker rsocketBrokerMarker() {
         return new RSocketBrokerMarkerConfiguration.Marker();
     }
 
