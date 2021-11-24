@@ -56,8 +56,7 @@ public class BrokerDiscoveryService implements DiscoveryService {
      * 通过app name寻找service instances
      */
     private Flux<RSocketServiceInstance> findServicesInstancesByAppName(String appName) {
-        return Flux.fromIterable(serviceManager.getAllResponders())
-                .filter(responder -> responder.getAppMetadata().getName().equalsIgnoreCase(appName))
+        return Flux.fromIterable(serviceManager.getByAppName(appName))
                 .filter(responder -> responder.getAppStatus().equals(AppStatus.SERVING))
                 .map(this::newServiceInstance);
     }
