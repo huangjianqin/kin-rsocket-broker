@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "kin.rsocket.gateway")
 public class RSocketBrokerHttpGatewayProperties {
+    /** http gateway是否开启api校验 */
     private boolean restApiAuth = false;
 
     //setter && getter

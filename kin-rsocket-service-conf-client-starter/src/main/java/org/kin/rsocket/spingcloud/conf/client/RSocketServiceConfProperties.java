@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "kin.rsocket.conf")
 public class RSocketServiceConfProperties {
-    /** 自动刷新配置 */
+    /** 是否自动刷新配置 */
     private boolean autoRefresh;
 
     //setter && getter
