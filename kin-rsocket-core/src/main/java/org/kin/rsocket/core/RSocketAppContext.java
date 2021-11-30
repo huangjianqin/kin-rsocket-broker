@@ -16,7 +16,7 @@ public class RSocketAppContext {
     /** app uuid */
     public static final String ID = UUID.randomUUID().toString();
     /** spi loader */
-    public static final ExtensionLoader LOADER = ExtensionLoader.load();
+    public static final ExtensionLoader LOADER = ExtensionLoader.common();
     /** 接受cloud event的flux */
     public static final Sinks.Many<CloudEventData<?>> CLOUD_EVENT_SINK = Sinks.many().multicast().onBackpressureBuffer();
 
