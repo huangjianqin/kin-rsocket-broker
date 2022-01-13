@@ -8,6 +8,7 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.service.UpstreamClusterManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -25,18 +26,13 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 public class HttpGatewayController {
     private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
 
-    private final AuthenticationService authenticationService;
-    private final RSocketBrokerHttpGatewayProperties config;
+    @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private RSocketBrokerHttpGatewayProperties config;
     /** broker upstream cluster */
-    private final UpstreamClusterManager upstreamClusterManager;
-
-    public HttpGatewayController(UpstreamClusterManager upstreamClusterManager,
-                                 AuthenticationService authenticationService,
-                                 RSocketBrokerHttpGatewayProperties config) {
-        this.upstreamClusterManager = upstreamClusterManager;
-        this.authenticationService = authenticationService;
-        this.config = config;
-    }
+    @Autowired
+    private UpstreamClusterManager upstreamClusterManager;
 
     @RequestMapping(value = "/{serviceName}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
     public Mono<ResponseEntity<ByteBuf>> handle(@PathVariable("serviceName") String serviceName,
