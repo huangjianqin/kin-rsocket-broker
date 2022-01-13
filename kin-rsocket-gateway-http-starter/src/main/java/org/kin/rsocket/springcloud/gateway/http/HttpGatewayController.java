@@ -1,13 +1,13 @@
 package org.kin.rsocket.springcloud.gateway.http;
 
 import io.netty.buffer.ByteBuf;
-import io.rsocket.RSocket;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
+import org.kin.rsocket.service.UpstreamClusterManager;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -28,12 +28,12 @@ public class HttpGatewayController {
     private final AuthenticationService authenticationService;
     private final RSocketBrokerHttpGatewayProperties config;
     /** broker upstream cluster */
-    private final RSocket brokerRSocket;
+    private final UpstreamClusterManager upstreamClusterManager;
 
-    public HttpGatewayController(RSocket brokerRSocket,
+    public HttpGatewayController(UpstreamClusterManager upstreamClusterManager,
                                  AuthenticationService authenticationService,
                                  RSocketBrokerHttpGatewayProperties config) {
-        this.brokerRSocket = brokerRSocket;
+        this.upstreamClusterManager = upstreamClusterManager;
         this.authenticationService = authenticationService;
         this.config = config;
     }
@@ -58,7 +58,7 @@ public class HttpGatewayController {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_MIME_TYPE);
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : body;
-            return brokerRSocket.requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
+            return upstreamClusterManager.getBroker().requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(payload -> {
                         HttpHeaders headers = new HttpHeaders();
                         headers.setContentType(MediaType.APPLICATION_JSON);
