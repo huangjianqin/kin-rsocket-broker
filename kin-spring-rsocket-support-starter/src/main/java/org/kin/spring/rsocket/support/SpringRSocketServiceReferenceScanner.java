@@ -21,7 +21,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/5/20
  */
-public class SpringRSocketServiceReferenceScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
+public final class SpringRSocketServiceReferenceScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
     public SpringRSocketServiceReferenceScanner(BeanDefinitionRegistry registry) {
         super(registry);
         registerFilters();

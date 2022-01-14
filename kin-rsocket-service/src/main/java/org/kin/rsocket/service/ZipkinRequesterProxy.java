@@ -11,6 +11,8 @@ import org.kin.rsocket.core.metadata.TracingMetadata;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.function.Function;
+
 /**
  * @author huangjianqin
  * @date 2021/8/19
@@ -29,7 +31,7 @@ public class ZipkinRequesterProxy extends RequesterProxy {
             TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
             if (traceContext != null) {
                 CompositeByteBuf newCompositeMetadata = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true,
-                        2, compositeMetadataBytes, tracingMetadata(traceContext).getContent());
+                        2, compositeMetadataBytes, TracingMetadata.zipkin(traceContext).getContent());
                 Span span = tracer.newChild(traceContext);
                 return super.requestResponse(methodMetadata, newCompositeMetadata, paramBodyBytes)
                         .doOnError(span::error)
@@ -45,7 +47,7 @@ public class ZipkinRequesterProxy extends RequesterProxy {
             TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
             if (traceContext != null) {
                 CompositeByteBuf newCompositeMetadata = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true,
-                        2, compositeMetadataBytes, tracingMetadata(traceContext).getContent());
+                        2, compositeMetadataBytes, TracingMetadata.zipkin(traceContext).getContent());
                 Span span = tracer.newChild(traceContext);
                 return super.fireAndForget(methodMetadata, newCompositeMetadata, paramBodyBytes)
                         .doOnError(span::error)
@@ -57,29 +59,30 @@ public class ZipkinRequesterProxy extends RequesterProxy {
 
     @Override
     protected Flux<Payload> requestStream(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
+        return requestMany(compositeMetadataBytes, byteBuf -> super.requestStream(methodMetadata, byteBuf, paramBodyBytes));
+    }
+
+    @Override
+    protected Flux<Payload> requestChannel(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes,
+                                           ByteBuf routeBytes, Flux<Object> paramBodys) {
+        return requestMany(compositeMetadataBytes, byteBuf -> super.requestChannel(methodMetadata, byteBuf, routeBytes, paramBodys));
+    }
+
+    /**
+     * requestStream or requestChannel
+     */
+    private Flux<Payload> requestMany(ByteBuf compositeMetadataBytes, Function<ByteBuf, Flux<Payload>> operator) {
         return Flux.deferContextual(context -> {
             TraceContext traceContext = context.getOrDefault(TraceContext.class, null);
             if (traceContext != null) {
                 CompositeByteBuf newCompositeMetadata = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true,
-                        2, compositeMetadataBytes, tracingMetadata(traceContext).getContent());
+                        2, compositeMetadataBytes, TracingMetadata.zipkin(traceContext).getContent());
                 Span span = tracer.newChild(traceContext);
-                return super.requestStream(methodMetadata, newCompositeMetadata, paramBodyBytes)
+                return operator.apply(newCompositeMetadata)
                         .doOnError(span::error)
                         .doOnComplete(span::finish);
             }
-            return super.requestStream(methodMetadata, compositeMetadataBytes, paramBodyBytes);
+            return operator.apply(compositeMetadataBytes);
         });
-    }
-
-    /**
-     * 创建{@link TracingMetadata}
-     */
-    private TracingMetadata tracingMetadata(TraceContext traceContext) {
-        return TracingMetadata.of(
-                traceContext.traceIdHigh(),
-                traceContext.traceId(),
-                traceContext.spanId(),
-                traceContext.parentId(),
-                true, false);
     }
 }

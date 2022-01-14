@@ -8,18 +8,12 @@ import java.lang.annotation.*;
  * @author huangjianqin
  * @date 2021/3/26
  */
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ServiceMapping {
     /** handler name, 默认=method name */
     String value() default "";
-
-    /** 所属组 */
-    String group() default "";
-
-    /** 版本号 */
-    String version() default "";
 
     /** 参数编码 mime type, 默认{@link RSocketMimeType#JSON} */
     String paramEncoding() default "application/json";
@@ -32,4 +26,9 @@ public @interface ServiceMapping {
 
     /** sticky session */
     boolean sticky() default false;
+
+    /**
+     * call timeout, 默认3s
+     */
+    int callTimeout() default 3000;
 }

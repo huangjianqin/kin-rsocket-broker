@@ -31,7 +31,7 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
     /** 方法参数是否required or not */
     private boolean[] required;
 
-    ReactiveMethodInvoker(Method method, Object provider) {
+    public ReactiveMethodInvoker(Method method, Object provider) {
         super(method);
 
         if (RSocketAppContext.ENHANCE) {
@@ -76,7 +76,7 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
     /**
      * 目标方法调用
      */
-    Object invoke(Object... args) throws Exception {
+    public Object invoke(Object... args) throws Exception {
         int paramCount = getParamCount();
         if (args.length != paramCount) {
             throw new IllegalArgumentException(String.format("request params is not right! service method need %d params, not %d", paramCount, args.length));
@@ -116,19 +116,19 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
     }
 
     //getter
-    Class<?>[] getParameterTypes() {
+    public Class<?>[] getParameterTypes() {
         return this.parametersTypes;
     }
 
-    Class<?> getInferredClassForParameter(int paramIndex) {
+    public Class<?> getInferredClassForParameter(int paramIndex) {
         return ClassUtils.getInferredClassForGeneric(method.getGenericParameterTypes()[paramIndex]);
     }
 
-    boolean isAsyncReturn() {
+    public boolean isAsyncReturn() {
         return asyncReturn;
     }
 
-    boolean isBinaryReturn() {
+    public boolean isBinaryReturn() {
         return this.binaryReturn;
     }
 }

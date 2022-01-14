@@ -17,8 +17,11 @@ import java.lang.annotation.*;
 public @interface RSocketServiceReference {
     /**
      * service interface
+     * 用于在{@link EnableRSocketServiceReference}直接定义RSocket service reference, 在不需要在接口上标注注解
      *
      * @return service interface
+     * @see EnableRSocketServiceReference
+     * @see RSocketServiceReferenceRegistrar
      */
     Class<?> interfaceClass() default Void.class;
 

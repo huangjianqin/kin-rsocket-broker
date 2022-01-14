@@ -11,7 +11,6 @@ import org.kin.framework.utils.MurmurHash3;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveMethodSupport;
-import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.ServiceMapping;
 import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.Separators;
@@ -31,18 +30,10 @@ import java.util.List;
  * @date 2021/3/26
  */
 final class ReactiveMethodMetadata extends ReactiveMethodSupport {
-    /** service full name {@link Method#getName()} */
-    private String service;
     /** handler name, 默认=method name */
     private String handler;
-    /** full name, service and name */
-    private final String fullName;
-    /** service group */
-    private String group;
-    /** service version */
-    private String version;
-    /** service ID */
-    private final Integer serviceId;
+    /** handler id string */
+    private final String handlerIdStr;
     /** method handler id */
     private final Integer handlerId;
     /** endpoint */
@@ -74,12 +65,9 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
                            boolean sticky,
                            URI origin) {
         super(method);
-        this.service = service;
         handler = method.getName();
         this.dataEncodingType = dataEncodingType;
         this.acceptEncodingTypes = acceptEncodingTypes;
-        this.group = group;
-        this.version = version;
         this.endpoint = endpoint;
 
         //处理method上的@ServiceMapping注解
@@ -91,9 +79,8 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         // sticky from service builder or @ServiceMapping
         this.sticky = sticky | this.sticky;
 
-        fullName = this.service + Separators.SERVICE_HANDLER + this.handler;
-        serviceId = MurmurHash3.hash32(ServiceLocator.gsv(this.group, this.service, this.version));
-        handlerId = MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler);
+        handlerIdStr = service + Separators.SERVICE_HANDLER + this.handler;
+        handlerId = MurmurHash3.hash32(handlerIdStr);
         //byte buffer binary encoding
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (paramCount == 1) {
@@ -103,7 +90,7 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
             }
         }
         //初始化方法调用的元数据
-        initCompositeMetadata(origin);
+        initCompositeMetadata(origin, group, service, version);
         //检查第一二个参数是否是Flux
         if (paramCount == 1 && Flux.class.isAssignableFrom(parameterTypes[0])) {
             frameType = FrameType.REQUEST_CHANNEL;
@@ -127,11 +114,11 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         }
 
         //metrics tags for micrometer
-        if (StringUtils.isNotBlank(this.group)) {
-            metricsTags.add(Tag.of("group", this.group));
+        if (StringUtils.isNotBlank(group)) {
+            metricsTags.add(Tag.of("group", group));
         }
-        if (StringUtils.isNotBlank(this.version)) {
-            metricsTags.add(Tag.of("version", this.version));
+        if (StringUtils.isNotBlank(version)) {
+            metricsTags.add(Tag.of("version", version));
         }
         metricsTags.add(Tag.of("method", this.handler));
         metricsTags.add(Tag.of("frame", this.frameType.name()));
@@ -141,20 +128,8 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
      * 解析method上的{@link ServiceMapping}注解
      */
     private void initServiceMapping(ServiceMapping serviceMapping) {
-        if (!serviceMapping.value().isEmpty()) {
-            String serviceName = serviceMapping.value();
-            if (serviceName.contains(Separators.SERVICE_HANDLER)) {
-                service = serviceName.substring(0, serviceName.lastIndexOf(Separators.SERVICE_HANDLER));
-                handler = serviceName.substring(serviceName.lastIndexOf(Separators.SERVICE_HANDLER) + 1);
-            } else {
-                handler = serviceName;
-            }
-        }
-        if (!serviceMapping.group().isEmpty()) {
-            group = serviceMapping.group();
-        }
-        if (!serviceMapping.version().isEmpty()) {
-            version = serviceMapping.version();
+        if (StringUtils.isNotBlank(serviceMapping.value())) {
+            handler = serviceMapping.value();
         }
         if (!serviceMapping.endpoint().isEmpty()) {
             endpoint = serviceMapping.endpoint();
@@ -171,7 +146,7 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     /**
      * 初始化方法调用的元数据
      */
-    private void initCompositeMetadata(URI origin) {
+    private void initCompositeMetadata(URI origin, String group, String service, String version) {
         //routing metadata
         GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handler, version, endpoint, sticky);
 
@@ -185,14 +160,10 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         OriginMetadata originMetadata = OriginMetadata.of(origin);
 
         //default composite metadata
-        CompositeByteBuf compositeMetadataBytes;
         compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
+        CompositeByteBuf compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
 
-        if (StringUtils.isNotBlank(endpoint)) {
-            compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
-        } else {
-            compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
-
+        if (StringUtils.isBlank(endpoint)) {
             //使用快速路由
             //binary routing metadata
             BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata);
@@ -207,28 +178,13 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     }
 
     //getter
-    public String getService() {
-        return service;
-    }
 
     public String getHandler() {
         return handler;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
-
-    public String getGroup() {
-        return group;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public Integer getServiceId() {
-        return serviceId;
+    public String getHandlerIdStr() {
+        return handlerIdStr;
     }
 
     public Integer getHandlerId() {

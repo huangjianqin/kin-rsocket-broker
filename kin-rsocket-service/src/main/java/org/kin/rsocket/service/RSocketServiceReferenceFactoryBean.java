@@ -1,6 +1,7 @@
 package org.kin.rsocket.service;
 
 import brave.Tracing;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -13,22 +14,22 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/5/19
  */
-class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
+public final class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     @Resource
     private RSocketServiceRequester requester;
-    /** 缓存rsocket service reference builder */
+    /** 缓存rsocket service reference builder, 创建reference后会clear掉 */
     private RSocketServiceReferenceBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
     private volatile T reference;
-    @Resource
+    @Autowired(required = false)
     private Tracing tracing;
 
-    RSocketServiceReferenceFactoryBean(RSocketServiceReferenceBuilder<T> builder) {
+    public RSocketServiceReferenceFactoryBean(RSocketServiceReferenceBuilder<T> builder) {
         this.builder = builder;
     }
 
     @SuppressWarnings("unchecked")
-    RSocketServiceReferenceFactoryBean(Class<T> claxx) {
+    public RSocketServiceReferenceFactoryBean(Class<T> claxx) {
         if (!claxx.isInterface()) {
             throw new IllegalArgumentException(
                     String.format("class '%s' must be interface", claxx.getName()));
@@ -52,7 +53,11 @@ class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
 
     @Override
     public Class<?> getObjectType() {
-        return builder.getServiceInterface();
+        if (Objects.nonNull(builder)) {
+            return builder.getServiceInterface();
+        } else {
+            return reference.getClass();
+        }
     }
 
     @Nonnull

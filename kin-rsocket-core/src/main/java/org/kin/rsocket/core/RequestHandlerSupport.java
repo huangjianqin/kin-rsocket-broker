@@ -38,8 +38,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      *
      * @return service method call exception
      */
-    private String failCallLog() {
-        return "Failed to call service stub";
+    private String failCallLog(String serviceName, String handleName) {
+        return String.format("Failed to call service stub %s#%s", serviceName, handleName);
     }
 
     /**
@@ -47,8 +47,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      *
      * @return service method call exception info
      */
-    private String failCallTips(Exception e) {
-        return "Service invoked failed: " + e.getMessage();
+    private String failCallTips(String serviceName, String handleName, Exception e) {
+        return String.format("Service '%s' invoked '%s' failed: %s", serviceName, handleName, e.getMessage());
     }
 
     /**
@@ -58,6 +58,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                  MessageMimeTypeMetadata dataEncodingMetadata,
                                                  MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                  Payload payload) {
+        String service = routing.getService();
+        String handler = routing.getHandler();
         try {
             ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
@@ -80,7 +82,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                 sink.success(resultObj);
                             }
                         } catch (Exception e) {
-                            error(failCallLog(), e);
+                            error(failCallLog(service, handler), e);
                             sink.error(e);
                         }
                     });
@@ -98,12 +100,12 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
-                return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
+                return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
-            error(failCallLog(), e);
+            error(failCallLog(service, handler), e);
             ReferenceCountUtil.safeRelease(payload);
-            return Mono.error(new InvalidException(failCallTips(e)));
+            return Mono.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
 
@@ -111,6 +113,9 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      * 本地调用服务接口方法并针对FireAndForget Frame Type场景定制额外逻辑
      */
     protected Mono<Void> localFireAndForget(GSVRoutingMetadata routing, MessageMimeTypeMetadata dataEncodingMetadata, Payload payload) {
+        String service = routing.getService();
+        String handler = routing.getHandler();
+
         ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
         if (methodInvoker != null) {
             if (methodInvoker.isAsyncReturn()) {
@@ -118,7 +123,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                     return ReactiveObjAdapter.INSTANCE.toMono(invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload));
                 } catch (Exception e) {
                     ReferenceCountUtil.safeRelease(payload);
-                    error(failCallLog(), e);
+                    error(failCallLog(service, handler), e);
                     return Mono.error(e);
                 }
             } else {
@@ -127,14 +132,14 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                         invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
                         sink.success();
                     } catch (Exception e) {
-                        error(failCallLog(), e);
+                        error(failCallLog(service, handler), e);
                         sink.error(e);
                     }
                 });
             }
         } else {
             ReferenceCountUtil.safeRelease(payload);
-            return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
+            return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
         }
     }
 
@@ -145,6 +150,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                MessageMimeTypeMetadata dataEncodingMetadata,
                                                MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                Payload payload) {
+        String service = routing.getService();
+        String handler = routing.getHandler();
         try {
             ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
@@ -162,12 +169,12 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
-                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
+                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
-            error(failCallLog(), e);
+            error(failCallLog(service, handler), e);
             ReferenceCountUtil.safeRelease(payload);
-            return Flux.error(new InvalidException(failCallTips(e)));
+            return Flux.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
 
@@ -179,6 +186,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                                 MessageMimeTypeMetadata dataEncodingMetadata,
                                                 MessageAcceptMimeTypesMetadata acceptMimeTypesMetadata,
                                                 Payload signal, Flux<Payload> payloads) {
+        String service = routing.getService();
+        String handler = routing.getHandler();
         try {
             ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
@@ -214,14 +223,14 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
-                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(routing.getService(), routing.getHandler())));
+                return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
-            error(failCallLog(), e);
+            error(failCallLog(service, handler), e);
             //release
             ReferenceCountUtil.safeRelease(signal);
             payloads.subscribe(ReferenceCountUtil::safeRelease);
-            return Flux.error(new InvalidException(failCallTips(e)));
+            return Flux.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
 

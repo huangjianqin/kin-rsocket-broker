@@ -43,6 +43,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class RequesterProxy implements InvocationHandler {
     private static final Logger log = LoggerFactory.getLogger(RequesterProxy.class);
+    /** 选择一个合适的{@link UpstreamCluster}(可broker可直连)的selector */
     protected final UpstreamClusterSelector selector;
     /** service interface */
     protected final Class<?> serviceInterface;
@@ -138,50 +139,32 @@ public class RequesterProxy implements InvocationHandler {
         if (methodMetadata.getFrameType() == FrameType.REQUEST_CHANNEL) {
             //request channel
             metrics(methodMetadata);
-            Payload routePayload;
-            Flux<Object> source;
+            ByteBuf routeBytes;
+            Flux<Object> paramBodys;
             if (args.length == 1) {
                 //1 param
-                routePayload = ByteBufPayload.create(Unpooled.EMPTY_BUFFER, methodMetadata.getCompositeMetadataBytes());
-                source = ReactiveObjAdapter.INSTANCE.toFlux(args[0]);
+                routeBytes = Unpooled.EMPTY_BUFFER;
+                paramBodys = ReactiveObjAdapter.INSTANCE.toFlux(args[0]);
             } else {
                 //2 params
-                ByteBuf bodyBuffer = Codecs.INSTANCE.encodeResult(args[0], methodMetadata.getDataEncodingType());
-                routePayload = ByteBufPayload.create(bodyBuffer, methodMetadata.getCompositeMetadataBytes());
-                source = ReactiveObjAdapter.INSTANCE.toFlux(args[1]);
+                routeBytes = Codecs.INSTANCE.encodeResult(args[0], methodMetadata.getDataEncodingType());
+                paramBodys = ReactiveObjAdapter.INSTANCE.toFlux(args[1]);
             }
-            //第一个signal
-            ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-            Flux<Payload> payloadFlux = source.startWith(routePayload).map(obj -> {
-                if (obj instanceof Payload) {
-                    return (Payload) obj;
-                }
-                return ByteBufPayload.create(
-                        Codecs.INSTANCE.encodeResult(obj, finalMethodMetadata.getDataEncodingType()),
-                        finalMethodMetadata.getCompositeMetadataBytes());
-            });
-            Flux<Payload> payloads = selector.select(serviceId)
-                    .requestChannel(payloadFlux)
-                    .name(methodMetadata.getFullName())
-                    .metrics()
-                    .timeout(timeout)
-                    .doOnError(TimeoutException.class,
-                            e -> {
-                                metricsTimeout(finalMethodMetadata);
-                                log.error(String.format("Timeout to call %s in %s seconds", finalMethodMetadata.getFullName(), timeout), e);
-                            });
+
             //handle return
-            Flux<Object> fluxReturn = payloads.concatMap(payload -> {
-                try {
-                    RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-                    return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
-                            extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
-                            payload.data(),
-                            finalMethodMetadata.getInferredClassForReturn()));
-                } catch (Exception e) {
-                    return Flux.error(e);
-                }
-            }).contextWrite(c -> mutableContext.putAll(c.readOnly()));
+            ReactiveMethodMetadata finalMethodMetadata1 = methodMetadata;
+            Flux<Object> fluxReturn = requestChannel(methodMetadata, methodMetadata.getCompositeMetadataBytes(), routeBytes, paramBodys)
+                    .concatMap(payload -> {
+                        try {
+                            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                            return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
+                                    extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata1.getAcceptEncodingTypes()[0]),
+                                    payload.data(),
+                                    finalMethodMetadata1.getInferredClassForReturn()));
+                        } catch (Exception e) {
+                            return Flux.error(e);
+                        }
+                    }).contextWrite(c -> mutableContext.putAll(c.readOnly()));
             if (methodMetadata.isMonoChannel()) {
                 return fluxReturn.last();
             } else {
@@ -194,22 +177,23 @@ public class RequesterProxy implements InvocationHandler {
                 //request response
                 metrics(methodMetadata);
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-                Mono<Payload> payloadMono = requestResponse(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes);
-                Mono<Object> result = payloadMono.handle((payload, sink) -> {
-                    try {
-                        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-                        Object obj = Codecs.INSTANCE.decodeResult(
-                                extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
-                                payload.data(),
-                                finalMethodMetadata.getInferredClassForReturn());
-                        if (obj != null) {
-                            sink.next(obj);
-                        }
-                        sink.complete();
-                    } catch (Exception e) {
-                        sink.error(e);
-                    }
-                });
+                //handle return
+                Mono<Object> result = requestResponse(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes)
+                        .handle((payload, sink) -> {
+                            try {
+                                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                                Object obj = Codecs.INSTANCE.decodeResult(
+                                        extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
+                                        payload.data(),
+                                        finalMethodMetadata.getInferredClassForReturn());
+                                if (obj != null) {
+                                    sink.next(obj);
+                                }
+                                sink.complete();
+                            } catch (Exception e) {
+                                sink.error(e);
+                            }
+                        });
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else if (methodMetadata.getFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
@@ -219,22 +203,22 @@ public class RequesterProxy implements InvocationHandler {
                 //request stream
                 metrics(methodMetadata);
                 ReactiveMethodMetadata finalMethodMetadata = methodMetadata;
-                Flux<Payload> flux = requestStream(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes);
-                Flux<Object> result = flux.concatMap((payload) -> {
-                    try {
-                        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
-                        return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
-                                extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
-                                payload.data(),
-                                finalMethodMetadata.getInferredClassForReturn()));
-                    } catch (Exception e) {
-                        return Mono.error(e);
-                    }
-                });
+                Flux<Object> result = requestStream(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes)
+                        .concatMap((payload) -> {
+                            try {
+                                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                                return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
+                                        extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
+                                        payload.data(),
+                                        finalMethodMetadata.getInferredClassForReturn()));
+                            } catch (Exception e) {
+                                return Mono.error(e);
+                            }
+                        });
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
             } else {
                 ReferenceCountUtil.safeRelease(paramBodyBytes);
-                return Mono.error(new Exception("Unknown RSocket Frame type: " + methodMetadata.getFrameType().name()));
+                return Mono.error(new Exception("unknown RSocket Frame type: " + methodMetadata.getFrameType().name()));
             }
         }
     }
@@ -245,13 +229,13 @@ public class RequesterProxy implements InvocationHandler {
     protected Mono<Payload> requestResponse(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
         return selector.select(serviceId)
                 .requestResponse(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
-                .name(methodMetadata.getFullName())
+                .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
                 .doOnError(TimeoutException.class,
                         e -> {
                             metricsTimeout(methodMetadata);
-                            log.error(String.format("Timeout to call %s in %s seconds", methodMetadata.getFullName(), timeout), e);
+                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
                         });
     }
 
@@ -261,13 +245,13 @@ public class RequesterProxy implements InvocationHandler {
     protected Mono<Void> fireAndForget(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
         return selector.select(serviceId)
                 .fireAndForget(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
-                .name(methodMetadata.getFullName())
+                .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
                 .doOnError(TimeoutException.class,
                         e -> {
                             metricsTimeout(methodMetadata);
-                            log.error(String.format("Timeout to call %s in %s seconds", methodMetadata.getFullName(), timeout), e);
+                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
                         });
     }
 
@@ -277,13 +261,41 @@ public class RequesterProxy implements InvocationHandler {
     protected Flux<Payload> requestStream(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes, ByteBuf paramBodyBytes) {
         return selector.select(serviceId)
                 .requestStream(ByteBufPayload.create(paramBodyBytes, compositeMetadataBytes))
-                .name(methodMetadata.getFullName())
+                .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
                 .doOnError(TimeoutException.class,
                         e -> {
                             metricsTimeout(methodMetadata);
-                            log.error(String.format("Timeout to call %s in %s seconds", methodMetadata.getFullName(), timeout), e);
+                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
+                        });
+    }
+
+    /**
+     * requestChannel请求封装, 用于子类扩展
+     */
+    protected Flux<Payload> requestChannel(ReactiveMethodMetadata methodMetadata, ByteBuf compositeMetadataBytes,
+                                           ByteBuf routeBytes, Flux<Object> paramBodys) {
+        //第一个是signal, 作route
+        Payload routePayload = ByteBufPayload.create(routeBytes, compositeMetadataBytes);
+        Flux<Payload> payloadFlux = paramBodys.startWith(routePayload).map(obj -> {
+            if (obj instanceof Payload) {
+                return (Payload) obj;
+            }
+            //param payload 只要带ReactiveMethodMetadata的CompositeMetadataBytes, 而不用带zipkin信息
+            return ByteBufPayload.create(
+                    Codecs.INSTANCE.encodeResult(obj, methodMetadata.getDataEncodingType()),
+                    methodMetadata.getCompositeMetadataBytes());
+        });
+        return selector.select(serviceId)
+                .requestChannel(payloadFlux)
+                .name(methodMetadata.getHandlerIdStr())
+                .metrics()
+                .timeout(timeout)
+                .doOnError(TimeoutException.class,
+                        e -> {
+                            metricsTimeout(methodMetadata);
+                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
                         });
     }
 

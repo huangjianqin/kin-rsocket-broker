@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2021/5/19
  */
-class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
+public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     /** 底层remote requester */
     @Resource
     private RSocketRequester rsocketRequester;
@@ -24,7 +24,7 @@ class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T>
     private volatile T reference;
 
     @SuppressWarnings("unchecked")
-    SpringRSocketServiceReferenceFactoryBean(Class<T> serviceInterface) {
+    public SpringRSocketServiceReferenceFactoryBean(Class<T> serviceInterface) {
         if (!serviceInterface.isInterface()) {
             throw new IllegalArgumentException(
                     String.format("class '%s' must be interface", serviceInterface.getName()));

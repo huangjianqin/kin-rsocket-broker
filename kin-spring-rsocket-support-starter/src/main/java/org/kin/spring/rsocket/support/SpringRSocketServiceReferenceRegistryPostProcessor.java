@@ -15,7 +15,7 @@ import javax.annotation.Nonnull;
  * @author huangjianqin
  * @date 2021/5/20
  */
-public class SpringRSocketServiceReferenceRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
+public final class SpringRSocketServiceReferenceRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
     /** 扫描package classpath的路径集合, 以,分隔 */
     private final String basePackage;
 

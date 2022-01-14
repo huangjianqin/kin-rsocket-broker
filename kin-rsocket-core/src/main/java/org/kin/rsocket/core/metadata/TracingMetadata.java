@@ -1,5 +1,6 @@
 package org.kin.rsocket.core.metadata;
 
+import brave.propagation.TraceContext;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.metadata.TracingMetadataCodec;
@@ -44,6 +45,15 @@ public class TracingMetadata implements MetadataAware {
      * Indicates that trace IDs should be force traced.
      */
     private boolean isDebug;
+
+    public static TracingMetadata zipkin(TraceContext traceContext) {
+        return TracingMetadata.of(
+                traceContext.traceIdHigh(),
+                traceContext.traceId(),
+                traceContext.spanId(),
+                traceContext.parentId(),
+                true, false);
+    }
 
     public static TracingMetadata of(long traceIdHigh, long traceId, long spanId, long parentId, boolean sampled, boolean debug) {
         TracingMetadata metadata = new TracingMetadata();

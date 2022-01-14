@@ -12,7 +12,6 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 
@@ -27,11 +26,11 @@ public final class RSocketServiceReferenceBuilder<T> {
     /** uri */
     private URI sourceUri;
     /** group */
-    private String group;
+    private String group = "";
     /** service */
-    private String service;
+    private String service = "";
     /** version */
-    private String version;
+    private String version = "";
     /** call timeout, 默认3s */
     private Duration callTimeout = Duration.ofMillis(3000);
     /**
@@ -41,7 +40,7 @@ public final class RSocketServiceReferenceBuilder<T> {
      * 2. uuid:XX
      * 3. ip:XX
      */
-    private String endpoint;
+    private String endpoint = "";
     /**
      * sticky session
      * 相当于固定session, 指定service首次请求后, 后面请求都是route到该service instance
@@ -55,7 +54,7 @@ public final class RSocketServiceReferenceBuilder<T> {
     private RSocketMimeType encodingType = RSocketMimeType.JSON;
     /** accept 编码类型 */
     private RSocketMimeType[] acceptEncodingTypes = new RSocketMimeType[]{RSocketMimeType.JSON};
-    /** 选择一个合适的UpstreamCluster(可broker可直连)的selector */
+    /** 选择一个合适的{@link UpstreamCluster}(可broker可直连)的selector */
     private UpstreamClusterSelector selector;
     /** consumer是否开启p2p */
     private boolean p2p;
@@ -69,29 +68,54 @@ public final class RSocketServiceReferenceBuilder<T> {
         RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getCanonicalName();
-        //解析interface class 上的@ServiceMapping注解
-        ServiceMapping serviceMapping = serviceInterface.getAnnotation(ServiceMapping.class);
-        if (serviceMapping != null) {
-            if (!serviceMapping.group().isEmpty()) {
-                builder.group = serviceMapping.group();
-            }
-            if (!serviceMapping.version().isEmpty()) {
-                builder.version = serviceMapping.group();
-            }
-            if (!serviceMapping.value().isEmpty()) {
-                builder.service = serviceMapping.value();
-            }
-            if (!serviceMapping.endpoint().isEmpty()) {
-                builder.endpoint = serviceMapping.endpoint();
-            }
-            if (!serviceMapping.paramEncoding().isEmpty()) {
-                builder.encodingType = RSocketMimeType.getByType(serviceMapping.paramEncoding());
-            }
-            if (CollectionUtils.isNonEmpty(serviceMapping.resultEncoding())) {
-                builder.acceptEncodingTypes = Arrays.stream(serviceMapping.resultEncoding()).map(RSocketMimeType::getByType).toArray(RSocketMimeType[]::new);
-            }
-            builder.sticky = serviceMapping.sticky();
+
+        //解析interface class 上的@RSocketServiceReference注解
+        RSocketServiceReference rsocketServiceReference = serviceInterface.getAnnotation(RSocketServiceReference.class);
+        if (Objects.isNull(rsocketServiceReference)) {
+            return builder;
         }
+
+        String serviceName = rsocketServiceReference.name();
+        if (StringUtils.isNotBlank(serviceName)) {
+            builder.service(serviceName);
+        }
+
+        String group = rsocketServiceReference.group();
+        if (StringUtils.isNotBlank(group)) {
+            builder.group(group);
+        }
+
+        String version = rsocketServiceReference.version();
+        if (StringUtils.isNotBlank(version)) {
+            builder.version(version);
+        }
+
+        int callTimeout = rsocketServiceReference.callTimeout();
+        if (callTimeout > 0) {
+            builder.callTimeout(callTimeout);
+        }
+
+        String endpoint = rsocketServiceReference.endpoint();
+        if (StringUtils.isNotBlank(endpoint)) {
+            builder.endpoint(endpoint);
+        }
+
+        if (rsocketServiceReference.sticky()) {
+            builder.sticky();
+        }
+
+        RSocketMimeType encodingType = rsocketServiceReference.encodingType();
+        builder.encodingType(encodingType);
+
+        RSocketMimeType[] acceptEncodingTypes = rsocketServiceReference.acceptEncodingTypes();
+        if (CollectionUtils.isNonEmpty(acceptEncodingTypes)) {
+            builder.acceptEncodingTypes(acceptEncodingTypes);
+        }
+
+        if (rsocketServiceReference.p2p()) {
+            builder.p2p();
+        }
+
         return builder;
     }
 
@@ -99,51 +123,54 @@ public final class RSocketServiceReferenceBuilder<T> {
      * 指定service interface class和{@link RSocketServiceReference}属性生成builder实例
      */
     public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
-        RSocketServiceReferenceBuilder<T> referenceBuilder = requester(serviceInterface);
+        RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
+        builder.serviceInterface = serviceInterface;
+        builder.service = serviceInterface.getCanonicalName();
+
         String serviceName = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(serviceName)) {
-            referenceBuilder.service(serviceName);
+            builder.service(serviceName);
         }
 
         String group = annoAttrs.getString("group");
         if (StringUtils.isNotBlank(group)) {
-            referenceBuilder.group(group);
+            builder.group(group);
         }
 
         String version = annoAttrs.getString("version");
         if (StringUtils.isNotBlank(version)) {
-            referenceBuilder.version(version);
+            builder.version(version);
         }
 
         int callTimeout = annoAttrs.getNumber("callTimeout");
         if (callTimeout > 0) {
-            referenceBuilder.callTimeout(callTimeout);
+            builder.callTimeout(callTimeout);
         }
 
         String endpoint = annoAttrs.getString("endpoint");
         if (StringUtils.isNotBlank(endpoint)) {
-            referenceBuilder.endpoint(endpoint);
+            builder.endpoint(endpoint);
         }
 
         boolean sticky = annoAttrs.getBoolean("sticky");
         if (sticky) {
-            referenceBuilder.sticky();
+            builder.sticky();
         }
 
         RSocketMimeType encodingType = annoAttrs.getEnum("encodingType");
-        referenceBuilder.encodingType(encodingType);
+        builder.encodingType(encodingType);
 
         RSocketMimeType[] acceptEncodingTypes = (RSocketMimeType[]) annoAttrs.get("acceptEncodingTypes");
         if (CollectionUtils.isNonEmpty(acceptEncodingTypes)) {
-            referenceBuilder.acceptEncodingTypes(acceptEncodingTypes);
+            builder.acceptEncodingTypes(acceptEncodingTypes);
         }
 
         boolean p2p = annoAttrs.getBoolean("p2p");
         if (p2p) {
-            referenceBuilder.p2p();
+            builder.p2p();
         }
 
-        return referenceBuilder;
+        return builder;
     }
 
     public RSocketServiceReferenceBuilder<T> group(String group) {

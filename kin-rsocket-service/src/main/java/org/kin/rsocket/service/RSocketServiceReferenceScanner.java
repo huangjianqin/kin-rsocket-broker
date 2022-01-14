@@ -21,7 +21,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/5/20
  */
-public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
+public final class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
     public RSocketServiceReferenceScanner(BeanDefinitionRegistry registry) {
         super(registry);
         registerFilters();
@@ -47,7 +47,7 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
         if (beanDefinitions.isEmpty()) {
-            info("no rsocket service reference interface was found in classpath !!!");
+            info("no rsocket service interface was found in classpath !!!");
         } else {
             processBeanDefinitions(beanDefinitions);
         }
@@ -64,7 +64,7 @@ public class RSocketServiceReferenceScanner extends ClassPathBeanDefinitionScann
             //factory bean constructor args
             String beanClassName = definition.getBeanClassName();
             if (StringUtils.isBlank(beanClassName)) {
-                throw new IllegalStateException("rsocket service reference interface class is null");
+                throw new IllegalStateException("rsocket service interface class is null");
             }
             definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
             //factory bean class

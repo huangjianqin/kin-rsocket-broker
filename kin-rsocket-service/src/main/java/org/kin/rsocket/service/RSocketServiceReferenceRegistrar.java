@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * @date 2021/5/19
  * @see EnableRSocketServiceReference
  */
-class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
+public final class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry) {
         AnnotationAttributes annoAttrs = AnnotationAttributes
@@ -42,7 +42,7 @@ class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar 
     /**
      * 注册{@link RSocketServiceReferenceRegistryPostProcessor} bean
      */
-    void registerScanner(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
+    public void registerScanner(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(RSocketServiceReferenceRegistryPostProcessor.class);
         List<String> basePackages = new ArrayList<>();
 
@@ -64,7 +64,7 @@ class RSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar 
     /**
      * 注册{@link RSocketServiceReferenceFactoryBean}
      */
-    void registerBeanDefinition(AnnotationAttributes annoAttrs, BeanDefinitionRegistry registry) {
+    public void registerBeanDefinition(AnnotationAttributes annoAttrs, BeanDefinitionRegistry registry) {
         BeanDefinitionBuilder beanBuilder = BeanDefinitionBuilder.genericBeanDefinition(RSocketServiceReferenceFactoryBean.class);
 
         Class<?> serviceInterfaceClass = (Class<?>) annoAttrs.get("interfaceClass");

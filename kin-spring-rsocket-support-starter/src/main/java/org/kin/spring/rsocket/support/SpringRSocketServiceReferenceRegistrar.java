@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @date 2021/5/19
  * @see EnableSpringRSocketServiceReference
  */
-class SpringRSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
+public final class SpringRSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry) {
         AnnotationAttributes annoAttrs = AnnotationAttributes
@@ -35,7 +35,7 @@ class SpringRSocketServiceReferenceRegistrar implements ImportBeanDefinitionRegi
     /**
      * 注册{@link SpringRSocketServiceReferenceRegistryPostProcessor} bean
      */
-    void registerScanner(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
+    public void registerScanner(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(SpringRSocketServiceReferenceRegistryPostProcessor.class);
         List<String> basePackages = new ArrayList<>();
 
