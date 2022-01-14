@@ -6,6 +6,7 @@ import io.rsocket.util.DefaultPayload;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.BrokerResponder;
+import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.RSocketServiceMeshInspector;
 import org.kin.rsocket.core.RSocketMimeType;
@@ -13,7 +14,6 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -34,8 +34,8 @@ public class RSocketApiController {
     /** json编码元数据 */
     private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
 
-    @Value("${kin.rsocket.broker.auth}")
-    private boolean authRequired;
+    @Autowired
+    private RSocketBrokerProperties rsocketBrokerProperties;
     @Autowired
     private RSocketServiceManager serviceManager;
     @Autowired
@@ -65,7 +65,7 @@ public class RSocketApiController {
                 responder = serviceManager.routeByServiceId(serviceId, bodyBuf);
             }
             if (Objects.nonNull(responder)) {
-                if (authRequired) {
+                if (rsocketBrokerProperties.isAuth()) {
                     RSocketAppPrincipal principal = authenticationService.auth(token);
                     if (principal == null || !serviceMeshInspector.isAllowed(principal, serviceId, responder.getPrincipal())) {
                         return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));

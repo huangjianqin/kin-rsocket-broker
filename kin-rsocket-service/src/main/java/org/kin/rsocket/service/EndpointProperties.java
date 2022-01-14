@@ -10,7 +10,7 @@ import java.util.List;
  * @date 2021/3/27
  */
 public class EndpointProperties {
-    /** group: region, datacenter, virtual group in datacenter */
+    /** group */
     private String group;
     /** service name */
     private String service;

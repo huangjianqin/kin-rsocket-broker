@@ -26,7 +26,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /** app name */
     private final String appName;
     /** 配置 */
-    private final RSocketServiceProperties config;
+    private final RSocketServiceProperties rsocketServiceProperties;
     /** zipkin */
     private final Tracer tracer;
     /** upstream cluster manager */
@@ -39,20 +39,20 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     private volatile boolean inited;
 
     private RSocketServiceRequester(String appName,
-                                    RSocketServiceProperties config,
+                                    RSocketServiceProperties rsocketServiceProperties,
                                     Tracer tracer,
                                     List<RSocketBinderCustomizer> binderCustomizers,
                                     List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
                                     HealthCheck customHealthCheck) {
         this.appName = appName;
-        this.config = config;
+        this.rsocketServiceProperties = rsocketServiceProperties;
         this.tracer = tracer;
 
         //1. create binder
-        if (config.getPort() > 0) {
+        if (rsocketServiceProperties.getPort() > 0) {
             RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
             binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload, tracer)));
-            binderBuilder.listen(config.getSchema(), config.getPort());
+            binderBuilder.listen(rsocketServiceProperties.getSchema(), rsocketServiceProperties.getPort());
             binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
             binder = binderBuilder.build();
         } else {
@@ -60,11 +60,11 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         //2.1 create requester support
-        requesterSupport = new RSocketRequesterSupportImpl(config, appName, tracer);
+        requesterSupport = new RSocketRequesterSupportImpl(rsocketServiceProperties, appName, tracer);
         //2.2 custom requester support
         requesterSupportCustomizers.forEach((customizer) -> customizer.customize(requesterSupport));
         //2.3 init upstream manager
-        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport, config.getLoadBalance());
+        upstreamClusterManager = new UpstreamClusterManagerImpl(requesterSupport, rsocketServiceProperties.getLoadBalance());
 
         //3. register health check
         if (Objects.isNull(customHealthCheck)) {
@@ -90,7 +90,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         //2. connect
-        add(config);
+        add(rsocketServiceProperties);
 
         //3. mark
         inited = true;
@@ -171,7 +171,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 获取broker urls字符串, 以,分割
      */
     private String getBrokerUris() {
-        return String.join(",", config.getBrokers());
+        return String.join(",", rsocketServiceProperties.getBrokers());
     }
 
     /**
@@ -197,7 +197,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         broker.broadcastCloudEvent(servicesExposedEventCloudEvent)
                 .doOnSuccess(aVoid -> {
                     //broker uris
-                    String brokerUris = String.join(",", config.getBrokers());
+                    String brokerUris = String.join(",", rsocketServiceProperties.getBrokers());
                     String exposedServiceIds = RSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
                     log.info(String.format("services(%s) published on Brokers(%s)!", exposedServiceIds, brokerUris));
                 }).subscribe();
@@ -232,7 +232,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         broker.broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     //broker uris
-                    String brokerUris = String.join(",", config.getBrokers());
+                    String brokerUris = String.join(",", rsocketServiceProperties.getBrokers());
 
                     RSocketServiceRegistry.INSTANCE.removeProvider(group, serviceName, version, serviceInterface);
                     log.info(String.format("Services(%s) hide on Brokers(%s)!.", serviceName, brokerUris));
@@ -275,8 +275,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     }
 
     @Override
-    public void add(RSocketServiceProperties config) {
-        upstreamClusterManager.add(config);
+    public void add(RSocketServiceProperties rsocketServiceProperties) {
+        upstreamClusterManager.add(rsocketServiceProperties);
     }
 
     @Override
@@ -332,23 +332,23 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
 
     //--------------------------------------------------内部类----------------------------------------------------------------------
-    public static Builder builder(String appName, RSocketServiceProperties config) {
-        return new Builder(appName, config);
+    public static Builder builder(String appName, RSocketServiceProperties rsocketServiceProperties) {
+        return new Builder(appName, rsocketServiceProperties);
     }
 
     /** builder **/
     public static class Builder {
         private final String appName;
-        private final RSocketServiceProperties config;
+        private final RSocketServiceProperties rsocketServiceProperties;
         private List<RSocketBinderCustomizer> binderCustomizers = Collections.emptyList();
         private List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers = Collections.emptyList();
         private HealthCheck customHealthCheck;
         /** zipkin */
         private Tracer tracer;
 
-        public Builder(String appName, RSocketServiceProperties config) {
+        public Builder(String appName, RSocketServiceProperties rsocketServiceProperties) {
             this.appName = appName;
-            this.config = config;
+            this.rsocketServiceProperties = rsocketServiceProperties;
         }
 
         public Builder binderCustomizers(List<RSocketBinderCustomizer> binderCustomizers) {
@@ -372,7 +372,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         public RSocketServiceRequester build() {
-            return new RSocketServiceRequester(appName, config, tracer, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
+            return new RSocketServiceRequester(appName, rsocketServiceProperties, tracer, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
         }
 
         public RSocketServiceRequester buildAndInit() {

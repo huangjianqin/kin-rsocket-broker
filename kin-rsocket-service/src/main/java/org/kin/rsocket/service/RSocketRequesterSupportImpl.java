@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  */
 public final class RSocketRequesterSupportImpl implements RSocketRequesterSupport {
     /** spring rsocket config */
-    private final RSocketServiceProperties config;
+    private final RSocketServiceProperties rsocketServiceProperties;
     /** app name */
     private final String appName;
     private final List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
@@ -42,19 +42,19 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
     /** zipkin */
     private final Tracer tracer;
 
-    public RSocketRequesterSupportImpl(RSocketServiceProperties config, String appName) {
-        this(config, appName, null);
+    public RSocketRequesterSupportImpl(RSocketServiceProperties rsocketServiceProperties, String appName) {
+        this(rsocketServiceProperties, appName, null);
     }
 
-    public RSocketRequesterSupportImpl(RSocketServiceProperties config, String appName, Tracer tracer) {
-        this.config = config;
+    public RSocketRequesterSupportImpl(RSocketServiceProperties rsocketServiceProperties, String appName, Tracer tracer) {
+        this.rsocketServiceProperties = rsocketServiceProperties;
         this.appName = appName;
         this.tracer = tracer;
     }
 
     @Override
     public URI originUri() {
-        return URI.create(config.getSchema() + "://" + NetUtils.getIp() + ":" + config.getPort()
+        return URI.create(rsocketServiceProperties.getSchema() + "://" + NetUtils.getIp() + ":" + rsocketServiceProperties.getPort()
                 + "?appName=" + appName
                 + "&uuid=" + RSocketAppContext.ID);
     }
@@ -65,7 +65,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
             List<MetadataAware> metadataAwares = new ArrayList<>(3);
             //app metadata
             metadataAwares.add(getAppMetadata());
-            if (config.getPort() > 0) {
+            if (rsocketServiceProperties.getPort() > 0) {
                 //published services
                 Set<ServiceLocator> serviceLocators = RSocketServiceRegistry.exposedServices();
                 if (!serviceLocators.isEmpty()) {
@@ -75,8 +75,8 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
                 }
             }
             // authentication
-            if (StringUtils.isNotBlank(config.getJwtToken())) {
-                metadataAwares.add(BearerTokenMetadata.jwt(config.getJwtToken().toCharArray()));
+            if (StringUtils.isNotBlank(rsocketServiceProperties.getJwtToken())) {
+                metadataAwares.add(BearerTokenMetadata.jwt(rsocketServiceProperties.getJwtToken().toCharArray()));
             }
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(metadataAwares);
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, compositeMetadata.getContent());
@@ -93,18 +93,18 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
         builder.ip(NetUtils.getIp());
         builder.device("SpringBootApp");
         //brokers
-        builder.brokers(config.getBrokers());
+        builder.brokers(rsocketServiceProperties.getBrokers());
         if (Objects.nonNull(upstreamClusterManager)) {
             builder.p2pServices(upstreamClusterManager.getP2pServices());
         }
-        builder.topology(config.getTopology());
+        builder.topology(rsocketServiceProperties.getTopology());
         builder.rsocketPorts(RSocketAppContext.rsocketPorts);
         //web port
         builder.webPort(RSocketAppContext.webPort);
         //management port
         builder.managementPort(RSocketAppContext.managementPort);
         //元数据
-        Map<String, String> metadata = config.getMetadata().entrySet().stream()
+        Map<String, String> metadata = rsocketServiceProperties.getMetadata().entrySet().stream()
                 .map(e -> new Tuple<>(
                         e.getKey().split("[=:]", 2)[0].trim().replace("kin.rsocket.metadata.", ""),
                         e.getValue()))
@@ -114,7 +114,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
         if (metadata.containsKey(RSocketServiceMetadataKeys.WEIGHT)) {
             builder.weight(Integer.parseInt(metadata.get(RSocketServiceMetadataKeys.WEIGHT)));
         }
-        builder.secure(StringUtils.isNotBlank(config.getJwtToken()));
+        builder.secure(StringUtils.isNotBlank(rsocketServiceProperties.getJwtToken()));
 
         //humans.md
         URL humansMd = this.getClass().getResource("/humans.md");

@@ -81,9 +81,9 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     }
 
     @Override
-    public void add(RSocketServiceProperties config) {
-        if (config.getBrokers() != null && !config.getBrokers().isEmpty()) {
-            if (config.getJwtToken() == null || config.getJwtToken().isEmpty()) {
+    public void add(RSocketServiceProperties rsocketServiceProperties) {
+        if (rsocketServiceProperties.getBrokers() != null && !rsocketServiceProperties.getBrokers().isEmpty()) {
+            if (rsocketServiceProperties.getJwtToken() == null || rsocketServiceProperties.getJwtToken().isEmpty()) {
                 try {
                     throw new JwtTokenNotFoundException();
                 } catch (JwtTokenNotFoundException e) {
@@ -91,11 +91,11 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
                 }
             }
             //添加rsocket service broker connection
-            add(null, Symbols.BROKER, null, config.getBrokers());
+            add(null, Symbols.BROKER, null, rsocketServiceProperties.getBrokers());
         }
-        if (config.getEndpoints() != null && !config.getEndpoints().isEmpty()) {
+        if (rsocketServiceProperties.getEndpoints() != null && !rsocketServiceProperties.getEndpoints().isEmpty()) {
             //添加rsocket service endpoint connection
-            for (EndpointProperties endpointProperties : config.getEndpoints()) {
+            for (EndpointProperties endpointProperties : rsocketServiceProperties.getEndpoints()) {
                 add(endpointProperties.getGroup(),
                         endpointProperties.getService(),
                         endpointProperties.getVersion(),

@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,13 +38,13 @@ import java.util.Objects;
 public class RSocketServiceConfiguration {
     @Bean(destroyMethod = "close")
     public RSocketServiceRequester rsocketServiceRequester(@Autowired Environment env,
-                                                           @Autowired RSocketServiceProperties config,
+                                                           @Autowired RSocketServiceProperties rsocketServiceProperties,
                                                            @Autowired List<RSocketBinderCustomizer> binderCustomizers,
                                                            @Autowired List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
                                                            @Autowired(required = false) HealthService healthService,
                                                            @Autowired(required = false) Tracing tracing) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        RSocketServiceRequester.Builder builder = RSocketServiceRequester.builder(appName, config)
+        RSocketServiceRequester.Builder builder = RSocketServiceRequester.builder(appName, rsocketServiceProperties)
                 .binderCustomizers(binderCustomizers)
                 .requesterSupportBuilderCustomizers(requesterSupportCustomizers)
                 .healthCheck(healthService);
@@ -55,15 +56,15 @@ public class RSocketServiceConfiguration {
     }
 
     //----------------------------spring----------------------------
+
     /**
      * {@link RSocketService}注解processor
      * 此处使用{@link Value}而不是{@link Autowired} {@link RSocketServiceProperties}, 是为了先初始化{@link RSocketServiceAnnoProcessor},
      * 避免{@link RSocketServiceProperties}没有被所有{@link org.springframework.beans.factory.config.BeanPostProcessor}处理, 而导致spring打印警告
      */
     @Bean
-    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor(@Value("${kin.rsocket.group:}") String group,
-                                                                   @Value("${kin.rsocket.version:}") String version) {
-        return new RSocketServiceAnnoProcessor(group, version);
+    public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor(@Autowired RSocketServiceProperties rsocketServiceProperties) {
+        return new RSocketServiceAnnoProcessor(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion());
     }
 
     /**
@@ -78,9 +79,9 @@ public class RSocketServiceConfiguration {
      * 开启actuator监控
      */
     @Bean
-    public RSocketEndpoint rsocketEndpoint(@Autowired RSocketServiceProperties config,
+    public RSocketEndpoint rsocketEndpoint(@Autowired RSocketServiceProperties rsocketServiceProperties,
                                            @Autowired RSocketServiceRequester requester) {
-        return new RSocketEndpoint(config, requester);
+        return new RSocketEndpoint(rsocketServiceProperties, requester);
     }
 
     /**
@@ -88,10 +89,10 @@ public class RSocketServiceConfiguration {
      */
     @Bean
     @ConditionalOnProperty("kin.rsocket.brokers")
-    public HealthIndicator healthIndicator(@Value("${kin.rsocket.brokers}") String brokers,
+    public HealthIndicator healthIndicator(@Autowired RSocketServiceProperties rsocketServiceProperties,
                                            @Autowired RSocketEndpoint endpoint,
                                            @Autowired @Qualifier("healthCheckRef") HealthCheck healthCheck) {
-        return new HealthIndicator(endpoint, healthCheck, brokers);
+        return new HealthIndicator(endpoint, healthCheck, StringUtils.collectionToCommaDelimitedString(rsocketServiceProperties.getBrokers()));
     }
 
     /**

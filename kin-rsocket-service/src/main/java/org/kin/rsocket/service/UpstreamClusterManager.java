@@ -32,7 +32,7 @@ public interface UpstreamClusterManager extends UpstreamClusterSelector, Closeab
     /**
      * 解析{@link RSocketServiceProperties}配置并注册创建对应的{@link UpstreamCluster}
      */
-    void add(RSocketServiceProperties config);
+    void add(RSocketServiceProperties rsocketServiceProperties);
 
     /**
      * 获取所有upstream cluster

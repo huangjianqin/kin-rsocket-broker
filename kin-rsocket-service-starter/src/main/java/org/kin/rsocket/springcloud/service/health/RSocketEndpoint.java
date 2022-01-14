@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  */
 @Endpoint(id = "rsocket")
 public final class RSocketEndpoint {
-    private final RSocketServiceProperties config;
+    private final RSocketServiceProperties rsocketServiceProperties;
     private final UpstreamClusterManager upstreamClusterManager;
     private final boolean serviceProvider;
     /** app status */
@@ -35,9 +35,9 @@ public final class RSocketEndpoint {
     /** 下线的服务 */
     private final Set<String> offlineServices = new HashSet<>();
 
-    public RSocketEndpoint(RSocketServiceProperties config,
+    public RSocketEndpoint(RSocketServiceProperties rsocketServiceProperties,
                            UpstreamClusterManager upstreamClusterManager) {
-        this.config = config;
+        this.rsocketServiceProperties = rsocketServiceProperties;
         this.upstreamClusterManager = upstreamClusterManager;
         Set<ServiceLocator> exposedServices = RSocketServiceRegistry.exposedServices();
         this.serviceProvider = !exposedServices.isEmpty();
@@ -80,8 +80,8 @@ public final class RSocketEndpoint {
         if (brokerCluster != null) {
             info.put("brokers", brokerCluster.getUris());
         }
-        if (config.getMetadata() != null && !config.getMetadata().isEmpty()) {
-            info.put("metadata", config.getMetadata());
+        if (rsocketServiceProperties.getMetadata() != null && !rsocketServiceProperties.getMetadata().isEmpty()) {
+            info.put("metadata", rsocketServiceProperties.getMetadata());
         }
         if (!offlineServices.isEmpty()) {
             info.put("offlineServices", offlineServices);

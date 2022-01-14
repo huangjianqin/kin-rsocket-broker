@@ -3,8 +3,9 @@ package org.kin.rsocket.conf.h2;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.conf.RSocketConfDiamondConfiguration;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 import java.io.File;
@@ -14,11 +15,16 @@ import java.io.File;
  * @date 2021/4/3
  */
 @RSocketConfDiamondConfiguration
+@EnableConfigurationProperties(H2StorageConfProperties.class)
 public class RSocketH2StorageConfAutoConfiguration {
+    @Autowired
+    private H2StorageConfProperties h2StorageConfProperties;
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    @Bean
     @ConditionalOnProperty("kin.rsocket.broker.conf.h2.dbPath")
-    public ConfDiamond configurationService(@Value("${kin.rsocket.broker.conf.h2.dbPath}") String dbPath) {
+    @Bean
+    public ConfDiamond configurationService() {
+        String dbPath = h2StorageConfProperties.getDbPath();
         if (StringUtils.isBlank(dbPath)) {
             //如果没有配置, 则使用默认路径
             File rsocketRootDir = new File(System.getProperty("user.home"), ".rsocket");

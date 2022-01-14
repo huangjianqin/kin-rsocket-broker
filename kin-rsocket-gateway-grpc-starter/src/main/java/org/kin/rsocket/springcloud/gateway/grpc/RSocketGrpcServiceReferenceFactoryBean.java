@@ -20,7 +20,7 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
     @Resource
     private RSocketServiceRequester requester;
     @Resource
-    private RSocketServiceProperties config;
+    private RSocketServiceProperties rsocketServiceProperties;
     /** 缓存rsocket rpc service reference builder, 创建reference后会clear掉 */
     private RSocketGrpcServiceImplBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
@@ -45,15 +45,15 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
         }
 
         builder = RSocketGrpcServiceImplBuilder.stub(claxx);
-        String defaultGroup = config.getGroup();
+        String defaultGroup = rsocketServiceProperties.getGroup();
         if (StringUtils.isNotBlank(defaultGroup)) {
             builder.group(defaultGroup);
         }
-        String version = config.getVersion();
+        String version = rsocketServiceProperties.getVersion();
         if (StringUtils.isNotBlank(version)) {
             builder.version(version);
         }
-        builder.callTimeout(config.getTimeout());
+        builder.callTimeout(rsocketServiceProperties.getTimeout());
     }
 
     @Override
