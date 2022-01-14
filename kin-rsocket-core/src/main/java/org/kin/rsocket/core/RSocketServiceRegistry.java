@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * 服务注册表, 单例, 仅仅是内部用于存储方法handler映射
  * <p>
- * handlerName = 可以是方法名, 也可以是自定义名字
+ * handler = 可以是方法名, 也可以是自定义名字
  * handlerId = hash(service.handler)
  * <p>
  * 一个app仅仅只有一个service name的instance, 不支持不同组多版本在同一jvm上注册
@@ -72,7 +72,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     }
 
     /**
-     * 是否包含对应service, handlerName注册信息
+     * 是否包含对应hash(service.handler)注册信息
      */
     public boolean contains(int handlerId) {
         Lock readLock = lock.readLock();
@@ -154,13 +154,13 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         try {
             for (Method method : interfaceClass.getMethods()) {
                 if (!method.isDefault()) {
-                    String handlerName = method.getName();
+                    String handler = method.getName();
                     //解析ServiceMapping注解, 看看是否自定义method(handler) name
                     ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
                     if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                        handlerName = serviceMapping.value();
+                        handler = serviceMapping.value();
                     }
-                    String key = service + Separators.SERVICE_HANDLER + handlerName;
+                    String key = service + Separators.SERVICE_HANDLER + handler;
 
                     ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
 
@@ -298,12 +298,12 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
             service2Provider.remove(service);
             for (Method method : serviceInterface.getMethods()) {
                 if (!method.isDefault()) {
-                    String handlerName = method.getName();
+                    String handler = method.getName();
                     ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
                     if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                        handlerName = serviceMapping.value();
+                        handler = serviceMapping.value();
                     }
-                    String key = service + Separators.SERVICE_HANDLER + handlerName;
+                    String key = service + Separators.SERVICE_HANDLER + handler;
 
                     handlerId2Invoker.remove(MurmurHash3.hash32(key));
                     service2Info.remove(service);
