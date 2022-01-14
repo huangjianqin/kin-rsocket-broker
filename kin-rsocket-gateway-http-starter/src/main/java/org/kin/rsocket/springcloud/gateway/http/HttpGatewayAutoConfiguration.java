@@ -4,6 +4,7 @@ import org.kin.rsocket.springcloud.gateway.http.converter.ByteBufDecoder;
 import org.kin.rsocket.springcloud.gateway.http.converter.ByteBufEncoder;
 import org.kin.rsocket.springcloud.service.RSocketServiceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.codec.DecoderHttpMessageReader;
 import org.springframework.http.codec.EncoderHttpMessageWriter;
@@ -21,5 +22,11 @@ public class HttpGatewayAutoConfiguration implements WebFluxConfigurer {
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
         configurer.customCodecs().register(new EncoderHttpMessageWriter<>(new ByteBufEncoder()));
         configurer.customCodecs().register(new DecoderHttpMessageReader<>(new ByteBufDecoder()));
+    }
+
+    //-------------------------------controller-------------------------------
+    @Bean
+    public HttpGatewayController httpGatewayController() {
+        return new HttpGatewayController();
     }
 }
