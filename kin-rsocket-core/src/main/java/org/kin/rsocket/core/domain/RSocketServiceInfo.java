@@ -20,7 +20,7 @@ public class RSocketServiceInfo implements Serializable {
     /** interface name */
     private String name;
     /** service name */
-    private String serviceName;
+    private String service;
     /** group */
     private String group;
     /** version */
@@ -53,8 +53,8 @@ public class RSocketServiceInfo implements Serializable {
             return this;
         }
 
-        public Builder serviceName(String serviceName) {
-            reactiveServiceInfo.serviceName = serviceName;
+        public Builder service(String service) {
+            reactiveServiceInfo.service = service;
             return this;
         }
 
@@ -112,12 +112,12 @@ public class RSocketServiceInfo implements Serializable {
         this.name = name;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getService() {
+        return service;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setService(String service) {
+        this.service = service;
     }
 
     public String getGroup() {

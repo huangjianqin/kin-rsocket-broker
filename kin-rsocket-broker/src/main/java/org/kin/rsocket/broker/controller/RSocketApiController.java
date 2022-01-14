@@ -43,8 +43,8 @@ public class RSocketApiController {
     @Autowired
     private AuthenticationService authenticationService;
 
-    @RequestMapping(value = "/{serviceName}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public Mono<ResponseEntity<String>> handle(@PathVariable("serviceName") String serviceName,
+    @RequestMapping(value = "/{service}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public Mono<ResponseEntity<String>> handle(@PathVariable("service") String service,
                                                @PathVariable("method") String method,
                                                @RequestParam(name = "group", required = false, defaultValue = "") String group,
                                                @RequestParam(name = "version", required = false, defaultValue = "") String version,
@@ -52,7 +52,7 @@ public class RSocketApiController {
                                                @RequestHeader(name = "X-Endpoint", required = false, defaultValue = "") String endpoint,
                                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         try {
-            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
+            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, method, version);
             int serviceId = routingMetadata.serviceId();
 
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);

@@ -35,7 +35,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     /** 每N秒刷新一下rsocket broker集群信息 */
     private static final int REFRESH_INTERVAL_SECONDS = 5;
     /** spring reactive cloud discovery中broker服务名字 */
-    private static final String SERVICE_NAME = "rsocket-broker";
+    private static final String DEFAULT_BROKER_DISCOVERY_SERVICE = "rsocket-broker";
 
     /** spring reactive cloud discovery client */
     private final ReactiveDiscoveryClient discoveryClient;
@@ -47,29 +47,29 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     private final Disposable brokersRresher;
 
     public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient) {
-        this(discoveryClient, SERVICE_NAME, REFRESH_INTERVAL_SECONDS);
+        this(discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, REFRESH_INTERVAL_SECONDS);
     }
 
-    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerServiceName) {
-        this(discoveryClient, brokerServiceName, REFRESH_INTERVAL_SECONDS);
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService) {
+        this(discoveryClient, brokerDiscoveryService, REFRESH_INTERVAL_SECONDS);
     }
 
     public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, int internal) {
-        this(discoveryClient, SERVICE_NAME, internal);
+        this(discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, internal);
     }
 
-    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerServiceName, int internal) {
-        if (StringUtils.isBlank(brokerServiceName)) {
-            brokerServiceName = SERVICE_NAME;
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService, int internal) {
+        if (StringUtils.isBlank(brokerDiscoveryService)) {
+            brokerDiscoveryService = DEFAULT_BROKER_DISCOVERY_SERVICE;
         }
         if (internal <= 0) {
             internal = REFRESH_INTERVAL_SECONDS;
         }
 
         this.discoveryClient = discoveryClient;
-        String finalBrokerServiceName = brokerServiceName;
+        String finalBrokerDiscoveryService = brokerDiscoveryService;
         this.brokersRresher = Flux.interval(Duration.ofSeconds(internal))
-                .flatMap(aLong -> this.discoveryClient.getInstances(finalBrokerServiceName).collectList())
+                .flatMap(aLong -> this.discoveryClient.getInstances(finalBrokerDiscoveryService).collectList())
                 .subscribe(serviceInstances -> {
                     boolean changed = serviceInstances.size() != brokers.size();
                     for (ServiceInstance serviceInstance : serviceInstances) {

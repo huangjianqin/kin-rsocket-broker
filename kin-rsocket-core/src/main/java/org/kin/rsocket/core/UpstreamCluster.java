@@ -28,7 +28,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     /** group */
     private final String group;
     /** service name */
-    private final String serviceName;
+    private final String service;
     /** version */
     private final String version;
     /** upstream uris  processor */
@@ -62,31 +62,31 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     }
 
     public UpstreamCluster(String group,
-                           String serviceName,
+                           String service,
                            String version,
                            RSocketRequesterSupport requesterSupport) {
-        this(group, serviceName, version, requesterSupport, Collections.emptyList());
+        this(group, service, version, requesterSupport, Collections.emptyList());
     }
 
     public UpstreamCluster(String group,
-                           String serviceName,
+                           String service,
                            String version,
                            RSocketRequesterSupport requesterSupport,
                            List<String> uris) {
-        this(group, serviceName, version, requesterSupport, uris, null);
+        this(group, service, version, requesterSupport, uris, null);
     }
 
     public UpstreamCluster(String group,
-                           String serviceName,
+                           String service,
                            String version,
                            RSocketRequesterSupport requesterSupport,
                            List<String> uris,
                            String loadBalanceStrategy) {
         this.group = group;
-        this.serviceName = serviceName;
+        this.service = service;
         this.version = version;
 
-        this.loadBalanceRequester = new LoadBalanceRsocketRequester(ServiceLocator.gsv(group, serviceName, version), loadBalanceStrategy, urisSink.asFlux(), requesterSupport);
+        this.loadBalanceRequester = new LoadBalanceRsocketRequester(ServiceLocator.gsv(group, service, version), loadBalanceStrategy, urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {
             refreshUris(uris);
         }
@@ -112,7 +112,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
      * 是否是broker upstream
      */
     public boolean isBroker() {
-        return serviceName.equals(Symbols.BROKER);
+        return service.equals(Symbols.BROKER);
     }
 
     @Override
@@ -180,7 +180,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         stopped = true;
         urisSink.tryEmitComplete();
         loadBalanceRequester.dispose();
-        log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, serviceName, version)));
+        log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, service, version)));
     }
 
     @Override
@@ -197,8 +197,8 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         return group;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getService() {
+        return service;
     }
 
     public String getVersion() {
@@ -206,7 +206,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     }
 
     public String getServiceId() {
-        return ServiceLocator.gsv(group, serviceName, version);
+        return ServiceLocator.gsv(group, service, version);
     }
 
     public List<String> getUris() {

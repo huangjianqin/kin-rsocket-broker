@@ -19,16 +19,16 @@ public class HealthService implements HealthCheck {
     private RSocketServiceManager serviceManager;
 
     @Override
-    public Mono<Integer> check(String serviceName) {
+    public Mono<Integer> check(String service) {
         //health check
-        if (serviceName == null || serviceName.isEmpty()) {
+        if (service == null || service.isEmpty()) {
             //broker心跳
             return Mono.just(AppStatus.SERVING.getId());
         }
 
         //指定服务的health check
         return Flux.fromIterable(serviceManager.getAllServices())
-                .any(serviceLocator -> serviceLocator.getService().equals(serviceName))
+                .any(serviceLocator -> serviceLocator.getService().equals(service))
                 .map(result -> result ? AppStatus.SERVING.getId() : AppStatus.DOWN.getId());
     }
 }

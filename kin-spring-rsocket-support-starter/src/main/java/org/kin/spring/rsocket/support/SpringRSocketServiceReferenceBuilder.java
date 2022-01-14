@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class SpringRSocketServiceReferenceBuilder<T> {
     /** 服务名 */
-    private String serviceName;
+    private String service;
     /** 服务接口 */
     private Class<T> serviceInterface;
     /** 底层remote requester */
@@ -40,8 +40,8 @@ public final class SpringRSocketServiceReferenceBuilder<T> {
         return this;
     }
 
-    public SpringRSocketServiceReferenceBuilder<T> serviceName(String serviceName) {
-        this.serviceName = serviceName;
+    public SpringRSocketServiceReferenceBuilder<T> service(String service) {
+        this.service = service;
         return this;
     }
 
@@ -59,12 +59,12 @@ public final class SpringRSocketServiceReferenceBuilder<T> {
     public T build() {
         Preconditions.checkNotNull(rsocketRequester, "RSocketRequester instance is null");
         Preconditions.checkNotNull(serviceInterface, "service interface class is null");
-        if (StringUtils.isBlank(serviceName)) {
+        if (StringUtils.isBlank(service)) {
             //默认为服务接口
-            this.serviceName = serviceInterface.getName();
+            this.service = serviceInterface.getName();
         }
 
-        RequesterProxy requesterProxy = new RequesterProxy(rsocketRequester, serviceName, serviceInterface, timeout);
+        RequesterProxy requesterProxy = new RequesterProxy(rsocketRequester, service, serviceInterface, timeout);
         if (ByteBuddySupport.ENHANCE) {
             return ByteBuddyUtils.build(this.serviceInterface, requesterProxy);
         } else {

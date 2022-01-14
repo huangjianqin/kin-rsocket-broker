@@ -68,7 +68,7 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
         }
 
         SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.requester(rsocketRequester, serviceInterface);
-        builder.serviceName(rsocketServiceReference.service());
+        builder.service(rsocketServiceReference.service());
         builder.timeout(rsocketServiceReference.callTimeout(), TimeUnit.SECONDS);
         return builder;
     }

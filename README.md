@@ -27,8 +27,8 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 
 ### **实现细节**
 
-gsv: group!serviceName:version serviceId: hash(gsv)
-handleId: hash(serviceName.handlerName)
+gsv: group!service:version serviceId: hash(gsv)
+handleId: hash(service.handlerName)
 
 ## **实现模块**
 

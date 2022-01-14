@@ -12,5 +12,5 @@ public interface RSocketServiceInfoSupport {
     /**
      * 用于后台访问服务接口具体信息
      */
-    RSocketServiceInfo getReactiveServiceInfoByName(String serviceName);
+    RSocketServiceInfo getReactiveServiceInfoByName(String service);
 }

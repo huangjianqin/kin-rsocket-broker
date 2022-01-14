@@ -16,16 +16,16 @@ public interface UpstreamClusterManager extends UpstreamClusterSelector, Closeab
      * 添加upstream cluster
      */
     default void add(String group,
-                     String serviceName,
+                     String service,
                      String version) {
-        add(group, serviceName, version, Collections.emptyList());
+        add(group, service, version, Collections.emptyList());
     }
 
     /**
      * 添加upstream cluster
      */
     void add(String group,
-             String serviceName,
+             String service,
              String version,
              List<String> uris);
 

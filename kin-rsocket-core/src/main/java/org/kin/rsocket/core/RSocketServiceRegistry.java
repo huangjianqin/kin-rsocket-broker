@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * 服务注册表, 单例, 仅仅是内部用于存储方法handler映射
  * <p>
  * handlerName = 可以是方法名, 也可以是自定义名字
- * handlerId = hash(serviceName.handlerName)
+ * handlerId = hash(service.handler)
  * <p>
  * 一个app仅仅只有一个service name的instance, 不支持不同组多版本在同一jvm上注册
  *
@@ -59,16 +59,16 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
 
     /** 修改数据需加锁 */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    /** key -> serviceName, value -> provider, 即service instance */
-    private final Map<String, Object> serviceName2Provider = new HashMap<>();
-    /** key -> hash(serviceName.method), value -> service method invoker */
+    /** key -> service, value -> provider, 即service instance */
+    private final Map<String, Object> service2Provider = new HashMap<>();
+    /** key -> hash(service.method), value -> service method invoker */
     private final Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>();
-    /** key -> service name, value -> reactive service info */
-    private final Map<String, RSocketServiceInfo> serviceName2Info = new HashMap<>();
+    /** key -> service, value -> reactive service info */
+    private final Map<String, RSocketServiceInfo> service2Info = new HashMap<>();
 
     private RSocketServiceRegistry() {
         //用于broker可以请求service instance访问其指定服务详细信息
-        addProvider("", "", RSocketServiceInfoSupport.class, this, "暴露Rsocket Service信息的服务");
+        addProvider("", "", RSocketServiceInfoSupport.class, this, "暴露RSocket Service信息的服务");
     }
 
     /**
@@ -87,18 +87,18 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /**
      * 是否包含对应service注册信息
      */
-    public boolean contains(String serviceName, String handlerName) {
-        return contains(MurmurHash3.hash32(serviceName + Separators.SERVICE_HANDLER + handlerName));
+    public boolean contains(String service, String handler) {
+        return contains(MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler));
     }
 
     /**
      * 是否包含对应handlerId的注册信息
      */
-    public boolean contains(String serviceName) {
+    public boolean contains(String service) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return serviceName2Provider.containsKey(serviceName);
+            return service2Provider.containsKey(service);
         } finally {
             readLock.unlock();
         }
@@ -113,7 +113,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return new HashSet<>(serviceName2Provider.keySet());
+            return new HashSet<>(service2Provider.keySet());
         } finally {
             readLock.unlock();
         }
@@ -128,8 +128,8 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return serviceName2Info.values().stream()
-                    .map(i -> ServiceLocator.of(i.getGroup(), i.getServiceName(), i.getVersion()))
+            return service2Info.values().stream()
+                    .map(i -> ServiceLocator.of(i.getGroup(), i.getService(), i.getVersion()))
                     .collect(Collectors.toSet());
         } finally {
             readLock.unlock();
@@ -148,7 +148,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      *
      * @param tags 对应{@link RSocketService#tags()}
      */
-    public void addProvider(String group, String serviceName, String version, Class<?> interfaceClass, Object provider, String... tags) {
+    public void addProvider(String group, String service, String version, Class<?> interfaceClass, Object provider, String... tags) {
         Lock writeLock = this.lock.writeLock();
         writeLock.lock();
         try {
@@ -160,13 +160,13 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
                     if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
                         handlerName = serviceMapping.value();
                     }
-                    String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
+                    String key = service + Separators.SERVICE_HANDLER + handlerName;
 
                     ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
 
-                    serviceName2Provider.put(serviceName, provider);
+                    service2Provider.put(service, provider);
                     handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
-                    serviceName2Info.put(serviceName, newReactiveServiceInfo(group, serviceName, version, interfaceClass, tags));
+                    service2Info.put(service, newReactiveServiceInfo(group, service, version, interfaceClass, tags));
                 }
             }
         } finally {
@@ -178,16 +178,16 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 注册service, 不会主动往broker注册新增服务
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
-    public void addProvider(String serviceName, String handlerName,
+    public void addProvider(String service, String handler,
                             Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
         Lock writeLock = this.lock.writeLock();
         writeLock.lock();
         try {
-            String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
+            String key = service + Separators.SERVICE_HANDLER + handler;
 
-            serviceName2Provider.put(serviceName, provider);
+            service2Provider.put(service, provider);
             handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
-            serviceName2Info.put(serviceName, serviceInfo);
+            service2Info.put(service, serviceInfo);
         } finally {
             writeLock.unlock();
         }
@@ -196,7 +196,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /**
      * 创建reactive service信息, 用于后台访问服务接口具体信息
      */
-    private RSocketServiceInfo newReactiveServiceInfo(String group, String serviceName,
+    private RSocketServiceInfo newReactiveServiceInfo(String group, String service,
                                                       String version, Class<?> interfaceClass,
                                                       String[] tags) {
         RSocketServiceInfo.Builder builder = RSocketServiceInfo.builder();
@@ -206,7 +206,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
             builder.namespace(interfaceClass.getPackage().getName());
         }
         builder.name(interfaceClass.getName());
-        builder.serviceName(serviceName);
+        builder.service(service);
 
         Desc desc = interfaceClass.getAnnotation(Desc.class);
         if (Objects.nonNull(desc) && StringUtils.isNotBlank(desc.value())) {
@@ -291,11 +291,11 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /**
      * 注销service信息, , 不会主动往broker注销移除服务
      */
-    public void removeProvider(String group, String serviceName, String version, Class<?> serviceInterface) {
+    public void removeProvider(String group, String service, String version, Class<?> serviceInterface) {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
-            serviceName2Provider.remove(serviceName);
+            service2Provider.remove(service);
             for (Method method : serviceInterface.getMethods()) {
                 if (!method.isDefault()) {
                     String handlerName = method.getName();
@@ -303,10 +303,10 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
                     if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
                         handlerName = serviceMapping.value();
                     }
-                    String key = serviceName + Separators.SERVICE_HANDLER + handlerName;
+                    String key = service + Separators.SERVICE_HANDLER + handlerName;
 
                     handlerId2Invoker.remove(MurmurHash3.hash32(key));
-                    serviceName2Info.remove(serviceName);
+                    service2Info.remove(service);
                 }
             }
         } finally {
@@ -317,8 +317,8 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /**
      * 返回method invoker
      */
-    public ReactiveMethodInvoker getInvoker(String serviceName, String handlerName) {
-        return getInvoker(MurmurHash3.hash32(serviceName + Separators.SERVICE_HANDLER + handlerName));
+    public ReactiveMethodInvoker getInvoker(String service, String handler) {
+        return getInvoker(MurmurHash3.hash32(service + Separators.SERVICE_HANDLER + handler));
     }
 
     /**
@@ -351,11 +351,11 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 用于后台访问服务接口具体信息
      */
     @Override
-    public RSocketServiceInfo getReactiveServiceInfoByName(String serviceName) {
+    public RSocketServiceInfo getReactiveServiceInfoByName(String service) {
         Lock readLock = lock.readLock();
         readLock.lock();
         try {
-            return serviceName2Info.get(serviceName);
+            return service2Info.get(service);
         } finally {
             readLock.unlock();
         }

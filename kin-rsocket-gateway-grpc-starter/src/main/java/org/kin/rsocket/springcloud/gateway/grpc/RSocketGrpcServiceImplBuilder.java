@@ -50,9 +50,9 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
         RSocketGrpcServiceImplBuilder<T> builder = new RSocketGrpcServiceImplBuilder<>(serviceInterface);
         builder.service(serviceInterface.getName());
 
-        String serviceName = annoAttrs.getString("name");
-        if (StringUtils.isNotBlank(serviceName)) {
-            builder.service(serviceName);
+        String service = annoAttrs.getString("name");
+        if (StringUtils.isNotBlank(service)) {
+            builder.service(service);
         }
 
         String group = annoAttrs.getString("group");

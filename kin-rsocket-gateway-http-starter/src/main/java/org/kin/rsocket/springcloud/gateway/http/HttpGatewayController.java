@@ -34,8 +34,8 @@ public class HttpGatewayController {
     @Autowired
     private UpstreamClusterManager upstreamClusterManager;
 
-    @RequestMapping(value = "/{serviceName}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public Mono<ResponseEntity<ByteBuf>> handle(@PathVariable("serviceName") String serviceName,
+    @RequestMapping(value = "/{service}/{method}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    public Mono<ResponseEntity<ByteBuf>> handle(@PathVariable("service") String service,
                                                 @PathVariable("method") String method,
                                                 @RequestParam(name = "group", required = false, defaultValue = "") String group,
                                                 @RequestParam(name = "version", required = false, defaultValue = "") String version,
@@ -51,7 +51,7 @@ public class HttpGatewayController {
             return Mono.error(new Exception("Failed to validate JWT token, please supply correct token."));
         }
         try {
-            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, serviceName, method, version);
+            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, method, version);
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_MIME_TYPE);
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : body;
             return upstreamClusterManager.getBroker().requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))

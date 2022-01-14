@@ -32,7 +32,7 @@ public final class HealthService implements HealthCheck, ApplicationListener<Con
     private volatile List<ReactiveHealthIndicator> healthIndicators = Collections.emptyList();
 
     @Override
-    public Mono<Integer> check(String serviceName) {
+    public Mono<Integer> check(String service) {
         return Flux.fromIterable(healthIndicators)
                 .flatMap(healthIndicator -> healthIndicator
                         .health().map(Health::getStatus))

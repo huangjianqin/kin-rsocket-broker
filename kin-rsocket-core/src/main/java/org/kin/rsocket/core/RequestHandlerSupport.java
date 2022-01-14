@@ -29,8 +29,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      *
      * @return 未能找到合适的service method invoker
      */
-    private String noServiceMethodInvokerFoundTips(String serviceName, String handleName) {
-        return String.format("No service method Invoker found: %s.%s", serviceName, handleName);
+    private String noServiceMethodInvokerFoundTips(String service, String handler) {
+        return String.format("No service method Invoker found: %s.%s", service, handler);
     }
 
     /**
@@ -38,8 +38,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      *
      * @return service method call exception
      */
-    private String failCallLog(String serviceName, String handleName) {
-        return String.format("Failed to call service stub %s#%s", serviceName, handleName);
+    private String failCallLog(String service, String handler) {
+        return String.format("Failed to call service stub %s#%s", service, handler);
     }
 
     /**
@@ -47,8 +47,8 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
      *
      * @return service method call exception info
      */
-    private String failCallTips(String serviceName, String handleName, Exception e) {
-        return String.format("Service '%s' invoked '%s' failed: %s", serviceName, handleName, e.getMessage());
+    private String failCallTips(String service, String handle, Exception e) {
+        return String.format("Service '%s' invoked '%s' failed: %s", service, handle, e.getMessage());
     }
 
     /**

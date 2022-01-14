@@ -44,8 +44,8 @@ public class RSocketCloudFunctionRegistrar implements ApplicationListener<Applic
             try {
                 //寻找其apply方法
                 Method method = function.getClass().getMethod("apply", Object.class);
-                String serviceName = functionName.substring(0, functionName.lastIndexOf("."));
-                String handlerName = functionName.substring(functionName.lastIndexOf(".") + 1);
+                String service = functionName.substring(0, functionName.lastIndexOf("."));
+                String handler = functionName.substring(functionName.lastIndexOf(".") + 1);
 
                 //将其封装成invoker
                 ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(
@@ -54,11 +54,11 @@ public class RSocketCloudFunctionRegistrar implements ApplicationListener<Applic
                         new Class[]{function.getRawInputType()});
 
                 RSocketServiceInfo.Builder builder = RSocketServiceInfo.builder();
-                RSocketServiceInfo rsocketServiceInfo = builder.name(serviceName).serviceName(serviceName)
+                RSocketServiceInfo rsocketServiceInfo = builder.name(service).service(service)
                         .group(serviceConfig.getGroup()).version(serviceConfig.getVersion())
                         .description(function.getFunctionDefinition()).build();
 
-                RSocketServiceRegistry.INSTANCE.addProvider(serviceName, handlerName, function, invoker, rsocketServiceInfo);
+                RSocketServiceRegistry.INSTANCE.addProvider(service, handler, function, invoker, rsocketServiceInfo);
             } catch (Exception e) {
                 ExceptionUtils.throwExt(e);
             }

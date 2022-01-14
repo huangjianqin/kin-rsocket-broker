@@ -123,15 +123,15 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String serviceName, Class<?> serviceInterface, Object provider, String... tags) {
-        return registerService("", serviceName, "", serviceInterface, provider, tags);
+    public RSocketServiceRequester registerService(String service, Class<?> serviceInterface, Object provider, String... tags) {
+        return registerService("", service, "", serviceInterface, provider, tags);
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider, String... tags) {
-        RSocketServiceRegistry.INSTANCE.addProvider(group, serviceName, version, serviceInterface, provider, tags);
+    public RSocketServiceRequester registerService(String group, String service, String version, Class<?> serviceInterface, Object provider, String... tags) {
+        RSocketServiceRegistry.INSTANCE.addProvider(group, service, version, serviceInterface, provider, tags);
         return this;
     }
 
@@ -154,16 +154,16 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 注册并发布service
      */
-    public RSocketServiceRequester registerAndPubService(String serviceName, Class<?> serviceInterface, Object provider) {
-        return registerAndPubService("", serviceName, "", serviceInterface, provider);
+    public RSocketServiceRequester registerAndPubService(String service, Class<?> serviceInterface, Object provider) {
+        return registerAndPubService("", service, "", serviceInterface, provider);
     }
 
     /**
      * 注册并发布service
      */
-    public RSocketServiceRequester registerAndPubService(String group, String serviceName, String version, Class<?> serviceInterface, Object provider) {
-        registerService(group, serviceName, version, serviceInterface, provider);
-        publishService(group, serviceName, version);
+    public RSocketServiceRequester registerAndPubService(String group, String service, String version, Class<?> serviceInterface, Object provider) {
+        registerService(group, service, version, serviceInterface, provider);
+        publishService(group, service, version);
         return this;
     }
 
@@ -206,36 +206,36 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 通知broker暴露新服务
      */
-    private void publishService(String group, String serviceName, String version) {
+    private void publishService(String group, String service, String version) {
         //publish
-        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServicesExposedEvent.of(ServiceLocator.of(group, serviceName, version));
+        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServicesExposedEvent.of(ServiceLocator.of(group, service, version));
         publishServices(cloudEvent);
     }
 
     /**
      * 下线服务
      */
-    public void hideService(String serviceName, Class<?> serviceInterface) {
-        hideService("", serviceName, "", serviceInterface);
+    public void hideService(String service, Class<?> serviceInterface) {
+        hideService("", service, "", serviceInterface);
     }
 
     /**
      * 下线服务
      */
-    public void hideService(String group, String serviceName, String version, Class<?> serviceInterface) {
+    public void hideService(String group, String service, String version, Class<?> serviceInterface) {
         UpstreamCluster broker = getBroker();
         if (Objects.isNull(broker)) {
             return;
         }
-        ServiceLocator targetServiceLocator = ServiceLocator.of(group, serviceName, version);
+        ServiceLocator targetServiceLocator = ServiceLocator.of(group, service, version);
         CloudEventData<RSocketServicesHiddenEvent> cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
         broker.broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     //broker uris
                     String brokerUris = String.join(",", rsocketServiceProperties.getBrokers());
 
-                    RSocketServiceRegistry.INSTANCE.removeProvider(group, serviceName, version, serviceInterface);
-                    log.info(String.format("Services(%s) hide on Brokers(%s)!.", serviceName, brokerUris));
+                    RSocketServiceRegistry.INSTANCE.removeProvider(group, service, version, serviceInterface);
+                    log.info(String.format("Services(%s) hide on Brokers(%s)!.", service, brokerUris));
                 }).subscribe();
     }
 
@@ -270,8 +270,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
     @Override
-    public void add(String group, String serviceName, String version, List<String> uris) {
-        upstreamClusterManager.add(group, serviceName, version, uris);
+    public void add(String group, String service, String version, List<String> uris) {
+        upstreamClusterManager.add(group, service, version, uris);
     }
 
     @Override
@@ -398,7 +398,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         @Override
-        public Mono<Integer> check(String serviceName) {
+        public Mono<Integer> check(String service) {
             return brokerHealthCheck.check(null).map(r -> AppStatus.SERVING.getId() == r ? 1 : 0);
         }
     }

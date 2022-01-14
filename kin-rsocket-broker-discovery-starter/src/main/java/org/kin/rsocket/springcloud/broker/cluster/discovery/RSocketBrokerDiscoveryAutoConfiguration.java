@@ -26,6 +26,6 @@ public class RSocketBrokerDiscoveryAutoConfiguration {
 
     @Bean
     public RSocketBrokerManager brokerManager(@Autowired ReactiveDiscoveryClient discoveryClient) {
-        return new DiscoveryBrokerManager(discoveryClient, discoveryProperties.getServiceName(), discoveryProperties.getRefreshInternal());
+        return new DiscoveryBrokerManager(discoveryClient, discoveryProperties.getService(), discoveryProperties.getRefreshInternal());
     }
 }

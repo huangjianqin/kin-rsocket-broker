@@ -69,10 +69,10 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
 
     @Override
     public void add(String group,
-                    String serviceName,
+                    String service,
                     String version,
                     List<String> uris) {
-        UpstreamCluster cluster = new UpstreamCluster(group, serviceName, version, requesterSupport, uris, loadBalance);
+        UpstreamCluster cluster = new UpstreamCluster(group, service, version, requesterSupport, uris, loadBalance);
         clusters.put(cluster.getServiceId(), cluster);
         if (cluster.isBroker()) {
             this.brokerCluster = cluster;

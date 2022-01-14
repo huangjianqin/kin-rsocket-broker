@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * 服务定位: group, service full name, version
  * <p>
- * gsv定义: group!serviceName:version
+ * gsv定义: group!service:version
  *
  * @author huangjianqin
  * @date 2021/2/15

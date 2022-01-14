@@ -95,25 +95,25 @@ public final class RSocketEndpoint {
             this.serviceStatus = AppStatus.SERVING;
             return updateAppStatus(this.serviceStatus).thenReturn("Succeed to register RSocket services on brokers!");
         } else if (action.startsWith("online-")) {
-            String serviceName = action.substring("online-".length());
-            ServiceLocator targetService = getServiceLocator(serviceName);
+            String service = action.substring("online-".length());
+            ServiceLocator targetService = getServiceLocator(service);
             if (targetService == null) {
-                return Mono.just("Service not found:  " + serviceName);
+                return Mono.just("Service not found:  " + service);
             } else {
-                offlineServices.remove(serviceName);
-                return sendRegisterService(targetService).thenReturn("Succeed to register " + serviceName + " on brokers!");
+                offlineServices.remove(service);
+                return sendRegisterService(targetService).thenReturn("Succeed to register " + service + " on brokers!");
             }
         } else if ("offline".equalsIgnoreCase(action)) {
             this.serviceStatus = AppStatus.DOWN;
             return updateAppStatus(this.serviceStatus).thenReturn("Succeed to unregister RSocket services on brokers!");
         } else if (action.startsWith("offline-")) {
-            String serviceName = action.substring("offline-".length());
-            ServiceLocator targetService = getServiceLocator(serviceName);
+            String service = action.substring("offline-".length());
+            ServiceLocator targetService = getServiceLocator(service);
             if (targetService == null) {
-                return Mono.just("Service not found:  " + serviceName);
+                return Mono.just("Service not found:  " + service);
             } else {
-                offlineServices.add(serviceName);
-                return sendUnregisterService(targetService).thenReturn("Succeed to unregister " + serviceName + " on brokers!");
+                offlineServices.add(service);
+                return sendUnregisterService(targetService).thenReturn("Succeed to unregister " + service + " on brokers!");
             }
         } else if ("shutdown".equalsIgnoreCase(action)) {
             this.serviceStatus = AppStatus.STOPPED;
@@ -158,10 +158,10 @@ public final class RSocketEndpoint {
     /**
      * find service locator
      */
-    private ServiceLocator getServiceLocator(String serviceName) {
+    private ServiceLocator getServiceLocator(String service) {
         ServiceLocator targetService = null;
         for (ServiceLocator serviceLocator : RSocketServiceRegistry.exposedServices()) {
-            if (serviceName.equals(serviceLocator.getService())) {
+            if (service.equals(serviceLocator.getService())) {
                 targetService = serviceLocator;
                 break;
             }

@@ -75,9 +75,9 @@ public final class RSocketServiceReferenceBuilder<T> {
             return builder;
         }
 
-        String serviceName = rsocketServiceReference.name();
-        if (StringUtils.isNotBlank(serviceName)) {
-            builder.service(serviceName);
+        String service = rsocketServiceReference.name();
+        if (StringUtils.isNotBlank(service)) {
+            builder.service(service);
         }
 
         String group = rsocketServiceReference.group();
@@ -127,9 +127,9 @@ public final class RSocketServiceReferenceBuilder<T> {
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getName();
 
-        String serviceName = annoAttrs.getString("name");
-        if (StringUtils.isNotBlank(serviceName)) {
-            builder.service(serviceName);
+        String service = annoAttrs.getString("name");
+        if (StringUtils.isNotBlank(service)) {
+            builder.service(service);
         }
 
         String group = annoAttrs.getString("group");
@@ -213,7 +213,7 @@ public final class RSocketServiceReferenceBuilder<T> {
     public RSocketServiceReferenceBuilder<T> upstream(UpstreamCluster upstreamCluster) {
         this.selector = upstreamCluster;
         group(upstreamCluster.getGroup());
-        service(upstreamCluster.getServiceName());
+        service(upstreamCluster.getService());
         version(upstreamCluster.getVersion());
         return this;
     }

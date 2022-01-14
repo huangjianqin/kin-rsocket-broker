@@ -30,7 +30,7 @@ public class RequesterProxy implements InvocationHandler {
     /** service interface */
     protected final Class<?> serviceInterface;
     /** 服务名 */
-    private final String serviceName;
+    private final String service;
     /** 请求超时 */
     private final Duration timeout;
 
@@ -38,10 +38,10 @@ public class RequesterProxy implements InvocationHandler {
         this(rsocketRequester, serviceInterface.getName(), serviceInterface, timeout);
     }
 
-    public RequesterProxy(RSocketRequester rsocketRequester, String serviceName, Class<?> serviceInterface, Duration timeout) {
+    public RequesterProxy(RSocketRequester rsocketRequester, String service, Class<?> serviceInterface, Duration timeout) {
         this.rsocketRequester = rsocketRequester;
         this.serviceInterface = serviceInterface;
-        this.serviceName = serviceName;
+        this.service = service;
         this.timeout = timeout;
     }
 
@@ -57,7 +57,7 @@ public class RequesterProxy implements InvocationHandler {
             }
         }
 
-        String routeKey = serviceName + Separators.SERVICE_HANDLER + method.getName();
+        String routeKey = service + Separators.SERVICE_HANDLER + method.getName();
         ReactiveMethodMetadata metadata = methodMetadatas.get(method);
         if (metadata == null) {
             metadata = new ReactiveMethodMetadata(method);

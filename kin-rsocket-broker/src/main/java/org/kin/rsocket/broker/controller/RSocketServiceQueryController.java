@@ -34,10 +34,10 @@ public class RSocketServiceQueryController {
     @Autowired
     private RSocketServiceManager serviceManager;
 
-    @GetMapping("/{serviceName}")
-    public Flux<Map<String, Object>> query(@PathVariable(name = "serviceName") String serviceName) {
+    @GetMapping("/{service}")
+    public Flux<Map<String, Object>> query(@PathVariable(name = "service") String service) {
         return Flux.fromIterable(serviceManager.getAllServices())
-                .filter(locator -> locator.getService().equals(serviceName))
+                .filter(locator -> locator.getService().equals(service))
                 .map(locator -> {
                     Map<String, Object> serviceInfoMap = new HashMap<>();
                     serviceInfoMap.put("count", serviceManager.countInstanceIds(locator.getId()));
@@ -51,12 +51,12 @@ public class RSocketServiceQueryController {
                 });
     }
 
-    @GetMapping(value = "/definition/{serviceName}")
+    @GetMapping(value = "/definition/{service}")
     public Mono<String> queryDefinition(@RequestParam(name = "group", defaultValue = "") String group,
-                                        @PathVariable(name = "serviceName") String serviceName,
+                                        @PathVariable(name = "service") String service,
                                         @RequestParam(name = "version", defaultValue = "") String version) {
-        ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(serviceName).concat("\"]")).getBytes(StandardCharsets.UTF_8));
-        BrokerResponder brokerResponder = serviceManager.routeByServiceId(ServiceLocator.of(group, serviceName, version).getId(), bodyBuf);
+        ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8));
+        BrokerResponder brokerResponder = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId(), bodyBuf);
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
@@ -65,7 +65,7 @@ public class RSocketServiceQueryController {
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(Payload::getDataUtf8);
         }
-        return Mono.error(new Exception(String.format("Service not found '%s'", serviceName)));
+        return Mono.error(new Exception(String.format("Service not found '%s'", service)));
     }
 
 }

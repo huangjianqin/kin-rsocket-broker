@@ -9,17 +9,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "kin.rsocket.broker.k8s")
 public class RSocketBrokerDiscoveryProperties {
     /** spring cloud k8s服务实例名 */
-    private String serviceName;
+    private String service;
     /** 集群broker信息刷新间隔 */
     private int refreshInternal;
 
     //setter && getter
-    public String getServiceName() {
-        return serviceName;
+    public String getService() {
+        return service;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setService(String service) {
+        this.service = service;
     }
 
     public int getRefreshInternal() {

@@ -20,5 +20,5 @@ public interface HealthCheck {
     /**
      * health status: 0:unknown, 1: serving, -1: out of service
      */
-    Mono<Integer> check(String serviceName);
+    Mono<Integer> check(String service);
 }
