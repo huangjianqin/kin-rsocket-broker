@@ -8,6 +8,7 @@ import org.kin.rsocket.core.event.CloudEventNotifyService;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.StreamOffset;
@@ -19,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Properties;
@@ -35,11 +35,11 @@ public class RedisStorageConfDiamond extends AbstractConfDiamond {
     /** redis stream name */
     private static final String STREAM_NAME = "kin-rsocket-broker-conf-stream";
 
-    @Resource
+    @Autowired
     private ReactiveRedisTemplate<String, String> redisTemplate;
-    @Resource
+    @Autowired
     private ReactiveRedisConnectionFactory connectionFactory;
-    @Resource
+    @Autowired
     private CloudEventNotifyService notifyService;
     private Disposable notificationSubscriber;
 

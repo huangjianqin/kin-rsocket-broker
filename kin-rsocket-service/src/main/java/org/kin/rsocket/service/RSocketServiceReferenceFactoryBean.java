@@ -7,7 +7,6 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -15,7 +14,7 @@ import java.util.Objects;
  * @date 2021/5/19
  */
 public final class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
-    @Resource
+    @Autowired
     private RSocketServiceRequester requester;
     /** 缓存rsocket service reference builder, 创建reference后会clear掉 */
     private RSocketServiceReferenceBuilder<T> builder;

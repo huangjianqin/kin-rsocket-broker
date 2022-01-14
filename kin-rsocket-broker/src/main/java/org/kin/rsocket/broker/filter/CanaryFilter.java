@@ -5,9 +5,9 @@ import org.kin.rsocket.broker.RSocketFilterContext;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.Resource;
 import java.util.List;
 
 /**
@@ -24,7 +24,7 @@ public class CanaryFilter extends AbstractRSocketFilter {
     /** 金丝雀版本流量 */
     public static final int DEFAULT_TRAFFIC_RATING = 30;
 
-    @Resource
+    @Autowired
     private final RSocketServiceManager serviceManager;
     /** 该filter生效的service name */
     private final List<String> canaryServices;

@@ -5,6 +5,7 @@ import org.kin.rsocket.core.RSocketServiceRegistry;
 import org.kin.rsocket.core.ReactiveMethodInvoker;
 import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.service.RSocketServiceProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.cloud.function.context.FunctionRegistry;
 import org.springframework.cloud.function.context.catalog.SimpleFunctionRegistry;
@@ -12,7 +13,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
  */
 @Order(99)
 public class RSocketCloudFunctionRegistrar implements ApplicationListener<ApplicationStartedEvent> {
-    @Resource
+    @Autowired
     private FunctionRegistry functionRegistry;
-    @Resource
+    @Autowired
     private RSocketServiceProperties serviceConfig;
 
     @Override

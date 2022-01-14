@@ -1,6 +1,7 @@
 package org.kin.spring.rsocket.example.requester;
 
 import org.kin.spring.rsocket.example.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -18,7 +18,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-    @Resource
+    @Autowired
     private UserService userService;
 
     @GetMapping("/all")

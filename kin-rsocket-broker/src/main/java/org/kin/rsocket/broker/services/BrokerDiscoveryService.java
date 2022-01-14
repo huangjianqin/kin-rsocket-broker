@@ -11,9 +11,8 @@ import org.kin.rsocket.core.discovery.RSocketServiceInstance;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.utils.Symbols;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
-
-import javax.annotation.Resource;
 
 /**
  * @author huangjianqin
@@ -21,9 +20,9 @@ import javax.annotation.Resource;
  */
 @RSocketService(DiscoveryService.class)
 public class BrokerDiscoveryService implements DiscoveryService {
-    @Resource
+    @Autowired
     private RSocketServiceManager serviceManager;
-    @Resource
+    @Autowired
     private RSocketBrokerManager rsocketBrokerManager;
 
     @Override

@@ -11,11 +11,11 @@ import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
@@ -26,9 +26,9 @@ import java.util.Objects;
  */
 public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager {
     private static final Logger log = LoggerFactory.getLogger(StandAloneBrokerManager.class);
-    /** 本机broker */
+    /** 本地broker */
     private BrokerInfo localBrokerInfo;
-    @Resource
+    @Autowired
     private RSocketBrokerProperties brokerConfig;
 
     @PostConstruct

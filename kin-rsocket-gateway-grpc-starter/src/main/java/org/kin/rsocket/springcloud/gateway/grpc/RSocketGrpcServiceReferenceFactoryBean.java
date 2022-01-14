@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -17,9 +16,9 @@ import java.util.Objects;
  * @date 2022/1/12
  */
 public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableService> extends AbstractFactoryBean<T> {
-    @Resource
+    @Autowired
     private RSocketServiceRequester requester;
-    @Resource
+    @Autowired
     private RSocketServiceProperties rsocketServiceProperties;
     /** 缓存rsocket rpc service reference builder, 创建reference后会clear掉 */
     private RSocketGrpcServiceImplBuilder<T> builder;
