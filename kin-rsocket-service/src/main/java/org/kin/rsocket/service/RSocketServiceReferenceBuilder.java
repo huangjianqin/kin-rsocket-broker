@@ -64,6 +64,10 @@ public final class RSocketServiceReferenceBuilder<T> {
     private RSocketServiceReferenceBuilder() {
     }
 
+    /**
+     * !!!注意: 如果自己使用{@link RSocketServiceReferenceBuilder}来创建bean, 不会使用{@link RSocketServiceProperties#getGroup()}和
+     * {@link RSocketServiceProperties#getVersion()}来作为全局默认group或者version. 想要达到该效果, 需要手动设置
+     */
     public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface) {
         RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
@@ -178,6 +182,16 @@ public final class RSocketServiceReferenceBuilder<T> {
         return this;
     }
 
+    /**
+     * group is empty才替换
+     */
+    public RSocketServiceReferenceBuilder<T> groupIfEmpty(String group) {
+        if (StringUtils.isBlank(group)) {
+            return group(group);
+        }
+        return this;
+    }
+
     public RSocketServiceReferenceBuilder<T> service(String service) {
         this.service = service;
         return this;
@@ -185,6 +199,16 @@ public final class RSocketServiceReferenceBuilder<T> {
 
     public RSocketServiceReferenceBuilder<T> version(String version) {
         this.version = version;
+        return this;
+    }
+
+    /**
+     * version is empty才替换
+     */
+    public RSocketServiceReferenceBuilder<T> versionIfEmpty(String version) {
+        if (StringUtils.isBlank(version)) {
+            return version(version);
+        }
         return this;
     }
 

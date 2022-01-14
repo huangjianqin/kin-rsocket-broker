@@ -113,6 +113,16 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     }
 
     /**
+     * group is empty才替换
+     */
+    public RSocketGrpcServiceImplBuilder<T> groupIfEmpty(String group) {
+        if (StringUtils.isBlank(group)) {
+            return group(group);
+        }
+        return this;
+    }
+
+    /**
      * service name
      */
     public RSocketGrpcServiceImplBuilder<T> service(String service) {
@@ -125,6 +135,16 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
      */
     public RSocketGrpcServiceImplBuilder<T> version(String version) {
         interceptor.setVersion(version);
+        return this;
+    }
+
+    /**
+     * version is empty才替换
+     */
+    public RSocketGrpcServiceImplBuilder<T> versionIfEmpty(String version) {
+        if (StringUtils.isBlank(version)) {
+            return version(version);
+        }
         return this;
     }
 

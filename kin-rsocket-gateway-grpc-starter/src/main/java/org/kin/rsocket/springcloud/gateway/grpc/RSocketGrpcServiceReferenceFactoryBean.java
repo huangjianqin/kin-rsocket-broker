@@ -2,7 +2,6 @@ package org.kin.rsocket.springcloud.gateway.grpc;
 
 import brave.Tracing;
 import io.grpc.BindableService;
-import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.service.RSocketServiceRequester;
 import org.kin.rsocket.springcloud.service.RSocketServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,15 +43,9 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
         }
 
         builder = RSocketGrpcServiceImplBuilder.stub(claxx);
-        String defaultGroup = rsocketServiceProperties.getGroup();
-        if (StringUtils.isNotBlank(defaultGroup)) {
-            builder.group(defaultGroup);
-        }
-        String version = rsocketServiceProperties.getVersion();
-        if (StringUtils.isNotBlank(version)) {
-            builder.version(version);
-        }
-        builder.callTimeout(rsocketServiceProperties.getTimeout());
+        builder.groupIfEmpty(rsocketServiceProperties.getGroup())
+                .versionIfEmpty(rsocketServiceProperties.getVersion())
+                .callTimeout(rsocketServiceProperties.getTimeout());
     }
 
     @Override

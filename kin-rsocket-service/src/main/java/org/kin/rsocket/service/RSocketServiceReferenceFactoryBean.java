@@ -16,6 +16,8 @@ import java.util.Objects;
 public final class RSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     @Autowired
     private RSocketServiceRequester requester;
+    @Autowired
+    private RSocketServiceProperties rsocketServiceProperties;
     /** 缓存rsocket service reference builder, 创建reference后会clear掉 */
     private RSocketServiceReferenceBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
@@ -48,6 +50,8 @@ public final class RSocketServiceReferenceFactoryBean<T> extends AbstractFactory
         }
 
         builder = RSocketServiceReferenceBuilder.requester(claxx, annoAttrs);
+        builder.groupIfEmpty(rsocketServiceProperties.getGroup())
+                .versionIfEmpty(rsocketServiceProperties.getVersion());
     }
 
     @Override
