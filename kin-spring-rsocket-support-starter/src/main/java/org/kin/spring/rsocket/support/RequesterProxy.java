@@ -35,7 +35,7 @@ public class RequesterProxy implements InvocationHandler {
     private final Duration timeout;
 
     public RequesterProxy(RSocketRequester rsocketRequester, Class<?> serviceInterface, Duration timeout) {
-        this(rsocketRequester, serviceInterface.getCanonicalName(), serviceInterface, timeout);
+        this(rsocketRequester, serviceInterface.getName(), serviceInterface, timeout);
     }
 
     public RequesterProxy(RSocketRequester rsocketRequester, String serviceName, Class<?> serviceInterface, Duration timeout) {

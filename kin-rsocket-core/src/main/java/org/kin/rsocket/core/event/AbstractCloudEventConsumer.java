@@ -25,7 +25,7 @@ public abstract class AbstractCloudEventConsumer<T extends CloudEventSupport> im
 
     @Override
     public final boolean shouldAccept(CloudEventData<?> cloudEventData) {
-        return cloudEventClass.getCanonicalName().equalsIgnoreCase(cloudEventData.getAttributes().getType());
+        return cloudEventClass.getName().equalsIgnoreCase(cloudEventData.getAttributes().getType());
     }
 
     @SuppressWarnings("unchecked")

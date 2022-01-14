@@ -48,7 +48,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
      */
     public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
         RSocketGrpcServiceImplBuilder<T> builder = new RSocketGrpcServiceImplBuilder<>(serviceInterface);
-        builder.service(serviceInterface.getCanonicalName());
+        builder.service(serviceInterface.getName());
 
         String serviceName = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(serviceName)) {

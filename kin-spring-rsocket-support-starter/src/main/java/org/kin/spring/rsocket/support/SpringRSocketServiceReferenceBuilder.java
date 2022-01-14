@@ -61,7 +61,7 @@ public final class SpringRSocketServiceReferenceBuilder<T> {
         Preconditions.checkNotNull(serviceInterface, "service interface class is null");
         if (StringUtils.isBlank(serviceName)) {
             //默认为服务接口
-            this.serviceName = serviceInterface.getCanonicalName();
+            this.serviceName = serviceInterface.getName();
         }
 
         RequesterProxy requesterProxy = new RequesterProxy(rsocketRequester, serviceName, serviceInterface, timeout);

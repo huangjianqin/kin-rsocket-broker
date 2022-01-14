@@ -59,7 +59,7 @@ public class RSocketServiceQueryController {
         BrokerResponder brokerResponder = serviceManager.routeByServiceId(ServiceLocator.of(group, serviceName, version).getId(), bodyBuf);
         if (Objects.nonNull(brokerResponder)) {
             GSVRoutingMetadata routingMetadata =
-                    GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getCanonicalName() + ".getReactiveServiceInfoByName", "");
+                    GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
             return brokerResponder
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))

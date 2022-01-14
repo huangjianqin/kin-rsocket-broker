@@ -54,7 +54,7 @@ public final class RSocketEndpoint {
         if (!RSocketServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
             info.put("subscribed", RSocketServiceReferenceBuilder.CONSUMED_SERVICES.stream()
                     //过滤掉自带的服务
-                    .filter(serviceLocator -> !HealthCheck.class.getCanonicalName().equals(serviceLocator.getService()))
+                    .filter(serviceLocator -> !HealthCheck.class.getName().equals(serviceLocator.getService()))
                     .collect(Collectors.toList()));
         }
         //service upstream

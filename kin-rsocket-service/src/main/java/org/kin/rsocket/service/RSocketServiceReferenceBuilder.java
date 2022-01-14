@@ -67,7 +67,7 @@ public final class RSocketServiceReferenceBuilder<T> {
     public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface) {
         RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
-        builder.service = serviceInterface.getCanonicalName();
+        builder.service = serviceInterface.getName();
 
         //解析interface class 上的@RSocketServiceReference注解
         RSocketServiceReference rsocketServiceReference = serviceInterface.getAnnotation(RSocketServiceReference.class);
@@ -125,7 +125,7 @@ public final class RSocketServiceReferenceBuilder<T> {
     public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
         RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
-        builder.service = serviceInterface.getCanonicalName();
+        builder.service = serviceInterface.getName();
 
         String serviceName = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(serviceName)) {

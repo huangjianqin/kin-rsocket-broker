@@ -41,7 +41,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         return RSocketServiceRegistry.INSTANCE.findAllServiceLocators()
                 .stream()
                 //过滤掉local service
-                .filter(l -> !l.getService().equals(HealthCheck.class.getCanonicalName()))
+                .filter(l -> !l.getService().equals(HealthCheck.class.getName()))
                 .collect(Collectors.toSet());
     }
 
@@ -140,7 +140,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 注册service, 不会主动往broker注册新增服务
      */
     public void addProvider(String group, String version, Class<?> interfaceClass, Object provider, String... tags) {
-        addProvider(group, interfaceClass.getCanonicalName(), version, interfaceClass, provider, tags);
+        addProvider(group, interfaceClass.getName(), version, interfaceClass, provider, tags);
     }
 
     /**
@@ -249,8 +249,8 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
             builder.deprecated(true);
         }
         builder.name(method.getName());
-        builder.returnType(method.getReturnType().getCanonicalName());
-        builder.returnInferredType(ClassUtils.getInferredClassForGeneric(method.getGenericReturnType()).getCanonicalName());
+        builder.returnType(method.getReturnType().getName());
+        builder.returnInferredType(ClassUtils.getInferredClassForGeneric(method.getGenericReturnType()).getName());
 
         List<ReactiveMethodParameterInfo> parameterInfos = new ArrayList<>(4);
         for (Parameter parameter : method.getParameters()) {
@@ -278,9 +278,9 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         }
 
         builder.name(parameter.getName());
-        String type = parameter.getType().getCanonicalName();
+        String type = parameter.getType().getName();
         builder.type(type);
-        String inferredType = ClassUtils.getInferredClassForGeneric(parameter.getParameterizedType()).getCanonicalName();
+        String inferredType = ClassUtils.getInferredClassForGeneric(parameter.getParameterizedType()).getName();
         if (!type.equals(inferredType)) {
             builder.inferredType(inferredType);
         }

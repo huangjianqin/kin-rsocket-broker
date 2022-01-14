@@ -83,7 +83,7 @@ public class RequesterProxy implements InvocationHandler {
         selector = builder.getSelector();
         serviceInterface = builder.getServiceInterface();
         if (StringUtils.isBlank(builder.getService())) {
-            service = serviceInterface.getCanonicalName();
+            service = serviceInterface.getName();
         } else {
             service = builder.getService();
         }

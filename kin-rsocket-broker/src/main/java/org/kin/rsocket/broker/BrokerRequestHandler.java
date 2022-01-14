@@ -189,7 +189,7 @@ final class BrokerRequestHandler extends AbstractRSocket {
             if (payload.metadata().readableBytes() > 0) {
                 CloudEventData<JsonNode> cloudEvent = JSON.decodeValue(payload.getMetadataUtf8());
                 String type = cloudEvent.getAttributes().getType();
-                if (UpstreamClusterChangedEvent.class.getCanonicalName().equalsIgnoreCase(type)) {
+                if (UpstreamClusterChangedEvent.class.getName().equalsIgnoreCase(type)) {
                     //因为upstream broker是其他rsocket broker集群, 为了保证隔离, 不需要处理其他类型的事件广播
                     RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent);
                 }

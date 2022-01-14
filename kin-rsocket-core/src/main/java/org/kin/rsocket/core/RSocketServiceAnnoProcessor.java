@@ -49,7 +49,7 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
             String serviceName = rsocketServiceAnno.name();
             if (StringUtils.isBlank(serviceName)) {
                 //default
-                serviceName = rsocketServiceAnno.value().getCanonicalName();
+                serviceName = rsocketServiceAnno.value().getName();
             }
             String group = rsocketServiceAnno.group();
             if (StringUtils.isBlank(group)) {

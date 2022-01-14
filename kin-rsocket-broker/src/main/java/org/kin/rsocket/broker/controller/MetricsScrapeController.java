@@ -52,7 +52,7 @@ public class MetricsScrapeController {
          * 初始化请求{@link MetricsService#scrape()}方法的metadata
          */
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
-                GSVRoutingMetadata.of(null, MetricsService.class.getCanonicalName(), "scrape", null),
+                GSVRoutingMetadata.of(null, MetricsService.class.getName(), "scrape", null),
                 MessageMimeTypeMetadata.of(RSocketMimeType.JSON),
                 MessageAcceptMimeTypesMetadata.of(RSocketMimeType.JSON));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();

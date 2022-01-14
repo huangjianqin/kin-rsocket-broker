@@ -147,7 +147,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      */
     public RSocketServiceRequester registerAndPubService(String group, String version, Class<?> serviceInterface, Object provider) {
         registerService(group, version, serviceInterface, provider);
-        publishService(group, serviceInterface.getCanonicalName(), version);
+        publishService(group, serviceInterface.getName(), version);
         return this;
     }
 

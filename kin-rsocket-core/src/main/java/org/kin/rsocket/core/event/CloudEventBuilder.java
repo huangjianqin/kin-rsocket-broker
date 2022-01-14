@@ -50,7 +50,7 @@ public class CloudEventBuilder<T> {
                 //目前仅仅只有json编码
                 .dataContentType(WellKnownMimeType.APPLICATION_JSON.getString())
                 .time(OffsetDateTime.now())
-                .type(data.getClass().getCanonicalName())
+                .type(data.getClass().getName())
                 .source(DEFAULT_SOURCE);
         return builder;
     }
