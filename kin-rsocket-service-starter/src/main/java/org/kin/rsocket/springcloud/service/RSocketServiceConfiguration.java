@@ -13,7 +13,6 @@ import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -59,8 +58,6 @@ public class RSocketServiceConfiguration {
 
     /**
      * {@link RSocketService}注解processor
-     * 此处使用{@link Value}而不是{@link Autowired} {@link RSocketServiceProperties}, 是为了先初始化{@link RSocketServiceAnnoProcessor},
-     * 避免{@link RSocketServiceProperties}没有被所有{@link org.springframework.beans.factory.config.BeanPostProcessor}处理, 而导致spring打印警告
      */
     @Bean
     public RSocketServiceAnnoProcessor rsocketServiceAnnoProcessor(@Autowired RSocketServiceProperties rsocketServiceProperties) {

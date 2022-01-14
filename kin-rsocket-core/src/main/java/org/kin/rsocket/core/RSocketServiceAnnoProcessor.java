@@ -45,25 +45,27 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
     private void scanRSocketServiceAnno(Object bean) {
         Class<?> beanClass = bean.getClass();
         RSocketService rsocketServiceAnno = AnnotationUtils.findAnnotation(beanClass, RSocketService.class);
-        if (rsocketServiceAnno != null) {
-            String service = rsocketServiceAnno.name();
-            if (StringUtils.isBlank(service)) {
-                //default
-                service = rsocketServiceAnno.value().getName();
-            }
-            String group = rsocketServiceAnno.group();
-            if (StringUtils.isBlank(group)) {
-                //default
-                group = defaultGroup;
-            }
-            String version = rsocketServiceAnno.version();
-            if (StringUtils.isBlank(version)) {
-                //default
-                version = defaultVersion;
-            }
-            //注册
-            RSocketServiceRegistry.INSTANCE.addProvider(group, service, version, rsocketServiceAnno.value(), bean, rsocketServiceAnno.tags());
+        if (rsocketServiceAnno == null) {
+            return;
         }
+
+        String service = rsocketServiceAnno.name();
+        if (StringUtils.isBlank(service)) {
+            //default
+            service = rsocketServiceAnno.value().getName();
+        }
+        String group = rsocketServiceAnno.group();
+        if (StringUtils.isBlank(group)) {
+            //default
+            group = defaultGroup;
+        }
+        String version = rsocketServiceAnno.version();
+        if (StringUtils.isBlank(version)) {
+            //default
+            version = defaultVersion;
+        }
+        //注册
+        RSocketServiceRegistry.INSTANCE.addProvider(group, service, version, rsocketServiceAnno.value(), bean, rsocketServiceAnno.tags());
     }
 
 }

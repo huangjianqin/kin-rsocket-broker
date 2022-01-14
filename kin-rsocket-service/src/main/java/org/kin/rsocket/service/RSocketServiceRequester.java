@@ -109,7 +109,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册service
      */
     public RSocketServiceRequester registerService(Class<?> serviceInterface, Object provider) {
-        return registerService("", "", serviceInterface, provider);
+        return registerService(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion(), serviceInterface, provider);
     }
 
     /**
@@ -124,7 +124,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册service
      */
     public RSocketServiceRequester registerService(String service, Class<?> serviceInterface, Object provider, String... tags) {
-        return registerService("", service, "", serviceInterface, provider, tags);
+        return registerService(rsocketServiceProperties.getGroup(), service, rsocketServiceProperties.version, serviceInterface, provider, tags);
     }
 
     /**
@@ -139,7 +139,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册并发布service
      */
     public RSocketServiceRequester registerAndPubService(Class<?> serviceInterface, Object provider) {
-        return registerAndPubService("", "", serviceInterface, provider);
+        return registerAndPubService(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion(), serviceInterface, provider);
     }
 
     /**
@@ -155,7 +155,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册并发布service
      */
     public RSocketServiceRequester registerAndPubService(String service, Class<?> serviceInterface, Object provider) {
-        return registerAndPubService("", service, "", serviceInterface, provider);
+        return registerAndPubService(rsocketServiceProperties.getGroup(), service, rsocketServiceProperties.getVersion(), serviceInterface, provider);
     }
 
     /**
@@ -216,7 +216,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 下线服务
      */
     public void hideService(String service, Class<?> serviceInterface) {
-        hideService("", service, "", serviceInterface);
+        hideService(rsocketServiceProperties.getGroup(), service, rsocketServiceProperties.getVersion(), serviceInterface);
     }
 
     /**
