@@ -60,11 +60,11 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /** 修改数据需加锁 */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     /** key -> service, value -> provider, 即service instance */
-    private final Map<String, Object> service2Provider = new HashMap<>();
+    private volatile Map<String, Object> service2Provider = new HashMap<>();
     /** key -> hash(service.method), value -> service method invoker */
-    private final Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>();
+    private volatile Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>();
     /** key -> service, value -> reactive service info */
-    private final Map<String, RSocketServiceInfo> service2Info = new HashMap<>();
+    private volatile Map<String, RSocketServiceInfo> service2Info = new HashMap<>();
 
     private RSocketServiceRegistry() {
         //用于broker可以请求service instance访问其指定服务详细信息
@@ -75,13 +75,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 是否包含对应hash(service.handler)注册信息
      */
     public boolean contains(int handlerId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return handlerId2Invoker.containsKey(handlerId);
-        } finally {
-            readLock.unlock();
-        }
+        return handlerId2Invoker.containsKey(handlerId);
     }
 
     /**
@@ -95,13 +89,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 是否包含对应handlerId的注册信息
      */
     public boolean contains(String service) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return service2Provider.containsKey(service);
-        } finally {
-            readLock.unlock();
-        }
+        return service2Provider.containsKey(service);
     }
 
     /**
@@ -110,13 +98,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * @return 所有已注册的服务
      */
     public Set<String> findAllServices() {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return new HashSet<>(service2Provider.keySet());
-        } finally {
-            readLock.unlock();
-        }
+        return new HashSet<>(service2Provider.keySet());
     }
 
     /**
@@ -125,15 +107,9 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * @return 所有已注册的服务
      */
     public Set<ServiceLocator> findAllServiceLocators() {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return service2Info.values().stream()
-                    .map(i -> ServiceLocator.of(i.getGroup(), i.getService(), i.getVersion()))
-                    .collect(Collectors.toSet());
-        } finally {
-            readLock.unlock();
-        }
+        return service2Info.values().stream()
+                .map(i -> ServiceLocator.of(i.getGroup(), i.getService(), i.getVersion()))
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -152,23 +128,35 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         Lock writeLock = this.lock.writeLock();
         writeLock.lock();
         try {
+            //copy
+            Map<String, Object> service2Provider = new HashMap<>(this.service2Provider);
+            Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>(this.handlerId2Invoker);
+            Map<String, RSocketServiceInfo> service2Info = new HashMap<>(this.service2Info);
+
             for (Method method : interfaceClass.getMethods()) {
-                if (!method.isDefault()) {
-                    String handler = method.getName();
-                    //解析ServiceMapping注解, 看看是否自定义method(handler) name
-                    ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-                    if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                        handler = serviceMapping.value();
-                    }
-                    String key = service + Separators.SERVICE_HANDLER + handler;
-
-                    ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
-
-                    service2Provider.put(service, provider);
-                    handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
-                    service2Info.put(service, newReactiveServiceInfo(group, service, version, interfaceClass, tags));
+                if (method.isDefault()) {
+                    continue;
                 }
+
+                String handler = method.getName();
+                //解析ServiceMapping注解, 看看是否自定义method(handler) name
+                ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
+                if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
+                    handler = serviceMapping.value();
+                }
+                String key = service + Separators.SERVICE_HANDLER + handler;
+
+                ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
+
+                service2Provider.put(service, provider);
+                handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
+                service2Info.put(service, newReactiveServiceInfo(group, service, version, interfaceClass, tags));
             }
+
+            //update
+            this.service2Provider = service2Provider;
+            this.handlerId2Invoker = handlerId2Invoker;
+            this.service2Info = service2Info;
         } finally {
             writeLock.unlock();
         }
@@ -185,9 +173,19 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         try {
             String key = service + Separators.SERVICE_HANDLER + handler;
 
+            //copy
+            Map<String, Object> service2Provider = new HashMap<>(this.service2Provider);
+            Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>(this.handlerId2Invoker);
+            Map<String, RSocketServiceInfo> service2Info = new HashMap<>(this.service2Info);
+
             service2Provider.put(service, provider);
             handlerId2Invoker.put(MurmurHash3.hash32(key), invoker);
             service2Info.put(service, serviceInfo);
+
+            //update
+            this.service2Provider = service2Provider;
+            this.handlerId2Invoker = handlerId2Invoker;
+            this.service2Info = service2Info;
         } finally {
             writeLock.unlock();
         }
@@ -295,20 +293,32 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
+            //copy
+            Map<String, Object> service2Provider = new HashMap<>(this.service2Provider);
+            Map<Integer, ReactiveMethodInvoker> handlerId2Invoker = new HashMap<>(this.handlerId2Invoker);
+            Map<String, RSocketServiceInfo> service2Info = new HashMap<>(this.service2Info);
+
             service2Provider.remove(service);
             for (Method method : serviceInterface.getMethods()) {
-                if (!method.isDefault()) {
-                    String handler = method.getName();
-                    ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-                    if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                        handler = serviceMapping.value();
-                    }
-                    String key = service + Separators.SERVICE_HANDLER + handler;
-
-                    handlerId2Invoker.remove(MurmurHash3.hash32(key));
-                    service2Info.remove(service);
+                if (method.isDefault()) {
+                    continue;
                 }
+
+                String handler = method.getName();
+                ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
+                if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
+                    handler = serviceMapping.value();
+                }
+                String key = service + Separators.SERVICE_HANDLER + handler;
+
+                handlerId2Invoker.remove(MurmurHash3.hash32(key));
+                service2Info.remove(service);
             }
+
+            //update
+            this.service2Provider = service2Provider;
+            this.handlerId2Invoker = handlerId2Invoker;
+            this.service2Info = service2Info;
         } finally {
             writeLock.unlock();
         }
@@ -325,26 +335,14 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 返回method invoker
      */
     public ReactiveMethodInvoker getInvoker(int handlerId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return handlerId2Invoker.get(handlerId);
-        } finally {
-            readLock.unlock();
-        }
+        return handlerId2Invoker.get(handlerId);
     }
 
     /**
      * 是否包含指定method invoker
      */
     public boolean containsHandler(int handlerId) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return handlerId2Invoker.containsKey(handlerId);
-        } finally {
-            readLock.unlock();
-        }
+        return handlerId2Invoker.containsKey(handlerId);
     }
 
     /**
@@ -352,12 +350,6 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      */
     @Override
     public RSocketServiceInfo getReactiveServiceInfoByName(String service) {
-        Lock readLock = lock.readLock();
-        readLock.lock();
-        try {
-            return service2Info.get(service);
-        } finally {
-            readLock.unlock();
-        }
+        return service2Info.get(service);
     }
 }
