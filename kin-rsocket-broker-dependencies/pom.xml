@@ -27,6 +27,10 @@
         <guava.version>30.1-jre</guava.version>
         <feign-reactor.version>3.0.0</feign-reactor.version>
         <zipkin-brave.version>5.13.3</zipkin-brave.version>
+        <protobuf-java.version>3.17.3</protobuf-java.version>
+        <grpc.version>1.39.0</grpc.version>
+        <reactive-grpc.version>1.1.0</reactive-grpc.version>
+        <grpc-spring-boot-starter.version>4.5.5</grpc-spring-boot-starter.version>
     </properties>
 
     <dependencyManagement>
@@ -136,6 +140,37 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-bom</artifactId>
+                <version>${protobuf-java.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-bom</artifactId>
+                <version>${grpc.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- reactor grpc stub-->
+            <dependency>
+                <groupId>com.salesforce.servicelibs</groupId>
+                <artifactId>reactor-grpc-stub</artifactId>
+                <version>${reactive-grpc.version}</version>
+            </dependency>
+
+            <!-- grpc spring boot starter -->
+            <dependency>
+                <groupId>io.github.lognet</groupId>
+                <artifactId>grpc-spring-boot-starter</artifactId>
+                <version>${grpc-spring-boot-starter.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
