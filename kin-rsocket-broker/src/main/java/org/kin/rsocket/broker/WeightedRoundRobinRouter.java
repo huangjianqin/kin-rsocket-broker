@@ -13,12 +13,12 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * RoundRobin(轮询)路由
+ * 加权RoundRobin(轮询)路由
  *
  * @author huangjianqin
  * @date 2021/5/7
  */
-public class RoundRobinRouter implements ProviderRouter {
+public class WeightedRoundRobinRouter implements ProviderRouter {
     /** key -> serviceId, value -> {@link WeightedRoundRobin} list */
     private FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>();
 
@@ -98,7 +98,7 @@ public class RoundRobinRouter implements ProviderRouter {
         /** app 权重 */
         private final int weight;
         /** 当前权重累计值 */
-        private AtomicLong current;
+        private final AtomicLong current = new AtomicLong();
 
         public WeightedRoundRobin(int instanceId, int weight) {
             this.instanceId = instanceId;
