@@ -67,7 +67,7 @@ public final class BrokerResponder implements CloudEventRSocket {
         this.appMetadata = appMetadata;
         //app tags hashcode set
         Set<Integer> appTagsHashCodeSet = new HashSet<>(4);
-        appTagsHashCodeSet.add(("id:" + appMetadata.getId()).hashCode());
+        appTagsHashCodeSet.add(("instanceId:" + appMetadata.getInstanceId()).hashCode());
         appTagsHashCodeSet.add(("uuid:" + appMetadata.getUuid()).hashCode());
 
         if (appMetadata.getIp() != null && !appMetadata.getIp().isEmpty()) {
@@ -162,9 +162,9 @@ public final class BrokerResponder implements CloudEventRSocket {
      */
     public void publishServices() {
         if (CollectionUtils.isNonEmpty(this.peerServices)) {
-            Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getId());
+            Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getInstanceId());
             if (serviceIds.isEmpty()) {
-                this.serviceManager.register(appMetadata.getId(), appMetadata.getWeight(), peerServices);
+                this.serviceManager.register(appMetadata.getInstanceId(), appMetadata.getWeight(), peerServices);
                 this.appStatus = AppStatus.SERVING;
             }
         }
@@ -173,7 +173,7 @@ public final class BrokerResponder implements CloudEventRSocket {
     /** 注册指定服务 */
     public void registerServices(Collection<ServiceLocator> services) {
         this.peerServices.addAll(services);
-        this.serviceManager.register(appMetadata.getId(), appMetadata.getWeight(), services);
+        this.serviceManager.register(appMetadata.getInstanceId(), appMetadata.getWeight(), services);
         this.appStatus = AppStatus.SERVING;
     }
 
@@ -186,7 +186,7 @@ public final class BrokerResponder implements CloudEventRSocket {
      * 隐藏peer rsocket的服务, 并修改该app的服务状态
      */
     public void hideServices() {
-        serviceManager.unregister(appMetadata.getId(), appMetadata.getWeight());
+        serviceManager.unregister(appMetadata.getInstanceId(), appMetadata.getWeight());
         this.appStatus = AppStatus.DOWN;
     }
 
@@ -196,7 +196,7 @@ public final class BrokerResponder implements CloudEventRSocket {
             this.peerServices.removeAll(services);
         }
         for (ServiceLocator service : services) {
-            this.serviceManager.unregister(appMetadata.getId(), appMetadata.getWeight(), service.getId());
+            this.serviceManager.unregister(appMetadata.getInstanceId(), appMetadata.getWeight(), service.getId());
         }
     }
 
@@ -252,7 +252,7 @@ public final class BrokerResponder implements CloudEventRSocket {
     }
 
     public Integer getId() {
-        return appMetadata.getId();
+        return appMetadata.getInstanceId();
     }
 
     public String getRemoteIp() {
