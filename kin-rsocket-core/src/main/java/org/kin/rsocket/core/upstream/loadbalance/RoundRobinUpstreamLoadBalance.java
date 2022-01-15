@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
+import io.rsocket.RSocket;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.Extension;
 
@@ -18,7 +19,7 @@ public class RoundRobinUpstreamLoadBalance implements UpstreamLoadBalance {
     private final ConcurrentHashMap<Integer, AtomicInteger> counters = new ConcurrentHashMap<>();
 
     @Override
-    public String select(int serviceId, ByteBuf paramBytes, List<String> uris) {
+    public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> uris) {
         AtomicInteger counter = counters.computeIfAbsent(serviceId, k -> new AtomicInteger());
         if (CollectionUtils.isEmpty(uris)) {
             return null;

@@ -8,7 +8,9 @@ import io.rsocket.RSocket;
 import io.rsocket.core.RSocketConnector;
 import io.rsocket.exceptions.ConnectionErrorException;
 import io.rsocket.frame.decoder.PayloadDecoder;
+import io.rsocket.loadbalance.WeightedStatsRequestInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
+import io.rsocket.plugins.RequestInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
@@ -22,6 +24,7 @@ import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.kin.rsocket.core.transport.UriTransportRegistry;
 import org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance;
+import org.kin.rsocket.core.upstream.loadbalance.WeightedStatsUpstreamLoadBalance;
 import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -40,6 +43,7 @@ import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -235,8 +239,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     private Mono<RSocket> next(ByteBuf paramBytes) {
         return Mono.fromSupplier(() -> {
             awaitFirstConnect();
-            String targetUri = loadBalance.select(serviceGsv.hashCode(), paramBytes, new ArrayList<>(activeRSockets.keySet()));
-            RSocket selected = activeRSockets.get(targetUri);
+            RSocket selected = loadBalance.select(serviceGsv.hashCode(), paramBytes, new ArrayList<>(activeRSockets.values()));
             if (Objects.isNull(selected)) {
                 throw new NoAvailableConnectionException(serviceGsv);
             }
@@ -498,6 +501,25 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
             for (RSocketInterceptor requestInterceptor : requesterSupport.requesterInterceptors()) {
                 rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(requestInterceptor));
             }
+
+            if (loadBalance instanceof WeightedStatsUpstreamLoadBalance) {
+                //需要注册requester interceptor来收集rsocket请求的统计信息
+                rsocketConnector.interceptors(interceptorRegistry ->
+                        interceptorRegistry.forRequestsInRequester((Function<RSocket, ? extends RequestInterceptor>)
+                                rSocket -> {
+                                    WeightedStatsUpstreamLoadBalance loadBalance = (WeightedStatsUpstreamLoadBalance) this.loadBalance;
+                                    WeightedStatsRequestInterceptor interceptor = new WeightedStatsRequestInterceptor() {
+                                        @Override
+                                        public void dispose() {
+                                            loadBalance.remove(rSocket);
+                                        }
+                                    };
+                                    loadBalance.put(rSocket, interceptor);
+
+                                    return interceptor;
+                                }));
+            }
+
             //responderInterceptors
             for (RSocketInterceptor responderInterceptor : requesterSupport.responderInterceptors()) {
                 rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(responderInterceptor));

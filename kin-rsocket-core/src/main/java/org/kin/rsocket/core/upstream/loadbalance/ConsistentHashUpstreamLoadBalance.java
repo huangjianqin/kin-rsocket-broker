@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
+import io.rsocket.RSocket;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.Extension;
 
@@ -17,31 +18,31 @@ public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBal
     private final ConcurrentHashMap<Integer, ConsistentHash> consistentHashMap = new ConcurrentHashMap<>();
 
     @Override
-    public String select(int serviceId, ByteBuf paramBytes, List<String> uris) {
+    public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> rsockets) {
         if (Objects.isNull(paramBytes)) {
             //requestChannel的时候paramBytes为null, 故回退到使用round robin模式
-            return super.select(serviceId, null, uris);
+            return super.select(serviceId, null, rsockets);
         }
 
-        if (CollectionUtils.isEmpty(uris)) {
+        if (CollectionUtils.isEmpty(rsockets)) {
             return null;
         }
 
-        int hashCode = uris.hashCode();
-        ConsistentHash consistentHash = consistentHashMap.computeIfAbsent(serviceId, k -> new ConsistentHash(uris, hashCode));
+        int hashCode = rsockets.hashCode();
+        ConsistentHash consistentHash = consistentHashMap.computeIfAbsent(serviceId, k -> new ConsistentHash(rsockets, hashCode));
         if (consistentHash.hashCode != hashCode) {
-            consistentHash = consistentHashMap.computeIfPresent(serviceId, (k, v) -> new ConsistentHash(uris, hashCode));
+            consistentHash = consistentHashMap.computeIfPresent(serviceId, (k, v) -> new ConsistentHash(rsockets, hashCode));
         }
 
         if (Objects.isNull(consistentHash)) {
             //兜底, 理论上不会到这里
-            return uris.get(0);
+            return rsockets.get(0);
         }
 
         byte[] bytes = new byte[paramBytes.readableBytes()];
         paramBytes.markReaderIndex();
         paramBytes.readBytes(bytes);
-        String target = consistentHash.get(bytes);
+        RSocket target = consistentHash.get(bytes);
         paramBytes.resetReaderIndex();
 
         return target;
@@ -49,25 +50,25 @@ public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBal
 
     /**
      * 不可变hash环
-     * 如果发现upstream rsocket uris发生变化时, 直接替换
+     * 如果发现upstream rsocket发生变化时, 直接替换
      */
-    private static class ConsistentHash extends org.kin.framework.utils.ConsistentHash<String> {
+    private static class ConsistentHash extends org.kin.framework.utils.ConsistentHash<RSocket> {
         /** hash环每个节点数量(含虚拟节点) */
         private static final int HASH_NODE_NUM = 128;
-        /** 标识该hash环对应的upstream rsocket uris, 用于判断upstream rsocket uris是否发生变化 */
-        private int hashCode;
+        /** 标识该hash环对应的upstream rsocket, 用于判断upstream rsocket是否发生变化 */
+        private final int hashCode;
 
-        public ConsistentHash(List<String> uris, int hashCode) {
+        public ConsistentHash(List<RSocket> rsockets, int hashCode) {
             super(HASH_NODE_NUM);
 
-            for (String uri : uris) {
-                add(uri);
+            for (RSocket rsocket : rsockets) {
+                add(rsocket);
             }
             this.hashCode = hashCode;
         }
 
         @Override
-        public void add(String obj, int weight) {
+        public void add(RSocket obj, int weight) {
             if (hashCode == 0) {
                 //初始化
                 super.add(obj, weight);
@@ -77,12 +78,12 @@ public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBal
         }
 
         @Override
-        public void remove(String obj, int weight) {
+        public void remove(RSocket obj, int weight) {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void add(String obj) {
+        public void add(RSocket obj) {
             if (hashCode == 0) {
                 //初始化
                 super.add(obj);
@@ -92,7 +93,7 @@ public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBal
         }
 
         @Override
-        public void remove(String obj) {
+        public void remove(RSocket obj) {
             throw new UnsupportedOperationException();
         }
     }

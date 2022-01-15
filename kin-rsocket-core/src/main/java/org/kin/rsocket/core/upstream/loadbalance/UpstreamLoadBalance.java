@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
+import io.rsocket.RSocket;
 import org.kin.framework.utils.SPI;
 
 import java.util.List;
@@ -19,7 +20,7 @@ public interface UpstreamLoadBalance {
      * 选择一个合适的upstream rsocket
      *
      * @param paramBytes 请求的参数序列化后bytes
-     * @param uris       upstream rsocket uris
+     * @param rsockets   upstream rsocket
      */
-    String select(int serviceId, ByteBuf paramBytes, List<String> uris);
+    RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> rsockets);
 }
