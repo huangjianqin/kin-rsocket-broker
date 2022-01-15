@@ -506,15 +506,15 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                 //需要注册requester interceptor来收集rsocket请求的统计信息
                 rsocketConnector.interceptors(interceptorRegistry ->
                         interceptorRegistry.forRequestsInRequester((Function<RSocket, ? extends RequestInterceptor>)
-                                rSocket -> {
+                                rsocket -> {
                                     WeightedStatsUpstreamLoadBalance loadBalance = (WeightedStatsUpstreamLoadBalance) this.loadBalance;
                                     WeightedStatsRequestInterceptor interceptor = new WeightedStatsRequestInterceptor() {
                                         @Override
                                         public void dispose() {
-                                            loadBalance.remove(rSocket);
+                                            loadBalance.remove(rsocket);
                                         }
                                     };
-                                    loadBalance.put(rSocket, interceptor);
+                                    loadBalance.put(rsocket, interceptor);
 
                                     return interceptor;
                                 }));

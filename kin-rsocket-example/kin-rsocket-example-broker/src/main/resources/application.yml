@@ -9,7 +9,7 @@ kin:
     broker:
       port: 9999
       auth: false
-      router: consistentHash
+      router: weightedStats
 
 # management
 management:

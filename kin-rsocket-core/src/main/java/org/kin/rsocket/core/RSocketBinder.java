@@ -3,11 +3,13 @@ package org.kin.rsocket.core;
 import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
+import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.core.RSocketServer;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.DuplexConnectionInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
+import io.rsocket.plugins.RequestInterceptor;
 import io.rsocket.plugins.SocketAcceptorInterceptor;
 import io.rsocket.transport.ServerTransport;
 import io.rsocket.transport.local.LocalServerTransport;
@@ -31,6 +33,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * @author huangjianqin
@@ -48,9 +52,18 @@ public class RSocketBinder implements Closeable {
     /** 私钥 */
     private PrivateKey privateKey;
     private SocketAcceptor acceptor;
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequester(RSocketInterceptor) */
+    private final List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forResponder(RSocketInterceptor) */
     private final List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forSocketAcceptor(SocketAcceptorInterceptor) */
     private final List<SocketAcceptorInterceptor> acceptorInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forConnection(Consumer) */
     private final List<DuplexConnectionInterceptor> connectionInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInResponder(Function) */
+    private final List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInRequester(Function) */
+    private final List<Function<RSocket, ? extends RequestInterceptor>> requesterRequestInterceptors = new ArrayList<>();
     //---------------------------------------------------------------------------------------------------------------------------------------
     private volatile boolean stopped;
     /** 已启动的{@link RSocketServer}对应的{@link Disposable} */
@@ -125,17 +138,34 @@ public class RSocketBinder implements Closeable {
 
                 RSocketServer rsocketServer = RSocketServer.create();
                 //acceptor interceptor
-                for (SocketAcceptorInterceptor acceptorInterceptor : acceptorInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forSocketAcceptor(acceptorInterceptor));
+                for (SocketAcceptorInterceptor interceptor : acceptorInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forSocketAcceptor(interceptor));
                 }
+
                 //connection interceptor
-                for (DuplexConnectionInterceptor connectionInterceptor : connectionInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forConnection(connectionInterceptor));
+                for (DuplexConnectionInterceptor interceptor : connectionInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forConnection(interceptor));
 
                 }
+
+                //requester interceptor
+                for (RSocketInterceptor interceptor : requesterInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(interceptor));
+                }
+
                 //responder interceptor
-                for (RSocketInterceptor responderInterceptor : responderInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(responderInterceptor));
+                for (RSocketInterceptor interceptor : responderInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(interceptor));
+                }
+
+                //request interceptor in responder
+                for (Function<RSocket, ? extends RequestInterceptor> interceptor : responderRequestInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
+                }
+
+                //request interceptor in request
+                for (Function<RSocket, ? extends RequestInterceptor> interceptor : requesterRequestInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInRequester(interceptor));
                 }
 
                 Disposable disposable = rsocketServer
@@ -203,6 +233,11 @@ public class RSocketBinder implements Closeable {
             return this;
         }
 
+        public RSocketBinder.Builder addRequesterInterceptors(RSocketInterceptor interceptor) {
+            binder.requesterInterceptors.add(interceptor);
+            return this;
+        }
+
         public RSocketBinder.Builder addResponderInterceptor(RSocketInterceptor interceptor) {
             binder.responderInterceptors.add(interceptor);
             return this;
@@ -215,6 +250,16 @@ public class RSocketBinder implements Closeable {
 
         public RSocketBinder.Builder addConnectionInterceptor(DuplexConnectionInterceptor interceptor) {
             binder.connectionInterceptors.add(interceptor);
+            return this;
+        }
+
+        public RSocketBinder.Builder addResponderRequestInterceptor(Function<RSocket, ? extends RequestInterceptor> interceptor) {
+            binder.responderRequestInterceptors.add(interceptor);
+            return this;
+        }
+
+        public RSocketBinder.Builder addRequesterRequestInterceptors(Function<RSocket, ? extends RequestInterceptor> interceptor) {
+            binder.requesterRequestInterceptors.add(interceptor);
             return this;
         }
 

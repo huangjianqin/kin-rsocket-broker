@@ -508,4 +508,8 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
     public RSocketAppPrincipal getPrincipal() {
         return principal;
     }
+
+    public AppMetadata getAppMetadata() {
+        return appMetadata;
+    }
 }

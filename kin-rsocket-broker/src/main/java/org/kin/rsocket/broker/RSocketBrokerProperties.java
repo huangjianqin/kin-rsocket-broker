@@ -38,7 +38,7 @@ public class RSocketBrokerProperties {
      */
     private String upstreamToken;
     /** broker 路由规则 */
-    private String route;
+    private String router;
     /**
      * 针对其余broker集群的loadbalance策略
      *
@@ -118,12 +118,12 @@ public class RSocketBrokerProperties {
         this.upstreamToken = upstreamToken;
     }
 
-    public String getRoute() {
-        return route;
+    public String getRouter() {
+        return router;
     }
 
-    public void setRoute(String route) {
-        this.route = route;
+    public void setRouter(String router) {
+        this.router = router;
     }
 
     public String getUpstreamLoadBalance() {

@@ -1,6 +1,7 @@
 package org.kin.rsocket.broker;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import io.rsocket.loadbalance.WeightedStatsRequestInterceptor;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
@@ -161,8 +162,8 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    public RSocketBinderCustomizer defaultRSocketBinderCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
-                                                                  @Autowired RSocketServiceManager serviceManager) {
+    public RSocketBinderCustomizer rsocketBindCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
+                                                         @Autowired RSocketServiceManager serviceManager) {
         return builder -> {
             builder.acceptor(serviceManager.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
@@ -209,6 +210,33 @@ public class RSocketBrokerAutoConfiguration {
     @ConditionalOnExpression("'consistentHash'.equals('${kin.rsocket.broker.router}')")
     public ProviderRouter consistentHashRouter() {
         return new ConsistentHashRouter();
+    }
+
+    @Bean("router")
+    @ConditionalOnMissingBean
+    @ConditionalOnExpression("'weightedStats'.equals('${kin.rsocket.broker.router}')")
+    public ProviderRouter weightedStatsRouter() {
+        return new WeightedStatsRouter();
+    }
+
+    /**
+     * 配合{@link WeightedStatsRouter}使用, 获取可预测的rsocket request响应时间
+     */
+    @Bean
+    @ConditionalOnExpression("'weightedStats'.equals('${kin.rsocket.broker.router}')")
+    public RSocketBinderCustomizer weightedStatsInterceptorCustomizer(@Autowired WeightedStatsRouter router) {
+        return builder -> {
+            builder.addRequesterRequestInterceptors(rsocket -> {
+                WeightedStatsRequestInterceptor interceptor = new WeightedStatsRequestInterceptor() {
+                    @Override
+                    public void dispose() {
+                        router.remove(rsocket);
+                    }
+                };
+                router.put(rsocket, interceptor);
+                return interceptor;
+            });
+        };
     }
 
     /**

@@ -205,6 +205,8 @@ public final class RSocketServiceManager {
                     .subscribe();
             //handler registration notify
             registerResponder(responder);
+            //connect success, so publish service now
+            responder.publishServices();
             log.info(String.format("succeed to accept connection from application '%s'", appMetadata.getName()));
             return Mono.just(requestHandler);
         } catch (Exception e) {
@@ -498,7 +500,7 @@ public final class RSocketServiceManager {
             this.instanceId2ServiceIds = instanceId2ServiceIds;
             this.services = services;
 
-            router.onAppRegistered(instanceId, weight, serviceLocators);
+            router.onAppRegistered(getByInstanceId(instanceId), weight, serviceLocators);
         } finally {
             writeLock.unlock();
         }
@@ -534,7 +536,7 @@ public final class RSocketServiceManager {
                 this.instanceId2ServiceIds = instanceId2ServiceIds;
                 this.services = services;
 
-                router.onServiceUnregistered(instanceId, weight, serviceIds);
+                router.onServiceUnregistered(getByInstanceId(instanceId), weight, serviceIds);
             }
         } finally {
             writeLock.unlock();
@@ -566,7 +568,7 @@ public final class RSocketServiceManager {
                 this.instanceId2ServiceIds = instanceId2ServiceIds;
                 this.services = services;
 
-                router.onServiceUnregistered(instanceId, weight, Collections.singleton(serviceId));
+                router.onServiceUnregistered(getByInstanceId(instanceId), weight, Collections.singleton(serviceId));
             }
         } finally {
             writeLock.unlock();

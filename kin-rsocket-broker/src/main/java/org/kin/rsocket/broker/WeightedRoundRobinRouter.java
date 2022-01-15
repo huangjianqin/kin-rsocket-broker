@@ -52,8 +52,9 @@ public class WeightedRoundRobinRouter implements ProviderRouter {
     }
 
     @Override
-    public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(BrokerResponder responder, int weight, Collection<ServiceLocator> services) {
         //copy on write
+        int instanceId = responder.getId();
         FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>(this.serviceId2WeightedRoundRobins);
 
         for (ServiceLocator serviceLocator : services) {
@@ -65,8 +66,9 @@ public class WeightedRoundRobinRouter implements ProviderRouter {
     }
 
     @Override
-    public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(BrokerResponder responder, int weight, Collection<Integer> serviceIds) {
         //copy on write
+        int instanceId = responder.getId();
         FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>(this.serviceId2WeightedRoundRobins);
 
         for (Integer serviceId : serviceIds) {

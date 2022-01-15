@@ -42,8 +42,9 @@ public class WeightedRandomRouter implements ProviderRouter {
     }
 
     @Override
-    public void onAppRegistered(int instanceId, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(BrokerResponder responder, int weight, Collection<ServiceLocator> services) {
         //copy on write
+        int instanceId = responder.getId();
         FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>(this.serviceId2InstanceIds);
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
@@ -58,8 +59,9 @@ public class WeightedRandomRouter implements ProviderRouter {
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(BrokerResponder responder, int weight, Collection<Integer> serviceIds) {
         //copy on write
+        int instanceId = responder.getId();
         FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>(this.serviceId2InstanceIds);
         for (Integer serviceId : serviceIds) {
             //移除所有相同的instanceId

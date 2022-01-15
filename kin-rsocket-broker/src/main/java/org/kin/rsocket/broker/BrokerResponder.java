@@ -90,7 +90,6 @@ public final class BrokerResponder implements CloudEventRSocket {
             RSocketServiceRegistryMetadata serviceRegistryMetadata = compositeMetadata.getMetadata(RSocketMimeType.SERVICE_REGISTRY);
             if (CollectionUtils.isNonEmpty(serviceRegistryMetadata.getPublished())) {
                 peerServices.addAll(serviceRegistryMetadata.getPublished());
-                publishServices();
             }
         }
 
@@ -282,5 +281,9 @@ public final class BrokerResponder implements CloudEventRSocket {
 
     RSocketServiceRequestHandler getRequestHandler() {
         return requestHandler;
+    }
+
+    RSocket getRequester() {
+        return requester;
     }
 }
