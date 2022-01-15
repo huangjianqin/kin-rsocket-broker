@@ -3,8 +3,11 @@ package org.kin.rsocket.service;
 import brave.Tracer;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
+import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
+import io.rsocket.plugins.DuplexConnectionInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
+import io.rsocket.plugins.RequestInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
@@ -21,6 +24,8 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -35,8 +40,16 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
     private final RSocketServiceProperties rsocketServiceProperties;
     /** app name */
     private final String appName;
-    private final List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequester(RSocketInterceptor) */
     private final List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forResponder(RSocketInterceptor) */
+    private final List<RSocketInterceptor> responderInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forConnection(Consumer) */
+    private final List<DuplexConnectionInterceptor> connectionInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInRequester(Function) */
+    private final List<Function<RSocket, ? extends RequestInterceptor>> requesterRequestInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInResponder(Function) */
+    private final List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors = new ArrayList<>();
     /** 用于获取开启p2p服务gsv */
     private UpstreamClusterManager upstreamClusterManager;
     /** zipkin */
@@ -146,28 +159,59 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
         return Collections.unmodifiableList(requesterInterceptors);
     }
 
-    public void addRequesterInterceptor(RSocketInterceptor interceptor) {
-        this.requesterInterceptors.add(interceptor);
+    @Override
+    public List<DuplexConnectionInterceptor> connectionInterceptors() {
+        return connectionInterceptors;
     }
 
-    public void addResponderInterceptor(RSocketInterceptor interceptor) {
-        this.responderInterceptors.add(interceptor);
+    @Override
+    public List<Function<RSocket, ? extends RequestInterceptor>> requesterRequestInterceptors() {
+        return requesterRequestInterceptors;
+    }
+
+    @Override
+    public List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors() {
+        return responderRequestInterceptors;
     }
 
     public void addRequesterInterceptors(Collection<RSocketInterceptor> interceptors) {
         this.requesterInterceptors.addAll(interceptors);
     }
 
-    public void addResponderInterceptors(Collection<RSocketInterceptor> interceptors) {
-        this.responderInterceptors.addAll(interceptors);
-    }
-
     public void addRequesterInterceptors(RSocketInterceptor... interceptors) {
         addRequesterInterceptors(Arrays.asList(interceptors));
     }
 
+    public void addResponderInterceptors(Collection<RSocketInterceptor> interceptors) {
+        this.responderInterceptors.addAll(interceptors);
+    }
+
     public void addResponderInterceptors(RSocketInterceptor... interceptors) {
         addResponderInterceptors(Arrays.asList(interceptors));
+    }
+
+    public void addConnectionInterceptors(Collection<DuplexConnectionInterceptor> interceptors) {
+        this.connectionInterceptors.addAll(interceptors);
+    }
+
+    public void addConnectionInterceptors(DuplexConnectionInterceptor... interceptors) {
+        addConnectionInterceptors(Arrays.asList(interceptors));
+    }
+
+    public void addResponderRequestInterceptors(Collection<Function<RSocket, ? extends RequestInterceptor>> interceptors) {
+        this.responderRequestInterceptors.addAll(interceptors);
+    }
+
+    public void addResponderRequestInterceptors(Function<RSocket, ? extends RequestInterceptor>... interceptors) {
+        addResponderRequestInterceptors(Arrays.asList(interceptors));
+    }
+
+    public void addRequesterRequestInterceptors(Collection<Function<RSocket, ? extends RequestInterceptor>> interceptors) {
+        this.requesterRequestInterceptors.addAll(interceptors);
+    }
+
+    public void addRequesterRequestInterceptors(Function<RSocket, ? extends RequestInterceptor>... interceptors) {
+        addRequesterRequestInterceptors(Arrays.asList(interceptors));
     }
 
     //setter && getter

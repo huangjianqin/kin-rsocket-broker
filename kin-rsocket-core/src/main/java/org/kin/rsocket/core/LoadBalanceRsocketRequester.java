@@ -9,6 +9,7 @@ import io.rsocket.core.RSocketConnector;
 import io.rsocket.exceptions.ConnectionErrorException;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.loadbalance.WeightedStatsRequestInterceptor;
+import io.rsocket.plugins.DuplexConnectionInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.plugins.RequestInterceptor;
 import io.rsocket.util.ByteBufPayload;
@@ -498,8 +499,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         try {
             //requesterInterceptors
             RSocketConnector rsocketConnector = RSocketConnector.create();
-            for (RSocketInterceptor requestInterceptor : requesterSupport.requesterInterceptors()) {
-                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(requestInterceptor));
+            for (RSocketInterceptor interceptor : requesterSupport.requesterInterceptors()) {
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(interceptor));
             }
 
             if (loadBalance instanceof WeightedStatsUpstreamLoadBalance) {
@@ -521,9 +522,25 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
             }
 
             //responderInterceptors
-            for (RSocketInterceptor responderInterceptor : requesterSupport.responderInterceptors()) {
-                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(responderInterceptor));
+            for (RSocketInterceptor interceptor : requesterSupport.responderInterceptors()) {
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(interceptor));
             }
+
+            //connectionInterceptors
+            for (DuplexConnectionInterceptor interceptor : requesterSupport.connectionInterceptors()) {
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forConnection(interceptor));
+            }
+
+            //requesterRequestInterceptors
+            for (Function<RSocket, ? extends RequestInterceptor> interceptor : requesterSupport.requesterRequestInterceptors()) {
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInRequester(interceptor));
+            }
+
+            //responderRequestInterceptors
+            for (Function<RSocket, ? extends RequestInterceptor> interceptor : requesterSupport.responderRequestInterceptors()) {
+                rsocketConnector.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
+            }
+
             Payload payload = requesterSupport.setupPayload().get();
             return rsocketConnector
                     .setupPayload(payload)
