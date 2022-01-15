@@ -60,10 +60,10 @@ public class RSocketBinder implements Closeable {
     private final List<SocketAcceptorInterceptor> acceptorInterceptors = new ArrayList<>();
     /** @see io.rsocket.plugins.InterceptorRegistry#forConnection(Consumer) */
     private final List<DuplexConnectionInterceptor> connectionInterceptors = new ArrayList<>();
-    /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInResponder(Function) */
-    private final List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors = new ArrayList<>();
     /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInRequester(Function) */
     private final List<Function<RSocket, ? extends RequestInterceptor>> requesterRequestInterceptors = new ArrayList<>();
+    /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInResponder(Function) */
+    private final List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors = new ArrayList<>();
     //---------------------------------------------------------------------------------------------------------------------------------------
     private volatile boolean stopped;
     /** 已启动的{@link RSocketServer}对应的{@link Disposable} */
@@ -158,14 +158,14 @@ public class RSocketBinder implements Closeable {
                     rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(interceptor));
                 }
 
-                //request interceptor in responder
-                for (Function<RSocket, ? extends RequestInterceptor> interceptor : responderRequestInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
-                }
-
                 //request interceptor in request
                 for (Function<RSocket, ? extends RequestInterceptor> interceptor : requesterRequestInterceptors) {
                     rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInRequester(interceptor));
+                }
+
+                //request interceptor in responder
+                for (Function<RSocket, ? extends RequestInterceptor> interceptor : responderRequestInterceptors) {
+                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
                 }
 
                 Disposable disposable = rsocketServer
@@ -253,13 +253,13 @@ public class RSocketBinder implements Closeable {
             return this;
         }
 
-        public RSocketBinder.Builder addResponderRequestInterceptor(Function<RSocket, ? extends RequestInterceptor> interceptor) {
-            binder.responderRequestInterceptors.add(interceptor);
+        public RSocketBinder.Builder addRequesterRequestInterceptors(Function<RSocket, ? extends RequestInterceptor> interceptor) {
+            binder.requesterRequestInterceptors.add(interceptor);
             return this;
         }
 
-        public RSocketBinder.Builder addRequesterRequestInterceptors(Function<RSocket, ? extends RequestInterceptor> interceptor) {
-            binder.requesterRequestInterceptors.add(interceptor);
+        public RSocketBinder.Builder addResponderRequestInterceptor(Function<RSocket, ? extends RequestInterceptor> interceptor) {
+            binder.responderRequestInterceptors.add(interceptor);
             return this;
         }
 
