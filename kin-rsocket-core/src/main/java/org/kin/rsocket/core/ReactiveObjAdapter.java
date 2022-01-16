@@ -43,6 +43,8 @@ public final class ReactiveObjAdapter {
     public <T> Flux<T> toFlux(Object source) {
         if (source instanceof Flux) {
             return (Flux) source;
+        } else if (source instanceof Mono) {
+            return Flux.from((Mono<T>) source);
         } else if (source instanceof Iterable) {
             return Flux.fromIterable((Iterable) source);
         } else if (source instanceof Stream) {

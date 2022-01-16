@@ -89,13 +89,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                 }
                 //composite data for return value
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
-                Mono<Object> monoResult;
-                if (result instanceof Mono) {
-                    monoResult = (Mono) result;
-                } else {
-                    monoResult = ReactiveObjAdapter.INSTANCE.toMono(result);
-                }
-                return monoResult
+                return ReactiveObjAdapter.INSTANCE.toMono(result)
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
@@ -156,15 +150,9 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
             ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
                 Object result = invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
-                Flux<Object> fluxResult;
-                if (result instanceof Flux) {
-                    fluxResult = (Flux<Object>) result;
-                } else {
-                    fluxResult = ReactiveObjAdapter.INSTANCE.toFlux(result);
-                }
                 //composite data for return value
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
-                return fluxResult
+                return ReactiveObjAdapter.INSTANCE.toFlux(result)
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
@@ -211,15 +199,10 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
                                     methodInvoker.getInferredClassForParameter(1)));
                     result = methodInvoker.invoke(paramFirst, paramFlux);
                 }
-                if (result instanceof Mono) {
-                    result = Flux.from((Mono<?>) result);
-                } else {
-                    result = ReactiveObjAdapter.INSTANCE.toFlux(result);
-                }
                 //composite data for return value
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 //result return
-                return ((Flux<?>) result)
+                return ReactiveObjAdapter.INSTANCE.toFlux(result)
                         .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
