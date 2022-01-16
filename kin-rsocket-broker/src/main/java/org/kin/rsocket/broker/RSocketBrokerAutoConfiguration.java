@@ -225,18 +225,18 @@ public class RSocketBrokerAutoConfiguration {
     @Bean
     @ConditionalOnExpression("'weightedStats'.equals('${kin.rsocket.broker.router}')")
     public RSocketBinderCustomizer weightedStatsInterceptorCustomizer(@Autowired WeightedStatsRouter router) {
-        return builder -> {
-            builder.addRequesterRequestInterceptors(rsocket -> {
-                WeightedStatsRequestInterceptor interceptor = new WeightedStatsRequestInterceptor() {
-                    @Override
-                    public void dispose() {
-                        router.remove(rsocket);
-                    }
-                };
-                router.put(rsocket, interceptor);
-                return interceptor;
-            });
-        };
+        return builder -> builder.addRequesterRequestInterceptors(rsocket -> {
+            WeightedStatsRequestInterceptor interceptor = new WeightedStatsRequestInterceptor() {
+                @Override
+                public void dispose() {
+                    //移除监控信息
+                    router.remove(rsocket);
+                }
+            };
+            //绑定监控信息
+            router.put(rsocket, interceptor);
+            return interceptor;
+        });
     }
 
     /**

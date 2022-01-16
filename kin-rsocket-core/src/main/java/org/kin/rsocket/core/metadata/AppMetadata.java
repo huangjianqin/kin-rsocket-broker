@@ -101,30 +101,39 @@ public final class AppMetadata implements MetadataAware {
         return metadata.get(name);
     }
 
-    public void updateRsocketPorts(Map<Integer, String> rsocketPorts) {
+    /** rsocket service通知broker更新rsocket port */
+    public void updateRSocketPorts(Map<Integer, String> rsocketPorts) {
         this.rsocketPorts = rsocketPorts;
     }
 
+    /** rsocket service通知broker更新rsocket web port */
     public void updateWebPort(int webPort) {
         this.webPort = webPort;
     }
 
+    /** rsocket service通知broker更新rsocket management port */
     public void updateManagementPort(int managementPort) {
         this.managementPort = managementPort;
     }
 
-    public void updateId(Integer id) {
+    /** rsocket service注册时, broker给更新instance id */
+    public void updateInstanceId(Integer id) {
         this.instanceId = id;
     }
 
+    /** rsocket service注册时, broker给更新注册时间 */
     public void updateConnectedAt(Date connectedAt) {
         this.connectedAt = connectedAt;
     }
 
+    /** 更新rsocket service p2p订阅服务 */
     public void updateP2pServiceIds(Set<String> p2pServiceIds) {
         this.p2pServiceIds = p2pServiceIds;
     }
 
+    /**
+     * 转换成{@link AppVO}
+     */
     public AppVO toVo() {
         return AppVO.builder()
                 .id(instanceId).uuid(uuid).weight(weight)

@@ -6,7 +6,6 @@ import io.rsocket.loadbalance.WeightedStats;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.jctools.maps.NonBlockingHashMap;
-import org.kin.framework.collection.Tuple;
 import org.kin.rsocket.core.ServiceLocator;
 import reactor.util.annotation.Nullable;
 
@@ -14,6 +13,9 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * 原理: 基于历史rsocket请求的响应时间来预测本次请求的响应时间, 然后根据预测的响应时间给requester分配权重, 最后选择最高权重的requester
+ * 如果延迟足够好, 可能会一直路由到同一service Instance
+ *
  * @author huangjianqin
  * @date 2022/1/15
  * @see io.rsocket.loadbalance.WeightedLoadbalanceStrategy
@@ -21,7 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WeightedStatsRouter implements ProviderRouter {
     private static final double EXP_FACTOR = 4.0;
 
-    /** 存储每个{@link RSocket} connector的状态信息, 用于计算其权重 */
+    /** 存储每个{@link RSocket} requester的状态信息, 用于计算其权重 */
     private final NonBlockingHashMap<RSocket, WeightedStats> statsMap = new NonBlockingHashMap<>();
     /** key -> serviceId, value -> {@link WeightedInstance} list */
     private FastListMultimap<Integer, WeightedInstance> serviceId2WeightedInstances = new FastListMultimap<>();
@@ -39,10 +41,10 @@ public class WeightedStatsRouter implements ProviderRouter {
     @Override
     public Integer route(int serviceId, ByteBuf paramBytes) {
         MutableList<WeightedInstance> weightedInstances = serviceId2WeightedInstances.get(serviceId);
-        //有效的rsocket service instance id
-        List<Integer> vaildInstanceIds = new ArrayList<>();
+        //有效的rsocket service instance
+        List<WeightedInstance> vaildInstances = new ArrayList<>();
         //有效的rsocket service instance及对应的WeightedStats
-        Map<Integer, Tuple<RSocket, WeightedStats>> partStatsMap = new HashMap<>();
+        Map<Integer, WeightedStats> validStatsMap = new HashMap<>();
 
         for (WeightedInstance weightedInstance : weightedInstances) {
             int instanceId = weightedInstance.instanceId;
@@ -50,81 +52,116 @@ public class WeightedStatsRouter implements ProviderRouter {
             if (Objects.isNull(stats)) {
                 continue;
             }
-            vaildInstanceIds.add(instanceId);
-            partStatsMap.put(instanceId, new Tuple<>(weightedInstance.requester, stats));
+            vaildInstances.add(weightedInstance);
+            validStatsMap.put(instanceId, stats);
         }
 
-        int size = vaildInstanceIds.size();
+        int size = vaildInstances.size();
         switch (size) {
             case 1:
-                return vaildInstanceIds.get(0);
+                //只有1个, 直接返回
+                return vaildInstances.get(0).instanceId;
             case 2: {
-                Integer f = vaildInstanceIds.get(0);
-                Tuple<RSocket, WeightedStats> ft = partStatsMap.get(f);
-                Integer s = vaildInstanceIds.get(1);
-                Tuple<RSocket, WeightedStats> st = partStatsMap.get(s);
-                double w1 = algorithmicWeight(ft.first(), ft.second());
-                double w2 = algorithmicWeight(st.first(), st.second());
+                //只有两个, 选择权重大的
+                WeightedInstance fwi = vaildInstances.get(0);
+                Integer fii = fwi.instanceId;
+                WeightedStats fws = validStatsMap.get(fii);
+
+                WeightedInstance swi = vaildInstances.get(0);
+                Integer sii = vaildInstances.get(1).instanceId;
+                WeightedStats sws = validStatsMap.get(sii);
+
+                double w1 = algorithmicWeight(fwi.requester, fws);
+                double w2 = algorithmicWeight(swi.requester, sws);
                 if (w1 < w2) {
-                    return s;
+                    return sii;
                 } else {
-                    return f;
+                    return fii;
                 }
             }
             default: {
-                int f = 0;
-                Tuple<RSocket, WeightedStats> ft = null;
-                int s = 0;
-                Tuple<RSocket, WeightedStats> st = null;
-                for (int i = 0; i < maxPairSelectionAttempts; i++) {
-                    int i1 = ThreadLocalRandom.current().nextInt(size);
-                    int i2 = ThreadLocalRandom.current().nextInt(size - 1);
+                //大于两个
+                WeightedInstance fwi = null;
+                WeightedStats fws = null;
 
-                    if (i2 >= i1) {
-                        i2++;
-                    }
-
-                    f = vaildInstanceIds.get(i1);
-                    ft = partStatsMap.get(f);
-                    s = vaildInstanceIds.get(i2);
-                    st = partStatsMap.get(s);
-
-                    if (ft.first().availability() > 0.0 && st.first().availability() > 0.0) {
-                        break;
-                    }
+                WeightedInstance swi = null;
+                WeightedStats sws = null;
+                //尝试随机取出两个有效的requester
+                List<WeightedInstance> validInstancesDuplicate = new ArrayList<>(weightedInstances);
+                //加权随机选出一个availability的requester
+                while (validInstancesDuplicate.size() > 0 &&
+                        (Objects.isNull((fwi = random(validInstancesDuplicate))) || fwi.requester.availability() <= 0.0)) {
+                    //do nothing
                 }
 
-                if (ft != null & st != null) {
-                    double w1 = algorithmicWeight(ft.first(), ft.second());
-                    double w2 = algorithmicWeight(st.first(), st.second());
+                if (Objects.nonNull(fwi)) {
+                    fws = validStatsMap.get(fwi.instanceId);
+                }
+
+                //再次加权随机选出一个availability的requester
+                while (validInstancesDuplicate.size() > 0 &&
+                        (Objects.isNull((swi = random(validInstancesDuplicate))) || swi.requester.availability() <= 0.0)) {
+                    //do nothing
+                }
+
+                if (Objects.nonNull(swi)) {
+                    sws = validStatsMap.get(swi.instanceId);
+                }
+
+                if (fwi != null & swi != null) {
+                    //选择权重大
+                    double w1 = algorithmicWeight(fwi.requester, fws);
+                    double w2 = algorithmicWeight(swi.requester, sws);
                     if (w1 < w2) {
-                        return s;
+                        return swi.instanceId;
                     } else {
-                        return f;
+                        return fwi.instanceId;
                     }
-                } else if (ft != null) {
-                    return f;
+                } else if (fwi != null) {
+                    return fwi.instanceId;
                 } else {
-                    return s;
+                    return swi.instanceId;
                 }
             }
         }
     }
 
-    private static double algorithmicWeight(
-            RSocket rSocket, @Nullable WeightedStats weightedStats) {
-        if (weightedStats == null || rSocket.isDisposed() || rSocket.availability() == 0.0) {
+    /**
+     * 按权重随机一个rsocket requester Instance
+     */
+    private WeightedInstance random(List<WeightedInstance> weightedInstances) {
+        int sumWeight = weightedInstances.stream().mapToInt(wi -> wi.weight).sum();
+        int random = ThreadLocalRandom.current().nextInt(sumWeight + 1);
+        int tempWeight = 0;
+        Iterator<WeightedInstance> iterator = weightedInstances.iterator();
+        while (iterator.hasNext()) {
+            WeightedInstance weightedInstance = iterator.next();
+            tempWeight += weightedInstance.weight;
+            if (tempWeight >= random) {
+                iterator.remove();
+                return weightedInstance;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 算法计算权重
+     */
+    private static double algorithmicWeight(RSocket rsocket, @Nullable WeightedStats weightedStats) {
+        if (weightedStats == null || rsocket.isDisposed() || rsocket.availability() == 0.0) {
             return 0.0;
         }
+        //等待中的请求数量
         int pending = weightedStats.pending();
-
+        //预测延迟时间
         double latency = weightedStats.predictedLatency();
-
+        //预测低分位数(0.5)延迟时间
         double low = weightedStats.lowerQuantileLatency();
-        double high =
-                Math.max(
-                        weightedStats.higherQuantileLatency(),
-                        low * 1.001); // ensure higherQuantile > lowerQuantile + .1%
+        //预测高分位数(0.8)延迟时间, ensure higherQuantile > lowerQuantile + .1%
+        double high = Math.max(weightedStats.higherQuantileLatency(), low * 1.001);
+        //预测带宽
         double bandWidth = Math.max(high - low, 1);
 
         if (latency < low) {
@@ -133,10 +170,12 @@ public class WeightedStatsRouter implements ProviderRouter {
             latency *= calculateFactor(latency, high, bandWidth);
         }
 
-        return (rSocket.availability() * weightedStats.weightedAvailability())
-                / (1.0d + latency * (pending + 1));
+        return (rsocket.availability() * weightedStats.weightedAvailability()) / (1.0d + latency * (pending + 1));
     }
 
+    /**
+     * 计算系数
+     */
     private static double calculateFactor(double u, double l, double bandWidth) {
         double alpha = (u - l) / bandWidth;
         return Math.pow(1 + alpha, EXP_FACTOR);

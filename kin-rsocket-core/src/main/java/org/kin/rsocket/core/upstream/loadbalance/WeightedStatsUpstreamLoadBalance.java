@@ -11,6 +11,7 @@ import java.util.List;
 
 /**
  * 原理: 基于历史rsocket请求的响应时间来预测本次请求的响应时间, 然后根据预测的响应时间给upstream rsocket分配权重, 最后选择最高权重的upstream rsocket
+ * 如果延迟足够好, 可能会一直负载均衡到同一service Instance
  *
  * @author huangjianqin
  * @date 2022/1/15

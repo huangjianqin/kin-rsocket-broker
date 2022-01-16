@@ -156,7 +156,7 @@ public final class RSocketServiceManager {
                 //validate appId data format
                 if (StringUtils.isNotBlank(appId) && appId.length() >= 32) {
                     int instanceId = MurmurHash3.hash32(credentials + ":" + temp.getUuid());
-                    temp.updateId(instanceId);
+                    temp.updateInstanceId(instanceId);
                     //application instance not connected
                     if (!containsInstanceId(instanceId)) {
                         appMetadata = temp;
