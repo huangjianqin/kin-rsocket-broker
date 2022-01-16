@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package org.kin.rsocket.example;
+
+import "google/protobuf/wrappers.proto";
+
+message UserPb {
+  string name = 1;
+  int32 age = 2;
+}
+
+service UserService {
+  rpc findByPb(google.protobuf.StringValue) returns (UserPb);
+}
+

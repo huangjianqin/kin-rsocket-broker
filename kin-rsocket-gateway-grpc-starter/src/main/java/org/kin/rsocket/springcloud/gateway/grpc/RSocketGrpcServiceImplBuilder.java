@@ -28,15 +28,15 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
  * @date 2022/1/9
  */
 public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
-    /** grpc service */
-    private final Class<T> serviceStub;
     /** grpc调用拦截 */
     private final ReactiveGrpcCallInterceptor interceptor = new ReactiveGrpcCallInterceptor();
     /** consumer是否开启p2p */
     private boolean p2p;
+    /** rsocket grpc service instance */
+    private T instance;
 
     public RSocketGrpcServiceImplBuilder(Class<T> serviceStub) {
-        this.serviceStub = serviceStub;
+        constructInstance(serviceStub);
     }
 
     public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceStub) {
@@ -48,7 +48,6 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
      */
     public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
         RSocketGrpcServiceImplBuilder<T> builder = new RSocketGrpcServiceImplBuilder<>(serviceInterface);
-        builder.service(serviceInterface.getName());
 
         String service = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(service)) {
@@ -201,8 +200,12 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
         }
     }
 
+    /**
+     * 主要是为了提前构造带有{@link GRpcService}注解的grpc service stub实现子类, 暴露给spring bean factory
+     * {@link ReactiveGrpcCallInterceptor}部分变量延迟初始化
+     */
     @SuppressWarnings("unchecked")
-    public T build() {
+    private void constructInstance(Class<T> serviceStub) {
         Class<T> dynamicType = (Class<T>) new ByteBuddy()
                 .subclass(serviceStub)
                 .name(serviceStub.getName() + "RSocketImpl")
@@ -214,21 +217,20 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
                 .make()
                 .load(getClass().getClassLoader())
                 .getLoaded();
-        T instance = null;
         try {
             instance = dynamicType.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             ExceptionUtils.throwExt(e);
         }
 
-        String service = interceptor.getService();
-        if (StringUtils.isBlank(service)) {
-            //如果没有设置service name, 则使用grpc service name
-            interceptor.setService(instance.bindService().getServiceDescriptor().getName());
-        }
+        //设置服务名
+        service(instance.bindService().getServiceDescriptor().getName());
+    }
+
+    public T connect() {
         interceptor.updateServiceId();
 
-        ServiceLocator serviceLocator = ServiceLocator.of(interceptor.getGroup(), service, interceptor.getVersion());
+        ServiceLocator serviceLocator = ServiceLocator.of(interceptor.getGroup(), interceptor.getService(), interceptor.getVersion());
         check(serviceLocator);
         if (interceptor.getSelector() instanceof UpstreamClusterManager && p2p) {
             ((UpstreamClusterManager) interceptor.getSelector()).openP2p(serviceLocator.getGsv());
@@ -238,11 +240,11 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     }
 
     //getter
-    Class<T> getServiceStub() {
-        return serviceStub;
-    }
-
     ReactiveGrpcCallInterceptor getInterceptor() {
         return interceptor;
+    }
+
+    T getInstance() {
+        return instance;
     }
 }

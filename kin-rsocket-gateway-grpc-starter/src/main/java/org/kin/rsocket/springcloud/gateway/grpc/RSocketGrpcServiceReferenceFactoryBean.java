@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
+import javax.annotation.PostConstruct;
 
 /**
  * @author huangjianqin
@@ -22,52 +22,46 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
     /** 缓存rsocket rpc service reference builder, 创建reference后会clear掉 */
     private RSocketGrpcServiceImplBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
-    private volatile T reference;
+    private final T reference;
     @Autowired(required = false)
     private Tracing tracing;
 
     public RSocketGrpcServiceReferenceFactoryBean(RSocketGrpcServiceImplBuilder<T> builder) {
         this.builder = builder;
+        reference = builder.getInstance();
     }
 
-    @SuppressWarnings("unchecked")
     public RSocketGrpcServiceReferenceFactoryBean(Class<T> claxx) {
-        if (!claxx.isInterface()) {
-            throw new IllegalArgumentException(
-                    String.format("class '%s' must be interface", claxx.getName()));
-        }
-
         if (!BindableService.class.isAssignableFrom(claxx)) {
             throw new IllegalArgumentException(
                     String.format("class '%s' must be extends BindableService", claxx.getName()));
         }
 
         builder = RSocketGrpcServiceImplBuilder.stub(claxx);
+        reference = builder.getInstance();
+    }
+
+    @PostConstruct
+    public void init() {
         builder.groupIfEmpty(rsocketServiceProperties.getGroup())
                 .versionIfEmpty(rsocketServiceProperties.getVersion())
                 .callTimeout(rsocketServiceProperties.getTimeout());
+        builder.upstreamClusterManager(requester);
+        builder.tracing(tracing);
+        builder.connect();
+        //release
+        builder = null;
     }
 
     @Override
     public Class<?> getObjectType() {
-        if (Objects.nonNull(builder)) {
-            return builder.getServiceStub();
-        } else {
-            return reference.getClass();
-        }
+        //马上返回带@GRpcService注解的grpc service stub子类
+        return reference.getClass();
     }
 
     @Nonnull
     @Override
     protected T createInstance() {
-        if (Objects.isNull(reference)) {
-            builder.upstreamClusterManager(requester);
-            builder.tracing(tracing);
-            reference = builder.build();
-            //release
-            builder = null;
-        }
-
         return reference;
     }
 

@@ -26,9 +26,9 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * 多语言支持: RSocket是一套标准协议, 主流语言的SDK都有支持.
 
 ### **实现细节**
-
-gsv: group!service:version serviceId: hash(gsv)
-handleId: hash(service.handler)
+* gsv: group!service:version serviceId: hash(gsv)
+* handleId: hash(service.handler)
+* 目前服务方法参数除了request channel外, 仅仅支持一个message, 主要受限于部分序列化方法, 没法反序列化Object[], 比如protobuf和avro
 
 ## **实现模块**
 

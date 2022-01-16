@@ -3,7 +3,7 @@ package org.kin.rsocket.springcloud.gateway.grpc;
 import io.grpc.BindableService;
 import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.framework.utils.StringUtils;
+import org.lognet.springboot.grpc.GRpcService;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -15,6 +15,7 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -57,22 +58,19 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
 
     /**
      * 处理扫描到的{@link BindableService}实现类
+     * 不能lazy load, 不然grpc-spring-boot-starter扫描不到{@link GRpcService}
      */
     private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
         for (BeanDefinitionHolder holder : beanDefinitions) {
             GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
             //factory bean constructor args
             String beanClassName = definition.getBeanClassName();
-            if (StringUtils.isBlank(beanClassName)) {
-                throw new IllegalStateException("rsocket rpc service interface class is null");
-            }
+            //noinspection ConstantConditions
             definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
             //factory bean class
             definition.setBeanClass(RSocketGrpcServiceReferenceFactoryBean.class);
             //enable autowire
             definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-            //set lazy init
-            definition.setLazyInit(true);
         }
     }
 
@@ -98,8 +96,12 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
         } catch (ClassNotFoundException e) {
             ExceptionUtils.throwExt(e);
         }
-        return BindableService.class.isAssignableFrom(claxx) &&
-                metadata.isInterface() &&
-                metadata.isIndependent();
+
+        Class<?> declaringClass = claxx.getDeclaringClass();
+        if (Objects.isNull(declaringClass) || !declaringClass.getSimpleName().startsWith("Reactor")) {
+            //reactor grpc生成出来的都是以Reactor开头, 故这里写死类名过滤
+            return false;
+        }
+        return BindableService.class.isAssignableFrom(claxx) && metadata.isIndependent();
     }
 }

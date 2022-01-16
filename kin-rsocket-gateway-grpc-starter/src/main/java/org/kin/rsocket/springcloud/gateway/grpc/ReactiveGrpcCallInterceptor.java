@@ -16,6 +16,7 @@ import io.rsocket.util.ByteBufPayload;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.metadata.TracingMetadata;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Map;
@@ -75,6 +77,15 @@ public final class ReactiveGrpcCallInterceptor {
     @SuppressWarnings("unchecked")
     @RuntimeType
     public Object intercept(@Origin Method method, @AllArguments Object[] params) {
+        if (Object.class.equals(method.getDeclaringClass())) {
+            //过滤Object方法
+            try {
+                return method.invoke(this, params);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                ExceptionUtils.throwExt(e);
+            }
+        }
+
         if (StringUtils.isBlank(serviceId)) {
             serviceId = ServiceLocator.gsv(group, service, version);
         }
@@ -331,6 +342,9 @@ public final class ReactiveGrpcCallInterceptor {
     }
 
     void setTracing(Tracing tracing) {
+        if (Objects.isNull(tracing)) {
+            return;
+        }
         this.tracer = tracing.tracer();
     }
 }

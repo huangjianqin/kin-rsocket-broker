@@ -11,13 +11,6 @@
     <artifactId>kin-rsocket-gateway-grpc-starter</artifactId>
     <packaging>jar</packaging>
 
-    <properties>
-        <protobuf-java.version>3.17.3</protobuf-java.version>
-        <grpc.version>1.39.0</grpc.version>
-        <reactive-grpc.version>1.1.0</reactive-grpc.version>
-        <grpc-spring-boot-starter.version>4.5.5</grpc-spring-boot-starter.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
@@ -73,6 +66,7 @@
             <groupId>com.salesforce.servicelibs</groupId>
             <artifactId>reactor-grpc-stub</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.github.lognet</groupId>
             <artifactId>grpc-spring-boot-starter</artifactId>
@@ -84,47 +78,4 @@
             </exclusions>
         </dependency>
     </dependencies>
-
-    <build>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.0</version>
-            </extension>
-        </extensions>
-
-        <plugins>
-            <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.6.1</version>
-                <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:${protobuf-java.version}:exe:${os.detected.classifier}
-                    </protocArtifact>
-                    <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}
-                    </pluginArtifact>
-                    <protocPlugins>
-                        <protocPlugin>
-                            <id>reactor-grpc</id>
-                            <groupId>com.salesforce.servicelibs</groupId>
-                            <artifactId>reactor-grpc</artifactId>
-                            <version>${reactive-grpc.version}</version>
-                            <mainClass>com.salesforce.reactorgrpc.ReactorGrpcGenerator</mainClass>
-                        </protocPlugin>
-                    </protocPlugins>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>compile-custom</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

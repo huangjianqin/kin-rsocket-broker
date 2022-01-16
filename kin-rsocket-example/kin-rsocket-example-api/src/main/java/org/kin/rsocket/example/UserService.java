@@ -1,5 +1,6 @@
 package org.kin.rsocket.example;
 
+import com.google.protobuf.StringValue;
 import io.netty.buffer.ByteBuf;
 import org.kin.rsocket.core.Required;
 import org.kin.rsocket.core.ServiceMapping;
@@ -32,4 +33,9 @@ public interface UserService {
     Mono<Boolean> checkRequired(@Required int a,
                                 @Required String s,
                                 @Required String[] ss);
+
+    /**
+     * 参数和返回值都是protobuf生成的
+     */
+    Mono<UserPb> findByPb(StringValue name);
 }

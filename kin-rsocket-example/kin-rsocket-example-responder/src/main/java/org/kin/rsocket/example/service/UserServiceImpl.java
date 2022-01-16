@@ -1,10 +1,12 @@
 package org.kin.rsocket.example.service;
 
+import com.google.protobuf.StringValue;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.utils.JSON;
 import org.kin.rsocket.example.User;
+import org.kin.rsocket.example.UserPb;
 import org.kin.rsocket.example.UserService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -66,5 +68,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<Boolean> checkRequired(int a, String s, String[] ss) {
         return Mono.just(true);
+    }
+
+    @Override
+    public Mono<UserPb> findByPb(StringValue name) {
+        String nameValue = name.getValue();
+        int random = ThreadLocalRandom.current().nextInt(100);
+        if (random % 2 == 0) {
+            return Mono.just(UserPb.newBuilder().setName(nameValue).setAge(random).build());
+        }
+        return Mono.just(UserPb.newBuilder().setName("unknown").setAge(random).build());
     }
 }

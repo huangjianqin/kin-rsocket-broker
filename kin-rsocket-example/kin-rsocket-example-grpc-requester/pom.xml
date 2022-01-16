@@ -5,10 +5,10 @@
     <parent>
         <artifactId>kin-rsocket-example</artifactId>
         <groupId>org.kin</groupId>
-        <version>${revision}</version>
+        <version>0.1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-example-grpc-gateway</artifactId>
+    <artifactId>kin-rsocket-example-grpc-requester</artifactId>
 
     <properties>
         <protobuf-java.version>3.17.3</protobuf-java.version>

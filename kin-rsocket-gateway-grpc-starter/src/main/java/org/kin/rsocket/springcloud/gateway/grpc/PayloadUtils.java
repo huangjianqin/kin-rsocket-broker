@@ -6,18 +6,19 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.Payload;
+import org.kin.framework.io.ByteBufferInputStream;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -36,8 +37,8 @@ final class PayloadUtils {
         ReferenceCountUtil.release(byteBuf);
     }
 
-    /** {@link io.grpc.binarylog.v1.Message#parseFrom(byte[])} lambda代理 */
-    private static final Cache<Class<?>, Function<ByteBuffer, Object>> PARSE_FROM_METHOD_CACHE = CacheBuilder.newBuilder().build();
+    /** {@link io.grpc.binarylog.v1.Message#parseDelimitedFrom(InputStream)} lambda代理 */
+    private static final Cache<Class<?>, Function<InputStream, Object>> PARSE_FROM_METHOD_CACHE = CacheBuilder.newBuilder().build();
 
     /**
      * 返回带有protobuf编码的CompositeMetadata bytebuf内容
@@ -52,15 +53,15 @@ final class PayloadUtils {
     @SuppressWarnings("unchecked")
     @Nullable
     static <T> T payloadToResponseObject(Payload payload, Class<T> responseClass) {
-        Function<ByteBuffer, Object> parseFrom = null;
+        Function<InputStream, Object> parseFrom = null;
         try {
             parseFrom = PARSE_FROM_METHOD_CACHE.get(responseClass, () -> {
-                Method method = responseClass.getMethod("parseFrom", ByteBuffer.class);
+                Method method = responseClass.getMethod("parseDelimitedFrom", InputStream.class);
                 MethodHandles.Lookup lookup = MethodHandles.lookup();
                 MethodHandle methodHandle = lookup.unreflect(method);
                 MethodType methodType = methodHandle.type();
                 try {
-                    return (Function<ByteBuffer, Object>) LambdaMetafactory.metafactory(lookup, "apply",
+                    return (Function<InputStream, Object>) LambdaMetafactory.metafactory(lookup, "apply",
                                     MethodType.methodType(Function.class), methodType.generic(), methodHandle, methodType)
                             .getTarget()
                             .invoke();
@@ -77,7 +78,7 @@ final class PayloadUtils {
             return null;
         }
 
-        return (T) parseFrom.apply(payload.data().nioBuffer());
+        return (T) parseFrom.apply(new ByteBufferInputStream(payload.data().nioBuffer()));
     }
 
     private PayloadUtils() {

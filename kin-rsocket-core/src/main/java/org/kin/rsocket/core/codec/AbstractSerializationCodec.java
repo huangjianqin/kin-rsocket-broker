@@ -44,7 +44,8 @@ public abstract class AbstractSerializationCodec implements Codec {
 
     @Override
     public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws CodecException {
-        return decodeObj(data, Object[].class);
+        // TODO: 2022/1/16  pb是否支持反序列化object[], 如果实在不行就在README写注释
+        return decodeObj(data, targetClasses[0]);
     }
 
     @Override

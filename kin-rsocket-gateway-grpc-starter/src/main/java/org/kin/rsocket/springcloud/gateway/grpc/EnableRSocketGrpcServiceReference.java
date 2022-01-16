@@ -2,6 +2,7 @@ package org.kin.rsocket.springcloud.gateway.grpc;
 
 import io.grpc.BindableService;
 import org.kin.rsocket.service.RSocketServiceReference;
+import org.kin.rsocket.springcloud.service.EnableRSocketService;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -17,6 +18,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Import(RSocketGrpcServiceReferenceRegistrar.class)
+@EnableRSocketService
 public @interface EnableRSocketGrpcServiceReference {
     /**
      * 需要将grpc call路由到rsocket broker的grpc service interface package
