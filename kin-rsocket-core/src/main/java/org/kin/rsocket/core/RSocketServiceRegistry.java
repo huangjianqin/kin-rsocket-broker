@@ -166,11 +166,12 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
      * 注册service, 不会主动往broker注册新增服务
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
-    public void addProvider(String service, String handler,
+    public void addProvider(String handler,
                             Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
         Lock writeLock = this.lock.writeLock();
         writeLock.lock();
         try {
+            String service = serviceInfo.getService();
             String key = service + Separators.SERVICE_HANDLER + handler;
 
             //copy

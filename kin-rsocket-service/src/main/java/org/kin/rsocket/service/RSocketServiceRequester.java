@@ -140,9 +140,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册service
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
-    public RSocketServiceRequester registerService(String service, String handler,
-                                                   Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
-        RSocketServiceRegistry.INSTANCE.addProvider(service, handler, provider, invoker, serviceInfo);
+    public RSocketServiceRequester registerService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
+        RSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
         return this;
     }
 
@@ -182,10 +181,9 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册并发布service
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
-    public RSocketServiceRequester registerAndPubService(String service, String handler,
-                                                         Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
-        RSocketServiceRegistry.INSTANCE.addProvider(service, handler, provider, invoker, serviceInfo);
-        publishService(serviceInfo.getGroup(), service, serviceInfo.getVersion());
+    public RSocketServiceRequester registerAndPubService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
+        RSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
+        publishService(serviceInfo.getGroup(), serviceInfo.getService(), serviceInfo.getVersion());
         return this;
     }
 

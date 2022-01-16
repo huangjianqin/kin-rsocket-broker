@@ -2,7 +2,6 @@ package org.kin.rsocket.springcloud.function;
 
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.core.RSocketServiceRegistry;
 import org.kin.rsocket.core.ReactiveMethodInvoker;
 import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodInfo;
@@ -19,8 +18,7 @@ import org.springframework.core.annotation.Order;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -49,36 +47,41 @@ public class RSocketCloudFunctionRegistrar implements ApplicationListener<Applic
         for (String functionName : functionNames) {
             //找到cloud function invoke包装类
             SimpleFunctionRegistry.FunctionInvocationWrapper function = functionRegistry.lookup(functionName);
+            String service = functionName.substring(0, functionName.lastIndexOf("."));
+            String handler = functionName.substring(functionName.lastIndexOf(".") + 1);
+
             try {
-                // TODO: 2022/1/16 处理其他类型的function
-                //寻找其apply方法
-                Method method = function.getClass().getMethod("apply", Object.class);
-                String service = functionName.substring(0, functionName.lastIndexOf("."));
-                String handler = functionName.substring(functionName.lastIndexOf(".") + 1);
+                //寻找方法
+                Method method = getMethod(function);
+                if (Objects.isNull(method)) {
+                    continue;
+                }
 
                 //将其封装成invoker
                 Type outputType = function.getOutputType();
-                Class<?> inferredClassForOutput = ClassUtils.getInferredClassForGeneric(outputType);
                 ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(
                         method, function,
                         function.getRawOutputType(), outputType,
                         new Class[]{function.getRawInputType()});
+                List<ReactiveMethodParameterInfo> methodParameterInfos = new ArrayList<>(1);
+                if (function.isFunction() || function.isConsumer()) {
+                    Type inputType = function.getInputType();
+                    Class<?> inferredClassForInput = ClassUtils.getInferredClassForGeneric(inputType);
+                    //Supplier没有参数
+                    methodParameterInfos.add(ReactiveMethodParameterInfo.builder()
+                            .name("arg")
+                            .type(function.getRawInputType().getName())
+                            .inferredType(inferredClassForInput.getName())
+                            .build());
+                }
 
-                Type inputType = function.getInputType();
-                Class<?> inferredClassForInput = ClassUtils.getInferredClassForGeneric(inputType);
-
-                ReactiveMethodParameterInfo methodParameterInfo = ReactiveMethodParameterInfo.builder()
-                        .name("arg")
-                        .type(function.getRawInputType().getName())
-                        .inferredType(inferredClassForInput.getName())
-                        .build();
-
+                Class<?> inferredClassForOutput = ClassUtils.getInferredClassForGeneric(outputType);
                 ReactiveMethodInfo reactiveMethodInfo = ReactiveMethodInfo.builder()
                         .name(handler)
                         .description(function.getFunctionDefinition())
                         .returnType(function.getRawInputType().getName())
                         .returnInferredType(inferredClassForOutput.getName())
-                        .parameters(Collections.singletonList(methodParameterInfo))
+                        .parameters(methodParameterInfos)
                         .build();
 
                 RSocketServiceInfo rsocketServiceInfo = RSocketServiceInfo.builder()
@@ -90,10 +93,28 @@ public class RSocketCloudFunctionRegistrar implements ApplicationListener<Applic
                         .methods(Collections.singletonList(reactiveMethodInfo))
                         .build();
 
-                RSocketServiceRegistry.INSTANCE.addProvider(service, handler, function, invoker, rsocketServiceInfo);
+                requester.registerService(handler, function, invoker, rsocketServiceInfo);
             } catch (Exception e) {
                 ExceptionUtils.throwExt(e);
             }
         }
+    }
+
+    /**
+     * 根据{@link SimpleFunctionRegistry.FunctionInvocationWrapper}类型获取对应的{@link Method}
+     */
+    private Method getMethod(SimpleFunctionRegistry.FunctionInvocationWrapper function) {
+        try {
+            if (function.isFunction()) {
+                return function.getClass().getMethod("apply", Object.class);
+            } else if (function.isConsumer()) {
+                return function.getClass().getMethod("accept", Object.class);
+            } else if (function.isSupplier()) {
+                return function.getClass().getMethod("get");
+            }
+        } catch (Exception e) {
+            ExceptionUtils.throwExt(e);
+        }
+        return null;
     }
 }
