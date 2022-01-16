@@ -26,7 +26,7 @@ public class CborCodec implements Codec {
     @Override
     public ByteBuf encodeParams(Object[] args) throws CodecException {
         if (CollectionUtils.isNonEmpty(args)) {
-            ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer();
+            ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
             try {
                 ByteBufOutputStream bos = new ByteBufOutputStream(byteBuf);
                 MAPPER.writeValue((OutputStream) bos, args);
@@ -56,7 +56,7 @@ public class CborCodec implements Codec {
     @Override
     public ByteBuf encodeResult(Object result) throws CodecException {
         if (result != null) {
-            ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer();
+            ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
             try {
                 ByteBufOutputStream bos = new ByteBufOutputStream(byteBuf);
                 MAPPER.writeValue((OutputStream) bos, result);

@@ -1,7 +1,7 @@
 package org.kin.rsocket.core.codec;
 
-import org.kin.kinrpc.serialization.hessian2.Hessian2Serialization;
 import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.serialization.hessian2.Hessian2Serialization;
 
 /**
  * @author huangjianqin

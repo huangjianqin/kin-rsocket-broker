@@ -1,7 +1,7 @@
 package org.kin.rsocket.core.codec;
 
-import org.kin.kinrpc.serialization.avro.AvroSerialization;
 import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.serialization.avro.AvroSerialization;
 
 /**
  * @author huangjianqin

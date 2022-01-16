@@ -25,27 +25,27 @@
         <!-- codec -->
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rpc-serialization-json</artifactId>
+            <artifactId>kin-serialization-json</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rpc-serialization-protobuf</artifactId>
+            <artifactId>kin-serialization-protobuf</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rpc-serialization-avro</artifactId>
+            <artifactId>kin-serialization-avro</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rpc-serialization-hessian2</artifactId>
+            <artifactId>kin-serialization-hessian2</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rpc-serialization-kryo</artifactId>
+            <artifactId>kin-serialization-kryo</artifactId>
         </dependency>
 
         <!-- 物联网专用, 编码紧凑, 轻量, 并且兼容JSON -->

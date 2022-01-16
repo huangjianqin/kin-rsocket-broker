@@ -1,7 +1,7 @@
 package org.kin.rsocket.core.codec;
 
-import org.kin.kinrpc.serialization.protobuf.ProtobufSerialization;
 import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.serialization.protobuf.ProtobufSerialization;
 
 /**
  * @author huangjianqin

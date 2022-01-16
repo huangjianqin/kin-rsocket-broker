@@ -1,12 +1,10 @@
 package org.kin.rsocket.core.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.framework.utils.ExceptionUtils;
-import org.kin.kinrpc.serialization.Serialization;
-
-import java.io.IOException;
+import org.kin.serialization.Serialization;
 
 /**
  * @author huangjianqin
@@ -24,30 +22,16 @@ public abstract class AbstractSerializationCodec implements Codec {
      * 序列化对象
      */
     private ByteBuf encodeObj(Object obj) {
-        try {
-            return Unpooled.wrappedBuffer(serialization.serialize(obj));
-        } catch (IOException e) {
-            ExceptionUtils.throwExt(e);
-        }
-
-        return Unpooled.EMPTY_BUFFER;
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        byteBuf.writeBytes(serialization.serialize(obj));
+        return byteBuf;
     }
 
     /**
      * 序列化对象
      */
-    private Object decodeObj(ByteBuf data, Class<?> targetClass) {
-        if (data.readableBytes() > 0) {
-            try {
-                byte[] bytes = new byte[data.readableBytes()];
-                data.readBytes(bytes);
-                return serialization.deserialize(bytes, targetClass);
-            } catch (IOException | ClassNotFoundException e) {
-                ExceptionUtils.throwExt(e);
-            }
-        }
-
-        return null;
+    private Object decodeObj(ByteBuf byteBuf, Class<?> targetClass) {
+        return serialization.deserialize(byteBuf, targetClass);
     }
 
     @Override

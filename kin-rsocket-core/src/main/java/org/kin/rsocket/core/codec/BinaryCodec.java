@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketMimeType;
@@ -39,9 +40,13 @@ public class BinaryCodec implements Codec {
             if (result instanceof ByteBuf) {
                 return (ByteBuf) result;
             } else if (result instanceof ByteBuffer) {
-                return Unpooled.wrappedBuffer((ByteBuffer) result);
+                ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+                byteBuf.writeBytes(((ByteBuffer) result));
+                return byteBuf;
             } else if (result instanceof byte[]) {
-                return Unpooled.wrappedBuffer((byte[]) result);
+                ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+                byteBuf.writeBytes(((byte[]) result));
+                return byteBuf;
             } else {
                 return Unpooled.EMPTY_BUFFER;
             }

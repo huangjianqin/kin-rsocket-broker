@@ -1,6 +1,7 @@
 package org.kin.rsocket.core.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketMimeType;
@@ -22,7 +23,9 @@ public class TextCodec implements Codec {
         if (CollectionUtils.isEmpty(args)) {
             return Unpooled.EMPTY_BUFFER;
         }
-        return Unpooled.wrappedBuffer(stringToBytes(args[0]));
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        byteBuf.writeBytes(stringToBytes(args[0]));
+        return byteBuf;
     }
 
     @Override
@@ -35,10 +38,12 @@ public class TextCodec implements Codec {
 
     @Override
     public ByteBuf encodeResult(Object result) throws CodecException {
-        if (result != null) {
-            return Unpooled.wrappedBuffer(stringToBytes(result));
+        if (result == null) {
+            return Unpooled.EMPTY_BUFFER;
         }
-        return Unpooled.EMPTY_BUFFER;
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        byteBuf.writeBytes(stringToBytes(result));
+        return byteBuf;
     }
 
     @Override

@@ -238,7 +238,7 @@ public class JSON {
      * 将Obj通过json序列化成{@link ByteBuf}
      */
     public static ByteBuf writeByteBuf(Object object) {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer();
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
         try {
             ByteBufOutputStream bos = new ByteBufOutputStream(byteBuf);
             PARSER.writeValue((OutputStream) bos, object);
@@ -270,25 +270,6 @@ public class JSON {
         } catch (JsonProcessingException e) {
             ExceptionUtils.throwExt(new CodecException(e.getMessage()));
         }
-    }
-
-    /**
-     * 从json {@link ByteBuf} 转换成Obj[]
-     */
-    public static Object[] read(ByteBuf byteBuf, Class<?>[] targetClasses) {
-        try {
-            Object[] targets = new Object[targetClasses.length];
-            List<JsonNode> jsonNodes = PARSER.readValue(new ByteBufInputStream(byteBuf), new TypeReference<List<JsonNode>>() {
-            });
-            for (int i = 0; i < targetClasses.length; i++) {
-                targets[i] = PARSER.treeToValue(jsonNodes.get(i), targetClasses[i]);
-            }
-            return targets;
-        } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
-        }
-
-        throw new IllegalStateException("encounter unknown error");
     }
 
     /**
