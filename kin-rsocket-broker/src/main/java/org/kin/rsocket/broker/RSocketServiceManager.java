@@ -536,7 +536,7 @@ public final class RSocketServiceManager {
                 this.instanceId2ServiceIds = instanceId2ServiceIds;
                 this.services = services;
 
-                router.onServiceUnregistered(getByInstanceId(instanceId), weight, serviceIds);
+                router.onServiceUnregistered(instanceId, weight, serviceIds);
             }
         } finally {
             writeLock.unlock();
@@ -568,7 +568,7 @@ public final class RSocketServiceManager {
                 this.instanceId2ServiceIds = instanceId2ServiceIds;
                 this.services = services;
 
-                router.onServiceUnregistered(getByInstanceId(instanceId), weight, Collections.singleton(serviceId));
+                router.onServiceUnregistered(instanceId, weight, Collections.singleton(serviceId));
             }
         } finally {
             writeLock.unlock();

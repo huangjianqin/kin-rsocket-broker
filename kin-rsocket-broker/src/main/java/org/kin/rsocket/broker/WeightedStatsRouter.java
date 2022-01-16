@@ -195,9 +195,8 @@ public class WeightedStatsRouter implements ProviderRouter {
     }
 
     @Override
-    public void onServiceUnregistered(BrokerResponder responder, int weight, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
         //copy on write
-        Integer instanceId = responder.getId();
         FastListMultimap<Integer, WeightedInstance> serviceId2WeightedInstances = new FastListMultimap<>(this.serviceId2WeightedInstances);
         for (Integer serviceId : serviceIds) {
             MutableList<WeightedInstance> weightedInstances = serviceId2WeightedInstances.get(serviceId);

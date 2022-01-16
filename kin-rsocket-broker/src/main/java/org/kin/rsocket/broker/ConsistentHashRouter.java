@@ -52,9 +52,8 @@ public class ConsistentHashRouter implements ProviderRouter {
     }
 
     @Override
-    public void onServiceUnregistered(BrokerResponder responder, int weight, Collection<Integer> serviceIds) {
+    public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
         //copy on write
-        int instanceId = responder.getId();
         Map<Integer, ConsistentHash> serviceId2Hash = new HashMap<>(this.serviceId2Hash);
         for (Integer serviceId : serviceIds) {
             ConsistentHash consistentHash = serviceId2Hash.get(serviceId);
