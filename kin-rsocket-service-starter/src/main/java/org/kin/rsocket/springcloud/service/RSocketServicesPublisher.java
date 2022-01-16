@@ -56,7 +56,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
             brokerCluster.broadcastCloudEvent(portsUpdateEvent.toCloudEvent()).subscribe();
         }
 
-        //4. notify broker app status update
+        //notify broker app status update
         brokerCluster.broadcastCloudEvent(AppStatusEvent.serving(RSocketAppContext.ID).toCloudEvent())
                 .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", serviceConfig.getBrokers()))))
                 .subscribe();
