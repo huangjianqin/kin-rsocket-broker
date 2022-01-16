@@ -6,8 +6,8 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.MetricsServicePrometheusImpl;
 import org.kin.rsocket.service.RSocketRequesterSupportCustomizer;
-import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.service.RSocketServiceRequester;
+import org.kin.rsocket.service.health.BrokerHealthCheckReference;
 import org.kin.rsocket.springcloud.service.health.HealthIndicator;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
@@ -135,12 +135,12 @@ public class RSocketServiceConfiguration {
     }
 
     //----------------------------service reference----------------------------
+
+    /**
+     * 独立出来bean, 是为了让{@link HealthIndicator}引用到
+     */
     @Bean("healthCheckRef")
     public HealthCheck healthCheckRef(@Autowired RSocketServiceRequester requester) {
-        return RSocketServiceReferenceBuilder
-                .requester(HealthCheck.class)
-                .nativeImage()
-                .upstreamClusterManager(requester)
-                .build();
+        return new BrokerHealthCheckReference(requester);
     }
 }

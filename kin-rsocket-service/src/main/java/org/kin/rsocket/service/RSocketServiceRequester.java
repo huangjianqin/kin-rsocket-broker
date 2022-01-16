@@ -2,11 +2,11 @@ package org.kin.rsocket.service;
 
 import brave.Tracer;
 import org.kin.rsocket.core.*;
-import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.event.ServiceInstanceChangedEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
+import org.kin.rsocket.service.health.BrokerHealthCheckReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -68,7 +68,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
         //3. register health check
         if (Objects.isNull(customHealthCheck)) {
-            customHealthCheck = new HealthCheckImpl(upstreamClusterManager);
+            customHealthCheck = new BrokerHealthCheckReference(upstreamClusterManager);
         }
         registerService(HealthCheck.class, customHealthCheck);
 
@@ -379,27 +379,6 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
             RSocketServiceRequester requester = build();
             requester.init();
             return requester;
-        }
-    }
-
-    /**
-     * 内置health check, 只要broker正常, 本application就可以对外提供服务
-     */
-    private static class HealthCheckImpl implements HealthCheck {
-        /** broker health check */
-        private final HealthCheck brokerHealthCheck;
-
-        public HealthCheckImpl(UpstreamClusterManagerImpl upstreamClusterManager) {
-            brokerHealthCheck = RSocketServiceReferenceBuilder
-                    .requester(HealthCheck.class)
-                    .nativeImage()
-                    .upstreamClusterManager(upstreamClusterManager)
-                    .build();
-        }
-
-        @Override
-        public Mono<Integer> check(String service) {
-            return brokerHealthCheck.check(null).map(r -> AppStatus.SERVING.getId() == r ? 1 : 0);
         }
     }
 }

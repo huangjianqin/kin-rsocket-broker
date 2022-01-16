@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * 启动health checker
+ * 聚合broker状态和服务自身endpoint状态, 来决定health状态
  *
  * @author huangjianqin
  * @date 2021/3/28
@@ -33,6 +34,7 @@ public final class HealthIndicator implements ReactiveHealthIndicator {
         return healthCheck.check(null)
                 .map(result -> {
                             boolean brokerAlive = result != null && result == 1;
+                    //endpoint health status
                             AppStatus serviceStatus = rsocketEndpoint.getServiceStatus();
                             boolean localServicesAlive = !serviceStatus.equals(AppStatus.STOPPED);
                             Health.Builder builder = brokerAlive && localServicesAlive ? Health.up() : Health.outOfService();

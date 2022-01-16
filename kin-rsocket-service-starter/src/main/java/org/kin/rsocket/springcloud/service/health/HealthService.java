@@ -16,8 +16,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * 聚合health检查, 当所有{@link Health#getStatus()}都有等于{@link Status#UP}时, rsocket服务才是'健康的'.
+ * 目前实现有
+ *
  * @author huangjianqin
  * @date 2021/3/28
+ * @see ReactiveHealthIndicator
  */
 @RSocketService(HealthCheck.class)
 public final class HealthService implements HealthCheck, ApplicationListener<ContextRefreshedEvent> {
