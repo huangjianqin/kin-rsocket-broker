@@ -16,8 +16,6 @@ public class ReactiveMethodParameterInfo implements Serializable {
     private String inferredType;
     /** 参数描述 */
     private String description;
-    /** 参数是否必须赋值 */
-    private boolean required;
 
     //--------------------------------builder--------------------------------
     public static Builder builder() {
@@ -45,11 +43,6 @@ public class ReactiveMethodParameterInfo implements Serializable {
 
         public Builder description(String description) {
             reactiveMethodParameterInfo.description = description;
-            return this;
-        }
-
-        public Builder required(boolean required) {
-            reactiveMethodParameterInfo.required = required;
             return this;
         }
 
@@ -89,13 +82,5 @@ public class ReactiveMethodParameterInfo implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public boolean isRequired() {
-        return required;
-    }
-
-    public void setRequired(boolean required) {
-        this.required = required;
     }
 }

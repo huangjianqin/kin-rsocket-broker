@@ -8,9 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -28,8 +26,6 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
     private boolean binaryReturn;
     /** 方法参数类型 */
     private Class<?>[] parametersTypes;
-    /** 方法参数是否required or not */
-    private boolean[] required;
 
     public ReactiveMethodInvoker(Method method, Object provider) {
         super(method);
@@ -43,18 +39,10 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
         initReturn();
 
         this.parametersTypes = this.method.getParameterTypes();
-
-        Parameter[] parameters = method.getParameters();
-        this.required = new boolean[parameters.length];
-        for (int i = 0; i < parameters.length; i++) {
-            Parameter parameter = parameters[i];
-            required[i] = Objects.nonNull(parameter.getAnnotation(Required.class));
-        }
     }
 
     /**
      * 供cloud function使用, 其使用了wrapper封装, 无法从provider和method那里获取到具体function信息
-     * 无法校验{@link Required}
      */
     public ReactiveMethodInvoker(Method method, Object provider, Class<?> rawReturnType, Type returnType, Class<?>[] parametersTypes) {
         this(method, provider);
@@ -63,7 +51,6 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
 
         initReturn();
         this.parametersTypes = parametersTypes;
-        this.required = new boolean[0];
     }
 
     private void initReturn() {
@@ -80,36 +67,6 @@ public final class ReactiveMethodInvoker extends ReactiveMethodSupport {
         int paramCount = getParamCount();
         if (args.length != paramCount) {
             throw new IllegalArgumentException(String.format("request params is not right! service method need %d params, not %d", paramCount, args.length));
-        }
-
-        //check required
-        for (int i = 0; i < args.length; i++) {
-            if (!required[i]) {
-                continue;
-            }
-
-            boolean throwExt = false;
-            Object arg = args[i];
-
-            if (Objects.isNull(arg)) {
-                throwExt = true;
-            } else {
-                Class<?> argClass = arg.getClass();
-                if ((argClass.isPrimitive() ||
-                        arg instanceof Number ||
-                        arg instanceof String ||
-                        arg instanceof Character ||
-                        arg instanceof Boolean) && arg.equals(ClassUtils.getDefaultValue(argClass))) {
-                    //基础类型
-                    //不允许等于默认值
-                    throwExt = true;
-                }
-            }
-            if (throwExt) {
-                throw new IllegalArgumentException(
-                        String.format("param 'arg%s' of type %s is required! must not null or default value",
-                                i, parametersTypes[i].getCanonicalName()));
-            }
         }
 
         return invoker.invoke(args);

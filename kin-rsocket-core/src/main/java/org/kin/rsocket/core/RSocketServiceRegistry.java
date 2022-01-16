@@ -270,11 +270,6 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
             builder.description(desc.value());
         }
 
-        Required required = parameter.getAnnotation(Required.class);
-        if (Objects.nonNull(required)) {
-            builder.required(true);
-        }
-
         builder.name(parameter.getName());
         String type = parameter.getType().getName();
         builder.type(type);

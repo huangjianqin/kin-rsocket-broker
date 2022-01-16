@@ -66,11 +66,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<Boolean> checkRequired(int a, String s, String[] ss) {
-        return Mono.just(true);
-    }
-
-    @Override
     public Mono<UserPb> findByPb(StringValue name) {
         String nameValue = name.getValue();
         int random = ThreadLocalRandom.current().nextInt(100);

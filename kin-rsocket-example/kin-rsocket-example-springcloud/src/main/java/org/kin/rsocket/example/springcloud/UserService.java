@@ -34,12 +34,4 @@ public interface UserService {
      */
     @GetMapping(value = "/find2")
     Mono<ByteBuf> find2(String name);
-//
-//    /**
-//     * 测试{@link Required}注解
-//     */
-//    @GetMapping(value = "/checkRequired")
-//    Mono<Boolean> checkRequired(@Required int a,
-//                                @Required String s,
-//                                @Required String[] ss);
 }
