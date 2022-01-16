@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @date 2021/3/28
  */
 public final class RSocketRequesterSupportImpl implements RSocketRequesterSupport {
-    /** spring rsocket config */
+    /** rsocket config */
     private final RSocketServiceProperties rsocketServiceProperties;
     /** app name */
     private final String appName;
@@ -104,7 +104,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
         builder.uuid(RSocketAppContext.ID);
         builder.name(appName);
         builder.ip(NetUtils.getIp());
-        builder.device("SpringBootApp");
+        builder.device("JvmApp");
         //brokers
         builder.brokers(rsocketServiceProperties.getBrokers());
         if (Objects.nonNull(upstreamClusterManager)) {

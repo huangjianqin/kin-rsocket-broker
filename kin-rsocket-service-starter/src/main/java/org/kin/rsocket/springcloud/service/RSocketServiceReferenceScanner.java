@@ -1,7 +1,8 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.springcloud.service;
 
 import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.service.RSocketServiceReference;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;

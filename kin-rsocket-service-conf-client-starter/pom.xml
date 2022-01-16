@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-service</artifactId>
+            <artifactId>kin-rsocket-service-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 

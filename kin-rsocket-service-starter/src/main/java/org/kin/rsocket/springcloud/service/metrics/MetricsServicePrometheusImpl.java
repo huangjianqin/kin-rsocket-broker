@@ -1,4 +1,4 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.springcloud.service.metrics;
 
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.kin.rsocket.core.MetricsService;

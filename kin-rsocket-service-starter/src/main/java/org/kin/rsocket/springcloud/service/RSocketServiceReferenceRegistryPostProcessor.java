@@ -1,5 +1,6 @@
-package org.kin.rsocket.service;
+package org.kin.rsocket.springcloud.service;
 
+import org.kin.rsocket.service.RSocketServiceReference;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

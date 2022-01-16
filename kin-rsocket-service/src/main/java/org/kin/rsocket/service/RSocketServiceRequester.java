@@ -2,6 +2,7 @@ package org.kin.rsocket.service;
 
 import brave.Tracer;
 import org.kin.rsocket.core.*;
+import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.event.ServiceInstanceChangedEventConsumer;
@@ -136,6 +137,16 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     }
 
     /**
+     * 注册service
+     * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
+     */
+    public RSocketServiceRequester registerService(String service, String handler,
+                                                   Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
+        RSocketServiceRegistry.INSTANCE.addProvider(service, handler, provider, invoker, serviceInfo);
+        return this;
+    }
+
+    /**
      * 注册并发布service
      */
     public RSocketServiceRequester registerAndPubService(Class<?> serviceInterface, Object provider) {
@@ -164,6 +175,17 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     public RSocketServiceRequester registerAndPubService(String group, String service, String version, Class<?> serviceInterface, Object provider) {
         registerService(group, service, version, serviceInterface, provider);
         publishService(group, service, version);
+        return this;
+    }
+
+    /**
+     * 注册并发布service
+     * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
+     */
+    public RSocketServiceRequester registerAndPubService(String service, String handler,
+                                                         Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
+        RSocketServiceRegistry.INSTANCE.addProvider(service, handler, provider, invoker, serviceInfo);
+        publishService(serviceInfo.getGroup(), service, serviceInfo.getVersion());
         return this;
     }
 
