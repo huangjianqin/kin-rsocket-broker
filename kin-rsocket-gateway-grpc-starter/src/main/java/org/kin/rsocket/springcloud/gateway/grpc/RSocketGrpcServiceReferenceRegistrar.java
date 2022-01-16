@@ -68,15 +68,15 @@ public final class RSocketGrpcServiceReferenceRegistrar implements ImportBeanDef
     public void registerBeanDefinition(AnnotationAttributes annoAttrs, BeanDefinitionRegistry registry) {
         BeanDefinitionBuilder beanBuilder = BeanDefinitionBuilder.genericBeanDefinition(RSocketGrpcServiceReferenceFactoryBean.class);
 
-        Class<? extends BindableService> serviceInterfaceClass = (Class<? extends BindableService>) annoAttrs.get("interfaceClass");
-        if (Objects.isNull(serviceInterfaceClass) ||
-                Void.class.equals(serviceInterfaceClass) ||
-                !BindableService.class.isAssignableFrom(serviceInterfaceClass)) {
+        Class<? extends BindableService> serviceStubClass = (Class<? extends BindableService>) annoAttrs.get("interfaceClass");
+        if (Objects.isNull(serviceStubClass) ||
+                Void.class.equals(serviceStubClass) ||
+                !BindableService.class.isAssignableFrom(serviceStubClass)) {
             //接口没有定义 | 不是实现了BindableService接口, 则不走这里
             return;
         }
 
-        RSocketGrpcServiceImplBuilder<?> referenceBuilder = RSocketGrpcServiceImplBuilder.stub(serviceInterfaceClass, annoAttrs);
+        RSocketGrpcServiceImplBuilder<?> referenceBuilder = RSocketGrpcServiceImplBuilder.stub(serviceStubClass, annoAttrs);
 
         //factory bean constructor args
         beanBuilder.addConstructorArgValue(referenceBuilder);

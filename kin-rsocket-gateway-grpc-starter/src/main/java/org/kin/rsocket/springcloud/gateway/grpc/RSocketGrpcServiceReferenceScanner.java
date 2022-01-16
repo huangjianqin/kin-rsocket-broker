@@ -48,7 +48,7 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
         if (beanDefinitions.isEmpty()) {
-            info("no rsocket rpc service interface was found in classpath !!!");
+            info("no rsocket rpc service stub was found in classpath !!!");
         } else {
             processBeanDefinitions(beanDefinitions);
         }
@@ -80,7 +80,7 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
             return true;
         } else {
             warn("skipping RSocketGrpcServiceReferenceFactoryBean with name '" + beanName + "' and '"
-                    + beanDefinition.getBeanClassName() + "' interface" + ". bean already defined with the same name!");
+                    + beanDefinition.getBeanClassName() + "' stub" + ". bean already defined with the same name!");
             return false;
         }
     }

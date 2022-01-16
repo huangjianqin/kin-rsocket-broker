@@ -44,10 +44,10 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     }
 
     /**
-     * 指定service interface class和{@link RSocketServiceReference}属性生成builder实例
+     * 指定service stub class和{@link RSocketServiceReference}属性生成builder实例
      */
-    public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
-        RSocketGrpcServiceImplBuilder<T> builder = new RSocketGrpcServiceImplBuilder<>(serviceInterface);
+    public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceStubClass, AnnotationAttributes annoAttrs) {
+        RSocketGrpcServiceImplBuilder<T> builder = new RSocketGrpcServiceImplBuilder<>(serviceStubClass);
 
         String service = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(service)) {
