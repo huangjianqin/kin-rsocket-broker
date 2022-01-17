@@ -268,10 +268,11 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Mono<Payload>) disposedMono();
         }
-        return next(payload.data()).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
-                .flatMap(rSocket -> rSocket.requestResponse(payload)
+        return next(payload.data())
+                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+                .flatMap(rsocket -> rsocket.requestResponse(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                            onRSocketClosed(rSocket, error);
+                            onRSocketClosed(rsocket, error);
                             return requestResponse(payload);
                         }));
 
@@ -283,7 +284,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
-        return next(payload.data()).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+        return next(payload.data())
+                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMap(rSocket -> rSocket.fireAndForget(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);
@@ -330,7 +332,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         if (isDisposed()) {
             return (Flux<Payload>) disposedFlux();
         }
-        return next(payload.data()).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+        return next(payload.data())
+                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMapMany(rSocket -> rSocket.requestStream(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);
@@ -345,7 +348,8 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
             return (Flux<Payload>) disposedFlux();
         }
 
-        return next(null).doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payloads))
+        return next(null)
+                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payloads))
                 .flatMapMany(rSocket -> rSocket.requestChannel(payloads)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rSocket, error);

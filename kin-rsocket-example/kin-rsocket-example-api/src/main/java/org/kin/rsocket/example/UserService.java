@@ -30,4 +30,16 @@ public interface UserService {
      * 参数和返回值都是protobuf生成的
      */
     Mono<UserPb> findByPb(StringValue name);
+
+    /**
+     * 主动抛异常的方法
+     * fire-forget
+     */
+    void exception1();
+
+    /**
+     * 主动抛异常的方法
+     * request-response
+     */
+    Mono<User> exception2();
 }

@@ -74,4 +74,14 @@ public class UserServiceImpl implements UserService {
         }
         return Mono.just(UserPb.newBuilder().setName("unknown").setAge(random).build());
     }
+
+    @Override
+    public void exception1() {
+        throw new IllegalStateException("service logic encounter exception");
+    }
+
+    @Override
+    public Mono<User> exception2() {
+        throw new IllegalStateException("service logic encounter exception");
+    }
 }

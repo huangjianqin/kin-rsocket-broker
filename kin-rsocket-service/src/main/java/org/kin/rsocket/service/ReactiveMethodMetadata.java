@@ -104,7 +104,8 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         }
         //参数不含Flux
         if (frameType == null) {
-            if (returnType.equals(Void.TYPE) || (returnType.equals(Mono.class) && inferredClassForReturn.equals(Void.TYPE))) {
+            if (Void.TYPE.equals(returnType) || Void.class.equals(returnType) ||
+                    (returnType.equals(Mono.class) && (Void.TYPE.equals(inferredClassForReturn) || Void.class.equals(inferredClassForReturn)))) {
                 frameType = FrameType.REQUEST_FNF;
             } else if (Flux.class.isAssignableFrom(returnType)) {
                 frameType = FrameType.REQUEST_STREAM;
@@ -177,8 +178,14 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         ReferenceCountUtil.safeRelease(compositeMetadataBytes);
     }
 
-    //getter
+    /**
+     * 方法是否返回void
+     */
+    public boolean isReturnVoid() {
+        return Void.TYPE.equals(returnType);
+    }
 
+    //getter
     public String getHandler() {
         return handler;
     }

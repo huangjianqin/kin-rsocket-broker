@@ -38,6 +38,10 @@ public class RequesterApplication {
                 System.out.println(new String(bytes, StandardCharsets.UTF_8));
             });
 
+            userService.exception1();
+
+            userService.exception2().subscribe();
+
             Thread.sleep(1_000);
         } finally {
             requester.close();

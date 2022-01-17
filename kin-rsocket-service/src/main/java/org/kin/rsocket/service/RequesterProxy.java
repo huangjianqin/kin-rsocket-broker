@@ -153,7 +153,7 @@ public class RequesterProxy implements InvocationHandler {
 
             //handle return
             ReactiveMethodMetadata finalMethodMetadata1 = methodMetadata;
-            Flux<Object> fluxReturn = requestChannel(methodMetadata, methodMetadata.getCompositeMetadataBytes(), routeBytes, paramBodys)
+            Flux<Object> result = requestChannel(methodMetadata, methodMetadata.getCompositeMetadataBytes(), routeBytes, paramBodys)
                     .concatMap(payload -> {
                         try {
                             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
@@ -166,9 +166,9 @@ public class RequesterProxy implements InvocationHandler {
                         }
                     }).contextWrite(c -> mutableContext.putAll(c.readOnly()));
             if (methodMetadata.isMonoChannel()) {
-                return fluxReturn.last();
+                return result.last();
             } else {
-                return fluxReturn;
+                return result;
             }
         } else {
             //body content
@@ -198,7 +198,14 @@ public class RequesterProxy implements InvocationHandler {
             } else if (methodMetadata.getFrameType() == FrameType.REQUEST_FNF) {
                 //request and forget
                 metrics(methodMetadata);
-                return fireAndForget(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes);
+                Mono<Void> result = fireAndForget(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes);
+                if (methodMetadata.isReturnVoid()) {
+                    //返回void
+                    result.subscribe();
+                    return null;
+                } else {
+                    return result;
+                }
             } else if (methodMetadata.getFrameType() == FrameType.REQUEST_STREAM) {
                 //request stream
                 metrics(methodMetadata);
@@ -232,11 +239,7 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(TimeoutException.class,
-                        e -> {
-                            metricsTimeout(methodMetadata);
-                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
-                        });
+                .doOnError(t -> hanldeCallError(t, methodMetadata));
     }
 
     /**
@@ -248,11 +251,7 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(TimeoutException.class,
-                        e -> {
-                            metricsTimeout(methodMetadata);
-                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
-                        });
+                .doOnError(t -> hanldeCallError(t, methodMetadata));
     }
 
     /**
@@ -264,11 +263,7 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(TimeoutException.class,
-                        e -> {
-                            metricsTimeout(methodMetadata);
-                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
-                        });
+                .doOnError(t -> hanldeCallError(t, methodMetadata));
     }
 
     /**
@@ -292,11 +287,17 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(TimeoutException.class,
-                        e -> {
-                            metricsTimeout(methodMetadata);
-                            log.error(String.format("timeout to call %s in %s seconds", methodMetadata.getHandlerIdStr(), timeout), e);
-                        });
+                .doOnError(t -> hanldeCallError(t, methodMetadata));
+    }
+
+    /**
+     * rsocket请求异常统一处理
+     */
+    private void hanldeCallError(Throwable throwable, ReactiveMethodMetadata methodMetadata) {
+        if (throwable instanceof TimeoutException) {
+            metricsTimeout(methodMetadata);
+            log.error(String.format("'%s' call timeout after %s seconds", methodMetadata.getHandlerIdStr(), timeout), throwable);
+        }
     }
 
     /**
