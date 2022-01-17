@@ -15,7 +15,7 @@ final class ReactiveMethodMetadata {
     /** rsocket frame type */
     private final FrameType frameType;
     /** 方法返回类型泛型参数实际类型 */
-    private final Class<?> returnType;
+    private final Class<?> inferredClassForReturn;
 
     public ReactiveMethodMetadata(Method method) {
         Class<?>[] parameterTypes = method.getParameterTypes();
@@ -37,7 +37,7 @@ final class ReactiveMethodMetadata {
         }
 
         this.frameType = frameType;
-        returnType = ClassUtils.getInferredClassForGeneric(method.getGenericReturnType());
+        inferredClassForReturn = ClassUtils.getInferredClassForGeneric(method.getGenericReturnType());
     }
 
     //getter
@@ -45,7 +45,7 @@ final class ReactiveMethodMetadata {
         return frameType;
     }
 
-    public Class<?> getReturnType() {
-        return returnType;
+    public Class<?> getInferredClassForReturn() {
+        return inferredClassForReturn;
     }
 }

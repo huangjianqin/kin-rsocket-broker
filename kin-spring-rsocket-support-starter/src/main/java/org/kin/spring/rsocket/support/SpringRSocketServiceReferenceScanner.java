@@ -91,7 +91,7 @@ public final class SpringRSocketServiceReferenceScanner extends ClassPathBeanDef
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
         //@SpringRSocketServiceReference && 接口 && top-level class
         AnnotationMetadata metadata = beanDefinition.getMetadata();
-        return metadata.getAnnotationTypes().contains(SpringRSocketServiceReference.class.getName()) &&
+        return metadata.isAnnotated(SpringRSocketServiceReference.class.getName()) &&
                 metadata.isInterface() &&
                 metadata.isIndependent();
     }
