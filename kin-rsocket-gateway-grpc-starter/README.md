@@ -1,4 +1,4 @@
-# grpc-gateway
+# kin-rsocket-gateway-grpc-starter
 
 使用注意:
 
