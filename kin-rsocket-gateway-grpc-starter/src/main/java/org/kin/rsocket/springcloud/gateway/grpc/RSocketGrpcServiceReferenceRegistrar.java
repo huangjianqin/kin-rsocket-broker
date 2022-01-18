@@ -72,7 +72,7 @@ public final class RSocketGrpcServiceReferenceRegistrar implements ImportBeanDef
         if (Objects.isNull(serviceStubClass) ||
                 Void.class.equals(serviceStubClass) ||
                 !BindableService.class.isAssignableFrom(serviceStubClass)) {
-            //接口没有定义 | 不是实现了BindableService接口, 则不走这里
+            //stub没有定义 | 不是实现了BindableService接口, 则不走这里
             return;
         }
 
