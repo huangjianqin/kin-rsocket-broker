@@ -3,6 +3,7 @@ package org.kin.rsocket.core;
 import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
+import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.core.RSocketServer;
@@ -233,11 +234,18 @@ public class RSocketBinder implements Closeable {
             return this;
         }
 
+        /**
+         * 可以拦截并将requester rsocket转换成别的{@link RSocket}实现, {@link SocketAcceptor#accept(ConnectionSetupPayload, RSocket)}中第二个参数就是该{@link RSocket}实现
+         * 但在{@link RequestInterceptor}却观察不到这个变化
+         */
         public RSocketBinder.Builder addRequesterInterceptors(RSocketInterceptor interceptor) {
             binder.requesterInterceptors.add(interceptor);
             return this;
         }
 
+        /**
+         * 可以拦截并将responder rsocket转换成别的{@link RSocket}实现, 该responder rsocket就是{@link SocketAcceptor#accept(ConnectionSetupPayload, RSocket)}的返回值
+         */
         public RSocketBinder.Builder addResponderInterceptor(RSocketInterceptor interceptor) {
             binder.responderInterceptors.add(interceptor);
             return this;
