@@ -85,7 +85,7 @@ public final class RSocketGrpcServiceReferenceRegistrar implements ImportBeanDef
         //set lazy init
         beanBuilder.setLazyInit(true);
 
-        //以service name当bean name
+        //以grpc stub service name当bean name
         registry.registerBeanDefinition(referenceBuilder.getInterceptor().getService(), beanBuilder.getBeanDefinition());
     }
 }
