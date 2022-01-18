@@ -44,7 +44,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     /** 集群broker信息变化sink, 使用者可以监听集群变化并作出响应 */
     private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
     /** 定时刷新集群broker信息Flux的Disposable */
-    private final Disposable brokersRresher;
+    private final Disposable brokersRefresher;
 
     public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient) {
         this(discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, REFRESH_INTERVAL_SECONDS);
@@ -68,7 +68,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
 
         this.discoveryClient = discoveryClient;
         String finalBrokerDiscoveryService = brokerDiscoveryService;
-        this.brokersRresher = Flux.interval(Duration.ofSeconds(internal))
+        this.brokersRefresher = Flux.interval(Duration.ofSeconds(internal))
                 .flatMap(aLong -> this.discoveryClient.getInstances(finalBrokerDiscoveryService).collectList())
                 .subscribe(serviceInstances -> {
                     boolean changed = serviceInstances.size() != brokers.size();
@@ -126,7 +126,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
 
     @Override
     public void close() {
-        brokersRresher.dispose();
+        brokersRefresher.dispose();
     }
 
     @Override

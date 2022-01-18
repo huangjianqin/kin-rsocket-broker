@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.Objects;
 
 /**
+ * standalone broker manager
+ *
  * @author huangjianqin
  * @date 2021/3/29
  */

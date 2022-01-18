@@ -29,6 +29,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * gsv: group!service:version serviceId: hash(gsv)
 * handleId: hash(service.handler)
 * 目前服务方法参数除了request channel外, 仅仅支持一个message, 主要受限于部分序列化方法, 没法反序列化Object[], 比如protobuf和avro
+* 目前`RSocket#fireAndForget(Payload)`不会返回异常给service reference, 如果想知道执行是否有异常, 则需要在service端查看
 
 ## **实现模块**
 
