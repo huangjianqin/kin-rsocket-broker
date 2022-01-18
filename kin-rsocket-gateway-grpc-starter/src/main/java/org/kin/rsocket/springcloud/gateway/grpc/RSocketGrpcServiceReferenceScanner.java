@@ -71,6 +71,8 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
             definition.setBeanClass(RSocketGrpcServiceReferenceFactoryBean.class);
             //enable autowire
             definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+            //set lazy init
+            definition.setLazyInit(true);
         }
     }
 
