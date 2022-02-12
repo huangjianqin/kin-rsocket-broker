@@ -243,11 +243,20 @@ public final class RSocketServiceReferenceBuilder<T> {
     }
 
     public RSocketServiceReferenceBuilder<T> encodingType(RSocketMimeType encodingType) {
+        RSocketMimeType.checkEncodingMimeType(encodingType);
         this.encodingType = encodingType;
         return this;
     }
 
     public RSocketServiceReferenceBuilder<T> acceptEncodingTypes(RSocketMimeType... acceptEncodingTypes) {
+        if (CollectionUtils.isEmpty(acceptEncodingTypes)) {
+            return this;
+        }
+
+        for (RSocketMimeType acceptEncodingType : acceptEncodingTypes) {
+            RSocketMimeType.checkEncodingMimeType(acceptEncodingType);
+        }
+
         this.acceptEncodingTypes = acceptEncodingTypes;
         return this;
     }

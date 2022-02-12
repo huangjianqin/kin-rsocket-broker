@@ -20,8 +20,8 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 服务接口方法元数据
@@ -66,6 +66,12 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
                            URI origin) {
         super(method);
         handler = method.getName();
+
+        RSocketMimeType.checkEncodingMimeType(dataEncodingType);
+        for (RSocketMimeType acceptEncodingType : acceptEncodingTypes) {
+            RSocketMimeType.checkEncodingMimeType(acceptEncodingType);
+        }
+
         this.dataEncodingType = dataEncodingType;
         this.acceptEncodingTypes = acceptEncodingTypes;
         this.endpoint = endpoint;
@@ -135,11 +141,19 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         if (!serviceMapping.endpoint().isEmpty()) {
             endpoint = serviceMapping.endpoint();
         }
-        if (!serviceMapping.paramEncoding().isEmpty()) {
-            dataEncodingType = RSocketMimeType.getByType(serviceMapping.paramEncoding());
+
+        RSocketMimeType paramEncoding = serviceMapping.paramEncoding();
+        if (Objects.nonNull(paramEncoding)) {
+            RSocketMimeType.checkEncodingMimeType(paramEncoding);
+            dataEncodingType = paramEncoding;
         }
-        if (CollectionUtils.isNonEmpty(serviceMapping.resultEncoding())) {
-            acceptEncodingTypes = Arrays.stream(serviceMapping.resultEncoding()).map(RSocketMimeType::getByType).toArray(RSocketMimeType[]::new);
+
+        RSocketMimeType[] resultEncodings = serviceMapping.resultEncodings();
+        if (CollectionUtils.isNonEmpty(resultEncodings)) {
+            for (RSocketMimeType resultEncoding : resultEncodings) {
+                RSocketMimeType.checkEncodingMimeType(resultEncoding);
+            }
+            acceptEncodingTypes = resultEncodings;
         }
         sticky = serviceMapping.sticky();
     }

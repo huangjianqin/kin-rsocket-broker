@@ -11,6 +11,7 @@ import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import net.bytebuddy.implementation.bind.annotation.This;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.MethodHandleUtils;
 import org.kin.framework.utils.StringUtils;
@@ -95,11 +96,15 @@ public class RequesterProxy implements InvocationHandler {
         sticky = builder.isSticky();
         sourceUri = builder.getSourceUri();
         defaultEncodingType = builder.getEncodingType();
+        RSocketMimeType.checkEncodingMimeType(defaultEncodingType);
 
         RSocketMimeType[] acceptEncodingTypes = builder.getAcceptEncodingTypes();
-        if (acceptEncodingTypes == null) {
+        if (CollectionUtils.isNonEmpty(acceptEncodingTypes)) {
             this.defaultAcceptEncodingTypes = defaultAcceptEncodingTypes();
         } else {
+            for (RSocketMimeType acceptEncodingType : acceptEncodingTypes) {
+                RSocketMimeType.checkEncodingMimeType(acceptEncodingType);
+            }
             this.defaultAcceptEncodingTypes = acceptEncodingTypes;
         }
         timeout = builder.getCallTimeout();

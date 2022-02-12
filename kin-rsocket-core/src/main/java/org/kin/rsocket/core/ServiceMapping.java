@@ -16,10 +16,10 @@ public @interface ServiceMapping {
     String value() default "";
 
     /** 参数编码 mime type, 默认{@link RSocketMimeType#JSON} */
-    String paramEncoding() default "application/json";
+    RSocketMimeType paramEncoding() default RSocketMimeType.JSON;
 
     /** 返回值编码 mime type, 默认{@link RSocketMimeType#JSON} */
-    String[] resultEncoding() default {"application/json"};
+    RSocketMimeType[] resultEncodings() default {RSocketMimeType.JSON};
 
     /** endpoint, such as id:xxxx,  ip:192.168.1.2 */
     String endpoint() default "";

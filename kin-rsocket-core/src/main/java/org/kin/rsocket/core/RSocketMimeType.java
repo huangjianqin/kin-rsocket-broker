@@ -1,8 +1,9 @@
 package org.kin.rsocket.core;
 
+import com.google.common.base.Preconditions;
 import io.rsocket.metadata.WellKnownMimeType;
 
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,15 +56,17 @@ public enum RSocketMimeType {
     MESSAGE_ORIGIN("Message-Origin", WellKnownMimeType.MESSAGE_RSOCKET_MESSAGE_ORIGIN);
 
     /** key -> id, value -> mime type */
-    public static final Map<Byte, RSocketMimeType> MIME_TYPE_MAP;
+    public static final Map<Byte, RSocketMimeType> ID_2_MIME_TYPE_MAP;
     /** key -> type, value -> mime type */
-    public static final Map<String, RSocketMimeType> MIME_MIME_MAP;
+    public static final Map<String, RSocketMimeType> TYPE_2_MIME_TYPE_MAP;
+    public static final Set<RSocketMimeType> ENCODING_MIME_TYPES;
 
     static {
-        MIME_TYPE_MAP = Stream.of(RSocketMimeType.values()).collect(
+        ID_2_MIME_TYPE_MAP = Stream.of(RSocketMimeType.values()).collect(
                 Collectors.toMap(RSocketMimeType::getId, x -> x));
-        MIME_MIME_MAP = Stream.of(RSocketMimeType.values()).collect(
+        TYPE_2_MIME_TYPE_MAP = Stream.of(RSocketMimeType.values()).collect(
                 Collectors.toMap(RSocketMimeType::getType, x -> x));
+        ENCODING_MIME_TYPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(JSON, PROTOBUF, AVRO, HESSIAN, TEXT, BINARY, JAVA_OBJECT, CBOR)));
     }
 
     /** {@link WellKnownMimeType#getIdentifier()} */
@@ -88,19 +91,34 @@ public enum RSocketMimeType {
      * 根据id寻找{@link RSocketMimeType}
      */
     public static RSocketMimeType getById(byte id) {
-        return MIME_TYPE_MAP.get(id);
+        return ID_2_MIME_TYPE_MAP.get(id);
     }
 
     /**
      * 根据type str寻找{@link RSocketMimeType}
      */
     public static RSocketMimeType getByType(String type) {
-        return MIME_MIME_MAP.get(type);
+        return TYPE_2_MIME_TYPE_MAP.get(type);
     }
 
     /** rsocket通信默认编码类型 */
     public static RSocketMimeType defaultEncodingType() {
         return JSON;
+    }
+
+    /**
+     * 是否是编码类型的{@link RSocketMimeType}
+     */
+    public static boolean isEncodingMimeType(RSocketMimeType mimeType) {
+        return ENCODING_MIME_TYPES.contains(mimeType);
+    }
+
+    /**
+     * 检查是否是编码类型的{@link RSocketMimeType}, 如果不是则报错
+     */
+    public static void checkEncodingMimeType(RSocketMimeType mimeType) {
+        Preconditions.checkArgument(Objects.nonNull(mimeType), "result encoding rsocket mime type is null");
+        Preconditions.checkArgument(RSocketMimeType.isEncodingMimeType(mimeType), String.format("unknown rsocket mime type '%s'", mimeType.getType()));
     }
 
     //getter

@@ -1,6 +1,7 @@
 package org.kin.rsocket.example.springcloud;
 
 import io.netty.buffer.ByteBuf;
+import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ServiceMapping;
 import org.kin.rsocket.example.User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +27,7 @@ public interface UserService {
      * 测试参数为{@link ByteBuf}
      */
     @GetMapping(value = "/find1")
-    @ServiceMapping(paramEncoding = "application/octet-stream")
+    @ServiceMapping(paramEncoding = RSocketMimeType.BINARY)
     Mono<User> find1(ByteBuf byteBuf);
 
     /**
