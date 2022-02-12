@@ -42,4 +42,7 @@ public interface UserService {
      * request-response
      */
     Mono<User> exception2();
+
+    @ServiceMapping(paramEncoding = "application/vnd.google.protobuf")
+    Mono<Boolean> find3(String name, int age);
 }

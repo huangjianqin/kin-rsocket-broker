@@ -8,6 +8,7 @@ import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
 import org.kin.rsocket.service.RSocketServiceRequester;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author huangjianqin
@@ -25,22 +26,24 @@ public class RequesterApplication {
         RSocketServiceRequester requester = RSocketServiceRequester.builder("MockApp", properties).buildAndInit();
         UserService userService = RSocketServiceReferenceBuilder.requester(UserService.class).upstreamClusterManager(requester).build();
         try {
-            userService.findAll().subscribe(System.out::println);
+            userService.findAll().subscribe(r -> System.out.println("findAll result:" + r));
 
             ByteBuf buffer = Unpooled.buffer();
             buffer.writeBytes("AA".getBytes(StandardCharsets.UTF_8));
-            userService.find1(buffer).subscribe(System.out::println);
+            userService.find1(buffer).subscribe(r -> System.out.println("find1 result:" + r));
 
             userService.find2("AA").subscribe(byteBuf -> {
                 byte[] bytes = new byte[byteBuf.readableBytes()];
                 byteBuf.readBytes(bytes);
 
-                System.out.println(new String(bytes, StandardCharsets.UTF_8));
+                System.out.println("find2 result:" + new String(bytes, StandardCharsets.UTF_8));
             });
 
             userService.exception1();
 
             userService.exception2().subscribe();
+
+            userService.find3("BB", ThreadLocalRandom.current().nextInt(100)).subscribe(r -> System.out.println("find3 result:" + r));
 
             Thread.sleep(1_000);
         } finally {

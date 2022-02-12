@@ -38,14 +38,23 @@ public abstract class AbstractSerializationCodec implements Codec {
     public ByteBuf encodeParams(Object[] args) throws CodecException {
         if (CollectionUtils.isEmpty(args)) {
             return Unpooled.EMPTY_BUFFER;
+        } else if (args.length == 1) {
+            return encodeObj(args[0]);
+        } else {
+            return encodeObj(new ObjectArray(args));
         }
-        return encodeObj(args);
     }
 
     @Override
     public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws CodecException {
-        // TODO: 2022/1/16  pb是否支持反序列化object[], 如果实在不行就在README写注释
-        return decodeObj(data, targetClasses[0]);
+        int len = targetClasses.length;
+        if (len == 0) {
+            return null;
+        } else if (len == 1) {
+            return decodeObj(data, targetClasses[0]);
+        } else {
+            return ((ObjectArray) decodeObj(data, ObjectArray.class)).getObjects();
+        }
     }
 
     @Override

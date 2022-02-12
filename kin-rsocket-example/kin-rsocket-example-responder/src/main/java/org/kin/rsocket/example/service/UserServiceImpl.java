@@ -84,4 +84,9 @@ public class UserServiceImpl implements UserService {
     public Mono<User> exception2() {
         throw new IllegalStateException("service logic encounter exception");
     }
+
+    @Override
+    public Mono<Boolean> find3(String name, int age) {
+        return find(name).map(u -> u.getName().equals(name) && u.getAge() == age);
+    }
 }
