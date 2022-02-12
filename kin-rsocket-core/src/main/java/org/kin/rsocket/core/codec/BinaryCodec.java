@@ -40,11 +40,11 @@ public class BinaryCodec implements Codec {
             if (result instanceof ByteBuf) {
                 return (ByteBuf) result;
             } else if (result instanceof ByteBuffer) {
-                ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+                ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
                 byteBuf.writeBytes(((ByteBuffer) result));
                 return byteBuf;
             } else if (result instanceof byte[]) {
-                ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+                ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
                 byteBuf.writeBytes(((byte[]) result));
                 return byteBuf;
             } else {

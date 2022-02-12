@@ -19,6 +19,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.checkerframework.checker.units.qual.C;
 import org.kin.framework.utils.ExceptionUtils;
+import org.kin.rsocket.core.codec.Codec;
 import org.kin.rsocket.core.codec.CodecException;
 import org.kin.rsocket.core.event.CloudEventData;
 
@@ -238,7 +239,7 @@ public class JSON {
      * 将Obj通过json序列化成{@link ByteBuf}
      */
     public static ByteBuf writeByteBuf(Object object) {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(Codec.DEFAULT_BUFFER_SIZE);
         try {
             ByteBufOutputStream bos = new ByteBufOutputStream(byteBuf);
             PARSER.writeValue((OutputStream) bos, object);

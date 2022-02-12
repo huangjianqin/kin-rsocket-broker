@@ -22,7 +22,7 @@ public abstract class AbstractSerializationCodec implements Codec {
      * 序列化对象
      */
     private ByteBuf encodeObj(Object obj) {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
         byteBuf.writeBytes(serialization.serialize(obj));
         return byteBuf;
     }

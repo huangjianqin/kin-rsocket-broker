@@ -83,7 +83,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
 
     @Override
     public ByteBuf getContent() {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(64);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(128);
         //利用protobuf压缩整形机制, 减少bytes体积, 提高性能
         VarIntUtils.writeRawVarInt32(byteBuf, serviceId);
         VarIntUtils.writeRawVarInt32(byteBuf, handlerId);
@@ -124,7 +124,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         ByteBuf content = getContent();
         int capacity = 4 + content.readableBytes();
 
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(capacity, capacity);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(capacity);
         byteBuf.writeByte(BINARY_ROUTING_MARK);
         NumberUtils.encodeUnsignedMedium(byteBuf, capacity - 4);
         byteBuf.writeBytes(content);

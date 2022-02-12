@@ -56,7 +56,8 @@ public final class RSocketCompositeMetadata implements MetadataAware {
 
     @Override
     public ByteBuf getContent() {
-        CompositeByteBuf compositeByteBuf = PooledByteBufAllocator.DEFAULT.compositeBuffer();
+        //假设平均每个metadata size=256
+        CompositeByteBuf compositeByteBuf = PooledByteBufAllocator.DEFAULT.compositeBuffer(metadataBytesStore.size() * 256);
         for (Map.Entry<String, ByteBuf> entry : metadataBytesStore.entrySet()) {
             WellKnownMimeType wellKnownMimeType = WellKnownMimeType.fromString(entry.getKey());
             if (wellKnownMimeType != UNPARSEABLE_MIME_TYPE) {

@@ -34,7 +34,7 @@ public final class CacheControlMetadata implements MetadataAware {
 
     @Override
     public ByteBuf getContent() {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(8, 8);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(8);
         byteBuf.writeLong(expiredAt);
         return byteBuf;
     }

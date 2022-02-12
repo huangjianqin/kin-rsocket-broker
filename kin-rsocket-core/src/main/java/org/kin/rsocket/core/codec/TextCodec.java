@@ -23,7 +23,7 @@ public class TextCodec implements Codec {
         if (CollectionUtils.isEmpty(args)) {
             return Unpooled.EMPTY_BUFFER;
         }
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
         byteBuf.writeBytes(stringToBytes(args[0]));
         return byteBuf;
     }
@@ -41,7 +41,7 @@ public class TextCodec implements Codec {
         if (result == null) {
             return Unpooled.EMPTY_BUFFER;
         }
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(256);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
         byteBuf.writeBytes(stringToBytes(result));
         return byteBuf;
     }

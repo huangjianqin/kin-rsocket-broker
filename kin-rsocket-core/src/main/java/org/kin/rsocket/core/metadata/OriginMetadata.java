@@ -37,7 +37,7 @@ public final class OriginMetadata implements MetadataAware {
     @Override
     public ByteBuf getContent() {
         byte[] bytes = this.origin.toString().getBytes(StandardCharsets.UTF_8);
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(bytes.length, bytes.length);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(bytes.length);
         byteBuf.writeBytes(bytes);
         return byteBuf;
     }

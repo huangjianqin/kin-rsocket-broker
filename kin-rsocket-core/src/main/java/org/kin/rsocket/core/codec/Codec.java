@@ -10,6 +10,9 @@ import org.kin.rsocket.core.RSocketMimeType;
  */
 @SPI(alias = "codec")
 public interface Codec {
+    /** 默认buffer size */
+    int DEFAULT_BUFFER_SIZE = 256;
+
     /**
      * rsocket mime type
      *
