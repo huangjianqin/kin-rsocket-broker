@@ -262,3 +262,8 @@ rsocket broker相当于注册中心, 每个消费者挂上 ```kin-rsocket-regist
 ## **展望**
 
 * 简化创建RSocket service refernce bean操作
+
+## 注意
+
+项目fork form [alibaba-rsocket-broker](https://github.com/alibaba/alibaba-rsocket-broker). broker核心逻辑没有大改动,
+修改provider和consumer端对外api逻辑. 目前仅用作本人对reactive编程和rsocket学习.
