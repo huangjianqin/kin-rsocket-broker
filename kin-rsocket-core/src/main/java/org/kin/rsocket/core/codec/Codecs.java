@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.framework.utils.ExtensionLoader;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -35,7 +35,7 @@ public final class Codecs {
         ImmutableMap.Builder<RSocketMimeType, Codec> codecBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<RSocketMimeType, ByteBuf> mimeTypeMetadataBytesBuilder = ImmutableMap.builder();
         //通过spi加载codec实现类
-        for (Codec codec : RSocketAppContext.LOADER.getExtensions(Codec.class)) {
+        for (Codec codec : ExtensionLoader.getExtensions(Codec.class)) {
             RSocketMimeType mimeType = codec.mimeType();
             codecBuilder.put(codec.mimeType(), codec);
 

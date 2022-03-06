@@ -15,6 +15,7 @@ import io.rsocket.plugins.RequestInterceptor;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.ConcurrentHashSet;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.ExtensionLoader;
 import org.kin.rsocket.core.codec.Codecs;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
@@ -139,7 +140,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
      */
     private UpstreamLoadBalance tryLoadUpstreamLoadBalance(String loadBalanceStrategy) {
         //默认round-robin
-        return RSocketAppContext.LOADER.getExtensionOrDefault(UpstreamLoadBalance.class, loadBalanceStrategy);
+        return ExtensionLoader.getExtensionOrDefault(UpstreamLoadBalance.class, loadBalanceStrategy);
     }
 
     /** 刷新Rsocket实例 */

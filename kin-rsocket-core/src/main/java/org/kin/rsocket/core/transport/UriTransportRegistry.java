@@ -2,7 +2,7 @@ package org.kin.rsocket.core.transport;
 
 import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.ServerTransport;
-import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.framework.utils.ExtensionLoader;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -30,7 +30,7 @@ public final class UriTransportRegistry {
     private final List<Uri2TransportParser> handlers;
 
     private UriTransportRegistry() {
-        List<Uri2TransportParser> extensions = RSocketAppContext.LOADER.getExtensions(Uri2TransportParser.class);
+        List<Uri2TransportParser> extensions = ExtensionLoader.getExtensions(Uri2TransportParser.class);
         handlers = Collections.unmodifiableList(extensions);
     }
 
