@@ -27,16 +27,6 @@ public class WeightedStatsRouter implements ProviderRouter {
     /** key -> serviceId, value -> {@link WeightedInstance} list */
     private FastListMultimap<Integer, WeightedInstance> serviceId2WeightedInstances = new FastListMultimap<>();
 
-    private final int maxPairSelectionAttempts;
-
-    public WeightedStatsRouter() {
-        this(5);
-    }
-
-    public WeightedStatsRouter(int maxPairSelectionAttempts) {
-        this.maxPairSelectionAttempts = maxPairSelectionAttempts;
-    }
-
     @Override
     public Integer route(int serviceId) {
         MutableList<WeightedInstance> weightedInstances = serviceId2WeightedInstances.get(serviceId);
