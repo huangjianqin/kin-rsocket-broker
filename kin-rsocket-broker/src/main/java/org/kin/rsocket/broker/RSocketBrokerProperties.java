@@ -58,7 +58,7 @@ public class RSocketBrokerProperties {
         }
 
         //如果配置的jwt token文件路径, 则加载进来并覆盖
-        upstreamToken = FileUtils.readFileToString(upstreamTokenFile, StandardCharsets.UTF_8);
+        upstreamToken = FileUtils.readFileToString(upstreamTokenFile, StandardCharsets.UTF_8.toString());
     }
 
     //setter && getter

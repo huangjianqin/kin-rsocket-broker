@@ -121,9 +121,9 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             if (this.filterChain.isFiltersPresent()) {
                 RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.appMetadata, payload);
                 //filter可能会改变gsv metadata的数据, 影响路由结果
-                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata, payload.data()));
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
             } else {
-                destination = findDestination(gsvRoutingMetadata, payload.data());
+                destination = findDestination(gsvRoutingMetadata);
             }
 
             //call destination
@@ -189,9 +189,9 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             if (this.filterChain.isFiltersPresent()) {
                 RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.appMetadata, payload);
                 //filter可能会改变gsv metadata的数据, 影响路由结果
-                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata, payload.data()));
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
             } else {
-                destination = findDestination(gsvRoutingMetadata, payload.data());
+                destination = findDestination(gsvRoutingMetadata);
             }
 
             //call destination
@@ -257,9 +257,9 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             if (this.filterChain.isFiltersPresent()) {
                 RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.appMetadata, payload);
                 //filter可能会改变gsv metadata的数据, 影响路由结果
-                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata, payload.data()));
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
             } else {
-                destination = findDestination(gsvRoutingMetadata, payload.data());
+                destination = findDestination(gsvRoutingMetadata);
             }
 
             return destination.flatMapMany(rsocket -> {
@@ -300,7 +300,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
             }
 
-            Mono<RSocket> destination = findDestination(gsvRoutingMetadata, signal.data());
+            Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
             return destination.flatMapMany(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
                 if (Objects.isNull(binaryRoutingMetadata)) {
@@ -381,7 +381,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
     /**
      * 寻找目标服务provider instance
      */
-    private Mono<RSocket> findDestination(GSVRoutingMetadata routingMetaData, ByteBuf paramBytes) {
+    private Mono<RSocket> findDestination(GSVRoutingMetadata routingMetaData) {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
             Integer serviceId = routingMetaData.serviceId();
@@ -407,7 +407,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", serviceErrorMsg, endpoint));
                     }
                 } else {
-                    targetResponder = serviceManager.routeByServiceId(serviceId, paramBytes);
+                    targetResponder = serviceManager.routeByServiceId(serviceId);
                     if (Objects.isNull(targetResponder)) {
                         error = new InvalidException(String.format("Service not found '%s'", serviceErrorMsg));
                     }

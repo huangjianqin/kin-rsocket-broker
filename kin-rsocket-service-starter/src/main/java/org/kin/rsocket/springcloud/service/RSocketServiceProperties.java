@@ -28,6 +28,6 @@ public class RSocketServiceProperties extends org.kin.rsocket.service.RSocketSer
         }
 
         //如果配置的jwt token文件路径, 则加载进来并覆盖
-        setJwtToken(FileUtils.readFileToString(jwtTokenFile, StandardCharsets.UTF_8));
+        setJwtToken(FileUtils.readFileToString(jwtTokenFile, StandardCharsets.UTF_8.toString()));
     }
 }

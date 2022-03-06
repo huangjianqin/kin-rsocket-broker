@@ -1,6 +1,5 @@
 package org.kin.rsocket.broker;
 
-import io.netty.buffer.ByteBuf;
 import io.rsocket.RSocket;
 import io.rsocket.loadbalance.WeightedStats;
 import org.eclipse.collections.api.list.MutableList;
@@ -39,7 +38,7 @@ public class WeightedStatsRouter implements ProviderRouter {
     }
 
     @Override
-    public Integer route(int serviceId, ByteBuf paramBytes) {
+    public Integer route(int serviceId) {
         MutableList<WeightedInstance> weightedInstances = serviceId2WeightedInstances.get(serviceId);
         //有效的rsocket service instance
         List<WeightedInstance> vaildInstances = new ArrayList<>();

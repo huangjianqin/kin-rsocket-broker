@@ -207,13 +207,6 @@ public class RSocketBrokerAutoConfiguration {
 
     @Bean("router")
     @ConditionalOnMissingBean
-    @ConditionalOnExpression("'consistentHash'.equals('${kin.rsocket.broker.router}')")
-    public ProviderRouter consistentHashRouter() {
-        return new ConsistentHashRouter();
-    }
-
-    @Bean("router")
-    @ConditionalOnMissingBean
     @ConditionalOnExpression("'weightedStats'.equals('${kin.rsocket.broker.router}')")
     public ProviderRouter weightedStatsRouter() {
         return new WeightedStatsRouter();

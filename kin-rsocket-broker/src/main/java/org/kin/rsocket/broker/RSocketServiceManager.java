@@ -1,7 +1,6 @@
 package org.kin.rsocket.broker;
 
 import io.micrometer.core.instrument.Metrics;
-import io.netty.buffer.ByteBuf;
 import io.netty.util.collection.IntObjectHashMap;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
@@ -336,8 +335,8 @@ public final class RSocketServiceManager {
     /**
      * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
      */
-    public BrokerResponder routeByServiceId(int serviceId, ByteBuf paramBytes) {
-        Integer instanceId = router.route(serviceId, paramBytes);
+    public BrokerResponder routeByServiceId(int serviceId) {
+        Integer instanceId = router.route(serviceId);
         if (Objects.nonNull(instanceId)) {
             return instanceId2Responder.get(instanceId);
         } else {

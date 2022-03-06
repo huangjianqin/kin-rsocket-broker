@@ -1,6 +1,5 @@
 package org.kin.rsocket.broker;
 
-import io.netty.buffer.ByteBuf;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.kin.framework.utils.CollectionUtils;
@@ -23,7 +22,7 @@ public class WeightedRoundRobinRouter implements ProviderRouter {
     private FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>();
 
     @Override
-    public Integer route(int serviceId, ByteBuf paramBytes) {
+    public Integer route(int serviceId) {
         MutableList<WeightedRoundRobin> weightedRoundRobins = serviceId2WeightedRoundRobins.get(serviceId);
         if (CollectionUtils.isEmpty(weightedRoundRobins)) {
             return null;
