@@ -36,8 +36,8 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class BrokerResponder implements CloudEventRSocket {
-    private static final Logger log = LoggerFactory.getLogger(BrokerResponder.class);
+public final class RSocketEndpoint implements CloudEventRSocket {
+    private static final Logger log = LoggerFactory.getLogger(RSocketEndpoint.class);
     /** app metadata */
     private final AppMetadata appMetadata;
     /**
@@ -56,10 +56,10 @@ public final class BrokerResponder implements CloudEventRSocket {
     private final Set<ServiceLocator> peerServices;
     /** app status */
     private AppStatus appStatus = AppStatus.CONNECTED;
-    /** requester请求处理handler */
+    /** rsocket consumer请求处理handler */
     private final RSocketServiceRequestHandler requestHandler;
 
-    public BrokerResponder(RSocketCompositeMetadata compositeMetadata,
+    public RSocketEndpoint(RSocketCompositeMetadata compositeMetadata,
                            AppMetadata appMetadata,
                            RSocket requester,
                            RSocketServiceManager serviceManager,

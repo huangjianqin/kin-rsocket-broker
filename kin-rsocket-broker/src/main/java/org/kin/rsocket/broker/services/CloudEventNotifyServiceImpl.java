@@ -1,6 +1,6 @@
 package org.kin.rsocket.broker.services;
 
-import org.kin.rsocket.broker.BrokerResponder;
+import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.event.CloudEventNotifyService;
@@ -21,9 +21,9 @@ public class CloudEventNotifyServiceImpl implements CloudEventNotifyService {
 
     @Override
     public Mono<Void> notify(String appId, String cloudEventJson) {
-        BrokerResponder responder = serviceManager.getByUUID(appId);
-        if (Objects.nonNull(responder)) {
-            return responder.fireCloudEvent(cloudEventJson);
+        RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(appId);
+        if (Objects.nonNull(rsocketEndpoint)) {
+            return rsocketEndpoint.fireCloudEvent(cloudEventJson);
         } else {
             return Mono.empty();
         }

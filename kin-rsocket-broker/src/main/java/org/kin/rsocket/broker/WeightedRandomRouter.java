@@ -41,9 +41,9 @@ public class WeightedRandomRouter implements ProviderRouter {
     }
 
     @Override
-    public void onAppRegistered(BrokerResponder responder, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(RSocketEndpoint rsocketEndpoint, int weight, Collection<ServiceLocator> services) {
         //copy on write
-        int instanceId = responder.getId();
+        int instanceId = rsocketEndpoint.getId();
         FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>(this.serviceId2InstanceIds);
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();

@@ -1,6 +1,6 @@
 package org.kin.rsocket.broker.controller;
 
-import org.kin.rsocket.broker.BrokerResponder;
+import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
@@ -42,8 +42,8 @@ public class OprController {
 
     @RequestMapping("/connections")
     public Mono<Map<String, Collection<String>>> connections() {
-        return Flux.fromIterable(serviceManager.getAllResponders())
-                .map(BrokerResponder::getAppMetadata)
+        return Flux.fromIterable(serviceManager.getAllRSocketEndpoints())
+                .map(RSocketEndpoint::getAppMetadata)
                 .collectMultimap(AppMetadata::getName, AppMetadata::getIp);
     }
 

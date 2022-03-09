@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
-import org.kin.rsocket.broker.BrokerResponder;
+import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.RSocketServiceInfoSupport;
@@ -56,12 +56,12 @@ public class RSocketServiceQueryController {
                                         @PathVariable(name = "service") String service,
                                         @RequestParam(name = "version", defaultValue = "") String version) {
         ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8));
-        BrokerResponder brokerResponder = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
-        if (Objects.nonNull(brokerResponder)) {
+        RSocketEndpoint RSocketEndpoint = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
+        if (Objects.nonNull(RSocketEndpoint)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
-            return brokerResponder
+            return RSocketEndpoint
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(Payload::getDataUtf8);
         }

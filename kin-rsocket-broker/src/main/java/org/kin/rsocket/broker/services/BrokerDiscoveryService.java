@@ -1,6 +1,6 @@
 package org.kin.rsocket.broker.services;
 
-import org.kin.rsocket.broker.BrokerResponder;
+import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
@@ -63,8 +63,8 @@ public class BrokerDiscoveryService implements DiscoveryService {
     /**
      * 构建{@link RSocketServiceInstance}实例
      */
-    private RSocketServiceInstance newServiceInstance(BrokerResponder responder) {
-        AppMetadata appMetadata = responder.getAppMetadata();
+    private RSocketServiceInstance newServiceInstance(RSocketEndpoint rsocketEndpoint) {
+        AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
         RSocketServiceInstance serviceInstance = new RSocketServiceInstance();
         serviceInstance.setInstanceId(appMetadata.getUuid());
         serviceInstance.setServiceId(appMetadata.getName());

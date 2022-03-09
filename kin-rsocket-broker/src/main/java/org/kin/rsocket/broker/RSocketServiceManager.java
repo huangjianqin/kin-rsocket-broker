@@ -66,12 +66,12 @@ public final class RSocketServiceManager {
 
     /** 修改数据需加锁 */
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    /** key -> hash(app instance UUID), value -> 对应responder */
-    private Map<Integer, BrokerResponder> instanceId2Responder = new UnifiedMap<>();
-    /** key -> app instance UUID, value -> 对应responder */
-    private Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>();
-    /** key -> app name, value -> responder list */
-    private FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>();
+    /** key -> hash(app instance UUID), value -> 对应rsocket endpoint */
+    private Map<Integer, RSocketEndpoint> instanceId2Endpoint = new UnifiedMap<>();
+    /** key -> app instance UUID, value -> 对应rsocket endpoint */
+    private Map<String, RSocketEndpoint> uuid2Endpoint = new UnifiedMap<>();
+    /** key -> app name, value -> rsocket endpoint list */
+    private FastListMultimap<String, RSocketEndpoint> appName2Endpoint = new FastListMultimap<>();
 
     /** key -> serviceId, value -> service info */
     private IntObjectHashMap<ServiceLocator> services = new IntObjectHashMap<>();
@@ -107,22 +107,22 @@ public final class RSocketServiceManager {
         this.router = router;
         this.p2pServiceNotificationSink = p2pServiceNotificationSink;
 
-        Metrics.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appResponders.size());
+        Metrics.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appName2Endpoint.size());
         Metrics.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_COUNT, this,
-                manager -> manager.appResponders.valuesView()
-                        .sumOfInt(responder -> (responder.isPublishServicesOnly() || responder.isConsumeAndPublishServices()) ? 0 : 1));
+                manager -> manager.appName2Endpoint.valuesView()
+                        .sumOfInt(rsocketEndpoint -> (rsocketEndpoint.isPublishServicesOnly() || rsocketEndpoint.isConsumeAndPublishServices()) ? 0 : 1));
         Metrics.gauge(MetricsNames.BROKER_SERVICE_COUNT, this, manager -> manager.services.size());
     }
 
     /**
-     * 返回broker端口 responder acceptor
+     * 返回broker端口 rsocket endpoint acceptor
      */
     public SocketAcceptor acceptor() {
         return this::acceptor;
     }
 
     /**
-     * service responder acceptor逻辑
+     * service rsocket endpoint acceptor逻辑
      */
     @SuppressWarnings("ConstantConditions")
     @Nonnull
@@ -193,19 +193,19 @@ public final class RSocketServiceManager {
         if (errorMsg != null) {
             return returnRejectedRSocket(errorMsg, requester);
         }
-        //create responder
+        //create rsocket endpoint
         try {
             RSocketServiceRequestHandler requestHandler = new RSocketServiceRequestHandler(setupPayload, appMetadata, principal,
                     this, serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
-            BrokerResponder responder = new BrokerResponder(compositeMetadata, appMetadata, requester, this, requestHandler);
-            responder.onClose()
-                    .doOnTerminate(() -> onResponderDisposed(responder))
+            RSocketEndpoint rsocketEndpoint = new RSocketEndpoint(compositeMetadata, appMetadata, requester, this, requestHandler);
+            rsocketEndpoint.onClose()
+                    .doOnTerminate(() -> onRSocketEndpointDisposed(rsocketEndpoint))
                     .subscribeOn(Schedulers.parallel())
                     .subscribe();
             //handler registration notify
-            registerResponder(responder);
+            registerRSocketEndpoint(rsocketEndpoint);
             //connect success, so publish service now
-            responder.publishServices();
+            rsocketEndpoint.publishServices();
             log.info(String.format("succeed to accept connection from application '%s'", appMetadata.getName()));
             return Mono.just(requestHandler);
         } catch (Exception e) {
@@ -218,33 +218,33 @@ public final class RSocketServiceManager {
     /**
      * 注册downstream信息
      */
-    private void registerResponder(BrokerResponder responder) {
-        AppMetadata appMetadata = responder.getAppMetadata();
+    private void registerRSocketEndpoint(RSocketEndpoint rsocketEndpoint) {
+        AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
 
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
             //copy on write
-            Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>(this.uuid2Responder);
-            uuid2Responder.put(appMetadata.getUuid(), responder);
+            Map<String, RSocketEndpoint> uuid2Endpoint = new UnifiedMap<>(this.uuid2Endpoint);
+            uuid2Endpoint.put(appMetadata.getUuid(), rsocketEndpoint);
 
-            Integer instanceId = responder.getId();
+            Integer instanceId = rsocketEndpoint.getId();
 
-            Map<Integer, BrokerResponder> instanceId2Responder = new UnifiedMap<>(this.instanceId2Responder);
-            instanceId2Responder.put(instanceId, responder);
+            Map<Integer, RSocketEndpoint> instanceId2Endpoint = new UnifiedMap<>(this.instanceId2Endpoint);
+            instanceId2Endpoint.put(instanceId, rsocketEndpoint);
 
-            FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>(this.appResponders);
-            appResponders.put(appMetadata.getName(), responder);
+            FastListMultimap<String, RSocketEndpoint> appName2Endpoint = new FastListMultimap<>(this.appName2Endpoint);
+            appName2Endpoint.put(appMetadata.getName(), rsocketEndpoint);
 
             UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>(this.p2pServiceConsumers);
             for (String p2pService : appMetadata.getP2pServiceIds()) {
                 p2pServiceConsumers.put(p2pService, instanceId);
-                responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
+                rsocketEndpoint.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
             }
 
-            this.uuid2Responder = uuid2Responder;
-            this.instanceId2Responder = instanceId2Responder;
-            this.appResponders = appResponders;
+            this.uuid2Endpoint = uuid2Endpoint;
+            this.instanceId2Endpoint = instanceId2Endpoint;
+            this.appName2Endpoint = appName2Endpoint;
             this.p2pServiceConsumers = p2pServiceConsumers;
         } finally {
             writeLock.unlock();
@@ -253,40 +253,40 @@ public final class RSocketServiceManager {
         RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(AppStatusEvent.connected(appMetadata.getUuid()).toCloudEvent());
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
-            responder.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
+            rsocketEndpoint.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
         }
         notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' online now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
     /**
-     * {@link BrokerResponder} disposed时触发的逻辑
+     * {@link RSocketEndpoint} disposed时触发的逻辑
      */
-    private void onResponderDisposed(BrokerResponder responder) {
-        AppMetadata appMetadata = responder.getAppMetadata();
+    private void onRSocketEndpointDisposed(RSocketEndpoint rsocketEndpoint) {
+        AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
 
         Lock writeLock = lock.writeLock();
         writeLock.lock();
         try {
             //copy on write
-            Map<String, BrokerResponder> uuid2Responder = new UnifiedMap<>(this.uuid2Responder);
-            uuid2Responder.remove(responder.getUuid());
+            Map<String, RSocketEndpoint> uuid2Endpoint = new UnifiedMap<>(this.uuid2Endpoint);
+            uuid2Endpoint.remove(rsocketEndpoint.getUuid());
 
-            Integer instanceId = responder.getId();
+            Integer instanceId = rsocketEndpoint.getId();
 
-            Map<Integer, BrokerResponder> instanceId2Responder = new UnifiedMap<>(this.instanceId2Responder);
-            instanceId2Responder.remove(instanceId);
+            Map<Integer, RSocketEndpoint> instanceId2Endpoint = new UnifiedMap<>(this.instanceId2Endpoint);
+            instanceId2Endpoint.remove(instanceId);
 
-            FastListMultimap<String, BrokerResponder> appResponders = new FastListMultimap<>(this.appResponders);
-            appResponders.remove(appMetadata.getName(), responder);
+            FastListMultimap<String, RSocketEndpoint> appName2Endpoint = new FastListMultimap<>(this.appName2Endpoint);
+            appName2Endpoint.remove(appMetadata.getName(), rsocketEndpoint);
 
             UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>(this.p2pServiceConsumers);
             for (String p2pService : appMetadata.getP2pServiceIds()) {
                 p2pServiceConsumers.remove(p2pService, instanceId);
             }
 
-            this.uuid2Responder = uuid2Responder;
-            this.instanceId2Responder = instanceId2Responder;
-            this.appResponders = appResponders;
+            this.uuid2Endpoint = uuid2Endpoint;
+            this.instanceId2Endpoint = instanceId2Endpoint;
+            this.appName2Endpoint = appName2Endpoint;
             this.p2pServiceConsumers = p2pServiceConsumers;
         } finally {
             writeLock.unlock();
@@ -301,44 +301,44 @@ public final class RSocketServiceManager {
      * 获取所有app names
      */
     public Set<String> getAllAppNames() {
-        return appResponders.keySet().toSet();
+        return appName2Endpoint.keySet().toSet();
     }
 
     /**
-     * 获取所有已注册的{@link BrokerResponder}
+     * 获取所有已注册的{@link RSocketEndpoint}
      */
-    public Collection<BrokerResponder> getAllResponders() {
-        return Collections.unmodifiableCollection(uuid2Responder.values());
+    public Collection<RSocketEndpoint> getAllRSocketEndpoints() {
+        return Collections.unmodifiableCollection(uuid2Endpoint.values());
     }
 
     /**
-     * 根据app name 获取所有已注册的{@link BrokerResponder}
+     * 根据app name 获取所有已注册的{@link RSocketEndpoint}
      */
-    public Collection<BrokerResponder> getByAppName(String appName) {
-        return Collections.unmodifiableCollection(appResponders.get(appName));
+    public Collection<RSocketEndpoint> getByAppName(String appName) {
+        return Collections.unmodifiableCollection(appName2Endpoint.get(appName));
     }
 
     /**
-     * 根据app uuid 获取已注册的{@link BrokerResponder}
+     * 根据app uuid 获取已注册的{@link RSocketEndpoint}
      */
-    public BrokerResponder getByUUID(String uuid) {
-        return uuid2Responder.get(uuid);
+    public RSocketEndpoint getByUUID(String uuid) {
+        return uuid2Endpoint.get(uuid);
     }
 
     /**
-     * 根据app instanceId 获取已注册的{@link BrokerResponder}
+     * 根据app instanceId 获取已注册的{@link RSocketEndpoint}
      */
-    public BrokerResponder getByInstanceId(int instanceId) {
-        return instanceId2Responder.get(instanceId);
+    public RSocketEndpoint getByInstanceId(int instanceId) {
+        return instanceId2Endpoint.get(instanceId);
     }
 
     /**
-     * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link BrokerResponder}
+     * 根据serviceId, 随机获取instanceId, 然后返回对应的已注册的{@link RSocketEndpoint}
      */
-    public BrokerResponder routeByServiceId(int serviceId) {
+    public RSocketEndpoint routeByServiceId(int serviceId) {
         Integer instanceId = router.route(serviceId);
         if (Objects.nonNull(instanceId)) {
-            return instanceId2Responder.get(instanceId);
+            return instanceId2Endpoint.get(instanceId);
         } else {
             return null;
         }
@@ -349,17 +349,17 @@ public final class RSocketServiceManager {
      */
     public Mono<Void> broadcast(String appName, CloudEventData<?> cloudEvent) {
         if (appName.equals(Symbols.BROKER)) {
-            return Flux.<BrokerResponder>create(s -> {
-                for (BrokerResponder brokerResponder : instanceId2Responder.values()) {
-                    s.next(brokerResponder);
+            return Flux.<RSocketEndpoint>create(s -> {
+                for (RSocketEndpoint RSocketEndpoint : instanceId2Endpoint.values()) {
+                    s.next(RSocketEndpoint);
                 }
-            }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
-        } else if (appResponders.containsKey(appName)) {
-            return Flux.<BrokerResponder>create(s -> {
-                for (BrokerResponder brokerResponder : appResponders.get(appName)) {
-                    s.next(brokerResponder);
+            }).flatMap(rsocketEndpoint -> rsocketEndpoint.fireCloudEvent(cloudEvent)).then();
+        } else if (appName2Endpoint.containsKey(appName)) {
+            return Flux.<RSocketEndpoint>create(s -> {
+                for (RSocketEndpoint RSocketEndpoint : appName2Endpoint.get(appName)) {
+                    s.next(RSocketEndpoint);
                 }
-            }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
+            }).flatMap(rsocketEndpoint -> rsocketEndpoint.fireCloudEvent(cloudEvent)).then();
         } else {
             return Mono.error(new ApplicationErrorException("Application not found: appName=" + appName));
         }
@@ -369,20 +369,20 @@ public final class RSocketServiceManager {
      * 向所有已注册的app广播cloud event
      */
     public Mono<Void> broadcast(CloudEventData<?> cloudEvent) {
-        return Flux.<BrokerResponder>create(s -> {
-            for (BrokerResponder brokerResponder : appResponders.valuesView()) {
-                s.next(brokerResponder);
+        return Flux.<RSocketEndpoint>create(s -> {
+            for (RSocketEndpoint RSocketEndpoint : appName2Endpoint.valuesView()) {
+                s.next(RSocketEndpoint);
             }
-        }).flatMap(responder -> responder.fireCloudEvent(cloudEvent)).then();
+        }).flatMap(rsocketEndpoint -> rsocketEndpoint.fireCloudEvent(cloudEvent)).then();
     }
 
     /**
      * 向指定uuid的app广播cloud event
      */
     public Mono<Void> send(String uuid, CloudEventData<?> cloudEvent) {
-        BrokerResponder responder = uuid2Responder.get(uuid);
-        if (responder != null) {
-            return responder.fireCloudEvent(cloudEvent);
+        RSocketEndpoint rsocketEndpoint = uuid2Endpoint.get(uuid);
+        if (rsocketEndpoint != null) {
+            return rsocketEndpoint.fireCloudEvent(cloudEvent);
         } else {
             return Mono.error(new ApplicationErrorException("Application not found: app uuid=" + uuid));
         }
@@ -432,17 +432,17 @@ public final class RSocketServiceManager {
     private Flux<Void> broadcastClusterTopology(Collection<BrokerInfo> brokerInfos) {
         CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTRANET);
         CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTERNET);
-        return Flux.fromIterable(getAllResponders()).flatMap(responder -> {
-            String topology = responder.getAppMetadata().getTopology();
+        return Flux.fromIterable(getAllRSocketEndpoints()).flatMap(rsocketEndpoint -> {
+            String topology = rsocketEndpoint.getAppMetadata().getTopology();
             Mono<Void> fireEvent;
             if (Topologys.INTERNET.equals(topology)) {
-                fireEvent = responder.fireCloudEvent(brokerClusterAliasesEvent);
+                fireEvent = rsocketEndpoint.fireCloudEvent(brokerClusterAliasesEvent);
             } else {
-                fireEvent = responder.fireCloudEvent(brokerClustersEvent);
+                fireEvent = rsocketEndpoint.fireCloudEvent(brokerClustersEvent);
             }
-            if (responder.isPublishServicesOnly()) {
+            if (rsocketEndpoint.isPublishServicesOnly()) {
                 return fireEvent;
-            } else if (responder.isConsumeAndPublishServices()) {
+            } else if (rsocketEndpoint.isConsumeAndPublishServices()) {
                 return fireEvent.delayElement(Duration.ofSeconds(15));
             } else {
                 //consume services only
@@ -610,9 +610,9 @@ public final class RSocketServiceManager {
     }
 
     /**
-     * 根据serviceId获取其所有已注册的{@link BrokerResponder}
+     * 根据serviceId获取其所有已注册的{@link RSocketEndpoint}
      */
-    public Collection<BrokerResponder> getAllByServiceId(int serviceId) {
+    public Collection<RSocketEndpoint> getAllByServiceId(int serviceId) {
         return getAllInstanceIds(serviceId).stream()
                 .map(this::getByInstanceId)
                 .filter(Objects::nonNull)
@@ -647,16 +647,16 @@ public final class RSocketServiceManager {
 
         List<String> uris = new ArrayList<>(8);
         for (Integer instanceId : instanceIdList) {
-            BrokerResponder responder = getByInstanceId(instanceId);
-            if (Objects.isNull(responder)) {
+            RSocketEndpoint rsocketEndpoint = getByInstanceId(instanceId);
+            if (Objects.isNull(rsocketEndpoint)) {
                 continue;
             }
 
-            Map<Integer, String> rsocketPorts = responder.getAppMetadata().getRsocketPorts();
+            Map<Integer, String> rsocketPorts = rsocketEndpoint.getAppMetadata().getRsocketPorts();
             if (rsocketPorts != null && !rsocketPorts.isEmpty()) {
                 //组装成uri
                 Map.Entry<Integer, String> entry = rsocketPorts.entrySet().stream().findFirst().get();
-                String uri = entry.getValue() + "://" + responder.getAppMetadata().getIp() + ":" + entry.getKey();
+                String uri = entry.getValue() + "://" + rsocketEndpoint.getAppMetadata().getIp() + ":" + entry.getKey();
                 uris.add(uri);
             }
         }
@@ -682,9 +682,9 @@ public final class RSocketServiceManager {
         CloudEventData<ServiceInstanceChangedEvent> cloudEvent = newServiceInstanceChangedCloudEvent(gsv);
         return Flux.fromIterable(getP2pServiceConsumerInstanceIds(gsv))
                 .flatMap(instanceId -> {
-                    BrokerResponder responder = getByInstanceId(instanceId);
-                    if (Objects.nonNull(responder)) {
-                        return responder.fireCloudEvent(cloudEvent);
+                    RSocketEndpoint rsocketEndpoint = getByInstanceId(instanceId);
+                    if (Objects.nonNull(rsocketEndpoint)) {
+                        return rsocketEndpoint.fireCloudEvent(cloudEvent);
                     } else {
                         return Mono.empty();
                     }
@@ -695,10 +695,10 @@ public final class RSocketServiceManager {
      * 更新指定app应用开启的p2p服务gsv
      */
     public void updateP2pServiceConsumers(String appId, Set<String> p2pServiceIds) {
-        BrokerResponder responder = getByUUID(appId);
-        if (responder != null) {
-            AppMetadata appMetadata = responder.getAppMetadata();
-            Integer instanceId = responder.getId();
+        RSocketEndpoint rsocketEndpoint = getByUUID(appId);
+        if (rsocketEndpoint != null) {
+            AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
+            Integer instanceId = rsocketEndpoint.getId();
             appMetadata.updateP2pServiceIds(p2pServiceIds);
 
             Lock writeLock = lock.writeLock();
@@ -709,7 +709,7 @@ public final class RSocketServiceManager {
 
                 for (String p2pService : appMetadata.getP2pServiceIds()) {
                     p2pServiceConsumers.put(p2pService, instanceId);
-                    responder.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
+                    rsocketEndpoint.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
                 }
 
                 this.p2pServiceConsumers = p2pServiceConsumers;

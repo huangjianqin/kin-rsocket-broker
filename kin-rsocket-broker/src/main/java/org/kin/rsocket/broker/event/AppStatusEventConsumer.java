@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
-import org.kin.rsocket.broker.BrokerResponder;
 import org.kin.rsocket.broker.ConfWatcher;
+import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
@@ -30,9 +30,9 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
         if (event != null) {
             String appId = event.getId();
             if (appId.equals(UriUtils.getAppUUID(cloudEventData.getAttributes().getSource()))) {
-                BrokerResponder responder = serviceManager.getByUUID(appId);
-                if (Objects.nonNull(responder)) {
-                    AppMetadata appMetadata = responder.getAppMetadata();
+                RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(appId);
+                if (Objects.nonNull(rsocketEndpoint)) {
+                    AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
                     if (event.getStatus().equals(AppStatus.CONNECTED)) {
                         //app connected
                         if (Objects.nonNull(confWatcher)) {
@@ -44,14 +44,14 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                         }
                     } else if (event.getStatus().equals(AppStatus.SERVING)) {
                         //app serving
-                        responder.publishServices();
+                        rsocketEndpoint.publishServices();
                     } else if (event.getStatus().equals(AppStatus.DOWN)) {
                         //app out of service
-                        responder.hideServices();
+                        rsocketEndpoint.hideServices();
                     } else if (event.getStatus().equals(AppStatus.STOPPED)) {
                         //app stopped
-                        responder.hideServices();
-                        responder.setAppStatus(AppStatus.STOPPED);
+                        rsocketEndpoint.hideServices();
+                        rsocketEndpoint.setAppStatus(AppStatus.STOPPED);
                         if (Objects.nonNull(confWatcher)) {
                             confWatcher.tryRemoveInvalidListen();
                         }

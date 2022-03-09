@@ -171,14 +171,14 @@ public class WeightedStatsRouter implements ProviderRouter {
     }
 
     @Override
-    public void onAppRegistered(BrokerResponder responder, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(RSocketEndpoint rsocketEndpoint, int weight, Collection<ServiceLocator> services) {
         //copy on write
-        Integer instanceId = responder.getId();
+        Integer instanceId = rsocketEndpoint.getId();
         FastListMultimap<Integer, WeightedInstance> serviceId2WeightedInstances = new FastListMultimap<>(this.serviceId2WeightedInstances);
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
 
-            serviceId2WeightedInstances.put(serviceId, new WeightedInstance(instanceId, weight, responder.getRequester()));
+            serviceId2WeightedInstances.put(serviceId, new WeightedInstance(instanceId, weight, rsocketEndpoint.getRequester()));
         }
         this.serviceId2WeightedInstances = serviceId2WeightedInstances;
     }

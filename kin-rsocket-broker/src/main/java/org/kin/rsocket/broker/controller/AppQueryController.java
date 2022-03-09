@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.broker.BrokerResponder;
+import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.domain.AppVO;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -29,12 +29,13 @@ public class AppQueryController {
     @GetMapping("/{appName}")
     public Flux<AppVO> query(@PathVariable(name = "appName") String appName) {
         List<AppVO> apps = new ArrayList<>();
-        Collection<BrokerResponder> responders = serviceManager.getByAppName(appName);
-        if (CollectionUtils.isNonEmpty(responders)) {
-            for (BrokerResponder handler : responders) {
-                AppMetadata appMetadata = handler.getAppMetadata();
-                apps.add(appMetadata.toVo());
-            }
+        Collection<RSocketEndpoint> rsocketEndpoints = serviceManager.getByAppName(appName);
+        if (CollectionUtils.isEmpty(rsocketEndpoints)) {
+            return Flux.empty();
+        }
+        for (RSocketEndpoint rsocketEndpoint : rsocketEndpoints) {
+            AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
+            apps.add(appMetadata.toVo());
         }
         return Flux.fromIterable(apps);
     }
