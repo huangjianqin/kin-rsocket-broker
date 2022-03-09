@@ -61,7 +61,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
         String service = routing.getService();
         String handler = routing.getHandler();
         try {
-            ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
+            ReactiveMethodInvoker methodInvoker = LocalRSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.isAsyncReturn()) {
@@ -110,7 +110,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
         String service = routing.getService();
         String handler = routing.getHandler();
 
-        ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
+        ReactiveMethodInvoker methodInvoker = LocalRSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
         if (methodInvoker != null) {
             if (methodInvoker.isAsyncReturn()) {
                 try {
@@ -147,7 +147,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
         String service = routing.getService();
         String handler = routing.getHandler();
         try {
-            ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
+            ReactiveMethodInvoker methodInvoker = LocalRSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
                 Object result = invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
                 //composite data for return value
@@ -177,7 +177,7 @@ public abstract class RequestHandlerSupport extends AbstractRSocket implements L
         String service = routing.getService();
         String handler = routing.getHandler();
         try {
-            ReactiveMethodInvoker methodInvoker = RSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
+            ReactiveMethodInvoker methodInvoker = LocalRSocketServiceRegistry.INSTANCE.getInvoker(routing.handlerId());
             if (methodInvoker != null) {
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {

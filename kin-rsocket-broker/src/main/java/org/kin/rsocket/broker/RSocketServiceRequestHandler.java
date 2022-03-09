@@ -111,7 +111,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             }
 
             // broker local service call
-            if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+            if (LocalRSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
                 //app 与 broker通信使用rsocket connector设置的dataMimeType即可
                 return localRequestResponse(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
             }
@@ -179,7 +179,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             }
 
             // broker local service call
-            if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+            if (LocalRSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
                 //app 与 broker通信使用rsocket connector设置的dataMimeType即可
                 return localFireAndForget(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, payload);
             }
@@ -247,7 +247,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
             }
 
             // broker local service call
-            if (RSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
+            if (LocalRSocketServiceRegistry.INSTANCE.contains(gsvRoutingMetadata.handlerId())) {
                 //app 与 broker通信使用rsocket connector设置的dataMimeType即可
                 return localRequestStream(gsvRoutingMetadata, defaultMessageMimeTypeMetadata, null, payload);
             }

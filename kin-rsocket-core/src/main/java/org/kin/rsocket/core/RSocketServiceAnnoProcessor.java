@@ -65,7 +65,7 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
             version = defaultVersion;
         }
         //注册
-        RSocketServiceRegistry.INSTANCE.addProvider(group, service, version, rsocketServiceAnno.value(), bean, rsocketServiceAnno.tags());
+        LocalRSocketServiceRegistry.INSTANCE.addProvider(group, service, version, rsocketServiceAnno.value(), bean, rsocketServiceAnno.tags());
     }
 
 }

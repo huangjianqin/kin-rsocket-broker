@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 /**
- * 服务注册表, 单例, 仅仅是内部用于存储方法handler映射
+ * 服务注册表, 单例, 仅仅是rsocket service内部用于存储provider方法handler映射
  * <p>
  * handler = 可以是方法名, 也可以是自定义名字
  * handlerId = hash(service.handler)
@@ -31,14 +31,14 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
-    public static final RSocketServiceRegistry INSTANCE = new RSocketServiceRegistry();
+public final class LocalRSocketServiceRegistry implements RSocketServiceInfoSupport {
+    public static final LocalRSocketServiceRegistry INSTANCE = new LocalRSocketServiceRegistry();
 
     /**
      * @return exposed services信息
      */
     public static Set<ServiceLocator> exposedServices() {
-        return RSocketServiceRegistry.INSTANCE.findAllServiceLocators()
+        return LocalRSocketServiceRegistry.INSTANCE.findAllServiceLocators()
                 .stream()
                 //过滤掉local service
                 .filter(l -> !l.getService().equals(HealthCheck.class.getName()))
@@ -66,7 +66,7 @@ public final class RSocketServiceRegistry implements RSocketServiceInfoSupport {
     /** key -> service, value -> reactive service info */
     private volatile Map<String, RSocketServiceInfo> service2Info = new HashMap<>();
 
-    private RSocketServiceRegistry() {
+    private LocalRSocketServiceRegistry() {
         //用于broker可以请求service instance访问其指定服务详细信息
         addProvider("", "", RSocketServiceInfoSupport.class, this, "暴露RSocket Service信息的服务");
     }

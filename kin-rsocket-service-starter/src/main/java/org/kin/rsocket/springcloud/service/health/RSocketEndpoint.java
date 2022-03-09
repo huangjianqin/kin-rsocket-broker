@@ -39,7 +39,7 @@ public final class RSocketEndpoint {
                            UpstreamClusterManager upstreamClusterManager) {
         this.rsocketServiceProperties = rsocketServiceProperties;
         this.upstreamClusterManager = upstreamClusterManager;
-        Set<ServiceLocator> exposedServices = RSocketServiceRegistry.exposedServices();
+        Set<ServiceLocator> exposedServices = LocalRSocketServiceRegistry.exposedServices();
         this.serviceProvider = !exposedServices.isEmpty();
     }
 
@@ -49,7 +49,7 @@ public final class RSocketEndpoint {
         info.put("id", RSocketAppContext.ID);
         info.put("serviceStatus", serviceStatus.getDesc());
         if (this.serviceProvider) {
-            info.put("published", RSocketServiceRegistry.exposedServices());
+            info.put("published", LocalRSocketServiceRegistry.exposedServices());
         }
         if (!RSocketServiceReferenceBuilder.CONSUMED_SERVICES.isEmpty()) {
             info.put("subscribed", RSocketServiceReferenceBuilder.CONSUMED_SERVICES.stream()
@@ -160,7 +160,7 @@ public final class RSocketEndpoint {
      */
     private ServiceLocator getServiceLocator(String service) {
         ServiceLocator targetService = null;
-        for (ServiceLocator serviceLocator : RSocketServiceRegistry.exposedServices()) {
+        for (ServiceLocator serviceLocator : LocalRSocketServiceRegistry.exposedServices()) {
             if (service.equals(serviceLocator.getService())) {
                 targetService = serviceLocator;
                 break;

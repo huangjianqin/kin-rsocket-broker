@@ -115,7 +115,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         this.loadBalance = tryLoadUpstreamLoadBalance(loadBalanceStrategy);
         this.requesterSupport = requesterSupport;
         if (ServiceLocator.gsv(Symbols.BROKER).equals(serviceGsv) ||
-                !RSocketServiceRegistry.exposedServices().isEmpty()) {
+                !LocalRSocketServiceRegistry.exposedServices().isEmpty()) {
             //broker 即 provider
             this.isServiceProvider = true;
         }
@@ -430,7 +430,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         this.unhealthyUris.remove(rsocketUri);
         onRSocketConnected(rsocketUri, rsocket);
 
-        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServiceRegistry.servicesExposedEvent();
+        CloudEventData<RSocketServicesExposedEvent> cloudEvent = LocalRSocketServiceRegistry.servicesExposedEvent();
         if (cloudEvent != null) {
             Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             rsocket.metadataPush(payload).subscribe();

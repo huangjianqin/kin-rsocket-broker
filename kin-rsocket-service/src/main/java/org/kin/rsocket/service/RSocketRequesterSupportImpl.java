@@ -12,9 +12,9 @@ import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.core.LocalRSocketServiceRegistry;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketRequesterSupport;
-import org.kin.rsocket.core.RSocketServiceRegistry;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.*;
 import reactor.core.publisher.Mono;
@@ -80,7 +80,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
             metadataAwares.add(getAppMetadata());
             if (rsocketServiceProperties.getPort() > 0) {
                 //published services
-                Set<ServiceLocator> serviceLocators = RSocketServiceRegistry.exposedServices();
+                Set<ServiceLocator> serviceLocators = LocalRSocketServiceRegistry.exposedServices();
                 if (!serviceLocators.isEmpty()) {
                     RSocketServiceRegistryMetadata.Builder builder = RSocketServiceRegistryMetadata.builder();
                     builder.addPublishedServices(serviceLocators);

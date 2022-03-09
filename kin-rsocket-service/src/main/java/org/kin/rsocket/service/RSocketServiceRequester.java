@@ -117,7 +117,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册service
      */
     public RSocketServiceRequester registerService(String group, String version, Class<?> serviceInterface, Object provider, String... tags) {
-        RSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider, tags);
+        LocalRSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider, tags);
         return this;
     }
 
@@ -132,7 +132,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册service
      */
     public RSocketServiceRequester registerService(String group, String service, String version, Class<?> serviceInterface, Object provider, String... tags) {
-        RSocketServiceRegistry.INSTANCE.addProvider(group, service, version, serviceInterface, provider, tags);
+        LocalRSocketServiceRegistry.INSTANCE.addProvider(group, service, version, serviceInterface, provider, tags);
         return this;
     }
 
@@ -141,7 +141,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
     public RSocketServiceRequester registerService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
-        RSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
+        LocalRSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
         return this;
     }
 
@@ -182,7 +182,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
     public RSocketServiceRequester registerAndPubService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
-        RSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
+        LocalRSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
         publishService(serviceInfo.getGroup(), serviceInfo.getService(), serviceInfo.getVersion());
         return this;
     }
@@ -199,7 +199,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      */
     public void publishServices() {
         // service exposed
-        CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent = RSocketServiceRegistry.servicesExposedEvent();
+        CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent = LocalRSocketServiceRegistry.servicesExposedEvent();
         if (servicesExposedEventCloudEvent != null) {
             publishServices(servicesExposedEventCloudEvent);
         }
@@ -218,7 +218,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", rsocketServiceProperties.getBrokers());
-                    String exposedServiceIds = RSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
+                    String exposedServiceIds = LocalRSocketServiceRegistry.exposedServices().stream().map(ServiceLocator::getGsv).collect(Collectors.joining(", "));
                     log.info(String.format("services(%s) published on Brokers(%s)!", exposedServiceIds, brokerUris));
                 }).subscribe();
     }
@@ -254,7 +254,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
                     //broker uris
                     String brokerUris = String.join(",", rsocketServiceProperties.getBrokers());
 
-                    RSocketServiceRegistry.INSTANCE.removeProvider(group, service, version, serviceInterface);
+                    LocalRSocketServiceRegistry.INSTANCE.removeProvider(group, service, version, serviceInterface);
                     log.info(String.format("Services(%s) hide on Brokers(%s)!.", service, brokerUris));
                 }).subscribe();
     }
