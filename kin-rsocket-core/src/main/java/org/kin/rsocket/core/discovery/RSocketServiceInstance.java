@@ -26,7 +26,7 @@ public class RSocketServiceInstance implements ServiceInstance, Serializable {
     /** uri */
     private String uri;
     /** 是否ssl */
-    private boolean secure = false;
+    private boolean secure;
     /** 元数据 */
     private Map<String, String> metadata = new HashMap<>();
 

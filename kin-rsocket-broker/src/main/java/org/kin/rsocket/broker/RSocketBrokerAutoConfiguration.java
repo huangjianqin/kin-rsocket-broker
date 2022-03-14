@@ -7,8 +7,8 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.broker.controller.*;
 import org.kin.rsocket.broker.event.*;
-import org.kin.rsocket.broker.services.BrokerDiscoveryService;
 import org.kin.rsocket.broker.services.CloudEventNotifyServiceImpl;
+import org.kin.rsocket.broker.services.DiscoveryServiceImpl;
 import org.kin.rsocket.broker.services.HealthService;
 import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.*;
@@ -264,7 +264,7 @@ public class RSocketBrokerAutoConfiguration {
     //----------------------------------------------services----------------------------------------------
     @Bean
     public DiscoveryService discoveryService() {
-        return new BrokerDiscoveryService();
+        return new DiscoveryServiceImpl();
     }
 
     @Bean

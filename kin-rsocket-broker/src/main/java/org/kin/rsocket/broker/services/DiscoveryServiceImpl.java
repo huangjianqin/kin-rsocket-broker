@@ -19,15 +19,15 @@ import reactor.core.publisher.Flux;
  * @date 2021/3/30
  */
 @RSocketService(DiscoveryService.class)
-public class BrokerDiscoveryService implements DiscoveryService {
+public class DiscoveryServiceImpl implements DiscoveryService {
     @Autowired
     private RSocketServiceManager serviceManager;
     @Autowired
     private RSocketBrokerManager rsocketBrokerManager;
 
     @Override
-    public Flux<RSocketServiceInstance> getInstances(String serviceId) {
-        if (serviceId.equals(Symbols.BROKER)) {
+    public Flux<RSocketServiceInstance> getInstances(String appName) {
+        if (appName.equals(Symbols.BROKER)) {
             //支持查询broker集群信息
             return Flux.fromIterable(rsocketBrokerManager.all())
                     .filter(BrokerInfo::isActive)
@@ -39,11 +39,10 @@ public class BrokerDiscoveryService implements DiscoveryService {
                         instance.setPort(broker.getPort());
                         instance.setSchema(broker.getSchema());
                         instance.setUri(broker.getUrl());
-                        instance.setSecure(broker.isActive());
                         return instance;
                     });
         }
-        return findServicesInstancesByAppName(serviceId);
+        return findServicesInstancesByAppName(appName);
     }
 
     @Override
