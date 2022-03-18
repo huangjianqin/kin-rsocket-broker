@@ -2,9 +2,9 @@ package org.kin.spring.rsocket.support;
 
 import com.google.common.base.Preconditions;
 import io.rsocket.loadbalance.LoadbalanceTarget;
-import io.rsocket.loadbalance.RoundRobinLoadbalanceStrategy;
 import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.ServiceInstance;
@@ -58,17 +58,17 @@ public final class SpringRSocketServiceDiscoveryRegistry {
                     return;
                 }
 
-                for (String serviceName : app2ServiceInstances.keySet()) {
+                for (String appName : app2ServiceInstances.keySet()) {
                     //refresh
-                    discoveryClient.getInstances(serviceName)
+                    discoveryClient.getInstances(appName)
                             .mapNotNull(this::toRSocketServiceInstance)
                             .collectList().subscribe(serviceInstances -> {
-                                List<RSocketServiceInstance> currentServiceInstances = snapshots.get(serviceName);
+                                List<RSocketServiceInstance> currentServiceInstances = snapshots.get(appName);
                                 //存在差异
                                 if (currentServiceInstances.size() != serviceInstances.size() || !currentServiceInstances.containsAll(serviceInstances)) {
-                                    log.debug("refresh upstream rsocket instance for service '{}', {}", serviceName, serviceInstances);
+                                    log.debug("refresh upstream rsocket service instance for app '{}', {}", appName, serviceInstances);
                                     //更新rsocket service实例信息
-                                    updateRSocketServiceInstances(serviceName, serviceInstances);
+                                    updateRSocketServiceInstances(appName, serviceInstances);
                                 }
                             });
                 }
@@ -81,8 +81,7 @@ public final class SpringRSocketServiceDiscoveryRegistry {
     /**
      * 更新缓存的rsocket service instance信息
      */
-    private void updateRSocketServiceInstances(String serviceName, List<RSocketServiceInstance> serviceInstances) {
-        String appName = toAppName(serviceName);
+    private void updateRSocketServiceInstances(String appName, List<RSocketServiceInstance> serviceInstances) {
         if (!app2ServiceInstances.containsKey(appName)) {
             return;
         }
@@ -95,7 +94,16 @@ public final class SpringRSocketServiceDiscoveryRegistry {
      * 将服务发现的所有{@link RSocketServiceInstance}转换成{@link LoadbalanceTarget}
      */
     private Flux<List<LoadbalanceTarget>> getRSocketLoadBalanceTargetListFlux(String serviceName) {
-        String appName = toAppName(serviceName);
+        return getRSocketLoadBalanceTargetListFlux(toAppName(serviceName), serviceName);
+    }
+
+    /**
+     * 将服务发现的所有{@link RSocketServiceInstance}转换成{@link LoadbalanceTarget}
+     */
+    private Flux<List<LoadbalanceTarget>> getRSocketLoadBalanceTargetListFlux(String appName, String serviceName) {
+        if (StringUtils.isBlank(appName)) {
+            appName = toAppName(serviceName);
+        }
         if (app2ServiceInstances.containsKey(appName)) {
             //使用缓存的
             return app2ServiceInstances.get(appName)
@@ -105,10 +113,11 @@ public final class SpringRSocketServiceDiscoveryRegistry {
 
         //重新拉
         app2ServiceInstances.put(appName, Sinks.many().replay().latest());
+        String finalAppName = appName;
         return Flux.from(discoveryClient.getInstances(appName)
                         .mapNotNull(this::toRSocketServiceInstance)
                         .collectList()
-                        .doOnNext(serviceInstances -> updateRSocketServiceInstances(serviceName, serviceInstances)))
+                        .doOnNext(serviceInstances -> updateRSocketServiceInstances(finalAppName, serviceInstances)))
                 .thenMany(app2ServiceInstances.get(appName).asFlux().map(this::toLoadBalanceTarget));
     }
 
@@ -132,7 +141,6 @@ public final class SpringRSocketServiceDiscoveryRegistry {
             return appName.substring(0, appName.indexOf(":"));
         }
 
-        // TODO: 2022/3/16 看看是否需要修改
         //默认规定, 假设rsocket service interface定义为a.b.c.S, 则a-b-c为该rsocket service的app name
         //取最后一个'-'后面的字符串
         String mayBeService = appName.substring(appName.lastIndexOf("-") + 1);
@@ -170,13 +178,26 @@ public final class SpringRSocketServiceDiscoveryRegistry {
     }
 
     //---------------------------------------------api---------------------------------------------
-    public RSocketRequester createLoadBalanceRSocketRequester(Class<?> serviceInterface, RSocketRequester.Builder builder) {
-        Preconditions.checkArgument(serviceInterface.isInterface());
-        return createLoadBalanceRSocketRequester(serviceInterface.getName(), builder);
+    public RSocketRequester createLoadBalanceRSocketRequester(String appName, String serviceName, RSocketRequester.Builder builder, LoadbalanceStrategyFactory loadbalanceStrategyFactory) {
+        return builder.transports(this.getRSocketLoadBalanceTargetListFlux(appName, serviceName), loadbalanceStrategyFactory.strategy());
+    }
+
+    public RSocketRequester createLoadBalanceRSocketRequester(String appName, String serviceName, RSocketRequester.Builder builder) {
+        return createLoadBalanceRSocketRequester(appName, serviceName, builder, LoadbalanceStrategyFactory.WEIGHTED);
     }
 
     public RSocketRequester createLoadBalanceRSocketRequester(String serviceName, RSocketRequester.Builder builder) {
-        return builder.transports(this.getRSocketLoadBalanceTargetListFlux(serviceName), new RoundRobinLoadbalanceStrategy());
+        return createLoadBalanceRSocketRequester(toAppName(serviceName), serviceName, builder);
+    }
+
+    public RSocketRequester createLoadBalanceRSocketRequester(String appName, Class<?> serviceInterface, RSocketRequester.Builder builder) {
+        Preconditions.checkArgument(serviceInterface.isInterface());
+        return createLoadBalanceRSocketRequester(appName, serviceInterface.getName(), builder);
+    }
+
+    public RSocketRequester createLoadBalanceRSocketRequester(Class<?> serviceInterface, RSocketRequester.Builder builder) {
+        Preconditions.checkArgument(serviceInterface.isInterface());
+        return createLoadBalanceRSocketRequester(serviceInterface.getName(), builder);
     }
 
     //getter

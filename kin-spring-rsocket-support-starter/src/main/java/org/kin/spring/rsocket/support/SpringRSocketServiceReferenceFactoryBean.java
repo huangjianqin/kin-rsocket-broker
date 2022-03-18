@@ -29,6 +29,9 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
     /** 基于服务发现的rsocket service instance注册中心, 用于获取loadbalance rsocket requester */
     @Autowired(required = false)
     private SpringRSocketServiceDiscoveryRegistry registry;
+    /** 使用自定义的负载均衡策略 */
+    @Autowired(required = false)
+    private LoadbalanceStrategyFactory loadbalanceStrategyFactory;
     /** 支持load balance rsocket requester */
     private volatile RSocketRequester loadBalanceRequester;
 
@@ -74,12 +77,13 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
         if (StringUtils.isBlank(serviceName)) {
             serviceName = serviceInterface.getName();
         }
+        String appName = rsocketServiceReference.appName();
 
         if (Objects.isNull(reference)) {
             RSocketRequester rsocketRequester;
             if (Objects.nonNull(registry)) {
                 //开启了服务发现, 则创建支持load balance的requester
-                loadBalanceRequester = registry.createLoadBalanceRSocketRequester(serviceName, requesterBuilder);
+                loadBalanceRequester = registry.createLoadBalanceRSocketRequester(appName, serviceName, requesterBuilder, loadbalanceStrategyFactory);
                 rsocketRequester = loadBalanceRequester;
             } else {
                 //没有开启服务发现

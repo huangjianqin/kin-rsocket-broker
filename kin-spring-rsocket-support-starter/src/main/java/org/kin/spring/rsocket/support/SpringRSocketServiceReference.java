@@ -21,4 +21,14 @@ public @interface SpringRSocketServiceReference {
      * call timeout, 默认3s
      */
     int callTimeout() default 3000;
+
+    /**
+     * naming service上注册的rsocket service application name
+     * 目前字段仅仅在使用{@link EnableLoadBalanceSpringRSocketServiceReference}前提下有效
+     *
+     * @see EnableLoadBalanceSpringRSocketServiceReference
+     */
+    String appName() default "";
+
+
 }
