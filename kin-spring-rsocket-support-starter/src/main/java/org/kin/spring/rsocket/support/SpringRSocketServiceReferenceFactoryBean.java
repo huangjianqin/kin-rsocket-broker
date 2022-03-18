@@ -1,5 +1,6 @@
 package org.kin.spring.rsocket.support;
 
+import org.kin.framework.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -15,11 +16,22 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/5/19
  */
 public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
-    /** 底层remote requester */
-    @Autowired
-    private RSocketRequester rsocketRequester;
     /** 服务接口 */
     private final Class<T> serviceInterface;
+
+    /** spring创建的rsocket requester builder */
+    @Autowired
+    private RSocketRequester.Builder requesterBuilder;
+    /** spring创建的rsocket requester */
+    @Autowired(required = false)
+    private RSocketRequester requester;
+
+    /** 基于服务发现的rsocket service instance注册中心, 用于获取loadbalance rsocket requester */
+    @Autowired(required = false)
+    private SpringRSocketServiceDiscoveryRegistry registry;
+    /** 支持load balance rsocket requester */
+    private volatile RSocketRequester loadBalanceRequester;
+
     /** rsocket service 服务reference, 仅仅build一次 */
     private volatile T reference;
 
@@ -53,24 +65,35 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
     @Nonnull
     @Override
     protected T createInstance() {
-        if (Objects.isNull(reference)) {
-            reference = builder().build();
-        }
-
-        return reference;
-    }
-
-    private SpringRSocketServiceReferenceBuilder<T> builder() {
         SpringRSocketServiceReference rsocketServiceReference = AnnotationUtils.findAnnotation(serviceInterface, SpringRSocketServiceReference.class);
         if (Objects.isNull(rsocketServiceReference)) {
             throw new IllegalArgumentException(
                     String.format("scanner find interface '%s' with @SpringRSocketServiceReference, but it actually doesn't has it", serviceInterface.getName()));
         }
+        String serviceName = rsocketServiceReference.service();
+        if (StringUtils.isBlank(serviceName)) {
+            serviceName = serviceInterface.getName();
+        }
 
-        SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.requester(rsocketRequester, serviceInterface);
-        builder.service(rsocketServiceReference.service());
-        builder.timeout(rsocketServiceReference.callTimeout(), TimeUnit.SECONDS);
-        return builder;
+        if (Objects.isNull(reference)) {
+            RSocketRequester rsocketRequester;
+            if (Objects.nonNull(registry)) {
+                //开启了服务发现, 则创建支持load balance的requester
+                loadBalanceRequester = registry.createLoadBalanceRSocketRequester(serviceName, requesterBuilder);
+                rsocketRequester = loadBalanceRequester;
+            } else {
+                //没有开启服务发现
+                rsocketRequester = this.requester;
+            }
+
+            SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.requester(rsocketRequester, serviceInterface);
+            builder.service(serviceName);
+            builder.timeout(rsocketServiceReference.callTimeout(), TimeUnit.SECONDS);
+
+            reference = builder.build();
+        }
+
+        return reference;
     }
 
     /**
@@ -79,5 +102,15 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
     @Override
     public boolean isSingleton() {
         return true;
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        super.destroy();
+
+        if (Objects.nonNull(loadBalanceRequester)) {
+            //如果构建了支持load balance的requester, 则需要手动shutdown requester
+            loadBalanceRequester.dispose();
+        }
     }
 }

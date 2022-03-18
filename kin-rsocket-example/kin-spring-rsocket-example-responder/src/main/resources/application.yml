@@ -1,10 +1,18 @@
 spring:
   application:
-    name: spring-rsocket-responder
+    # name: spring-rsocket-responder
+    # 取服务名package作为app name
+    name: org-kin-spring-rsocket-example
   rsocket:
     server:
       port: 9000
       transport: tcp
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        metadata:
+          rsocketSchemaPorts: ${spring.rsocket.server.transport}:${spring.rsocket.server.port}
 server:
   port: 8088
 
