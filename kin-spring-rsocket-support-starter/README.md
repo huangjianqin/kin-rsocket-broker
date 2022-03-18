@@ -14,3 +14,5 @@
     * 基于应用名发现rsocket service, 故说明实现如何识别发现提取应用名. 假设服务名为`org.kin.spring.rsocket.example.UserService-{version}`,
       则应用名为`org.kin.spring.rsocket.example`. 如果rsocket service是基于broker模式搭建, 而可以这样子定义服务名, 如
       `{broker app name}:org.kin.spring.rsocket.example.UserService-{version}`, 则我们直接认为`{broker app name}`为应用名
+* `@SpringRSocketService`, `@MessageMapping`的替身, 用于定义标识rsocket service
+* `@SpringRSocketHandler`, `@MessageMapping`的替身, 用于定义标识rsocket handler
