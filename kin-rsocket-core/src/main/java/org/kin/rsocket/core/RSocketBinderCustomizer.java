@@ -1,7 +1,7 @@
 package org.kin.rsocket.core;
 
 /**
- * {@link RSocketBinder.Builder}自定义额外逻辑
+ * 自定义{@link RSocketBinder.Builder}额外逻辑
  *
  * @author huangjianqin
  * @date 2021/3/29
@@ -9,7 +9,7 @@ package org.kin.rsocket.core;
 @FunctionalInterface
 public interface RSocketBinderCustomizer {
     /**
-     * 自定义额外的rsocket binder builder 逻辑
+     * 自定义{@link RSocketBinder.Builder}额外逻辑
      */
     void customize(RSocketBinder.Builder builder);
 }
