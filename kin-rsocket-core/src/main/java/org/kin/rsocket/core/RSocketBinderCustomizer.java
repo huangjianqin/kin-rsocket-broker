@@ -1,7 +1,7 @@
 package org.kin.rsocket.core;
 
 /**
- * 自定义rsocket bind额外逻辑
+ * {@link RSocketBinder.Builder}自定义额外逻辑
  *
  * @author huangjianqin
  * @date 2021/3/29
