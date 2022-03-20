@@ -107,7 +107,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
                 //默认认为带了消息编码元数据
                 encodingMetadataIncluded = true;
-                messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
             }
 
             // broker local service call
@@ -139,7 +138,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (encodingMetadataIncluded) {
                     return rsocket.requestResponse(payload);
                 } else {
-                    return rsocket.requestResponse(payloadWithDataEncoding(payload, messageMimeTypeMetadata));
+                    return rsocket.requestResponse(payloadWithDataEncoding(payload));
                 }
             });
         } catch (Exception e) {
@@ -175,7 +174,6 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
                 //默认认为带了消息编码元数据
                 encodingMetadataIncluded = true;
-                messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
             }
 
             // broker local service call
@@ -206,7 +204,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (encodingMetadataIncluded) {
                     return rsocket.fireAndForget(payload);
                 } else {
-                    return rsocket.fireAndForget(payloadWithDataEncoding(payload, messageMimeTypeMetadata));
+                    return rsocket.fireAndForget(payloadWithDataEncoding(payload));
                 }
             });
         } catch (Exception e) {
@@ -238,12 +236,10 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 }
                 messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
                 encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
-
             } else {
                 gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
                 //默认认为带了消息编码元数据
                 encodingMetadataIncluded = true;
-                messageMimeTypeMetadata = defaultMessageMimeTypeMetadata;
             }
 
             // broker local service call
@@ -273,7 +269,7 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
                 if (encodingMetadataIncluded) {
                     return rsocket.requestStream(payload);
                 } else {
-                    return rsocket.requestStream(payloadWithDataEncoding(payload, messageMimeTypeMetadata));
+                    return rsocket.requestStream(payloadWithDataEncoding(payload));
                 }
             });
         } catch (Exception e) {
@@ -358,9 +354,9 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
      * 然后再调用{@link RSocketCompositeMetadata#getContent()}来获取路由需要的payload, 之所以采用下面这种方式,
      * 可以减少一点点ByteBuf的内存资源分配和cpu消耗
      */
-    private Payload payloadWithDataEncoding(Payload payload, MessageMimeTypeMetadata messageMimeTypeMetadata) {
+    private Payload payloadWithDataEncoding(Payload payload) {
         CompositeByteBuf compositeByteBuf = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true, 2,
-                payload.metadata(), toMimeAndContentBuffersSlices(messageMimeTypeMetadata));
+                payload.metadata(), toMimeAndContentBuffersSlices(defaultMessageMimeTypeMetadata));
         return ByteBufPayload.create(payload.data(), compositeByteBuf);
     }
 
