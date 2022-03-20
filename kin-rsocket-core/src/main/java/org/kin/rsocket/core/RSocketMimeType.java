@@ -8,6 +8,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ * !!!注意, 如果应用同时依赖kin-rsocket-core和rsocket-core, 那么使用{@link RSocketMimeType}时会存在加载异常
+ * 因为kin-rsocket-core和rsocket-core依赖都存在与一个类名一样的{@link WellKnownMimeType}
+ *
  * @author huangjianqin
  * @date 2021/3/24
  */
