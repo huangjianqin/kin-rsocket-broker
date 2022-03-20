@@ -3,6 +3,7 @@ package org.kin.spring.rsocket.support;
 import org.kin.framework.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfiguration;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -19,7 +20,12 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
     /** 服务接口 */
     private final Class<T> serviceInterface;
 
-    /** spring创建的rsocket requester builder */
+    /**
+     * spring创建的rsocket requester builder
+     * prototype类型
+     *
+     * @see RSocketRequesterAutoConfiguration
+     */
     @Autowired
     private RSocketRequester.Builder requesterBuilder;
     /** spring创建的rsocket requester */
@@ -73,10 +79,12 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
             throw new IllegalArgumentException(
                     String.format("scanner find interface '%s' with @SpringRSocketServiceReference, but it actually doesn't has it", serviceInterface.getName()));
         }
+        //此处的service name可能会包括app name或者app version信息
         String serviceName = rsocketServiceReference.service();
         if (StringUtils.isBlank(serviceName)) {
             serviceName = serviceInterface.getName();
         }
+
         String appName = rsocketServiceReference.appName();
 
         if (Objects.isNull(reference)) {
@@ -91,13 +99,32 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
             }
 
             SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.requester(rsocketRequester, serviceInterface);
-            builder.service(serviceName);
+            //此处必须只取service name, 不然在broker模式下, route metadata会存在异常
+            builder.service(takeRealServiceName(serviceName));
             builder.timeout(rsocketServiceReference.callTimeout(), TimeUnit.SECONDS);
 
             reference = builder.build();
         }
 
         return reference;
+    }
+
+    /**
+     * 提取真正的service name, 不包含app name或者app version信息
+     */
+    private String takeRealServiceName(String serviceName) {
+        //移除app instance name
+        if (serviceName.contains(":")) {
+            serviceName = serviceName.substring(serviceName.indexOf(":") + 1);
+        }
+
+        //移除实例版本信息
+        String mayBeVersion = serviceName.substring(serviceName.lastIndexOf("-") + 1);
+        if (StringUtils.isNumeric(mayBeVersion)) {
+            serviceName = serviceName.substring(0, serviceName.lastIndexOf("-"));
+        }
+
+        return serviceName;
     }
 
     /**

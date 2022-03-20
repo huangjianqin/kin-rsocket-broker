@@ -1,5 +1,6 @@
 package org.kin.spring.rsocket.support;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
@@ -19,8 +20,9 @@ public class SpringRSocketServiceDiscoveryAutoConfiguration {
      * 基于{@link ReactiveDiscoveryClient}发现naming service注册的rsocket service实例并缓存其元数据, 用于创建支持load balance rsocket requester
      */
     @Bean
-    public SpringRSocketServiceDiscoveryRegistry springRSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient) {
-        return new SpringRSocketServiceDiscoveryRegistry(discoveryClient);
+    public SpringRSocketServiceDiscoveryRegistry springRSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient,
+                                                                                       @Autowired(required = false) RSocketRequesterBuilderCustomizer customizer) {
+        return new SpringRSocketServiceDiscoveryRegistry(discoveryClient, customizer);
     }
 
     /**

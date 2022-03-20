@@ -17,6 +17,7 @@ import reactor.core.publisher.Sinks;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
@@ -29,19 +30,28 @@ import java.util.stream.Collectors;
 public final class SpringRSocketServiceDiscoveryRegistry {
     private static final Logger log = LoggerFactory.getLogger(SpringRSocketServiceDiscoveryRegistry.class);
 
+    /** spring reactive discovery client */
+    private final ReactiveDiscoveryClient discoveryClient;
+    /** 自定义{@link RSocketRequester.Builder}自定义额外逻辑 */
+    @Nullable
+    private final RSocketRequesterBuilderCustomizer requesterBuilderCustomizer;
+
     /** key -> app name, value -> 该app所有实例信息 */
     private final ConcurrentMap<String, Sinks.Many<List<RSocketServiceInstance>>> app2ServiceInstances = new NonBlockingHashMap<>();
     /** {@link #app2ServiceInstances}的副本, 用于外部访问当前的app实例信息 */
     private final ConcurrentMap<String, List<RSocketServiceInstance>> snapshots = new NonBlockingHashMap<>();
-    /** spring reactive discovery client */
-    private final ReactiveDiscoveryClient discoveryClient;
     /** 上次刷新毫秒数 */
     private volatile long lastRefreshTimeMs;
     /** 是否在刷新中 */
     private volatile boolean refreshing;
 
     public SpringRSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient) {
+        this(discoveryClient, null);
+    }
+
+    public SpringRSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient, @Nullable RSocketRequesterBuilderCustomizer requesterBuilderCustomizer) {
         this.discoveryClient = discoveryClient;
+        this.requesterBuilderCustomizer = requesterBuilderCustomizer;
     }
 
     /**
@@ -178,7 +188,14 @@ public final class SpringRSocketServiceDiscoveryRegistry {
     }
 
     //---------------------------------------------api---------------------------------------------
+
+    /**
+     * @param builder prototype类型, 可以放心为每个requester设置不同setup payload
+     */
     public RSocketRequester createLoadBalanceRSocketRequester(String appName, String serviceName, RSocketRequester.Builder builder, LoadbalanceStrategyFactory loadbalanceStrategyFactory) {
+        if (Objects.nonNull(requesterBuilderCustomizer)) {
+            requesterBuilderCustomizer.customize(builder, appName, serviceName);
+        }
         return builder.transports(this.getRSocketLoadBalanceTargetListFlux(appName, serviceName), loadbalanceStrategyFactory.strategy());
     }
 

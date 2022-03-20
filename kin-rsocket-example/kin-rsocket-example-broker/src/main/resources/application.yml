@@ -1,6 +1,12 @@
 spring:
   application:
     name: rsocket-broker
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 127.0.0.1:8848
+#        metadata:
+#          rsocketSchemaPorts: tcp:${kin.rsocket.broker.port}
 server:
   port: 9998
 
