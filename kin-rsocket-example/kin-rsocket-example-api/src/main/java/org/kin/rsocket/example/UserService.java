@@ -2,8 +2,8 @@ package org.kin.rsocket.example;
 
 import com.google.protobuf.StringValue;
 import io.netty.buffer.ByteBuf;
+import org.kin.rsocket.core.RSocketHandler;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.ServiceMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -19,7 +19,7 @@ public interface UserService {
     /**
      * 测试参数为{@link ByteBuf}
      */
-    @ServiceMapping(paramEncoding = RSocketMimeType.BINARY)
+    @RSocketHandler(paramEncoding = RSocketMimeType.BINARY)
     Mono<User> find1(ByteBuf byteBuf);
 
     /**
@@ -44,6 +44,6 @@ public interface UserService {
      */
     Mono<User> exception2();
 
-    @ServiceMapping(paramEncoding = RSocketMimeType.PROTOBUF)
+    @RSocketHandler(paramEncoding = RSocketMimeType.PROTOBUF)
     Mono<Boolean> find3(String name, int age);
 }

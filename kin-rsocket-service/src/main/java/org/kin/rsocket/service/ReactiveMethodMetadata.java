@@ -9,9 +9,9 @@ import io.rsocket.frame.FrameType;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.MurmurHash3;
 import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.core.RSocketHandler;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveMethodSupport;
-import org.kin.rsocket.core.ServiceMapping;
 import org.kin.rsocket.core.metadata.*;
 import org.kin.rsocket.core.utils.Separators;
 import reactor.core.publisher.Flux;
@@ -77,9 +77,9 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         this.endpoint = endpoint;
 
         //处理method上的@ServiceMapping注解
-        ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-        if (serviceMapping != null) {
-            initServiceMapping(serviceMapping);
+        RSocketHandler rsocketHandler = method.getAnnotation(RSocketHandler.class);
+        if (rsocketHandler != null) {
+            initServiceMapping(rsocketHandler);
         }
 
         // sticky from service builder or @ServiceMapping
@@ -132,30 +132,30 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
     }
 
     /**
-     * 解析method上的{@link ServiceMapping}注解
+     * 解析method上的{@link RSocketHandler}注解
      */
-    private void initServiceMapping(ServiceMapping serviceMapping) {
-        if (StringUtils.isNotBlank(serviceMapping.value())) {
-            handler = serviceMapping.value();
+    private void initServiceMapping(RSocketHandler rsocketHandler) {
+        if (StringUtils.isNotBlank(rsocketHandler.value())) {
+            handler = rsocketHandler.value();
         }
-        if (!serviceMapping.endpoint().isEmpty()) {
-            endpoint = serviceMapping.endpoint();
+        if (!rsocketHandler.endpoint().isEmpty()) {
+            endpoint = rsocketHandler.endpoint();
         }
 
-        RSocketMimeType paramEncoding = serviceMapping.paramEncoding();
+        RSocketMimeType paramEncoding = rsocketHandler.paramEncoding();
         if (Objects.nonNull(paramEncoding)) {
             RSocketMimeType.checkEncodingMimeType(paramEncoding);
             dataEncodingType = paramEncoding;
         }
 
-        RSocketMimeType[] resultEncodings = serviceMapping.resultEncodings();
+        RSocketMimeType[] resultEncodings = rsocketHandler.resultEncodings();
         if (CollectionUtils.isNonEmpty(resultEncodings)) {
             for (RSocketMimeType resultEncoding : resultEncodings) {
                 RSocketMimeType.checkEncodingMimeType(resultEncoding);
             }
             acceptEncodingTypes = resultEncodings;
         }
-        sticky = serviceMapping.sticky();
+        sticky = rsocketHandler.sticky();
     }
 
     /**

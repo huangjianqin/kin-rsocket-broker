@@ -140,9 +140,9 @@ public final class LocalRSocketServiceRegistry implements RSocketServiceInfoSupp
 
                 String handler = method.getName();
                 //解析ServiceMapping注解, 看看是否自定义method(handler) name
-                ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-                if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                    handler = serviceMapping.value();
+                RSocketHandler rsocketHandler = method.getAnnotation(RSocketHandler.class);
+                if (Objects.nonNull(rsocketHandler) && StringUtils.isNotBlank(rsocketHandler.value())) {
+                    handler = rsocketHandler.value();
                 }
                 String key = service + Separators.SERVICE_HANDLER + handler;
 
@@ -301,9 +301,9 @@ public final class LocalRSocketServiceRegistry implements RSocketServiceInfoSupp
                 }
 
                 String handler = method.getName();
-                ServiceMapping serviceMapping = method.getAnnotation(ServiceMapping.class);
-                if (Objects.nonNull(serviceMapping) && StringUtils.isNotBlank(serviceMapping.value())) {
-                    handler = serviceMapping.value();
+                RSocketHandler rsocketHandler = method.getAnnotation(RSocketHandler.class);
+                if (Objects.nonNull(rsocketHandler) && StringUtils.isNotBlank(rsocketHandler.value())) {
+                    handler = rsocketHandler.value();
                 }
                 String key = service + Separators.SERVICE_HANDLER + handler;
 

@@ -3,7 +3,7 @@ package org.kin.rsocket.core;
 import java.lang.annotation.*;
 
 /**
- * 标识接口(及其方法)属性注解
+ * 给rsocket service handler(method)提供额外自定义参数的注解
  *
  * @author huangjianqin
  * @date 2021/3/26
@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ServiceMapping {
+public @interface RSocketHandler {
     /** handler name, 默认=method name */
     String value() default "";
 
