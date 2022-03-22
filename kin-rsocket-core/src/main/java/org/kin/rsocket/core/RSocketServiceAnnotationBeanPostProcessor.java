@@ -13,17 +13,17 @@ import javax.annotation.Nonnull;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
+public class RSocketServiceAnnotationBeanPostProcessor implements BeanPostProcessor {
     /** 缺省group */
     private final String defaultGroup;
     /** 缺省version */
     private final String defaultVersion;
 
-    public RSocketServiceAnnoProcessor() {
+    public RSocketServiceAnnotationBeanPostProcessor() {
         this("", "");
     }
 
-    public RSocketServiceAnnoProcessor(String defaultGroup, String defaultVersion) {
+    public RSocketServiceAnnotationBeanPostProcessor(String defaultGroup, String defaultVersion) {
         this.defaultGroup = defaultGroup;
         this.defaultVersion = defaultVersion;
     }
@@ -50,9 +50,10 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
         }
 
         String service = rsocketServiceAnno.name();
+        Class<?> serviceInterfaceClass = rsocketServiceAnno.value();
         if (StringUtils.isBlank(service)) {
             //default
-            service = rsocketServiceAnno.value().getName();
+            service = serviceInterfaceClass.getName();
         }
         String group = rsocketServiceAnno.group();
         if (StringUtils.isBlank(group)) {
@@ -65,7 +66,7 @@ public class RSocketServiceAnnoProcessor implements BeanPostProcessor {
             version = defaultVersion;
         }
         //注册
-        LocalRSocketServiceRegistry.INSTANCE.addProvider(group, service, version, rsocketServiceAnno.value(), bean, rsocketServiceAnno.tags());
+        LocalRSocketServiceRegistry.INSTANCE.addProvider(group, service, version, serviceInterfaceClass, bean, rsocketServiceAnno.tags());
     }
 
 }
