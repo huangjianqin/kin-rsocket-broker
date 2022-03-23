@@ -8,7 +8,7 @@ import java.lang.annotation.*;
  * @author huangjianqin
  * @date 2021/5/19
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface SpringRSocketServiceReference {
@@ -29,6 +29,4 @@ public @interface SpringRSocketServiceReference {
      * @see EnableLoadBalanceSpringRSocketServiceReference
      */
     String appName() default "";
-
-
 }

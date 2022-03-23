@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({SpringRSocketServiceReferenceRegistrar.class})
+@Import({SpringRSocketServiceReferenceRegistrar.class, SpringRSocketServiceReferenceAnnotationBeanPostProcessor.class})
 public @interface EnableSpringRSocketServiceReference {
     /**
      * 指定扫描定义有{@link SpringRSocketServiceReference}的服务接口的classpath

@@ -19,7 +19,10 @@ import java.util.Objects;
 @RequestMapping("/user")
 public class UserController {
     @Autowired
+//    @SpringRSocketServiceReference(service = "org.kin.spring.rsocket.example.UserService")
     private UserService userService;
+//    @SpringRSocketServiceReference(service = "org.kin.spring.rsocket.example.UserService")
+//    private UserService userServiceCopy;
 
     @GetMapping("/all")
     public Flux<User> findAll() {

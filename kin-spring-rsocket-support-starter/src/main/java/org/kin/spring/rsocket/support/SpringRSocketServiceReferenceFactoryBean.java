@@ -19,7 +19,12 @@ import java.util.concurrent.TimeUnit;
 public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractFactoryBean<T> {
     /** 服务接口 */
     private final Class<T> serviceInterface;
-
+    /** 服务名 */
+    private String serviceName;
+    /** naming service上注册的rsocket service application name */
+    private String appName;
+    /** call timeout */
+    private int callTimeout;
     /**
      * spring创建的rsocket requester builder
      * prototype类型
@@ -50,20 +55,42 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
             throw new IllegalArgumentException(
                     String.format("class '%s' must be interface", serviceInterface.getName()));
         }
+
         SpringRSocketServiceReference rsocketServiceReference = AnnotationUtils.findAnnotation(serviceInterface, SpringRSocketServiceReference.class);
         if (Objects.isNull(rsocketServiceReference)) {
             throw new IllegalArgumentException(
-                    String.format("scanner find interface '%s' with @RSocketServiceReference, but it actually doesn't has it", serviceInterface.getName()));
+                    String.format("scanner find interface '%s' with @SpringRSocketServiceReference, but it actually doesn't has it", serviceInterface.getName()));
         }
 
-        AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(AnnotationUtils.getAnnotationAttributes(rsocketServiceReference));
-        Class<T> serviceInterfaceClass = (Class<T>) annoAttrs.get("interfaceClass");
-        if (Objects.nonNull(serviceInterfaceClass) && !Void.class.equals(serviceInterfaceClass)) {
-            //定义了接口, 不允许的
-            throw new IllegalArgumentException(
-                    String.format("interface '%s' with @SpringRSocketServiceReference has define interface class", serviceInterface.getName()));
-        }
         this.serviceInterface = serviceInterface;
+        initAnno(AnnotationAttributes.fromMap(AnnotationUtils.getAnnotationAttributes(rsocketServiceReference)));
+    }
+
+    public SpringRSocketServiceReferenceFactoryBean(Class<T> serviceInterface, AnnotationAttributes annoAttrs,
+                                                    RSocketRequester.Builder requesterBuilder, RSocketRequester requester,
+                                                    SpringRSocketServiceDiscoveryRegistry registry, LoadbalanceStrategyFactory loadbalanceStrategyFactory) {
+        if (!serviceInterface.isInterface()) {
+            throw new IllegalArgumentException(
+                    String.format("class '%s' must be interface", serviceInterface.getName()));
+        }
+
+        this.serviceInterface = serviceInterface;
+        this.requesterBuilder = requesterBuilder;
+        this.requester = requester;
+        this.registry = registry;
+        this.loadbalanceStrategyFactory = loadbalanceStrategyFactory;
+        initAnno(annoAttrs);
+    }
+
+    private void initAnno(AnnotationAttributes annoAttrs) {
+        //此处的service name可能会包括app name或者app version信息
+        serviceName = annoAttrs.getString("service");
+        if (StringUtils.isBlank(serviceName)) {
+            serviceName = serviceInterface.getName();
+        }
+
+        appName = annoAttrs.getString("appName");
+        callTimeout = annoAttrs.getNumber("callTimeout");
     }
 
     @Override
@@ -74,19 +101,6 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
     @Nonnull
     @Override
     protected T createInstance() {
-        SpringRSocketServiceReference rsocketServiceReference = AnnotationUtils.findAnnotation(serviceInterface, SpringRSocketServiceReference.class);
-        if (Objects.isNull(rsocketServiceReference)) {
-            throw new IllegalArgumentException(
-                    String.format("scanner find interface '%s' with @SpringRSocketServiceReference, but it actually doesn't has it", serviceInterface.getName()));
-        }
-        //此处的service name可能会包括app name或者app version信息
-        String serviceName = rsocketServiceReference.service();
-        if (StringUtils.isBlank(serviceName)) {
-            serviceName = serviceInterface.getName();
-        }
-
-        String appName = rsocketServiceReference.appName();
-
         if (Objects.isNull(reference)) {
             RSocketRequester rsocketRequester;
             if (Objects.nonNull(registry)) {
@@ -101,7 +115,7 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> extends AbstractF
             SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.requester(rsocketRequester, serviceInterface);
             //此处必须只取service name, 不然在broker模式下, route metadata会存在异常
             builder.service(takeRealServiceName(serviceName));
-            builder.timeout(rsocketServiceReference.callTimeout(), TimeUnit.SECONDS);
+            builder.timeout(callTimeout, TimeUnit.SECONDS);
 
             reference = builder.build();
         }

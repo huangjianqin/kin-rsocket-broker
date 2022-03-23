@@ -2,7 +2,8 @@
 
 相当于`spring-messaging`的工具类
 
-* `@SpringRSocketServiceReference`, 提供自动扫描rsocket service interface, 并使用代理拦截其接口方法.
+* `@SpringRSocketServiceReference`, 提供自动扫描rsocket service interface, 并使用代理拦截其接口方法. 同时支持注解定义在field上的rsocket service
+  interface.
     * 需要使用者定义`org.springframework.messaging.rsocket.RSocketRequester` bean
 * `@EnableLoadBalanceSpringRSocketServiceReference`, 相当于`@SpringRSocketServiceReference`的增强版本.
   基于`ReactiveDiscoveryClient`发现并缓存naming service上注册的rsocket service实例,
