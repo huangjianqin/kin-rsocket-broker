@@ -15,7 +15,7 @@ import java.lang.annotation.*;
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({RSocketServiceReferenceRegistrar.class, RSocketServiceReferenceAnnotationBeanPostProcessor.class})
+@Import({RSocketServiceReferenceRegistrar.class, RSocketServiceReferenceBeanPostProcessor.class})
 @EnableRSocketService
 public @interface EnableRSocketServiceReference {
     /**

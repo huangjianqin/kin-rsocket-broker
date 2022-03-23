@@ -1,13 +1,10 @@
-package org.kin.rsocket.springcloud.service;
+package org.kin.spring.rsocket.support;
 
-import brave.Tracing;
 import org.kin.framework.spring.AbstractAnnotationBeanPostProcessor;
-import org.kin.rsocket.service.RSocketServiceProperties;
-import org.kin.rsocket.service.RSocketServiceReference;
-import org.kin.rsocket.service.RSocketServiceRequester;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.core.annotation.AnnotationAttributes;
+import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -19,23 +16,24 @@ import java.util.StringJoiner;
  * @date 2022/3/23
  */
 @Component
-public class RSocketServiceReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBeanPostProcessor {
+public class SpringRSocketServiceReferenceBeanPostProcessor extends AbstractAnnotationBeanPostProcessor {
     @Autowired
-    private RSocketServiceRequester requester;
-    @Autowired
-    private RSocketServiceProperties rsocketServiceProperties;
+    private RSocketRequester.Builder requesterBuilder;
     @Autowired(required = false)
-    private Tracing tracing;
+    private RSocketRequester requester;
+    @Autowired(required = false)
+    private SpringRSocketServiceDiscoveryRegistry registry;
+    @Autowired(required = false)
+    private LoadbalanceStrategyFactory loadbalanceStrategyFactory;
 
-    @SuppressWarnings("unchecked")
-    public RSocketServiceReferenceAnnotationBeanPostProcessor() {
-        super(RSocketServiceReference.class);
+    public SpringRSocketServiceReferenceBeanPostProcessor() {
+        super(SpringRSocketServiceReference.class);
     }
 
     @Override
     protected Object doGetInjectedBean(AnnotationAttributes attributes, Object bean, String beanName,
-                                       Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) {
-        return new RSocketServiceReferenceFactoryBean<>(requester, rsocketServiceProperties, tracing, injectedType, attributes).createInstance();
+                                       Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) throws Exception {
+        return new SpringRSocketServiceReferenceFactoryBean<>(injectedType, attributes, requesterBuilder, requester, registry, loadbalanceStrategyFactory).createInstance();
     }
 
     @Override
@@ -44,14 +42,10 @@ public class RSocketServiceReferenceAnnotationBeanPostProcessor extends Abstract
         StringBuilder sb = new StringBuilder();
         StringJoiner sj = new StringJoiner(",");
         sb.append(injectedType.getName());
-        sb.append("@").append(RSocketServiceReference.class.getSimpleName()).append("{");
+        sb.append("@").append(SpringRSocketServiceReference.class.getSimpleName()).append("{");
         for (Map.Entry<String, Object> entry : attributes.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            if (key.equals("interfaceClass")) {
-                //过滤
-                continue;
-            }
 
             String valueStr;
             if (value.getClass().isArray()) {

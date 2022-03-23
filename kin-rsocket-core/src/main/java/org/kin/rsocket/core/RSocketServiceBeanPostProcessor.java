@@ -13,17 +13,17 @@ import javax.annotation.Nonnull;
  * @author huangjianqin
  * @date 2021/3/28
  */
-public class RSocketServiceAnnotationBeanPostProcessor implements BeanPostProcessor {
+public class RSocketServiceBeanPostProcessor implements BeanPostProcessor {
     /** 缺省group */
     private final String defaultGroup;
     /** 缺省version */
     private final String defaultVersion;
 
-    public RSocketServiceAnnotationBeanPostProcessor() {
+    public RSocketServiceBeanPostProcessor() {
         this("", "");
     }
 
-    public RSocketServiceAnnotationBeanPostProcessor(String defaultGroup, String defaultVersion) {
+    public RSocketServiceBeanPostProcessor(String defaultGroup, String defaultVersion) {
         this.defaultGroup = defaultGroup;
         this.defaultVersion = defaultVersion;
     }

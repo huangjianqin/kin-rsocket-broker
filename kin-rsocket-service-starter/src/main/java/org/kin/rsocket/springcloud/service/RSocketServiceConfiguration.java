@@ -60,8 +60,8 @@ public class RSocketServiceConfiguration {
      * {@link RSocketService}注解processor
      */
     @Bean
-    public RSocketServiceAnnotationBeanPostProcessor rsocketServiceAnnotationBeanPostProcessor(@Autowired RSocketServiceProperties rsocketServiceProperties) {
-        return new RSocketServiceAnnotationBeanPostProcessor(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion());
+    public RSocketServiceBeanPostProcessor rsocketServiceBeanPostProcessor(@Autowired RSocketServiceProperties rsocketServiceProperties) {
+        return new RSocketServiceBeanPostProcessor(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion());
     }
 
     /**

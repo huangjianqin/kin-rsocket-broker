@@ -122,8 +122,8 @@ public class RSocketBrokerAutoConfiguration {
      * {@link RSocketService}注解processor
      */
     @Bean
-    public RSocketServiceAnnotationBeanPostProcessor rsocketServiceAnnotationBeanPostProcessor() {
-        return new RSocketServiceAnnotationBeanPostProcessor();
+    public RSocketServiceBeanPostProcessor rsocketServiceBeanPostProcessor() {
+        return new RSocketServiceBeanPostProcessor();
     }
 
     @Bean
