@@ -57,6 +57,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-roscket-service**: rsocket服务实现
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
 * **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
+* **kin-spring-rsocket-support-starter**: 对spring rsocket进行增强
 
 ## **RSocket服务示例**
 
@@ -224,7 +225,8 @@ public class RequesterConfiguration {
 
 ```java
 
-@EnableRSocketService
+@
+@EnableRSocketServiceReference
 @SpringBootApplication
 public class RequesterSpringApplication {
   public static void main(String[] args) {
@@ -242,7 +244,11 @@ public class RequesterSpringApplication {
       //....
   }
   ```
-  
+  ```java
+  @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+  private UserService userService;
+  ```
+
 * ```@EnableRSocketServiceReference```注解用法
   ```java
   @EnableRSocketServiceReference(references = @RSocketServiceReference(name = "org.kin.rsocket.example.UserService"))
@@ -260,8 +266,6 @@ rsocket broker相当于注册中心, 每个消费者挂上 ```kin-rsocket-regist
 详细代码请看 ```kin-roscket-example-springcloud``` 模块
 
 ## **展望**
-
-* 简化创建RSocket service refernce bean操作
 
 ## 注意
 
