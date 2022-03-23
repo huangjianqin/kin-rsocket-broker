@@ -33,7 +33,6 @@ public final class RSocketServiceReferenceFactoryBean<T> extends AbstractFactory
         this.builder = builder;
     }
 
-    @SuppressWarnings("unchecked")
     public RSocketServiceReferenceFactoryBean(Class<T> claxx) {
         if (!claxx.isInterface()) {
             throw new IllegalArgumentException(
@@ -46,6 +45,19 @@ public final class RSocketServiceReferenceFactoryBean<T> extends AbstractFactory
         }
 
         AnnotationAttributes annoAttrs = AnnotationAttributes.fromMap(AnnotationUtils.getAnnotationAttributes(rsocketServiceReference));
+        initBuilder(claxx, annoAttrs);
+    }
+
+    public RSocketServiceReferenceFactoryBean(RSocketServiceRequester requester, RSocketServiceProperties rsocketServiceProperties,
+                                              Tracing tracing, Class<T> claxx, AnnotationAttributes annoAttrs) {
+        this.requester = requester;
+        this.rsocketServiceProperties = rsocketServiceProperties;
+        this.tracing = tracing;
+        initBuilder(claxx, annoAttrs);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initBuilder(Class<T> claxx, AnnotationAttributes annoAttrs) {
         Class<T> serviceInterfaceClass = (Class<T>) annoAttrs.get("interfaceClass");
         if (Objects.nonNull(serviceInterfaceClass) && !Void.class.equals(serviceInterfaceClass)) {
             //定义了接口, 不允许的

@@ -20,9 +20,14 @@ import java.util.Objects;
 @RequestMapping("/user")
 public class UserController {
     @Autowired(required = false)
+//    //方法4, 直接注入field
+//    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
     private UserService userService;
-    @Autowired
+    @Autowired(required = false)
     private org.kin.rsocket.example.consumer.UserService customUserService;
+    /** 测试是否会复用对象 */
+//    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+    private UserService userServiceCopy;
 
     @GetMapping("/all")
     public Flux<User> findAll() {

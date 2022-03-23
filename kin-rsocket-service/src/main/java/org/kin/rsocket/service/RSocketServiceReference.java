@@ -11,17 +11,12 @@ import java.lang.annotation.*;
  * @author huangjianqin
  * @date 2021/5/19
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RSocketServiceReference {
     /**
-     * service interface
-     * 用于在{@link EnableRSocketServiceReference}直接定义RSocket service reference, 在不需要在接口上标注注解
-     *
      * @return service interface
-     * @see EnableRSocketServiceReference
-     * @see RSocketServiceReferenceRegistrar
      */
     Class<?> interfaceClass() default Void.class;
 
