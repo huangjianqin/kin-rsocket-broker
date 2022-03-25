@@ -63,6 +63,12 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
+                <artifactId>kin-rsocket-conf-redis-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
                 <artifactId>kin-rsocket-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -81,6 +87,18 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
+                <artifactId>kin-rsocket-example-grpc-gateway</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-rsocket-example-grpc-requester</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
                 <artifactId>kin-rsocket-example-requester</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -94,6 +112,30 @@
             <dependency>
                 <groupId>org.kin</groupId>
                 <artifactId>kin-rsocket-example-springcloud</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-spring-rsocket-example-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-spring-rsocket-example-requester</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-spring-rsocket-example-responder</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-rsocket-gateway-grpc-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -124,6 +166,12 @@
             <dependency>
                 <groupId>org.kin</groupId>
                 <artifactId>kin-rsocket-service-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-spring-rsocket-support-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
