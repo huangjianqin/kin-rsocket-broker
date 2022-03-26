@@ -7,6 +7,7 @@ import org.kin.framework.utils.Extension;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -68,32 +69,18 @@ public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBal
         }
 
         @Override
-        public void add(RSocket obj, int weight) {
+        protected void applySlot(SortedMap<Long, RSocket> circle, String s, RSocket node) {
             if (hashCode == 0) {
                 //初始化
-                super.add(obj, weight);
+                super.applySlot(circle, s, node);
                 return;
             }
+
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void remove(RSocket obj, int weight) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void add(RSocket obj) {
-            if (hashCode == 0) {
-                //初始化
-                super.add(obj);
-                return;
-            }
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void remove(RSocket obj) {
+        protected void removeSlot(SortedMap<Long, RSocket> circle, String s) {
             throw new UnsupportedOperationException();
         }
     }
