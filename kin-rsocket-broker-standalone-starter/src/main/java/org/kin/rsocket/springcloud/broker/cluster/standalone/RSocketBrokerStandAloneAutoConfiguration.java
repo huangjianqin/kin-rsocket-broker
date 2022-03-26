@@ -1,7 +1,10 @@
 package org.kin.rsocket.springcloud.broker.cluster.standalone;
 
 import org.kin.rsocket.broker.RSocketBrokerAutoConfiguration;
+import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
+import org.kin.rsocket.core.UpstreamCluster;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +22,8 @@ public class RSocketBrokerStandAloneAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(RSocketBrokerManager.class)
-    public RSocketBrokerManager brokerManager() {
-        return new StandAloneBrokerManager();
+    public RSocketBrokerManager brokerManager(@Autowired(required = false) UpstreamCluster upstreamBrokers,
+                                              @Autowired RSocketBrokerProperties brokerConfig) {
+        return new StandAloneBrokerManager(upstreamBrokers, brokerConfig);
     }
 }

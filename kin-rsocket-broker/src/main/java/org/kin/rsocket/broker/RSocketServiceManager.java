@@ -100,9 +100,6 @@ public final class RSocketServiceManager {
         if (!brokerManager.isStandAlone()) {
             //broker集群变化通知downstream
             this.brokerManager.brokersChangedFlux().flatMap(this::broadcastClusterTopology).subscribe();
-            this.brokerManager.brokersChangedFlux().subscribe(this::refreshClusterUpstreamBrokers);
-            //先刷新一次
-            refreshClusterUpstreamBrokers(brokerManager.all());
         }
         this.router = router;
         this.p2pServiceNotificationSink = p2pServiceNotificationSink;
@@ -414,16 +411,6 @@ public final class RSocketServiceManager {
         return CloudEventBuilder.builder(upstreamClusterChangedEvent)
                 .dataSchema(URI.create("rsocket:" + UpstreamClusterChangedEvent.class.getName()))
                 .build();
-    }
-
-    /**
-     * 在集群模式下, 创建集群中与其余broker的连接
-     */
-    private void refreshClusterUpstreamBrokers(Collection<BrokerInfo> brokerInfos) {
-        List<String> uris = new ArrayList<>(upstreamBrokers.getUris());
-        uris.addAll(brokerInfos.stream().map(BrokerInfo::getUrl).collect(Collectors.toList()));
-
-        upstreamBrokers.refreshUris(uris);
     }
 
     /**
