@@ -366,10 +366,13 @@ public final class RSocketServiceRequestHandler extends RequestHandlerSupport {
      */
     private static ByteBuf toMimeAndContentBuffersSlices(MessageMimeTypeMetadata metadata) {
         ByteBuf buf = Unpooled.buffer(5, 5);
+        //|0x80 代表第一个byte仅仅是mime type
         buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
+        //24bit代表内容长度
         buf.writeByte(0);
         buf.writeByte(0);
         buf.writeByte(1);
+        //内容
         buf.writeByte(metadata.getMessageMimeType().getId() | 0x80);
         return buf;
     }
