@@ -10,7 +10,8 @@
     <description>kin-rsocket-broker项目第三方依赖清单</description>
 
     <properties>
-        <kin-framework.version>0.1.0.0</kin-framework.version>
+        <kin-framework-java.version>0.1.0.0</kin-framework-java.version>
+        <kin-framework-dependencies.version>0.1.0.0</kin-framework-dependencies.version>
         <kin-transport.version>0.1.0.0</kin-transport.version>
         <jmh.version>1.21</jmh.version>
         <jackson.version>2.10.1</jackson.version>
@@ -78,16 +79,14 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-framework-bom</artifactId>
-                <version>${kin-framework.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
+                <artifactId>kin-framework-java</artifactId>
+                <version>${kin-framework-java.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.kin</groupId>
                 <artifactId>kin-framework-dependencies</artifactId>
-                <version>${kin-framework.version}</version>
+                <version>${kin-framework-dependencies.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
