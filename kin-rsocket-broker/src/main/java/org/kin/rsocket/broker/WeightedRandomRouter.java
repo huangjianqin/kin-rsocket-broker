@@ -1,15 +1,14 @@
 package org.kin.rsocket.broker;
 
-import org.eclipse.collections.impl.multimap.list.FastListMultimap;
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.kin.rsocket.core.ServiceLocator;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 /**
  * 加权随机路由
- * 当全部app权重都一样时, 即为简单Random
  * <p>
  * 基于copy on write更新数据
  *
@@ -17,61 +16,187 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 2021/5/7
  */
 public class WeightedRandomRouter implements ProviderRouter {
-    /** key -> serviceId, value -> list(instanceId, 也就是hash(app uuid) (会重复的, 数量=权重, 用于随机获取对应的instanceId)) */
-    private FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>();
+    /** key -> serviceId, value -> {@link InstanceIdWeightList} */
+    private UnifiedMap<Integer, InstanceIdWeightList> serviceId2InstanceIdWeightList = new UnifiedMap<>();
 
     @Override
     public Integer route(int serviceId) {
-        int instanceId;
-        List<Integer> instanceIds = serviceId2InstanceIds.get(serviceId);
-        int handlerCount = instanceIds.size();
-        if (handlerCount > 1) {
-            try {
-                instanceId = instanceIds.get(ThreadLocalRandom.current().nextInt(handlerCount));
-            } catch (Exception e) {
-                instanceId = instanceIds.get(0);
-            }
-        } else if (handlerCount == 1) {
-            instanceId = instanceIds.get(0);
-        } else {
+        InstanceIdWeightList instanceIdWeightList = serviceId2InstanceIdWeightList.get(serviceId);
+        if (Objects.isNull(instanceIdWeightList)) {
             return null;
         }
 
-        return instanceId;
+        return instanceIdWeightList.weightedRandom();
     }
 
     @Override
     public void onAppRegistered(RSocketEndpoint rsocketEndpoint, int weight, Collection<ServiceLocator> services) {
         //copy on write
+        UnifiedMap<Integer, InstanceIdWeightList> serviceId2InstanceIdWeightList = new UnifiedMap<>(this.serviceId2InstanceIdWeightList);
         int instanceId = rsocketEndpoint.getId();
-        FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>(this.serviceId2InstanceIds);
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
 
-            for (int i = 0; i < weight; i++) {
-                //put n个
-                serviceId2InstanceIds.put(serviceId, instanceId);
+            InstanceIdWeightList instanceIdWeightList = serviceId2InstanceIdWeightList.get(serviceId);
+            if (Objects.isNull(instanceIdWeightList)) {
+                //没有, 则创建
+                instanceIdWeightList = new InstanceIdWeightList();
+                serviceId2InstanceIdWeightList.put(serviceId, instanceIdWeightList);
             }
+            instanceIdWeightList.updateInstanceIdWeight(instanceId, weight);
         }
-        this.serviceId2InstanceIds = serviceId2InstanceIds;
+        this.serviceId2InstanceIdWeightList = serviceId2InstanceIdWeightList;
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds) {
         //copy on write
-        FastListMultimap<Integer, Integer> serviceId2InstanceIds = new FastListMultimap<>(this.serviceId2InstanceIds);
+        UnifiedMap<Integer, InstanceIdWeightList> serviceId2InstanceIdWeightList = new UnifiedMap<>(this.serviceId2InstanceIdWeightList);
         for (Integer serviceId : serviceIds) {
-            //移除所有相同的instanceId
-            while (serviceId2InstanceIds.remove(serviceId, instanceId)) {
-                //do nothing
+            InstanceIdWeightList instanceIdWeightList = serviceId2InstanceIdWeightList.get(serviceId);
+            if (Objects.isNull(instanceIdWeightList)) {
+                continue;
             }
+            instanceIdWeightList.removeInstance(instanceId);
         }
-        this.serviceId2InstanceIds = serviceId2InstanceIds;
+        this.serviceId2InstanceIdWeightList = serviceId2InstanceIdWeightList;
     }
 
     @Override
     public Collection<Integer> getAllInstanceIds(int serviceId) {
-        return serviceId2InstanceIds.get(serviceId).distinct().asUnmodifiable();
+        InstanceIdWeightList instanceIdWeightList = serviceId2InstanceIdWeightList.get(serviceId);
+        if (Objects.isNull(instanceIdWeightList)) {
+            return Collections.emptyList();
+        }
+        return instanceIdWeightList.instanceIdWeights.stream().map(wii -> wii.instanceId).collect(Collectors.toSet());
+    }
+
+    /**
+     *
+     */
+    private static class InstanceIdWeightList {
+        /** app instance id和权重 */
+        private List<InstanceIdWeight> instanceIdWeights = Collections.emptyList();
+
+        /** 计算加权后各app instance的权重 */
+        private List<Integer> weights = Collections.emptyList();
+
+        /**
+         * 新app instance注册, 更新缓存信息
+         */
+        public void updateInstanceIdWeight(int instanceId, int weight) {
+            updateInstanceIdWeight(new InstanceIdWeight(instanceId, weight));
+        }
+
+        /**
+         * 新app instance注册, 更新缓存信息
+         */
+        public void updateInstanceIdWeight(InstanceIdWeight instanceIdWeight) {
+            updateInstanceIdWeights(Collections.singletonList(instanceIdWeight));
+        }
+
+        /**
+         * 新app instance注册, 更新缓存信息
+         */
+        public void updateInstanceIdWeights(List<InstanceIdWeight> newInstanceIdWeights) {
+            List<InstanceIdWeight> instanceIdWeights = new ArrayList<>(this.instanceIdWeights);
+            instanceIdWeights.addAll(newInstanceIdWeights);
+
+            updateInstanceIdWeights0(instanceIdWeights);
+        }
+
+        /**
+         * 原有app instance取消注册, 移除缓存信息
+         */
+        public void removeInstance(int instanceId) {
+            List<InstanceIdWeight> instanceIdWeights = new ArrayList<>(this.instanceIdWeights);
+            instanceIdWeights.removeIf(wii -> wii.instanceId == instanceId);
+
+            updateInstanceIdWeights0(instanceIdWeights);
+        }
+
+        /**
+         * 更新缓存数据
+         *
+         * @param instanceIdWeights 此时存活的app instance id和weight
+         */
+        private void updateInstanceIdWeights0(List<InstanceIdWeight> instanceIdWeights) {
+            List<Integer> weights = calculateWeights(instanceIdWeights);
+
+            this.instanceIdWeights = instanceIdWeights;
+            this.weights = weights;
+        }
+
+        /**
+         * 计算加权后各app instance的权重
+         */
+        private List<Integer> calculateWeights(List<InstanceIdWeight> instanceIdWeights) {
+            List<Integer> weights = new ArrayList<>(instanceIdWeights.size());
+            for (InstanceIdWeight instanceIdWeight : instanceIdWeights) {
+                weights.add(instanceIdWeight.weight);
+            }
+
+            for (int i = 1; i < weights.size(); i++) {
+                weights.set(i, weights.get(i) + weights.get(i - 1));
+            }
+
+            return weights;
+        }
+
+        /**
+         * @return 加权随机出app instance id
+         */
+        public int weightedRandom() {
+            int totalWeight = weights.get(weights.size() - 1);
+            int value = ThreadLocalRandom.current().nextInt(totalWeight + 1);
+            return instanceIdWeights.get(binarySearchIndex(value)).instanceId;
+        }
+
+        /**
+         * 二分搜索查找随机app instance index
+         */
+        private int binarySearchIndex(int value) {
+            int low = 0;
+            int high = weights.size() - 1;
+
+            while (low <= high) {
+                int mid = (low + high) >>> 1;
+                long midVal = weights.get(mid);
+
+                if (midVal < value) {
+                    low = mid + 1;
+                } else if (midVal > value) {
+                    high = mid - 1;
+                } else {
+                    return mid;
+                }
+            }
+
+            return low;
+        }
+    }
+
+    /**
+     * app instance id和weight
+     */
+    private static final class InstanceIdWeight {
+        /** app instance id */
+        private final int instanceId;
+        /** 权重 */
+        private final int weight;
+
+        public InstanceIdWeight(int instanceId, int weight) {
+            this.instanceId = instanceId;
+            this.weight = weight;
+        }
+
+        //getter
+        public int getInstanceId() {
+            return instanceId;
+        }
+
+        public int getWeight() {
+            return weight;
+        }
     }
 }
