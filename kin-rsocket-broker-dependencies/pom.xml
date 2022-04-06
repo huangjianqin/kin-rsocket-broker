@@ -16,7 +16,7 @@
         <jmh.version>1.21</jmh.version>
         <jackson.version>2.10.1</jackson.version>
         <javassist.version>3.25.0-GA</javassist.version>
-        <spring-cloud-release.version>2020.0.2</spring-cloud-release.version>
+        <springcloud.version>2020.0.4</springcloud.version>
         <springboot.version>2.6.6</springboot.version>
         <reactor.version>2020.0.16</reactor.version>
         <rsocket.version>1.1.2</rsocket.version>
@@ -48,7 +48,7 @@
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud-release.version}</version>
+                <version>${springcloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
