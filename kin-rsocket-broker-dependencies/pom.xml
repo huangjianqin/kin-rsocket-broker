@@ -20,9 +20,9 @@
         <springboot.version>2.6.6</springboot.version>
         <reactor.version>2020.0.16</reactor.version>
         <rsocket.version>1.1.2</rsocket.version>
-        <cloudevents.version>2.0.0.RC2</cloudevents.version>
+        <cloudevents.version>2.3.0</cloudevents.version>
         <java-jwt.version>3.19.1</java-jwt.version>
-        <scalecube-cluster.version>2.6.9</scalecube-cluster.version>
+        <scalecube-cluster.version>2.6.12</scalecube-cluster.version>
         <byte-buddy.version>1.12.8</byte-buddy.version>
         <guava.version>30.1-jre</guava.version>
         <feign-reactor.version>3.0.0</feign-reactor.version>
@@ -114,6 +114,12 @@
             <dependency>
                 <groupId>io.scalecube</groupId>
                 <artifactId>scalecube-codec-jackson</artifactId>
+                <version>${scalecube-cluster.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.scalecube</groupId>
+                <artifactId>scalecube-transport-netty</artifactId>
                 <version>${scalecube-cluster.version}</version>
             </dependency>
 
