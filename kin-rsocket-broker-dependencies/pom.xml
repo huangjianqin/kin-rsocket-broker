@@ -17,18 +17,18 @@
         <jackson.version>2.10.1</jackson.version>
         <javassist.version>3.25.0-GA</javassist.version>
         <spring-cloud-release.version>2020.0.2</spring-cloud-release.version>
-        <springboot.version>2.5.0</springboot.version>
-        <reactor.version>2020.0.0</reactor.version>
-        <rsocket.version>1.1.0</rsocket.version>
+        <springboot.version>2.6.6</springboot.version>
+        <reactor.version>2020.0.16</reactor.version>
+        <rsocket.version>1.1.2</rsocket.version>
         <cloudevents.version>2.0.0.RC2</cloudevents.version>
-        <java-jwt.version>3.12.1</java-jwt.version>
+        <java-jwt.version>3.19.1</java-jwt.version>
         <scalecube-cluster.version>2.6.9</scalecube-cluster.version>
-        <byte-buddy.version>1.10.18</byte-buddy.version>
+        <byte-buddy.version>1.12.8</byte-buddy.version>
         <guava.version>30.1-jre</guava.version>
         <feign-reactor.version>3.0.0</feign-reactor.version>
-        <zipkin-brave.version>5.13.3</zipkin-brave.version>
-        <protobuf-java.version>3.17.3</protobuf-java.version>
-        <grpc.version>1.39.0</grpc.version>
+        <zipkin-brave.version>5.13.7</zipkin-brave.version>
+        <protobuf-java.version>3.19.4</protobuf-java.version>
+        <grpc.version>1.45.1</grpc.version>
         <reactive-grpc.version>1.1.0</reactive-grpc.version>
         <grpc-spring-boot-starter.version>4.5.5</grpc-spring-boot-starter.version>
         <kin-serialization.version>0.1.0.0</kin-serialization.version>
