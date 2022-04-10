@@ -39,14 +39,14 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
     @Override
     public PropertySource<?> locate(Environment environment) {
         /*
-         * 没有下面三个字段信息, 无法从broker那获取到具体的配置信息
-         *
          * ContextRefresher.refresh时, 只会重新加载bootstrap.yml配置, 不包括application.yml, 所有下面是三个配置信息必须要在bootstrap.yml里面定义
+         * 不然会locate不到property source
          * 可以通过定义spring.cloud.refresh.additionalPropertySourcesToRetain, 让copy environment时, 把指定配置的内容也copy过来
          *
          * 如果bootstrap.yml没有任何内容, 则会去加载application.yml, 但bootstrap.yml有任何内容, 则不会先加载application.yml
          * 因此仅仅有application.yml也可以remote fetch configs, 但不支持刷新
          */
+        //没有下面三个字段信息, 无法从broker那获取到具体的配置信息
         String jwtToken = environment.getProperty("kin.rsocket.jwt-token");
         //broker rsocket url
         String brokers = environment.getProperty("kin.rsocket.brokers");

@@ -32,18 +32,23 @@ public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<Confi
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, ConfigChangedEvent event) {
         // validate app name
-        if (event != null && applicationName.equalsIgnoreCase(event.getAppName())
-                && !locator.getLastContent().equals(event.getContent())) {
-            Properties confs = locator.getConfs();
-            if (confs != null) {
-                try {
-                    PropertiesUtils.loadPropertiesContent(confs, event.getContent());
-                    log.info("Succeed to receive config: ".concat(confs.toString()));
-                    //refresh environment, @RefreshScope bean, then configuration properties bean
-                    contextRefresher.refresh();
-                    log.info("Succeed to refresh Application");
-                } catch (Exception e) {
-                    log.info("Failed to parse the config properties", e);
+        if (event != null && applicationName.equalsIgnoreCase(event.getAppName())) {
+            String content = event.getContent();
+            if (!locator.getLastContent().equals(content)) {
+                //update
+                locator.setLastContent(content);
+                //prepare to refresh
+                Properties confs = locator.getConfs();
+                if (confs != null) {
+                    try {
+                        PropertiesUtils.loadPropertiesContent(confs, content);
+                        log.info("Succeed to receive config: ".concat(confs.toString()));
+                        //refresh environment, @RefreshScope bean, then configuration properties bean
+                        contextRefresher.refresh();
+                        log.info("Succeed to refresh Application");
+                    } catch (Exception e) {
+                        log.info("Failed to parse the config properties", e);
+                    }
                 }
             }
         }
