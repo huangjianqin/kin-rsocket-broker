@@ -17,11 +17,11 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>org.kin</groupId>-->
-        <!--            <artifactId>kin-rsocket-service-conf-client-starter</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-service-conf-client-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- byte buddy(基于ASM) -->
         <dependency>
