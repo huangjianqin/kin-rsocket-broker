@@ -1,7 +1,10 @@
 package org.kin.rsocket.spingcloud.conf.client;
 
+import org.kin.framework.collection.Tuple;
+import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.PropertiesUtils;
+import org.kin.framework.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
@@ -13,8 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URI;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * RSocket Config properties source locator from RSocket Broker
@@ -36,7 +38,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
 
     @Override
     public PropertySource<?> locate(Environment environment) {
-        /**
+        /*
          * 没有下面三个字段信息, 无法从broker那获取到具体的配置信息
          *
          * ContextRefresher.refresh时, 只会重新加载bootstrap.yml配置, 不包括application.yml, 所有下面是三个配置信息必须要在bootstrap.yml里面定义
@@ -46,19 +48,30 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
          * 因此仅仅有application.yml也可以remote fetch configs, 但不支持刷新
          */
         String jwtToken = environment.getProperty("kin.rsocket.jwt-token");
-        String rsocketBrokers = environment.getProperty("kin.rsocket.brokers");
+        //broker rsocket url
+        String brokers = environment.getProperty("kin.rsocket.brokers");
         String applicationName = environment.getProperty("spring.application.name");
+        //broker web host and port
+        String brokerWebHostPorts = environment.getProperty("kin.rsocket.brokerWebHostPorts");
 
         if (Objects.nonNull(this.source)) {
             return source;
         }
 
-        if (jwtToken != null && rsocketBrokers != null && applicationName != null) {
+        //broker web host and port
+        List<Tuple<String, Integer>> webHostPorts;
+        if (StringUtils.isNotBlank(brokerWebHostPorts)) {
+            //配置了web host and port
+            webHostPorts = toBrokerWebHostPorts(brokerWebHostPorts);
+        } else {
+            webHostPorts = parseBrokerWebHostPorts(brokers);
+        }
+
+        if (jwtToken != null && CollectionUtils.isNonEmpty(webHostPorts) && applicationName != null) {
             Properties confs = new Properties();
-            for (String rsocketBroker : rsocketBrokers.split(",")) {
-                URI rsocketUri = URI.create(rsocketBroker);
+            for (Tuple<String, Integer> webHostPort : webHostPorts) {
                 //首次通过http请求获取
-                String httpUri = "http://" + rsocketUri.getHost() + ":" + (rsocketUri.getPort() - 1) + "/api/org.kin.rsocket.core.conf.ConfigurationService/get";
+                String httpUri = "http://" + webHostPort.first() + ":" + webHostPort.second() + "/api/org.kin.rsocket.core.conf.ConfigurationService/get";
                 try {
                     String confText = WebClient.create().post()
                             .uri(httpUri)
@@ -95,6 +108,40 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
         String errorMsg = "please setup spring.application.name, kin.rsocket.jwt-token and kin.rsocket.brokers in bootstrap.yml";
         log.error(errorMsg);
         throw new RuntimeException(errorMsg);
+    }
+
+    /**
+     * 从broker rsocket url解析出broker web host and port列表
+     */
+    private List<Tuple<String, Integer>> parseBrokerWebHostPorts(String brokers) {
+        if (StringUtils.isBlank(brokers)) {
+            return Collections.emptyList();
+        }
+
+        List<Tuple<String, Integer>> hostPorts = new ArrayList<>(4);
+        for (String brokerUriStr : brokers.split(",")) {
+            URI brokerUri = URI.create(brokerUriStr);
+
+            hostPorts.add(new Tuple<>(brokerUri.getHost(), brokerUri.getPort() - 1));
+        }
+        return hostPorts;
+    }
+
+    /**
+     * 将broker web host and port转化成host and port列表
+     */
+    private List<Tuple<String, Integer>> toBrokerWebHostPorts(String brokerWebHostPorts) {
+        if (StringUtils.isBlank(brokerWebHostPorts)) {
+            return Collections.emptyList();
+        }
+
+        List<Tuple<String, Integer>> hostPorts = new ArrayList<>(4);
+        for (String brokerWebHostPortStr : brokerWebHostPorts.split(",")) {
+            String[] splits = brokerWebHostPortStr.split(":");
+
+            hostPorts.add(new Tuple<>(splits[0], Integer.parseInt(splits[1])));
+        }
+        return hostPorts;
     }
 
     //getter && setter

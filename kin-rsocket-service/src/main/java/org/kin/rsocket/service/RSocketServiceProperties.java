@@ -39,6 +39,8 @@ public class RSocketServiceProperties {
      * @see org.kin.rsocket.core.upstream.loadbalance.UpstreamLoadBalance
      */
     private String loadBalance;
+    /** broker web host and port */
+    private List<String> brokerWebHostPorts = Collections.emptyList();
 
     //setter && getter
     public String getSchema() {
@@ -130,6 +132,14 @@ public class RSocketServiceProperties {
         return this;
     }
 
+    public List<String> getBrokerWebHostPorts() {
+        return brokerWebHostPorts;
+    }
+
+    public void setBrokerWebHostPorts(List<String> brokerWebHostPorts) {
+        this.brokerWebHostPorts = brokerWebHostPorts;
+    }
+
     //----------------------------------------------------------------------------------------------------------------------------------------
     public static Builder builder() {
         return new Builder();
@@ -205,6 +215,15 @@ public class RSocketServiceProperties {
         public Builder loadBalance(UpstreamLoadBalanceStrategy strategy) {
             rsocketServiceProperties.loadBalance = strategy.getName();
             return this;
+        }
+
+        public Builder brokerWebHostPorts(List<String> brokerWebHostPorts) {
+            rsocketServiceProperties.brokerWebHostPorts = brokerWebHostPorts;
+            return this;
+        }
+
+        public Builder brokerWebHostPorts(String... brokerWebHostPorts) {
+            return brokers(Arrays.asList(brokerWebHostPorts));
         }
 
         public RSocketServiceProperties build() {
