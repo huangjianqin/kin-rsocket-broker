@@ -15,6 +15,7 @@
         <module>kin-rsocket-conf-memory-starter</module>
         <module>kin-rsocket-conf-h2-starter</module>
         <module>kin-rsocket-conf-redis-starter</module>
+        <module>kin-rsocket-conf-server-starter</module>
     </modules>
 
     <dependencies>

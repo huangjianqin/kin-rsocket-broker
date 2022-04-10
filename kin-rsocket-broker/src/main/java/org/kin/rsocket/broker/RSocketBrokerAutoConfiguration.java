@@ -10,7 +10,6 @@ import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.CloudEventNotifyServiceImpl;
 import org.kin.rsocket.broker.services.DiscoveryServiceImpl;
 import org.kin.rsocket.broker.services.HealthService;
-import org.kin.rsocket.conf.ConfDiamond;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.event.CloudEventConsumer;
@@ -93,12 +92,6 @@ public class RSocketBrokerAutoConfiguration {
     @ConditionalOnBean(name = "upstreamBrokerCluster", value = UpstreamCluster.class)
     public UpstreamClusterChangedEventConsumer upstreamClusterChangedEventConsumer() {
         return new UpstreamClusterChangedEventConsumer();
-    }
-
-    @Bean
-    @ConditionalOnBean(ConfDiamond.class)
-    public BrokerConfigChangedEventConsumer brokerConfigChangedEventConsumer() {
-        return new BrokerConfigChangedEventConsumer();
     }
 
     @Bean
@@ -284,12 +277,6 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnBean(ConfDiamond.class)
-    public ConfigController configController() {
-        return new ConfigController();
-    }
-
-    @Bean
     public OprController oprController() {
         return new OprController();
     }
@@ -314,12 +301,4 @@ public class RSocketBrokerAutoConfiguration {
         //根据应用区分监控指标
         return registry -> registry.config().commonTags("application", "kin-rsocket-broker-".concat(springAppName));
     }
-
-    //----------------------------------------------conf----------------------------------------------
-    @Bean
-    @ConditionalOnBean(ConfDiamond.class)
-    public ConfWatcher confWatcher() {
-        return new ConfWatcher();
-    }
-
 }

@@ -24,12 +24,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-conf-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
         <!-- reactive web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

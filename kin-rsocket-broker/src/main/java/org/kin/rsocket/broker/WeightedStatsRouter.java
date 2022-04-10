@@ -6,8 +6,8 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.multimap.list.FastListMultimap;
 import org.jctools.maps.NonBlockingHashMap;
 import org.kin.rsocket.core.ServiceLocator;
-import reactor.util.annotation.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -27,11 +27,12 @@ public class WeightedStatsRouter implements ProviderRouter {
     /** key -> serviceId, value -> {@link WeightedInstance} list */
     private FastListMultimap<Integer, WeightedInstance> serviceId2WeightedInstances = new FastListMultimap<>();
 
+    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public Integer route(int serviceId) {
         MutableList<WeightedInstance> weightedInstances = serviceId2WeightedInstances.get(serviceId);
         //有效的rsocket service instance
-        List<WeightedInstance> vaildInstances = new ArrayList<>();
+        List<WeightedInstance> validInstances = new ArrayList<>();
         //有效的rsocket service instance及对应的WeightedStats
         Map<Integer, WeightedStats> validStatsMap = new HashMap<>();
 
@@ -41,23 +42,25 @@ public class WeightedStatsRouter implements ProviderRouter {
             if (Objects.isNull(stats)) {
                 continue;
             }
-            vaildInstances.add(weightedInstance);
+            validInstances.add(weightedInstance);
             validStatsMap.put(instanceId, stats);
         }
 
-        int size = vaildInstances.size();
+        int size = validInstances.size();
         switch (size) {
+            case 0:
+                return null;
             case 1:
                 //只有1个, 直接返回
-                return vaildInstances.get(0).instanceId;
+                return validInstances.get(0).instanceId;
             case 2: {
                 //只有两个, 选择权重大的
-                WeightedInstance fwi = vaildInstances.get(0);
+                WeightedInstance fwi = validInstances.get(0);
                 Integer fii = fwi.instanceId;
                 WeightedStats fws = validStatsMap.get(fii);
 
-                WeightedInstance swi = vaildInstances.get(0);
-                Integer sii = vaildInstances.get(1).instanceId;
+                WeightedInstance swi = validInstances.get(0);
+                Integer sii = validInstances.get(1).instanceId;
                 WeightedStats sws = validStatsMap.get(sii);
 
                 double w1 = algorithmicWeight(fwi.requester, fws);
@@ -75,29 +78,23 @@ public class WeightedStatsRouter implements ProviderRouter {
 
                 WeightedInstance swi = null;
                 WeightedStats sws = null;
-                //尝试随机取出两个有效的requester
-                List<WeightedInstance> validInstancesDuplicate = new ArrayList<>(weightedInstances);
-                //加权随机选出一个availability的requester
-                while (validInstancesDuplicate.size() > 0 &&
-                        (Objects.isNull((fwi = random(validInstancesDuplicate))) || fwi.requester.availability() <= 0.0)) {
-                    //do nothing
-                }
 
+                //尝试随机取出两个有效的requester
+                List<WeightedInstance> validWeightedInstances = new ArrayList<>(weightedInstances);
+
+                //加权随机选出一个availability的requester
+                fwi = random(validWeightedInstances);
                 if (Objects.nonNull(fwi)) {
                     fws = validStatsMap.get(fwi.instanceId);
                 }
 
                 //再次加权随机选出一个availability的requester
-                while (validInstancesDuplicate.size() > 0 &&
-                        (Objects.isNull((swi = random(validInstancesDuplicate))) || swi.requester.availability() <= 0.0)) {
-                    //do nothing
-                }
-
+                swi = random(validWeightedInstances);
                 if (Objects.nonNull(swi)) {
                     sws = validStatsMap.get(swi.instanceId);
                 }
 
-                if (fwi != null & swi != null) {
+                if (fwi != null && swi != null) {
                     //选择权重大
                     double w1 = algorithmicWeight(fwi.requester, fws);
                     double w2 = algorithmicWeight(swi.requester, sws);
@@ -108,17 +105,37 @@ public class WeightedStatsRouter implements ProviderRouter {
                     }
                 } else if (fwi != null) {
                     return fwi.instanceId;
-                } else {
+                } else if (swi != null) {
                     return swi.instanceId;
+                } else {
+                    return null;
                 }
             }
         }
     }
 
     /**
-     * 按权重随机一个rsocket requester Instance
+     * 按权重随机一个有效的rsocket requester instance
      */
+    @Nullable
     private WeightedInstance random(List<WeightedInstance> weightedInstances) {
+        while (weightedInstances.size() > 0) {
+            WeightedInstance random = weightedRandom(weightedInstances);
+            if (Objects.isNull(random) || random.requester.availability() <= 0.0D) {
+                continue;
+            }
+
+            return random;
+        }
+
+        return null;
+    }
+
+    /**
+     * 按权重随机一个rsocket requester instance
+     */
+    @Nullable
+    private WeightedInstance weightedRandom(List<WeightedInstance> weightedInstances) {
         int sumWeight = weightedInstances.stream().mapToInt(wi -> wi.weight).sum();
         int random = ThreadLocalRandom.current().nextInt(sumWeight + 1);
         int tempWeight = 0;

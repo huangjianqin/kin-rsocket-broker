@@ -5,10 +5,11 @@
     <parent>
         <artifactId>kin-rsocket-example</artifactId>
         <groupId>org.kin</groupId>
-        <version>${revision}</version>
+        <version>0.1.0.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-example-requester</artifactId>
+    <artifactId>kin-rsocket-example-conf-server-service</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -19,27 +20,20 @@
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-gateway-http-starter</artifactId>
+            <artifactId>kin-rsocket-conf-server-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>org.kin</groupId>-->
-        <!--            <artifactId>kin-rsocket-service-conf-client-starter</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-conf-memory-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- byte buddy(基于ASM) -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
         </dependency>
-
-        <!-- reactive web -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
     </dependencies>
-
 </project>

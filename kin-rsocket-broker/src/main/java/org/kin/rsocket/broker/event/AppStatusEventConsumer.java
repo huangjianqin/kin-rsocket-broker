@@ -1,6 +1,5 @@
 package org.kin.rsocket.broker.event;
 
-import org.kin.rsocket.broker.ConfWatcher;
 import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -21,8 +20,6 @@ import java.util.Objects;
 public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> {
     @Autowired
     private RSocketServiceManager serviceManager;
-    @Autowired(required = false)
-    private ConfWatcher confWatcher;
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, AppStatusEvent event) {
@@ -35,13 +32,6 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                     AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
                     if (event.getStatus().equals(AppStatus.CONNECTED)) {
                         //app connected
-                        if (Objects.nonNull(confWatcher)) {
-                            String autoRefreshKey = "auto-refresh";
-                            if ("true".equalsIgnoreCase(appMetadata.getMetadata(autoRefreshKey))) {
-                                //broker主动监听配置变化, 并通知app refresh context
-                                confWatcher.listenConfChange(appMetadata);
-                            }
-                        }
                     } else if (event.getStatus().equals(AppStatus.SERVING)) {
                         //app serving
                         rsocketEndpoint.publishServices();
@@ -52,17 +42,11 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                         //app stopped
                         rsocketEndpoint.hideServices();
                         rsocketEndpoint.setAppStatus(AppStatus.STOPPED);
-                        if (Objects.nonNull(confWatcher)) {
-                            confWatcher.tryRemoveInvalidListen();
-                        }
                     }
                 } else {
                     //upstream断开连接时, 先移除responder, 再广播事件, 所以此次要特殊处理一下
                     if (event.getStatus().equals(AppStatus.STOPPED)) {
-                        //app stopped
-                        if (Objects.nonNull(confWatcher)) {
-                            confWatcher.tryRemoveInvalidListen();
-                        }
+
                     }
                 }
             }

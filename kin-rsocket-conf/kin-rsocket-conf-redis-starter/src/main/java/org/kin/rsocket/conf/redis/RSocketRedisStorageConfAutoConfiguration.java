@@ -1,22 +1,22 @@
 package org.kin.rsocket.conf.redis;
 
 import org.kin.rsocket.conf.ConfDiamond;
-import org.kin.rsocket.conf.RSocketConfDiamondConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * @author huangjianqin
  * @date 2021/8/20
  */
-@RSocketConfDiamondConfiguration
+@Configuration
 @AutoConfigureAfter(RedisReactiveAutoConfiguration.class)
 public class RSocketRedisStorageConfAutoConfiguration {
     @Bean
     @ConditionalOnProperty("spring.redis.port")
-    public ConfDiamond configurationService() {
+    public ConfDiamond redisStorageConfDiamond() {
         return new RedisStorageConfDiamond();
     }
 }

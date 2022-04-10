@@ -41,10 +41,11 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud
 * **kin-rsocket-broker-standalone-starter**: standalone broker实现, 整合spring cloud
 * **kin-rsocket-cloud-function-starter**: rsocket service兼容spring cloud function实现
-* **kin-rsocket-conf**: broker配置中心模块
-  * **kin-rsocket-conf-api**: : broker配置中心接口api模块
+* **kin-rsocket-conf**: rsocket service配置中心模块
+  * **kin-rsocket-conf-api**: : rsocket service配置中心接口api模块
   * **kin-rsocket-conf-h2-starter**: 基于h2文件系统实现的配置中心
   * **kin-rsocket-conf-memory-starter**: 基于内存实现的配置中心
+  * **kin-rsocket-conf-server-starter**: rsocket service配置中心实现, 以broker作为桥梁, 为同一broker集群下的app提供配置中心服务
 * **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
 * **kin-roscket-example**: rsocket示例
   * **kin-roscket-example-api**: rsocket broker示例api
@@ -52,6 +53,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
   * **kin-roscket-example-requester**: rsocket consumer示例
   * **kin-roscket-example-responder**: rsocket service示例
   * **kin-roscket-example-springcloud**: rsocket service整合spring cloud示例
+  * **kin-rsocket-example-conf-server-service**: rsocket conf server service示例
 * **kin-rsocket-gateway-http-starter**: rsocket service http gateway
 * **kin-rsocket-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
 * **kin-roscket-service**: rsocket服务实现

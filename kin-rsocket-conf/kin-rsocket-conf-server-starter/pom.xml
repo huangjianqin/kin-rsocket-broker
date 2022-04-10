@@ -3,42 +3,43 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>kin-rsocket-example</artifactId>
+        <artifactId>kin-rsocket-conf</artifactId>
         <groupId>org.kin</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-rsocket-example-requester</artifactId>
+    <artifactId>kin-rsocket-conf-server-starter</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-example-api</artifactId>
+            <artifactId>kin-rsocket-service-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-gateway-http-starter</artifactId>
+            <artifactId>kin-rsocket-conf-api</artifactId>
             <version>${project.version}</version>
-        </dependency>
-
-        <!--        <dependency>-->
-        <!--            <groupId>org.kin</groupId>-->
-        <!--            <artifactId>kin-rsocket-service-conf-client-starter</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
-
-        <!-- byte buddy(基于ASM) -->
-        <dependency>
-            <groupId>net.bytebuddy</groupId>
-            <artifactId>byte-buddy</artifactId>
         </dependency>
 
         <!-- reactive web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

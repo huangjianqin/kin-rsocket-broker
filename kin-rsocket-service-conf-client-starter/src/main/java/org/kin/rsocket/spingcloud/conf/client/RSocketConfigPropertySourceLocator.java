@@ -9,6 +9,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URI;
@@ -57,11 +58,13 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
             for (String rsocketBroker : rsocketBrokers.split(",")) {
                 URI rsocketUri = URI.create(rsocketBroker);
                 //首次通过http请求获取
-                String httpUri = "http://" + rsocketUri.getHost() + ":" + (rsocketUri.getPort() - 1) + "/config/last/" + applicationName;
+                String httpUri = "http://" + rsocketUri.getHost() + ":" + (rsocketUri.getPort() - 1) + "/api/org.kin.rsocket.core.conf.ConfigurationService/get";
                 try {
-                    String confText = WebClient.create().get()
+                    String confText = WebClient.create().post()
                             .uri(httpUri)
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue("[\"" + applicationName + "\",\"application.properties\"]")
                             .retrieve()
                             .bodyToMono(String.class)
                             .block();
@@ -69,9 +72,9 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
                         lastContent = confText;
                         PropertiesUtils.loadPropertiesContent(confs, lastContent);
                         this.confs = confs;
-                        log.info("Succeed to receive config: ".concat(confs.toString()));
+                        log.info("succeed to receive config: ".concat(confs.toString()));
                     } else {
-                        log.info(String.format("Failed to fetch config from RSocket Broker for app: '%s'", applicationName));
+                        log.warn(String.format("failed to fetch config from RSocket Broker for app: '%s'", applicationName));
                     }
                     //标识app使用了配置中心
                     confs.setProperty(ConfigMetadataKeys.CONF, "true");
@@ -89,7 +92,7 @@ public class RSocketConfigPropertySourceLocator implements PropertySourceLocator
             }
         }
 
-        String errorMsg = "Please setup spring.application.name, kin.rsocket.jwt-token and kin.rsocket.brokers in bootstrap.yml";
+        String errorMsg = "please setup spring.application.name, kin.rsocket.jwt-token and kin.rsocket.brokers in bootstrap.yml";
         log.error(errorMsg);
         throw new RuntimeException(errorMsg);
     }

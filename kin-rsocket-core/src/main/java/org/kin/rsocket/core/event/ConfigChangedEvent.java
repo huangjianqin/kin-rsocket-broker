@@ -11,6 +11,7 @@ import java.util.UUID;
  */
 public final class ConfigChangedEvent implements CloudEventSupport {
     private static final long serialVersionUID = -8370450054209813536L;
+
     /** config event logic id */
     private String id;
     /** app name */

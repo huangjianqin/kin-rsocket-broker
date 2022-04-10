@@ -10,7 +10,6 @@ import io.scalecube.cluster.membership.MembershipEvent;
 import io.scalecube.cluster.transport.api.Message;
 import io.scalecube.net.Address;
 import io.scalecube.transport.netty.tcp.TcpTransportFactory;
-import org.kin.framework.event.HandleEvent;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
@@ -41,7 +40,6 @@ import java.util.stream.Stream;
  * @author huangjianqin
  * @date 2021/3/29
  */
-@HandleEvent
 public class GossipBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, ClusterMessageHandler, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
     /** 请求新增broker数据(也就是{@link BrokerInfo})的gossip header key */

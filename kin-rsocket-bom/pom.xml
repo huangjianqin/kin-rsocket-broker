@@ -69,6 +69,12 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
+                <artifactId>kin-rsocket-conf-server-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.kin</groupId>
                 <artifactId>kin-rsocket-core</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -80,7 +80,7 @@ public class RSocketApiController {
                             return new ResponseEntity<>(payload.getDataUtf8(), headers, HttpStatus.OK);
                         });
             }
-            return Mono.just(error(String.format("Service not found '%s'", routingMetadata.gsv())));
+            return Mono.just(error(String.format("service not found, '%s'", routingMetadata.gsv())));
         } catch (Exception e) {
             return Mono.just(error(e.getMessage()));
         }
