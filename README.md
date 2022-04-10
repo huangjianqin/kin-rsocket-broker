@@ -36,8 +36,8 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-rsocket-auth**: 权限校验模块
   * **kin-rsocket-auth-api**: 权限校验接口api模块
   * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
-* **kin-roscket-bom**: kin rsocket依赖统一管理
-* **kin-roscket-broker**: rsocket broker基础功能实现
+* **kin-rsocket-bom**: kin rsocket依赖统一管理
+* **kin-rsocket-broker**: rsocket broker基础功能实现
 * **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud
 * **kin-rsocket-broker-standalone-starter**: standalone broker实现, 整合spring cloud
 * **kin-rsocket-cloud-function-starter**: rsocket service兼容spring cloud function实现
@@ -46,19 +46,19 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
   * **kin-rsocket-conf-h2-starter**: 基于h2文件系统实现的配置中心
   * **kin-rsocket-conf-memory-starter**: 基于内存实现的配置中心
   * **kin-rsocket-conf-server-starter**: rsocket service配置中心实现, 以broker作为桥梁, 为同一broker集群下的app提供配置中心服务
-* **kin-roscket-core**: rsocket核心功能, 实现一些共用的基础功能类
-* **kin-roscket-example**: rsocket示例
-  * **kin-roscket-example-api**: rsocket broker示例api
-  * **kin-roscket-example-broker**: rsocket broker示例
-  * **kin-roscket-example-requester**: rsocket consumer示例
-  * **kin-roscket-example-responder**: rsocket service示例
-  * **kin-roscket-example-springcloud**: rsocket service整合spring cloud示例
+* **kin-rsocket-core**: rsocket核心功能, 实现一些共用的基础功能类
+* **kin-rsocket-example**: rsocket示例
+  * **kin-rsocket-example-api**: rsocket broker示例api
+  * **kin-rsocket-example-broker**: rsocket broker示例
+  * **kin-rsocket-example-requester**: rsocket consumer示例
+  * **kin-rsocket-example-responder**: rsocket service示例
+  * **kin-rsocket-example-springcloud**: rsocket service整合spring cloud示例
   * **kin-rsocket-example-conf-server-service**: rsocket conf server service示例
 * **kin-rsocket-gateway-http-starter**: rsocket service http gateway
 * **kin-rsocket-registry-client-starter**: 以kin-rsocket-broker作为服务注册中心, 基于spring cloud discovery发现规则, 开发服务
-* **kin-roscket-service**: rsocket服务实现
+* **kin-rsocket-service**: rsocket服务实现
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
-* **kin-roscket-service-starter**: rsocket服务实现, 整合spring cloud
+* **kin-rsocket-service-starter**: rsocket服务实现, 整合spring cloud
 * **kin-spring-rsocket-support-starter**: 对spring rsocket进行增强
 
 ## **RSocket服务示例**
@@ -226,8 +226,6 @@ public class RequesterConfiguration {
 创建main class
 
 ```java
-
-@
 @EnableRSocketServiceReference
 @SpringBootApplication
 public class RequesterSpringApplication {
@@ -241,19 +239,28 @@ public class RequesterSpringApplication {
 
 * ```@RSocketServiceReference```注解用法
   ```java
-  @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
-  public interface UserService {
-      //....
-  }
+    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+    public interface UserService {
+       //....
+    }
   ```
   ```java
-  @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
-  private UserService userService;
+    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+    private UserService userService;
+  ```
+  ```java
+    @Bean
+    public UserService userService(@Autowired RSocketServiceRequester requester) {
+        return RSocketServiceReferenceBuilder
+                 .requester(UserService.class)
+                 .upstreamClusterManager(requester)
+                 .build();
+    }
   ```
 
 * ```@EnableRSocketServiceReference```注解用法
   ```java
-  @EnableRSocketServiceReference(references = @RSocketServiceReference(name = "org.kin.rsocket.example.UserService"))
+    @EnableRSocketServiceReference(references = @RSocketServiceReference(name = "org.kin.rsocket.example.UserService"))
   ```
 
 ## **整合Spring Cloud**
@@ -265,7 +272,7 @@ rsocket broker相当于注册中心, 每个消费者挂上 ```kin-rsocket-regist
 可以把 ```kin-rsocket-registry-client-starter``` 和 ```kin-rsocket-gateway-http-starter```
 同时作为两个集群的一员, 然后通过registry client发现broker服务, 根据服务实例信息, 请求gateway, 进而实现非对称集群访问rsocket broker集群服务
 
-详细代码请看 ```kin-roscket-example-springcloud``` 模块
+详细代码请看 ```kin-rsocket-example-springcloud``` 模块
 
 ## **展望**
 
