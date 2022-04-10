@@ -1,4 +1,4 @@
-package org.kin.spring.rsocket.example.requester;
+package org.kin.spring.rsocket.example.consumer;
 
 import org.kin.spring.rsocket.support.SpringRSocketServiceReference;
 

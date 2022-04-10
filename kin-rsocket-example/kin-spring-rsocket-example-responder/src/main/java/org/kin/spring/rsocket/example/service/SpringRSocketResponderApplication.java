@@ -1,4 +1,4 @@
-package org.kin.spring.rsocket.example.responder;
+package org.kin.spring.rsocket.example.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

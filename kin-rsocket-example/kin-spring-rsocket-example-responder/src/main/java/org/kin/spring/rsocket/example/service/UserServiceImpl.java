@@ -1,4 +1,4 @@
-package org.kin.spring.rsocket.example.responder;
+package org.kin.spring.rsocket.example.service;
 
 import org.kin.spring.rsocket.example.User;
 import org.kin.spring.rsocket.example.UserService;

@@ -1,4 +1,4 @@
-package org.kin.spring.rsocket.example.requester;
+package org.kin.spring.rsocket.example.consumer;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

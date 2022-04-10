@@ -1,4 +1,4 @@
-package org.kin.rsocket.grpc.requester;
+package org.kin.rsocket.grpc.consumer;
 
 import com.google.protobuf.StringValue;
 import io.grpc.ManagedChannel;
