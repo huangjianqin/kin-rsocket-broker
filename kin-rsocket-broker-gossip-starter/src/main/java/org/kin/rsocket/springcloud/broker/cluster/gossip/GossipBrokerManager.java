@@ -18,7 +18,6 @@ import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventBuilder;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.utils.JSON;
@@ -35,7 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * 基于Gossip的rsocket broker manager
+ * 基于gossip发现和监听rsocket broker集群变化
  *
  * @author huangjianqin
  * @date 2021/3/29
@@ -61,16 +60,13 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     /** 集群broker信息变化sink, 使用者可以监听集群变化并作出响应 */
     private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
 
-    public GossipBrokerManager(UpstreamCluster upstreamBrokers, RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
-        super(upstreamBrokers);
+    public GossipBrokerManager(RSocketBrokerProperties brokerConfig, RSocketBrokerGossipProperties gossipConfig) {
         this.brokerConfig = brokerConfig;
         this.gossipConfig = gossipConfig;
     }
 
     @PostConstruct
-    @Override
     public void init() {
-        super.init();
         String localIp = NetUtils.getIp();
         int gossipPort = gossipConfig.getPort();
         cluster = new ClusterImpl()

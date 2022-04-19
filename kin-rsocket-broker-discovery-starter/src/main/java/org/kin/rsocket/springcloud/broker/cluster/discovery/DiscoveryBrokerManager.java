@@ -5,7 +5,6 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 基于spring reactive cloud discovery机制的rsocket broker manager
+ * 基于spring reactive cloud discovery机制发现和监听rsocket broker集群变化
  * 目的是支持k8s
  *
  * @author huangjianqin
@@ -47,20 +46,19 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     /** 定时刷新集群broker信息Flux的Disposable */
     private final Disposable brokersRefresher;
 
-    public DiscoveryBrokerManager(UpstreamCluster upstreamBrokers, ReactiveDiscoveryClient discoveryClient) {
-        this(upstreamBrokers, discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, REFRESH_INTERVAL_SECONDS);
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient) {
+        this(discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, REFRESH_INTERVAL_SECONDS);
     }
 
-    public DiscoveryBrokerManager(UpstreamCluster upstreamBrokers, ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService) {
-        this(upstreamBrokers, discoveryClient, brokerDiscoveryService, REFRESH_INTERVAL_SECONDS);
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService) {
+        this(discoveryClient, brokerDiscoveryService, REFRESH_INTERVAL_SECONDS);
     }
 
-    public DiscoveryBrokerManager(UpstreamCluster upstreamBrokers, ReactiveDiscoveryClient discoveryClient, int internal) {
-        this(upstreamBrokers, discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, internal);
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, int internal) {
+        this(discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, internal);
     }
 
-    public DiscoveryBrokerManager(UpstreamCluster upstreamBrokers, ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService, int internal) {
-        super(upstreamBrokers);
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService, int internal) {
         if (StringUtils.isBlank(brokerDiscoveryService)) {
             brokerDiscoveryService = DEFAULT_BROKER_DISCOVERY_SERVICE;
         }

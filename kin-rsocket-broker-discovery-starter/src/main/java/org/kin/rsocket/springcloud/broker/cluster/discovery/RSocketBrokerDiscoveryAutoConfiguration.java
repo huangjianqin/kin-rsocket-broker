@@ -2,7 +2,6 @@ package org.kin.rsocket.springcloud.broker.cluster.discovery;
 
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.UpstreamCluster;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,8 +23,7 @@ public class RSocketBrokerDiscoveryAutoConfiguration {
     private RSocketBrokerDiscoveryProperties discoveryProperties;
 
     @Bean
-    public RSocketBrokerManager brokerManager(@Autowired(required = false) UpstreamCluster upstreamBrokers,
-                                              @Autowired ReactiveDiscoveryClient discoveryClient) {
-        return new DiscoveryBrokerManager(upstreamBrokers, discoveryClient, discoveryProperties.getService(), discoveryProperties.getRefreshInternal());
+    public RSocketBrokerManager brokerManager(@Autowired ReactiveDiscoveryClient discoveryClient) {
+        return new DiscoveryBrokerManager(discoveryClient, discoveryProperties.getService(), discoveryProperties.getRefreshInternal());
     }
 }

@@ -415,6 +415,7 @@ public final class RSocketServiceManager {
 
     /**
      * 广播集群broker拓扑事件
+     * 通知downstream upstream broker集群发生变化, 并及时{@link UpstreamCluster#refreshUris(List)}
      */
     private Flux<Void> broadcastClusterTopology(Collection<BrokerInfo> brokerInfos) {
         CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTRANET);

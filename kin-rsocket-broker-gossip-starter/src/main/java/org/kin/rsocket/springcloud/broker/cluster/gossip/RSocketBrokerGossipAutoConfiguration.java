@@ -3,7 +3,6 @@ package org.kin.rsocket.springcloud.broker.cluster.gossip;
 import org.kin.rsocket.broker.RSocketBrokerAutoConfiguration;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.UpstreamCluster;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,9 +27,8 @@ public class RSocketBrokerGossipAutoConfiguration {
      * 配置了gossip cluster绑定端口, 并且至少有一个seed, 也就是member, 才有效启动gossip 集群模式
      */
     @Bean
-    public RSocketBrokerManager brokerManager(@Autowired(required = false) UpstreamCluster upstreamBrokers,
-                                              @Autowired RSocketBrokerProperties brokerConfig,
+    public RSocketBrokerManager brokerManager(@Autowired RSocketBrokerProperties brokerConfig,
                                               @Autowired RSocketBrokerGossipProperties gossipConfig) {
-        return new GossipBrokerManager(upstreamBrokers, brokerConfig, gossipConfig);
+        return new GossipBrokerManager(brokerConfig, gossipConfig);
     }
 }

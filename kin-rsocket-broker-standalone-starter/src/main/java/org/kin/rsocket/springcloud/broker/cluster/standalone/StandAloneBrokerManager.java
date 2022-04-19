@@ -8,7 +8,6 @@ import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,16 +32,12 @@ public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager 
     /** 本地broker配置 */
     private final RSocketBrokerProperties brokerConfig;
 
-    public StandAloneBrokerManager(UpstreamCluster upstreamBrokers, RSocketBrokerProperties brokerConfig) {
-        super(upstreamBrokers);
+    public StandAloneBrokerManager(RSocketBrokerProperties brokerConfig) {
         this.brokerConfig = brokerConfig;
     }
 
     @PostConstruct
-    @Override
     public void init() {
-        super.init();
-
         String localIp = NetUtils.getIp();
         String schema = "tcp";
         RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
