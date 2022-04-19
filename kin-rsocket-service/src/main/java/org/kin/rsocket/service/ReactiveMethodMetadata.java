@@ -6,10 +6,8 @@ import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.frame.FrameType;
-import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.MurmurHash3;
 import org.kin.framework.utils.StringUtils;
-import org.kin.rsocket.core.RSocketHandler;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ReactiveMethodSupport;
 import org.kin.rsocket.core.metadata.*;
@@ -21,7 +19,6 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * 服务接口方法元数据
@@ -76,12 +73,6 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         this.acceptEncodingTypes = acceptEncodingTypes;
         this.endpoint = endpoint;
 
-        //处理method上的@ServiceMapping注解
-        RSocketHandler rsocketHandler = method.getAnnotation(RSocketHandler.class);
-        if (rsocketHandler != null) {
-            initServiceMapping(rsocketHandler);
-        }
-
         // sticky from service builder or @ServiceMapping
         this.sticky = sticky | this.sticky;
 
@@ -129,33 +120,6 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
         }
         metricsTags.add(Tag.of("method", this.handler));
         metricsTags.add(Tag.of("frame", this.frameType.name()));
-    }
-
-    /**
-     * 解析method上的{@link RSocketHandler}注解
-     */
-    private void initServiceMapping(RSocketHandler rsocketHandler) {
-        if (StringUtils.isNotBlank(rsocketHandler.value())) {
-            handler = rsocketHandler.value();
-        }
-        if (!rsocketHandler.endpoint().isEmpty()) {
-            endpoint = rsocketHandler.endpoint();
-        }
-
-        RSocketMimeType paramEncoding = rsocketHandler.paramEncoding();
-        if (Objects.nonNull(paramEncoding)) {
-            RSocketMimeType.checkEncodingMimeType(paramEncoding);
-            dataEncodingType = paramEncoding;
-        }
-
-        RSocketMimeType[] resultEncodings = rsocketHandler.resultEncodings();
-        if (CollectionUtils.isNonEmpty(resultEncodings)) {
-            for (RSocketMimeType resultEncoding : resultEncodings) {
-                RSocketMimeType.checkEncodingMimeType(resultEncoding);
-            }
-            acceptEncodingTypes = resultEncodings;
-        }
-        sticky = rsocketHandler.sticky();
     }
 
     /**

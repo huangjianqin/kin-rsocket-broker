@@ -139,11 +139,6 @@ public final class LocalRSocketServiceRegistry implements RSocketServiceInfoSupp
                 }
 
                 String handler = method.getName();
-                //解析ServiceMapping注解, 看看是否自定义method(handler) name
-                RSocketHandler rsocketHandler = method.getAnnotation(RSocketHandler.class);
-                if (Objects.nonNull(rsocketHandler) && StringUtils.isNotBlank(rsocketHandler.value())) {
-                    handler = rsocketHandler.value();
-                }
                 String key = service + Separators.SERVICE_HANDLER + handler;
 
                 ReactiveMethodInvoker invoker = new ReactiveMethodInvoker(method, provider);
@@ -301,10 +296,6 @@ public final class LocalRSocketServiceRegistry implements RSocketServiceInfoSupp
                 }
 
                 String handler = method.getName();
-                RSocketHandler rsocketHandler = method.getAnnotation(RSocketHandler.class);
-                if (Objects.nonNull(rsocketHandler) && StringUtils.isNotBlank(rsocketHandler.value())) {
-                    handler = rsocketHandler.value();
-                }
                 String key = service + Separators.SERVICE_HANDLER + handler;
 
                 handlerId2Invoker.remove(MurmurHash3.hash32(key));
