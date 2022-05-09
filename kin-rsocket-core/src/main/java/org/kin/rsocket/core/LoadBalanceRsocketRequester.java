@@ -555,14 +555,14 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                     .dataMimeType(RSocketMimeType.defaultEncodingType().getType())
                     .acceptor((setup, sendingSocket) -> requesterSupport.socketAcceptor().accept(setup, sendingSocket).doOnNext(responder -> {
                         //设置remote 推过来的cloud event source
-                        if (responder instanceof RequestHandlerSupport) {
+                        if (responder instanceof RSocketResponderHandlerSupport) {
                             String sourcing = "upstream:";
                             if (this.serviceGsv.equals(Symbols.BROKER)) {
                                 sourcing = sourcing + "broker:*";
                             } else {
                                 sourcing = sourcing + ":" + serviceGsv;
                             }
-                            ((RequestHandlerSupport) responder).setCloudEventSource(sourcing);
+                            ((RSocketResponderHandlerSupport) responder).setCloudEventSource(sourcing);
                         }
                     }))
                     //zero copy

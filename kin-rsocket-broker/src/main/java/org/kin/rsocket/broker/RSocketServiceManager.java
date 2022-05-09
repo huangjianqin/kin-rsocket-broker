@@ -192,9 +192,9 @@ public final class RSocketServiceManager {
         }
         //create rsocket endpoint
         try {
-            RSocketServiceRequestHandler requestHandler = new RSocketServiceRequestHandler(setupPayload, appMetadata, principal,
+            RSocketBrokerResponderHandler responderHandler = new RSocketBrokerResponderHandler(setupPayload, appMetadata, principal,
                     this, serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
-            RSocketEndpoint rsocketEndpoint = new RSocketEndpoint(compositeMetadata, appMetadata, requester, this, requestHandler);
+            RSocketEndpoint rsocketEndpoint = new RSocketEndpoint(compositeMetadata, appMetadata, requester, this, responderHandler);
             rsocketEndpoint.onClose()
                     .doOnTerminate(() -> onRSocketEndpointDisposed(rsocketEndpoint))
                     .subscribeOn(Schedulers.parallel())
@@ -204,7 +204,7 @@ public final class RSocketServiceManager {
             //connect success, so publish service now
             rsocketEndpoint.publishServices();
             log.info(String.format("succeed to accept connection from application '%s'", appMetadata.getName()));
-            return Mono.just(requestHandler);
+            return Mono.just(responderHandler);
         } catch (Exception e) {
             String formattedErrorMsg = String.format("failed to accept the connection: %s", e.getMessage());
             log.error(formattedErrorMsg, e);

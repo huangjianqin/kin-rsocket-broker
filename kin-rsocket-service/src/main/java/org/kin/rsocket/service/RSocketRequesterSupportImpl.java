@@ -146,7 +146,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload, tracer));
+        return (setupPayload, requester) -> Mono.just(new RSocketResponderHandler(requester, setupPayload, tracer));
     }
 
     @Override

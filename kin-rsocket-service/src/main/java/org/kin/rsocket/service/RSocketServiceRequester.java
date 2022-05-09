@@ -52,7 +52,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         //1. create binder
         if (rsocketServiceProperties.getPort() > 0) {
             RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
-            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new BrokerOrServiceRequestHandler(requester, setupPayload, tracer)));
+            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new RSocketResponderHandler(requester, setupPayload, tracer)));
             binderBuilder.listen(rsocketServiceProperties.getSchema(), rsocketServiceProperties.getPort());
             binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
             binder = binderBuilder.build();

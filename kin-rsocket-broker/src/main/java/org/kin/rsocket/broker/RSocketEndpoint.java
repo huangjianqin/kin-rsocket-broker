@@ -57,13 +57,13 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     /** app status */
     private AppStatus appStatus = AppStatus.CONNECTED;
     /** rsocket consumer请求处理handler */
-    private final RSocketServiceRequestHandler requestHandler;
+    private final RSocketBrokerResponderHandler responderHandler;
 
     public RSocketEndpoint(RSocketCompositeMetadata compositeMetadata,
                            AppMetadata appMetadata,
                            RSocket requester,
                            RSocketServiceManager serviceManager,
-                           RSocketServiceRequestHandler requestHandler) {
+                           RSocketBrokerResponderHandler responderHandler) {
         this.appMetadata = appMetadata;
         //app tags hashcode set
         Set<Integer> appTagsHashCodeSet = new HashSet<>(4);
@@ -95,9 +95,9 @@ public final class RSocketEndpoint implements CloudEventRSocket {
 
         //remote ip
         this.remoteIp = getRemoteAddress(requester);
-        this.requestHandler = requestHandler;
+        this.responderHandler = responderHandler;
         //new comboOnClose
-        this.comboOnClose = Mono.firstWithSignal(requestHandler.onClose(), requester.onClose());
+        this.comboOnClose = Mono.firstWithSignal(responderHandler.onClose(), requester.onClose());
         this.comboOnClose.doOnTerminate(this::hideServices).subscribeOn(Schedulers.parallel()).subscribe();
     }
 
@@ -209,21 +209,21 @@ public final class RSocketEndpoint implements CloudEventRSocket {
      * @return requester publish services only
      */
     public boolean isPublishServicesOnly() {
-        return !requestHandler.everConsumed() && CollectionUtils.isNonEmpty(peerServices);
+        return !responderHandler.everConsumed() && CollectionUtils.isNonEmpty(peerServices);
     }
 
     /**
      * @return requester consume and publish services
      */
     public boolean isConsumeAndPublishServices() {
-        return requestHandler.everConsumed() && CollectionUtils.isNonEmpty(peerServices);
+        return responderHandler.everConsumed() && CollectionUtils.isNonEmpty(peerServices);
     }
 
     /**
      * @return requester consume services
      */
     public boolean isConsumeServicesOnly() {
-        return requestHandler.everConsumed() && CollectionUtils.isEmpty(peerServices);
+        return responderHandler.everConsumed() && CollectionUtils.isEmpty(peerServices);
     }
 
     /** 获取requester ip */
@@ -264,7 +264,7 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     }
 
     public RSocketAppPrincipal getPrincipal() {
-        return requestHandler.getPrincipal();
+        return responderHandler.getPrincipal();
     }
 
     public Set<Integer> getAppTagsHashCodeSet() {
@@ -277,10 +277,6 @@ public final class RSocketEndpoint implements CloudEventRSocket {
 
     public void setAppStatus(AppStatus appStatus) {
         this.appStatus = appStatus;
-    }
-
-    RSocketServiceRequestHandler getRequestHandler() {
-        return requestHandler;
     }
 
     RSocket getRequester() {
