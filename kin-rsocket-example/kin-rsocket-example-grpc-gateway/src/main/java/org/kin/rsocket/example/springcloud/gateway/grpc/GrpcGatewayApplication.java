@@ -1,5 +1,6 @@
-package org.kin.rsocket.springcloud.gateway.grpc;
+package org.kin.rsocket.example.springcloud.gateway.grpc;
 
+import org.kin.rsocket.springcloud.gateway.grpc.EnableRSocketGrpcServiceReference;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
