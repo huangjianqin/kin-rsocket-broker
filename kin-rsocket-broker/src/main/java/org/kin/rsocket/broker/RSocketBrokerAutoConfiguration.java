@@ -194,8 +194,8 @@ public class RSocketBrokerAutoConfiguration {
     @Bean("router")
     @ConditionalOnMissingBean
     @ConditionalOnExpression("'roundRobin'.equals('${kin.rsocket.broker.router}')")
-    public ProviderRouter weightedRoundRobinRouter() {
-        return new WeightedRoundRobinRouter();
+    public ProviderRouter roundRobinRouter() {
+        return new RoundRobinRouter();
     }
 
     @Bean("router")
@@ -232,8 +232,8 @@ public class RSocketBrokerAutoConfiguration {
     @Bean("router")
     @ConditionalOnMissingBean
     @ConditionalOnExpression("'random'.equals('${kin.rsocket.broker.router:random}')")
-    public ProviderRouter weightedRandomRouter() {
-        return new WeightedRandomRouter();
+    public ProviderRouter randomRouter() {
+        return new RandomRouter();
     }
 
     //----------------------------------------------upstream broker requester相关----------------------------------------------

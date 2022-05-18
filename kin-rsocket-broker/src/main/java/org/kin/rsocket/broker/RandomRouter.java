@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/5/7
  */
-public class WeightedRandomRouter implements ProviderRouter {
+public class RandomRouter implements ProviderRouter {
     /** key -> serviceId, value -> {@link InstanceIdWeightList} */
     private UnifiedMap<Integer, InstanceIdWeightList> serviceId2InstanceIdWeightList = new UnifiedMap<>();
 
@@ -72,7 +72,7 @@ public class WeightedRandomRouter implements ProviderRouter {
     }
 
     /**
-     *
+     * 指定service id对应的所有instance和其权重组成的list
      */
     private static class InstanceIdWeightList {
         /** app instance id和权重 */

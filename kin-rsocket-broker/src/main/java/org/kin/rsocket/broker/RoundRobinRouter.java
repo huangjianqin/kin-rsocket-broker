@@ -12,12 +12,12 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 加权RoundRobin(轮询)路由
+ * 顺滑加权RoundRobin(轮询)路由
  *
  * @author huangjianqin
  * @date 2021/5/7
  */
-public class WeightedRoundRobinRouter implements ProviderRouter {
+public class RoundRobinRouter implements ProviderRouter {
     /** key -> serviceId, value -> {@link WeightedRoundRobin} list */
     private FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>();
 
