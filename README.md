@@ -210,7 +210,6 @@ kin:
 创建服务引用
 
 ```java
-
 @Configuration
 public class RequesterConfiguration {
   @Bean
@@ -226,6 +225,7 @@ public class RequesterConfiguration {
 创建main class
 
 ```java
+
 @EnableRSocketServiceReference
 @SpringBootApplication
 public class RequesterSpringApplication {
@@ -235,33 +235,48 @@ public class RequesterSpringApplication {
 }
 ```
 
-另外还支持使用注解, 构建rsocket service reference
+目前支持以下三种方式构建rsocket service reference
 
-* ```@RSocketServiceReference```注解用法
-  ```java
-    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
-    public interface UserService {
-       //....
-    }
-  ```
-  ```java
-    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
-    private UserService userService;
-  ```
-  ```java
-    @Bean
-    public UserService userService(@Autowired RSocketServiceRequester requester) {
-        return RSocketServiceReferenceBuilder
-                 .requester(UserService.class)
-                 .upstreamClusterManager(requester)
-                 .build();
-    }
-  ```
+* 使用`@Bean`+`RSocketServiceReferenceBuilder`构建rsocket service reference
 
-* ```@EnableRSocketServiceReference```注解用法
-  ```java
-    @EnableRSocketServiceReference(references = @RSocketServiceReference(name = "org.kin.rsocket.example.UserService"))
-  ```
+```java
+
+@Configuration
+public class RequesterConfiguration {
+  @Bean
+  public UserService userService(@Autowired RSocketServiceRequester requester) {
+    return RSocketServiceReferenceBuilder
+            .requester(UserService.class)
+            .upstreamClusterManager(requester)
+            .build();
+  }
+}
+```
+
+* 使用`@Bean`+`@RSocketServiceReference`构建rsocket service reference
+
+```java
+
+@Configuration
+public class RequesterConfiguration {
+  @Bean
+  @RSocketServiceReference(interfaceClass = UserService.class)
+  public RSocketServiceReferenceFactoryBean<UserService> userService() {
+    return new RSocketServiceReferenceFactoryBean<>();
+  }
+}
+```
+
+* 使用`@RSocketServiceReference`注解在字段变量上构建rsocket service reference
+
+```java
+
+@RestController
+public class UserController {
+  @RSocketServiceReference
+  private UserService userService;
+}
+```
 
 ## **整合Spring Cloud**
 
@@ -277,6 +292,5 @@ rsocket broker相当于注册中心, 每个消费者挂上 ```kin-rsocket-regist
 ## **展望**
 
 ## References
-
 * Alibaba RSocket Broker: https://github.com/alibaba/alibaba-rsocket-broker
 * RSocket Service Registry: https://github.com/alibaba-rsocket-broker/rsocket-load-balance

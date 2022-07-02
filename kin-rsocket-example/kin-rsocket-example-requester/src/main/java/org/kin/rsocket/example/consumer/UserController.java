@@ -20,21 +20,17 @@ import java.util.Objects;
 @RequestMapping("/user")
 public class UserController {
     @Autowired(required = false)
-//    //方法4, 直接注入field
-//    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+    //方法3, 直接注入field
+//    @RSocketServiceReference
     private UserService userService;
-    @Autowired(required = false)
-    private org.kin.rsocket.example.consumer.UserService customUserService;
     /** 测试是否会复用对象 */
-//    @RSocketServiceReference(name = "org.kin.rsocket.example.UserService")
+//    @RSocketServiceReference
     private UserService userServiceCopy;
 
     @GetMapping("/all")
     public Flux<User> findAll() {
         if (Objects.nonNull(userService)) {
             return userService.findAll();
-        } else if (Objects.nonNull(customUserService)) {
-            return customUserService.findAll();
         } else {
             return Flux.empty();
         }
@@ -44,8 +40,6 @@ public class UserController {
     public Mono<User> find(@PathVariable(name = "name") String name) {
         if (Objects.nonNull(userService)) {
             return userService.find(name);
-        } else if (Objects.nonNull(customUserService)) {
-            return customUserService.find(name);
         } else {
             return Mono.empty();
         }

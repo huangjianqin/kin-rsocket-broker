@@ -1,6 +1,7 @@
 package org.kin.rsocket.service;
 
 import org.kin.rsocket.core.RSocketMimeType;
+import org.springframework.context.annotation.Bean;
 
 import java.lang.annotation.*;
 
@@ -8,22 +9,49 @@ import java.lang.annotation.*;
  * 通过注解方法创建rsocket service reference
  * 注意: 最终rsocket service reference的bean name是其service name, 所以注意不要重复, 不然会启动错误
  * <p>
- * 4种使用方式:
- * 1. org.kin.rsocket.springcloud.service.EnableRSocketService和org.kin.rsocket.springcloud.gateway.grpc.EnableRSocketGrpcServiceReference的references()字段
- * 2. 注解在接口上
- * 3. 注解在字段变量上
- * 4. 使用{@link RSocketServiceReferenceBuilder}创建rsocket service reference, 并以{@link org.springframework.context.annotation.Bean}方式注解
+ * 3种使用方式:
+ * 1. {@link Bean}+{@link RSocketServiceReferenceBuilder}构建rsocket service reference
+ * <pre class="code">
+ * &#64;Configuration
+ * public class RequesterConfiguration {
+ *     &#64;Bean
+ *     public UserService userService(@Autowired RSocketServiceRequester requester) {
+ *         return RSocketServiceReferenceBuilder
+ *                 .requester(UserService.class)
+ *                 .upstreamClusterManager(requester)
+ *                 .build();
+ *     }
+ * }
+ * </pre>
+ * 2. {@link Bean}+{@link RSocketServiceReference}构建rsocket service reference
+ * <pre class="code">
+ * &#64;Configuration
+ * public class RequesterConfiguration {
+ *     &#64;Bean
+ *     &#64;RSocketServiceReference(interfaceClass = UserService.class)
+ *     public RSocketServiceReferenceFactoryBean<UserService> userService() {
+ *         return new RSocketServiceReferenceFactoryBean<>();
+ *     }
+ * }
+ * </pre>
+ * 3. 使用{@link RSocketServiceReference}注解在字段变量上构建rsocket service reference
+ * <pre class="code">
+ * &#64;RestController
+ * public class UserController {
+ *     &#64;RSocketServiceReference
+ *     private UserService userService;
+ * }
+ * </pre>
  *
  * @author huangjianqin
  * @date 2021/5/19
  */
-@Target({ElementType.TYPE, ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface RSocketServiceReference {
     /**
-     * 目前仅仅只有org.kin.rsocket.springcloud.service.EnableRSocketService和org.kin.rsocket.springcloud.gateway.grpc.EnableRSocketGrpcServiceReference才会使用到
-     * 其余三种方式取字段变量类型
+     * 返回rsocket service class, 目前仅仅方法2需要开发者指出
      *
      * @return service interface
      */

@@ -1,6 +1,5 @@
 package org.kin.rsocket.springcloud.service;
 
-import org.kin.rsocket.service.RSocketServiceReference;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -15,17 +14,7 @@ import java.lang.annotation.*;
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({RSocketServiceReferenceRegistrar.class, RSocketServiceReferenceBeanPostProcessor.class})
+@Import({RSocketServiceReferenceFieldPostProcessor.class})
 @EnableRSocketService
 public @interface EnableRSocketServiceReference {
-    /**
-     * 指定扫描定义有{@link RSocketServiceReference}的服务接口的classpath
-     */
-    String[] basePackages() default {};
-
-    /**
-     * {@link RSocketServiceReference}集合
-     * 注意, 该集合的所有注解必须配置{@link RSocketServiceReference#interfaceClass()}, 否则无效
-     */
-    RSocketServiceReference[] references() default {};
 }
