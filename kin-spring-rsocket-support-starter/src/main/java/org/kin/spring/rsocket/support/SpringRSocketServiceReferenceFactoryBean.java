@@ -2,16 +2,12 @@ package org.kin.spring.rsocket.support;
 
 import org.kin.framework.utils.StringUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfiguration;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.MethodMetadata;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -25,7 +21,7 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2021/5/19
  */
-public final class SpringRSocketServiceReferenceFactoryBean<T> implements FactoryBean<T>, ApplicationContextAware,
+public final class SpringRSocketServiceReferenceFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware,
         BeanNameAware, InitializingBean, DisposableBean {
     /**
      * spring创建的rsocket requester builder
@@ -45,7 +41,7 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
     @Autowired(required = false)
     private LoadbalanceStrategyFactory loadbalanceStrategyFactory;
     private String beanName;
-    private ApplicationContext context;
+    private ConfigurableListableBeanFactory beanFactory;
 
     /** 服务接口 */
     private Class<T> serviceInterface;
@@ -163,8 +159,8 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
     }
 
     @Override
-    public void setApplicationContext(@Nonnull ApplicationContext applicationContext) throws BeansException {
-        context = applicationContext;
+    public void setBeanFactory(@Nonnull BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
     }
 
     @Override
@@ -175,10 +171,13 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
 
         //仅仅处理通过无参构造方法创建实例的场景
         //获取BeanDefinition
-        ConfigurableListableBeanFactory beanFactory = (ConfigurableListableBeanFactory) context.getAutowireCapableBeanFactory();
-        AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) beanFactory.getBeanDefinition(beanName);
+        BeanDefinition beanDefinition = beanFactory.getBeanDefinition(beanName);
+        if (!(beanDefinition instanceof AnnotatedBeanDefinition)) {
+            return;
+        }
+        AnnotatedBeanDefinition annotatedBeanDefinition = (AnnotatedBeanDefinition) beanDefinition;
         //获取@SpringRSocketServiceReference注解属性
-        MethodMetadata factoryMethodMetadata = beanDefinition.getFactoryMethodMetadata();
+        MethodMetadata factoryMethodMetadata = annotatedBeanDefinition.getFactoryMethodMetadata();
         if (Objects.isNull(factoryMethodMetadata)) {
             throw new IllegalArgumentException(String.format("unavailable to create %s instance without @Bean", SpringRSocketServiceReferenceFactoryBean.class.getSimpleName()));
         }
