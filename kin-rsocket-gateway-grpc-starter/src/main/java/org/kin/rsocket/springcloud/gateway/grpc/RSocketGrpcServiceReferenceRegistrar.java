@@ -1,8 +1,6 @@
 package org.kin.rsocket.springcloud.gateway.grpc;
 
-import io.grpc.BindableService;
 import org.kin.framework.utils.CollectionUtils;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -30,12 +28,6 @@ public final class RSocketGrpcServiceReferenceRegistrar implements ImportBeanDef
             //扫描实现BindableService实现类
             registerScanner(importingClassMetadata, registry, annoAttrs,
                     importingClassMetadata.getClassName() + "#" + RSocketGrpcServiceReferenceRegistryPostProcessor.class.getSimpleName());
-
-            //处理直接配置的rsocket grpc service reference
-            AnnotationAttributes[] rsocketServiceReferenceAttrs = annoAttrs.getAnnotationArray("references");
-            for (AnnotationAttributes rsocketServiceReferenceAttr : rsocketServiceReferenceAttrs) {
-                registerBeanDefinition(rsocketServiceReferenceAttr, registry);
-            }
         }
     }
 
@@ -59,33 +51,5 @@ public final class RSocketGrpcServiceReferenceRegistrar implements ImportBeanDef
         builder.addConstructorArgValue(org.springframework.util.StringUtils.collectionToCommaDelimitedString(basePackages));
 
         registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
-    }
-
-    /**
-     * 注册{@link RSocketGrpcServiceReferenceFactoryBean}
-     */
-    @SuppressWarnings("unchecked")
-    public void registerBeanDefinition(AnnotationAttributes annoAttrs, BeanDefinitionRegistry registry) {
-        BeanDefinitionBuilder beanBuilder = BeanDefinitionBuilder.genericBeanDefinition(RSocketGrpcServiceReferenceFactoryBean.class);
-
-        Class<? extends BindableService> serviceStubClass = (Class<? extends BindableService>) annoAttrs.get("interfaceClass");
-        if (Objects.isNull(serviceStubClass) ||
-                Void.class.equals(serviceStubClass) ||
-                !BindableService.class.isAssignableFrom(serviceStubClass)) {
-            //stub没有定义 | 不是实现了BindableService接口, 则不走这里
-            return;
-        }
-
-        RSocketGrpcServiceImplBuilder<?> referenceBuilder = RSocketGrpcServiceImplBuilder.stub(serviceStubClass, annoAttrs);
-
-        //factory bean constructor args
-        beanBuilder.addConstructorArgValue(referenceBuilder);
-        //enable autowire
-        beanBuilder.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-        //set lazy init
-        beanBuilder.setLazyInit(true);
-
-        //以grpc stub service name当bean name
-        registry.registerBeanDefinition(referenceBuilder.getInterceptor().getService(), beanBuilder.getBeanDefinition());
     }
 }

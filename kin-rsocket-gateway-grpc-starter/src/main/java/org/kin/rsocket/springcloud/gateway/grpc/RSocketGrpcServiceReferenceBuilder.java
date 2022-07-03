@@ -27,7 +27,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
  * @author huangjianqin
  * @date 2022/1/9
  */
-public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
+public final class RSocketGrpcServiceReferenceBuilder<T extends BindableService> {
     /** grpc调用拦截 */
     private final ReactiveGrpcCallInterceptor interceptor = new ReactiveGrpcCallInterceptor();
     /** consumer是否开启p2p */
@@ -35,19 +35,19 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /** rsocket grpc service instance */
     private T instance;
 
-    public RSocketGrpcServiceImplBuilder(Class<T> serviceStub) {
+    public RSocketGrpcServiceReferenceBuilder(Class<T> serviceStub) {
         constructInstance(serviceStub);
     }
 
-    public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceStub) {
-        return new RSocketGrpcServiceImplBuilder<T>(serviceStub);
+    public static <T extends BindableService> RSocketGrpcServiceReferenceBuilder<T> stub(Class<T> serviceStub) {
+        return new RSocketGrpcServiceReferenceBuilder<T>(serviceStub);
     }
 
     /**
      * 指定service stub class和{@link RSocketServiceReference}属性生成builder实例
      */
-    public static <T extends BindableService> RSocketGrpcServiceImplBuilder<T> stub(Class<T> serviceStubClass, AnnotationAttributes annoAttrs) {
-        RSocketGrpcServiceImplBuilder<T> builder = new RSocketGrpcServiceImplBuilder<>(serviceStubClass);
+    public static <T extends BindableService> RSocketGrpcServiceReferenceBuilder<T> stub(Class<T> serviceStubClass, AnnotationAttributes annoAttrs) {
+        RSocketGrpcServiceReferenceBuilder<T> builder = new RSocketGrpcServiceReferenceBuilder<>(serviceStubClass);
 
         String service = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(service)) {
@@ -90,7 +90,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * 选择一个合适的{@link UpstreamCluster}(可broker可直连)的selector
      */
-    public RSocketGrpcServiceImplBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
+    public RSocketGrpcServiceReferenceBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
         interceptor.setSelector(upstreamClusterManager);
         return this;
     }
@@ -98,7 +98,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * 选择一个合适的{@link UpstreamCluster}(可broker可直连)的selector
      */
-    public RSocketGrpcServiceImplBuilder<T> requester(UpstreamClusterSelector selector) {
+    public RSocketGrpcServiceReferenceBuilder<T> requester(UpstreamClusterSelector selector) {
         interceptor.setSelector(selector);
         return this;
     }
@@ -106,7 +106,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * group
      */
-    public RSocketGrpcServiceImplBuilder<T> group(String group) {
+    public RSocketGrpcServiceReferenceBuilder<T> group(String group) {
         interceptor.setGroup(group);
         return this;
     }
@@ -114,7 +114,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * group is empty才替换
      */
-    public RSocketGrpcServiceImplBuilder<T> groupIfEmpty(String group) {
+    public RSocketGrpcServiceReferenceBuilder<T> groupIfEmpty(String group) {
         if (StringUtils.isBlank(group)) {
             return group(group);
         }
@@ -124,7 +124,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * service name
      */
-    public RSocketGrpcServiceImplBuilder<T> service(String service) {
+    public RSocketGrpcServiceReferenceBuilder<T> service(String service) {
         interceptor.setService(service);
         return this;
     }
@@ -132,7 +132,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * version
      */
-    public RSocketGrpcServiceImplBuilder<T> version(String version) {
+    public RSocketGrpcServiceReferenceBuilder<T> version(String version) {
         interceptor.setVersion(version);
         return this;
     }
@@ -140,7 +140,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * version is empty才替换
      */
-    public RSocketGrpcServiceImplBuilder<T> versionIfEmpty(String version) {
+    public RSocketGrpcServiceReferenceBuilder<T> versionIfEmpty(String version) {
         if (StringUtils.isBlank(version)) {
             return version(version);
         }
@@ -150,7 +150,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * 请求超时
      */
-    public RSocketGrpcServiceImplBuilder<T> callTimeout(int millis) {
+    public RSocketGrpcServiceReferenceBuilder<T> callTimeout(int millis) {
         interceptor.setCallTimeout(Duration.ofMillis(millis));
         return this;
     }
@@ -158,7 +158,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * endpoint
      */
-    public RSocketGrpcServiceImplBuilder<T> endpoint(String endpoint) {
+    public RSocketGrpcServiceReferenceBuilder<T> endpoint(String endpoint) {
         interceptor.setEndpoint(endpoint);
         return this;
     }
@@ -166,7 +166,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * sticky session
      */
-    public RSocketGrpcServiceImplBuilder<T> sticky() {
+    public RSocketGrpcServiceReferenceBuilder<T> sticky() {
         interceptor.setSticky(true);
         return this;
     }
@@ -174,7 +174,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * consumer是否开启p2p
      */
-    public RSocketGrpcServiceImplBuilder<T> p2p() {
+    public RSocketGrpcServiceReferenceBuilder<T> p2p() {
         this.p2p = true;
         return this;
     }
@@ -182,7 +182,7 @@ public final class RSocketGrpcServiceImplBuilder<T extends BindableService> {
     /**
      * 开启zipkin tracing
      */
-    public RSocketGrpcServiceImplBuilder<T> tracing(Tracing tracing) {
+    public RSocketGrpcServiceReferenceBuilder<T> tracing(Tracing tracing) {
         this.interceptor.setTracing(tracing);
         return this;
     }

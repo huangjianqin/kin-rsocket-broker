@@ -15,4 +15,9 @@ public class GrpcGatewayApplication implements WebFluxConfigurer {
     public static void main(String[] args) {
         SpringApplication.run(GrpcGatewayApplication.class, args);
     }
+
+//    @Bean
+//    public RSocketGrpcServiceReferenceFactoryBean<ReactorUserServiceGrpc.UserServiceImplBase> userService(){
+//        return new RSocketGrpcServiceReferenceFactoryBean<>(ReactorUserServiceGrpc.UserServiceImplBase.class);
+//    }
 }

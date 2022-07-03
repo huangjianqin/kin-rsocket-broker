@@ -9,6 +9,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
+import java.util.Objects;
 
 /**
  * @author huangjianqin
@@ -20,16 +21,11 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
     @Autowired
     private RSocketServiceProperties rsocketServiceProperties;
     /** 缓存rsocket rpc service reference builder, 创建reference后会clear掉 */
-    private RSocketGrpcServiceImplBuilder<T> builder;
+    private RSocketGrpcServiceReferenceBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
     private final T reference;
     @Autowired(required = false)
     private Tracing tracing;
-
-    public RSocketGrpcServiceReferenceFactoryBean(RSocketGrpcServiceImplBuilder<T> builder) {
-        this.builder = builder;
-        reference = builder.getInstance();
-    }
 
     public RSocketGrpcServiceReferenceFactoryBean(Class<T> claxx) {
         if (!BindableService.class.isAssignableFrom(claxx)) {
@@ -37,7 +33,13 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
                     String.format("class '%s' must be extends BindableService", claxx.getName()));
         }
 
-        builder = RSocketGrpcServiceImplBuilder.stub(claxx);
+        Class<?> declaringClass = claxx.getDeclaringClass();
+        if (Objects.isNull(declaringClass) || !declaringClass.getSimpleName().startsWith("Reactor")) {
+            //reactor grpc生成出来的都是以Reactor开头, 故这里写死类名过滤
+            throw new IllegalArgumentException(String.format("class '%s' must be generate by reactor-grpc-stub", claxx.getName()));
+        }
+
+        builder = RSocketGrpcServiceReferenceBuilder.stub(claxx);
         reference = builder.getInstance();
     }
 
