@@ -183,6 +183,20 @@ public class ServiceApplication {
 }
 ```
 
+另外, 还支持使用`@Bean`+`@RSocketService`创建RSocket服务提供者
+
+```java
+
+@Configuration
+public class ResponderConfiguration {
+  @Bean
+  @RSocketService(UserService.class)
+  public UserService userService() {
+    return new UserServiceImpl();
+  }
+}
+```
+
 ### **RSocket服务消费者**
 
 配置pom.xml

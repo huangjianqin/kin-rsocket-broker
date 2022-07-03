@@ -8,7 +8,6 @@ import org.kin.rsocket.core.utils.JSON;
 import org.kin.rsocket.example.User;
 import org.kin.rsocket.example.UserPb;
 import org.kin.rsocket.example.UserService;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -22,7 +21,6 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 2021/4/9
  */
 @RSocketService(UserService.class)
-@Service
 public class UserServiceImpl implements UserService {
     private static final List<User> USERS = Arrays.asList(
             User.of("A", 1),
