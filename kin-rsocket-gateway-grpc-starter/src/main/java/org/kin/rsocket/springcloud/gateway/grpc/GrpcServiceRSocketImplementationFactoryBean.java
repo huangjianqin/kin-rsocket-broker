@@ -15,19 +15,19 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2022/1/12
  */
-public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableService> extends AbstractFactoryBean<T> {
+public final class GrpcServiceRSocketImplementationFactoryBean<T extends BindableService> extends AbstractFactoryBean<T> {
     @Autowired
     private RSocketServiceRequester requester;
     @Autowired
     private RSocketServiceProperties rsocketServiceProperties;
     /** 缓存rsocket rpc service reference builder, 创建reference后会clear掉 */
-    private RSocketGrpcServiceReferenceBuilder<T> builder;
+    private GrpcServiceRSocketImplementationBuilder<T> builder;
     /** rsocket service 服务reference, 仅仅build一次 */
     private final T reference;
     @Autowired(required = false)
     private Tracing tracing;
 
-    public RSocketGrpcServiceReferenceFactoryBean(Class<T> claxx) {
+    public GrpcServiceRSocketImplementationFactoryBean(Class<T> claxx) {
         if (!BindableService.class.isAssignableFrom(claxx)) {
             throw new IllegalArgumentException(
                     String.format("class '%s' must be extends BindableService", claxx.getName()));
@@ -39,7 +39,7 @@ public final class RSocketGrpcServiceReferenceFactoryBean<T extends BindableServ
             throw new IllegalArgumentException(String.format("class '%s' must be generate by reactor-grpc-stub", claxx.getName()));
         }
 
-        builder = RSocketGrpcServiceReferenceBuilder.stub(claxx);
+        builder = GrpcServiceRSocketImplementationBuilder.stub(claxx);
         reference = builder.getInstance();
     }
 

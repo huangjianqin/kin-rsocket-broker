@@ -19,23 +19,23 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2022/1/11
  */
-public final class RSocketGrpcServiceReferenceRegistrar implements ImportBeanDefinitionRegistrar {
+public final class GrpcServiceRSocketImplementationRegistrar implements ImportBeanDefinitionRegistrar {
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry) {
         AnnotationAttributes annoAttrs = AnnotationAttributes
-                .fromMap(importingClassMetadata.getAnnotationAttributes(EnableRSocketGrpcServiceReference.class.getName()));
+                .fromMap(importingClassMetadata.getAnnotationAttributes(EnableGrpcServiceRSocketImplementation.class.getName()));
         if (Objects.nonNull(annoAttrs)) {
             //扫描实现BindableService实现类
             registerScanner(importingClassMetadata, registry, annoAttrs,
-                    importingClassMetadata.getClassName() + "#" + RSocketGrpcServiceReferenceRegistryPostProcessor.class.getSimpleName());
+                    importingClassMetadata.getClassName() + "#" + GrpcServiceRSocketImplementationRegistryPostProcessor.class.getSimpleName());
         }
     }
 
     /**
-     * 注册{@link RSocketGrpcServiceReferenceRegistryPostProcessor} bean
+     * 注册{@link GrpcServiceRSocketImplementationRegistryPostProcessor} bean
      */
     public void registerScanner(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry, AnnotationAttributes annoAttrs, String beanName) {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(RSocketGrpcServiceReferenceRegistryPostProcessor.class);
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(GrpcServiceRSocketImplementationRegistryPostProcessor.class);
         List<String> basePackages = new ArrayList<>();
 
         String[] basePackageArr = annoAttrs.getStringArray("basePackages");

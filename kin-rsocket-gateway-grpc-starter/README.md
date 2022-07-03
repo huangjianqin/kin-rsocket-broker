@@ -15,12 +15,12 @@
 
 目前支持两种方式构建grpc service rsocket implementation:
 
-* 通过`@EnableRSocketGrpcServiceReference.basePackages()`扫明指定classpath, 并构建grpc service rsocket implementation
+* 通过`@EnableGrpcServiceRSocketImplementation.basePackages()`扫明指定classpath, 并构建grpc service rsocket implementation
 
 ```java
 
 @SpringBootApplication
-@EnableRSocketGrpcServiceReference(basePackages = "org.kin.rsocket.example")
+@EnableGrpcServiceRSocketImplementation(basePackages = "org.kin.rsocket.example")
 public class GrpcGatewayApplication implements WebFluxConfigurer {
     public static void main(String[] args) {
         SpringApplication.run(GrpcGatewayApplication.class, args);
@@ -28,20 +28,20 @@ public class GrpcGatewayApplication implements WebFluxConfigurer {
 }
 ```
 
-* 通过`@Bean`+`RSocketGrpcServiceReferenceFactoryBean`, 构建grpc service rsocket implementation
+* 通过`@Bean`+`GrpcServiceRSocketImplementationFactoryBean`, 构建grpc service rsocket implementation
 
 ```java
 
 @SpringBootApplication
-@EnableRSocketGrpcServiceReference
+@EnableGrpcServiceRSocketImplementation
 public class GrpcGatewayApplication implements WebFluxConfigurer {
     public static void main(String[] args) {
         SpringApplication.run(GrpcGatewayApplication.class, args);
     }
 
     @Bean
-    public RSocketGrpcServiceReferenceFactoryBean<ReactorUserServiceGrpc.UserServiceImplBase> userService() {
-        return new RSocketGrpcServiceReferenceFactoryBean<>(ReactorUserServiceGrpc.UserServiceImplBase.class);
+    public GrpcServiceRSocketImplementationFactoryBean<ReactorUserServiceGrpc.UserServiceImplBase> userService() {
+        return new GrpcServiceRSocketImplementationFactoryBean<>(ReactorUserServiceGrpc.UserServiceImplBase.class);
     }
 }
 ```

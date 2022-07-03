@@ -10,16 +10,16 @@ import org.springframework.util.StringUtils;
 import javax.annotation.Nonnull;
 
 /**
- * 在bean factory处理前, 创建{@link RSocketGrpcServiceReferenceScanner}并启动扫描{@link io.grpc.BindableService}实现类并注册为bean
+ * 在bean factory处理前, 创建{@link GrpcServiceRSocketImplementationScanner}并启动扫描{@link io.grpc.BindableService}实现类并注册为bean
  *
  * @author huangjianqin
  * @date 2022/1/12
  */
-public final class RSocketGrpcServiceReferenceRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
+public final class GrpcServiceRSocketImplementationRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
     /** 扫描package classpath的路径集合, 以,分隔 */
     private final String basePackage;
 
-    public RSocketGrpcServiceReferenceRegistryPostProcessor(String basePackage) {
+    public GrpcServiceRSocketImplementationRegistryPostProcessor(String basePackage) {
         this.basePackage = basePackage;
     }
 
@@ -30,7 +30,7 @@ public final class RSocketGrpcServiceReferenceRegistryPostProcessor implements B
 
     @Override
     public void postProcessBeanDefinitionRegistry(@Nonnull BeanDefinitionRegistry registry) throws BeansException {
-        RSocketGrpcServiceReferenceScanner scanner = new RSocketGrpcServiceReferenceScanner(registry);
+        GrpcServiceRSocketImplementationScanner scanner = new GrpcServiceRSocketImplementationScanner(registry);
         scanner.scan(StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
     }
 }

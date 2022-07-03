@@ -22,8 +22,8 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2022/1/12
  */
-public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
-    public RSocketGrpcServiceReferenceScanner(BeanDefinitionRegistry registry) {
+public final class GrpcServiceRSocketImplementationScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
+    public GrpcServiceRSocketImplementationScanner(BeanDefinitionRegistry registry) {
         super(registry);
         registerFilters();
     }
@@ -68,7 +68,7 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
             //noinspection ConstantConditions
             definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
             //factory bean class
-            definition.setBeanClass(RSocketGrpcServiceReferenceFactoryBean.class);
+            definition.setBeanClass(GrpcServiceRSocketImplementationFactoryBean.class);
             //enable autowire
             definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
             //set lazy init
@@ -81,7 +81,7 @@ public final class RSocketGrpcServiceReferenceScanner extends ClassPathBeanDefin
         if (super.checkCandidate(beanName, beanDefinition)) {
             return true;
         } else {
-            warn("skipping RSocketGrpcServiceReferenceFactoryBean with name '" + beanName + "' and '"
+            warn("skipping GrpcServiceRSocketImplementationFactoryBean with name '" + beanName + "' and '"
                     + beanDefinition.getBeanClassName() + "' stub" + ". bean already defined with the same name!");
             return false;
         }

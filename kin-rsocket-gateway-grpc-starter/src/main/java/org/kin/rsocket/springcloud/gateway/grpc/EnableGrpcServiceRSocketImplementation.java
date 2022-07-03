@@ -15,9 +15,9 @@ import java.lang.annotation.*;
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(RSocketGrpcServiceReferenceRegistrar.class)
+@Import(GrpcServiceRSocketImplementationRegistrar.class)
 @EnableRSocketService
-public @interface EnableRSocketGrpcServiceReference {
+public @interface EnableGrpcServiceRSocketImplementation {
     /**
      * 需要将grpc call路由到rsocket broker的grpc service stub package
      */
