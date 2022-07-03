@@ -33,7 +33,7 @@ public class SpringRSocketServiceReferenceBeanPostProcessor extends AbstractAnno
     @Override
     protected Object doGetInjectedBean(AnnotationAttributes attributes, Object bean, String beanName,
                                        Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) throws Exception {
-        return new SpringRSocketServiceReferenceFactoryBean<>(injectedType, attributes, requesterBuilder, requester, registry, loadbalanceStrategyFactory).createInstance();
+        return new SpringRSocketServiceReferenceFactoryBean<>(injectedType, attributes, requesterBuilder, requester, registry, loadbalanceStrategyFactory).getObject();
     }
 
     @Override

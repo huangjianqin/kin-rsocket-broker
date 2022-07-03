@@ -1,10 +1,9 @@
 # kin-spring-rsocket-support-starter
-
 相当于`spring-messaging`的工具类
 
-* `@SpringRSocketServiceReference`, 提供自动扫描rsocket service interface, 并使用代理拦截其接口方法. 同时支持注解定义在field上的rsocket service
-  interface.
-    * 需要使用者定义`org.springframework.messaging.rsocket.RSocketRequester` bean
+* `@EnableSpringRSocketServiceReference`, 提供自动扫描并构建rsocket service reference
+    * 需要提供`org.springframework.messaging.rsocket.RSocketRequester` bean, 默认构建,
+      但broker模式下需开发者手动指定broker元数据信息并构建`org.springframework.messaging.rsocket.RSocketRequester` bean
 * `@EnableLoadBalanceSpringRSocketServiceReference`, 相当于`@SpringRSocketServiceReference`的增强版本.
   基于`ReactiveDiscoveryClient`发现并缓存naming service上注册的rsocket service实例,
   并创建支持负载均衡的`org.springframework.messaging.rsocket.RSocketRequester`, 从而实现支持负载均衡的rsocket service reference.
@@ -14,6 +13,49 @@
         * `rsocketWsPath`: 如果传输层式websocket时, 选择性配置. 格式是websocket path内容, 比如`/rsocket`
     * 基于应用名发现rsocket service, 故说明实现如何识别发现提取应用名. 假设服务名为`org.kin.spring.rsocket.example.UserService-{version}`,
       则应用名为`org.kin.spring.rsocket.example`. 如果rsocket service是基于broker模式搭建, 而可以这样子定义服务名, 如
-      `{broker app name}:org.kin.spring.rsocket.example.UserService-{version}`, 则我们直接认为`{broker app name}`为应用名
+      `{broker app name}:org.kin.spring.rsocket.example.UserService-{version}`, 则我们直接认为`{broker app name}`为应用名. 注意,
+      这里面的broker也是作为服务注册到naming service上.
 * `@SpringRSocketService`, `@MessageMapping`的替身, 用于定义标识rsocket service
 * `@SpringRSocketHandler`, `@MessageMapping`的替身, 用于定义标识rsocket handler
+
+目前`@SpringRSocketServiceReference`支持3种使用方式:
+
+* 使用`@Bean`+`SpringRSocketServiceReferenceBuilder`构建rsocket service reference
+
+```java
+
+@Configuration
+public class RequesterConfiguration {
+    @Bean
+    public UserService userService(@Autowired RSocketServiceRequester requester) {
+        return SpringRSocketServiceReferenceBuilder
+                .requester(requester, UserService.class)
+                .build();
+    }
+}
+```
+
+* 使用`@Bean`+`@SpringRSocketServiceReference`构建rsocket service reference
+
+```java
+
+@Configuration
+public class RequesterConfiguration {
+    @Bean
+    @SpringRSocketServiceReference(interfaceClass = UserService.class, appName = "XXXX")
+    public SpringRSocketServiceReferenceFactoryBean<UserService> userService() {
+        return new SpringRSocketServiceReferenceFactoryBean<>();
+    }
+}
+```
+
+* 使用`@RSocketServiceReference`注解在字段变量上构建rsocket service reference
+
+```java
+
+@RestController
+public class UserController {
+    @SpringRSocketServiceReference(appName = "XXXX")
+    private UserService userService;
+}
+```

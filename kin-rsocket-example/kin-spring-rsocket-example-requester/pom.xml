@@ -28,11 +28,11 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
 
-        <!--        <dependency>-->
-        <!--            <groupId>org.kin</groupId>-->
-        <!--            <artifactId>kin-rsocket-core</artifactId>-->
-        <!--            <version>${project.version}</version>-->
-        <!--        </dependency>-->
+        <dependency>
+            <groupId>org.kin</groupId>
+            <artifactId>kin-rsocket-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

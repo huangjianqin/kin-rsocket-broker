@@ -1,11 +1,13 @@
 package org.kin.spring.rsocket.support;
 
+import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 
 /**
+ * 基于spring {@link ReactiveDiscoveryClient}发现naming service注册的rsocket service实例, 并构建rsocket service reference
+ *
  * @author huangjianqin
  * @date 2022/3/18
  */
@@ -16,9 +18,4 @@ import java.lang.annotation.*;
 @Import({SpringRSocketServiceDiscoveryMarkerConfiguration.class})
 @EnableSpringRSocketServiceReference
 public @interface EnableLoadBalanceSpringRSocketServiceReference {
-    /**
-     * 指定扫描定义有{@link SpringRSocketServiceReference}的服务接口的classpath
-     */
-    @AliasFor(annotation = EnableSpringRSocketServiceReference.class, attribute = "basePackages")
-    String[] basePackages() default {};
 }

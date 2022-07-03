@@ -1,6 +1,7 @@
 package org.kin.spring.rsocket.example.consumer;
 
 import org.kin.spring.rsocket.example.User;
+import org.kin.spring.rsocket.example.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +20,9 @@ import java.util.Objects;
 @RequestMapping("/user")
 public class UserController {
     @Autowired
-//    @SpringRSocketServiceReference(service = "org.kin.spring.rsocket.example.UserService")
+//    @SpringRSocketServiceReference()
     private UserService userService;
-//    @SpringRSocketServiceReference(service = "org.kin.spring.rsocket.example.UserService")
+//    @SpringRSocketServiceReference()
 //    private UserService userServiceCopy;
 
     @GetMapping("/all")
