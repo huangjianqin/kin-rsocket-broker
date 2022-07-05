@@ -18,7 +18,6 @@
         <javassist.version>3.25.0-GA</javassist.version>
         <springcloud.version>2020.0.4</springcloud.version>
         <springboot.version>2.5.12</springboot.version>
-        <reactor.version>2020.0.16</reactor.version>
         <rsocket.version>1.1.2</rsocket.version>
         <cloudevents.version>2.3.0</cloudevents.version>
         <java-jwt.version>3.19.1</java-jwt.version>
