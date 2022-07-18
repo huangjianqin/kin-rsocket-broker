@@ -680,29 +680,45 @@ public final class RSocketServiceManager {
     }
 
     /**
-     * 更新指定app应用开启的p2p服务gsv
+     * 更新指定app应用开启的p2p service ids
+     *
+     * @param p2pServiceIds 目前该app开通的p2p service ids
      */
     public void updateP2pServiceConsumers(String appId, Set<String> p2pServiceIds) {
         RSocketEndpoint rsocketEndpoint = getByUUID(appId);
         if (rsocketEndpoint != null) {
             AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
             Integer instanceId = rsocketEndpoint.getId();
+            //原开通p2p的service ids
+            Set<String> oldP2pServiceIds = appMetadata.getP2pServiceIds();
             appMetadata.updateP2pServiceIds(p2pServiceIds);
 
+            //更新
             Lock writeLock = lock.writeLock();
             writeLock.lock();
             try {
                 //copy on write
                 UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>(this.p2pServiceConsumers);
-
-                for (String p2pService : appMetadata.getP2pServiceIds()) {
+                for (String p2pService : p2pServiceIds) {
                     p2pServiceConsumers.put(p2pService, instanceId);
-                    rsocketEndpoint.fireCloudEvent(newServiceInstanceChangedCloudEvent(p2pService)).subscribe();
                 }
-
                 this.p2pServiceConsumers = p2pServiceConsumers;
             } finally {
                 writeLock.unlock();
+            }
+
+            //新开通p2p的service ids
+            Set<String> newP2pServiceIds = new HashSet<>();
+            for (String newP2pServiceId : p2pServiceIds) {
+                if (oldP2pServiceIds.contains(newP2pServiceId)) {
+                    continue;
+                }
+                newP2pServiceIds.add(newP2pServiceId);
+            }
+
+            //通知该app新开通p2p的service id对应instance
+            for (String newP2pService : newP2pServiceIds) {
+                rsocketEndpoint.fireCloudEvent(newServiceInstanceChangedCloudEvent(newP2pService)).subscribe();
             }
         }
     }
