@@ -3,10 +3,14 @@ package org.kin.rsocket.springcloud.service;
 import brave.Tracing;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.kin.rsocket.core.*;
+import org.kin.rsocket.core.event.CloudEventConsumer;
+import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketRequesterSupportCustomizer;
 import org.kin.rsocket.service.RSocketServiceRequester;
 import org.kin.rsocket.service.health.BrokerHealthCheckReference;
+import org.kin.rsocket.springcloud.service.event.CloudEvent2ApplicationEventConsumer;
+import org.kin.rsocket.springcloud.service.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.springcloud.service.health.HealthIndicator;
 import org.kin.rsocket.springcloud.service.health.HealthService;
 import org.kin.rsocket.springcloud.service.health.RSocketEndpoint;
@@ -20,7 +24,6 @@ import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
@@ -33,7 +36,6 @@ import java.util.Objects;
  */
 @Configuration
 @EnableConfigurationProperties(RSocketServiceProperties.class)
-@Import(RSocketCloudEventConsumerConfiguration.class)
 public class RSocketServiceConfiguration {
     @Bean(destroyMethod = "close")
     public RSocketServiceRequester rsocketServiceRequester(@Autowired Environment env,
@@ -142,5 +144,26 @@ public class RSocketServiceConfiguration {
     @Bean("healthCheckRef")
     public HealthCheck healthCheckRef(@Autowired RSocketServiceRequester requester) {
         return new BrokerHealthCheckReference(requester);
+    }
+
+    //----------------------------------------------cloud event consumers----------------------------------------------
+
+    /**
+     * 管理所有{@link CloudEventConsumer}的实例
+     */
+    @Bean(destroyMethod = "close")
+    public CloudEventConsumers cloudEventConsumers(@Autowired List<CloudEventConsumer> consumers) {
+        CloudEventConsumers.INSTANCE.addConsumers(consumers);
+        return CloudEventConsumers.INSTANCE;
+    }
+
+    @Bean
+    public CloudEvent2ApplicationEventConsumer cloudEvent2ListenerConsumer() {
+        return new CloudEvent2ApplicationEventConsumer();
+    }
+
+    @Bean
+    public InvalidCacheEventConsumer invalidCacheEventConsumer() {
+        return new InvalidCacheEventConsumer();
     }
 }

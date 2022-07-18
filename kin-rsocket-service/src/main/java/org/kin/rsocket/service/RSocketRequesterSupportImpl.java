@@ -78,14 +78,12 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
             List<MetadataAware> metadataAwares = new ArrayList<>(3);
             //app metadata
             metadataAwares.add(getAppMetadata());
-            if (rsocketServiceProperties.getPort() > 0) {
-                //published services
-                Set<ServiceLocator> serviceLocators = LocalRSocketServiceRegistry.exposedServices();
-                if (!serviceLocators.isEmpty()) {
-                    RSocketServiceRegistryMetadata.Builder builder = RSocketServiceRegistryMetadata.builder();
-                    builder.addPublishedServices(serviceLocators);
-                    metadataAwares.add(builder.build());
-                }
+            //published services
+            Set<ServiceLocator> serviceLocators = LocalRSocketServiceRegistry.exposedServices();
+            if (!serviceLocators.isEmpty()) {
+                RSocketServiceRegistryMetadata.Builder builder = RSocketServiceRegistryMetadata.builder();
+                builder.addPublishedServices(serviceLocators);
+                metadataAwares.add(builder.build());
             }
             // authentication
             if (StringUtils.isNotBlank(rsocketServiceProperties.getJwtToken())) {

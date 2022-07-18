@@ -5,7 +5,7 @@ spring:
     name: org-kin-spring-rsocket-example
   rsocket:
     server:
-      port: 9000
+#      port: 9000
       transport: tcp
   cloud:
     nacos:

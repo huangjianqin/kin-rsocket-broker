@@ -150,7 +150,6 @@ server:
 kin:
   rsocket:
     brokers: tcp://127.0.0.1:9999
-    port: 9101
 ```
 
 创建接口以及其实现类
@@ -218,7 +217,6 @@ server:
 kin:
   rsocket:
     brokers: tcp://127.0.0.1:9999
-    port: 9201
 ```
 
 创建服务引用

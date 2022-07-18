@@ -61,9 +61,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
                 .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", serviceConfig.getBrokers()))))
                 .subscribe();
 
-        if (serviceConfig.getPort() > 0) {
-            //没有绑定rsocket port, 则是无法调用该app 服务, 那么没必要暴露服务
-            requester.publishServices();
-        }
+        //暴露服务
+        requester.publishServices();
     }
 }
