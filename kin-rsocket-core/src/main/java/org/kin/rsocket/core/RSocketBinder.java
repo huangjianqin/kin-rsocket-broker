@@ -189,6 +189,9 @@ public class RSocketBinder implements Closeable {
      */
     @Override
     public void close() {
+        if (stopped) {
+            return;
+        }
         stopped = true;
         for (Disposable responder : responders) {
             responder.dispose();
@@ -206,7 +209,7 @@ public class RSocketBinder implements Closeable {
         }
     }
 
-    //------------------------------------------------------------------------------------------------------------
+    //--------------------------------------------------------builder
     public static Builder builder() {
         return new Builder();
     }
