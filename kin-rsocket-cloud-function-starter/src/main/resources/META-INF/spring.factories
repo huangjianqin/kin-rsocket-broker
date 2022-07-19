@@ -1,2 +1,2 @@
-org.springframework.context.ApplicationListener=\
-org.kin.rsocket.springcloud.function.RSocketCloudFunctionRegistrar
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.kin.rsocket.cloud.function.RSocketFunctionAutoConfiguration
