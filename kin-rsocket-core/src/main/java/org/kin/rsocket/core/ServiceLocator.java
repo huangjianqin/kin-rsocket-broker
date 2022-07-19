@@ -17,12 +17,12 @@ public class ServiceLocator {
     private static final String[] EMPTY_TAGS = new String[0];
 
     /** service分组 */
-    private String group;
+    private String group = "";
     /** service名 */
-    private String service;
+    private String service = "";
     /** service版本 */
-    private String version;
-    private String[] tags;
+    private String version = "";
+    private String[] tags = EMPTY_TAGS;
 
     /** 服务唯一标识(str) */
     private String gsv;

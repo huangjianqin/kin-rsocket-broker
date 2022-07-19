@@ -72,64 +72,15 @@ public final class RSocketServiceReferenceBuilder<T> {
         RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getName();
-
-        //解析interface class 上的@RSocketServiceReference注解
-        RSocketServiceReference rsocketServiceReference = serviceInterface.getAnnotation(RSocketServiceReference.class);
-        if (Objects.isNull(rsocketServiceReference)) {
-            return builder;
-        }
-
-        String service = rsocketServiceReference.name();
-        if (StringUtils.isNotBlank(service)) {
-            builder.service(service);
-        }
-
-        String group = rsocketServiceReference.group();
-        if (StringUtils.isNotBlank(group)) {
-            builder.group(group);
-        }
-
-        String version = rsocketServiceReference.version();
-        if (StringUtils.isNotBlank(version)) {
-            builder.version(version);
-        }
-
-        int callTimeout = rsocketServiceReference.callTimeout();
-        if (callTimeout > 0) {
-            builder.callTimeout(callTimeout);
-        }
-
-        String endpoint = rsocketServiceReference.endpoint();
-        if (StringUtils.isNotBlank(endpoint)) {
-            builder.endpoint(endpoint);
-        }
-
-        if (rsocketServiceReference.sticky()) {
-            builder.sticky();
-        }
-
-        RSocketMimeType encodingType = rsocketServiceReference.encodingType();
-        builder.encodingType(encodingType);
-
-        RSocketMimeType[] acceptEncodingTypes = rsocketServiceReference.acceptEncodingTypes();
-        if (CollectionUtils.isNonEmpty(acceptEncodingTypes)) {
-            builder.acceptEncodingTypes(acceptEncodingTypes);
-        }
-
-        if (rsocketServiceReference.p2p()) {
-            builder.p2p();
-        }
-
         return builder;
     }
 
     /**
-     * 指定service interface class和{@link RSocketServiceReference}属性生成builder实例
+     * 适用于基于spring容器启动的Application
+     * 会读取注解在field或者bean factory method下{@link RSocketServiceReference}的属性生成builder实例
      */
     public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
-        RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
-        builder.serviceInterface = serviceInterface;
-        builder.service = serviceInterface.getName();
+        RSocketServiceReferenceBuilder<T> builder = requester(serviceInterface);
 
         String service = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(service)) {

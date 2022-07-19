@@ -7,7 +7,6 @@ import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.metadata.AppMetadata;
-import org.kin.rsocket.core.utils.UriUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 
@@ -26,28 +25,26 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
         if (event != null) {
             String appId = event.getId();
-            if (appId.equals(UriUtils.getAppUUID(cloudEventData.getAttributes().getSource()))) {
-                RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(appId);
-                if (Objects.nonNull(rsocketEndpoint)) {
-                    AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
-                    if (event.getStatus().equals(AppStatus.CONNECTED)) {
-                        //app connected
-                    } else if (event.getStatus().equals(AppStatus.SERVING)) {
-                        //app serving
-                        rsocketEndpoint.publishServices();
-                    } else if (event.getStatus().equals(AppStatus.DOWN)) {
-                        //app out of service
-                        rsocketEndpoint.hideServices();
-                    } else if (event.getStatus().equals(AppStatus.STOPPED)) {
-                        //app stopped
-                        rsocketEndpoint.hideServices();
-                        rsocketEndpoint.setAppStatus(AppStatus.STOPPED);
-                    }
-                } else {
-                    //upstream断开连接时, 先移除responder, 再广播事件, 所以此次要特殊处理一下
-                    if (event.getStatus().equals(AppStatus.STOPPED)) {
+            RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(appId);
+            if (Objects.nonNull(rsocketEndpoint)) {
+                AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
+                if (event.getStatus().equals(AppStatus.CONNECTED)) {
+                    //app connected
+                } else if (event.getStatus().equals(AppStatus.SERVING)) {
+                    //app serving
+                    rsocketEndpoint.publishServices();
+                } else if (event.getStatus().equals(AppStatus.DOWN)) {
+                    //app out of service
+                    rsocketEndpoint.hideServices();
+                } else if (event.getStatus().equals(AppStatus.STOPPED)) {
+                    //app stopped
+                    rsocketEndpoint.hideServices();
+                    rsocketEndpoint.setAppStatus(AppStatus.STOPPED);
+                }
+            } else {
+                //upstream断开连接时, 先移除responder, 再广播事件, 所以此次要特殊处理一下
+                if (event.getStatus().equals(AppStatus.STOPPED)) {
 
-                    }
                 }
             }
         }

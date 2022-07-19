@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -44,6 +45,13 @@ import java.util.function.Function;
 public class RSocketBinder implements Closeable {
     private static final Logger log = LoggerFactory.getLogger(RSocketBinder.class);
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
+
+    //状态-初始
+    private static final int STATE_INIT = 0;
+    //状态-已启动
+    private static final int STATE_START = 1;
+    //状态-已closed
+    private static final int STATE_TERMINATED = 2;
 
     /** bind的schema */
     private final Map<Integer, String> schemas = new HashMap<>();
@@ -66,7 +74,8 @@ public class RSocketBinder implements Closeable {
     /** @see io.rsocket.plugins.InterceptorRegistry#forRequestsInResponder(Function) */
     private final List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors = new ArrayList<>();
     //---------------------------------------------------------------------------------------------------------------------------------------
-    private volatile boolean stopped;
+    /** 状态 */
+    private AtomicInteger state = new AtomicInteger(STATE_INIT);
     /** 已启动的{@link RSocketServer}对应的{@link Disposable} */
     private List<Disposable> responders;
 
@@ -74,113 +83,115 @@ public class RSocketBinder implements Closeable {
      * bind
      */
     public void bind() {
-        if (!stopped) {
-            responders = new ArrayList<>(schemas.size());
-            for (Map.Entry<Integer, String> entry : schemas.entrySet()) {
-                String schema = entry.getValue();
-                int port = entry.getKey();
-                if (!NetUtils.isPortInRange(port)) {
-                    log.warn(String.format("schema '%s' port '%d' is invalid", schema, port));
-                    continue;
-                }
-                ServerTransport<?> transport;
-                switch (schema) {
-                    case Schemas.LOCAL:
-                        transport = LocalServerTransport.create("unittest");
-                        break;
-                    case Schemas.TCP:
-                        transport = TcpServerTransport.create(host, port);
-                        break;
-                    case Schemas.TCPS:
-                        TcpServer tcpServer = TcpServer.create()
-                                .host(host)
-                                .port(port)
-                                .secure(ssl -> {
-                                    try {
-                                        ssl.sslContext(
-                                                SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
-                                                        .protocols(PROTOCOLS)
-                                                        .sslProvider(getSslProvider())
-                                                        .build()
-                                        );
-                                    } catch (SSLException e) {
-                                        ExceptionUtils.throwExt(e);
-                                    }
-                                });
-                        transport = TcpServerTransport.create(tcpServer);
-                        break;
-                    case Schemas.WS:
-                        transport = WebsocketServerTransport.create(host, port);
-                        break;
-                    case Schemas.WSS:
-                        HttpServer httpServer = HttpServer.create()
-                                .host(host)
-                                .port(port)
-                                .secure(ssl -> {
-                                    try {
-                                        ssl.sslContext(
-                                                SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
-                                                        .protocols(PROTOCOLS)
-                                                        .sslProvider(getSslProvider())
-                                                        .build()
-                                        );
-                                    } catch (SSLException e) {
-                                        ExceptionUtils.throwExt(e);
-                                    }
-                                });
-                        transport = WebsocketServerTransport.create(httpServer);
-                        break;
-                    default:
-                        log.warn(String.format("unknown schema '%s', just retry to bind with tcp", schema));
-                        //回退到默认tcp
-                        transport = TcpServerTransport.create(host, port);
-                        break;
-                }
+        if (!state.compareAndSet(STATE_INIT, STATE_START)) {
+            return;
+        }
 
-                RSocketServer rsocketServer = RSocketServer.create();
-                //acceptor interceptor
-                for (SocketAcceptorInterceptor interceptor : acceptorInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forSocketAcceptor(interceptor));
-                }
-
-                //connection interceptor
-                for (DuplexConnectionInterceptor interceptor : connectionInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forConnection(interceptor));
-
-                }
-
-                //requester interceptor
-                for (RSocketInterceptor interceptor : requesterInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(interceptor));
-                }
-
-                //responder interceptor
-                for (RSocketInterceptor interceptor : responderInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(interceptor));
-                }
-
-                //request interceptor in request
-                for (Function<RSocket, ? extends RequestInterceptor> interceptor : requesterRequestInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInRequester(interceptor));
-                }
-
-                //request interceptor in responder
-                for (Function<RSocket, ? extends RequestInterceptor> interceptor : responderRequestInterceptors) {
-                    rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
-                }
-
-                Disposable disposable = rsocketServer
-                        .acceptor(acceptor)
-                        //zero copy
-                        .payloadDecoder(PayloadDecoder.ZERO_COPY)
-                        .bind(transport)
-                        .onTerminateDetach()
-                        .subscribe();
-                responders.add(disposable);
-                log.info("succeed to start RSocket on " + schema + "://" + host + ":" + port);
-
-                RSocketAppContext.rsocketPorts = schemas;
+        responders = new ArrayList<>(schemas.size());
+        for (Map.Entry<Integer, String> entry : schemas.entrySet()) {
+            String schema = entry.getValue();
+            int port = entry.getKey();
+            if (!NetUtils.isPortInRange(port)) {
+                log.warn(String.format("schema '%s' port '%d' is invalid", schema, port));
+                continue;
             }
+            ServerTransport<?> transport;
+            switch (schema) {
+                case Schemas.LOCAL:
+                    transport = LocalServerTransport.create("unittest");
+                    break;
+                case Schemas.TCP:
+                    transport = TcpServerTransport.create(host, port);
+                    break;
+                case Schemas.TCPS:
+                    TcpServer tcpServer = TcpServer.create()
+                            .host(host)
+                            .port(port)
+                            .secure(ssl -> {
+                                try {
+                                    ssl.sslContext(
+                                            SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
+                                                    .protocols(PROTOCOLS)
+                                                    .sslProvider(getSslProvider())
+                                                    .build()
+                                    );
+                                } catch (SSLException e) {
+                                    ExceptionUtils.throwExt(e);
+                                }
+                            });
+                    transport = TcpServerTransport.create(tcpServer);
+                    break;
+                case Schemas.WS:
+                    transport = WebsocketServerTransport.create(host, port);
+                    break;
+                case Schemas.WSS:
+                    HttpServer httpServer = HttpServer.create()
+                            .host(host)
+                            .port(port)
+                            .secure(ssl -> {
+                                try {
+                                    ssl.sslContext(
+                                            SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
+                                                    .protocols(PROTOCOLS)
+                                                    .sslProvider(getSslProvider())
+                                                    .build()
+                                    );
+                                } catch (SSLException e) {
+                                    ExceptionUtils.throwExt(e);
+                                }
+                            });
+                    transport = WebsocketServerTransport.create(httpServer);
+                    break;
+                default:
+                    log.warn(String.format("unknown schema '%s', just retry to bind with tcp", schema));
+                    //回退到默认tcp
+                    transport = TcpServerTransport.create(host, port);
+                    break;
+            }
+
+            RSocketServer rsocketServer = RSocketServer.create();
+            //acceptor interceptor
+            for (SocketAcceptorInterceptor interceptor : acceptorInterceptors) {
+                rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forSocketAcceptor(interceptor));
+            }
+
+            //connection interceptor
+            for (DuplexConnectionInterceptor interceptor : connectionInterceptors) {
+                rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forConnection(interceptor));
+
+            }
+
+            //requester interceptor
+            for (RSocketInterceptor interceptor : requesterInterceptors) {
+                rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequester(interceptor));
+            }
+
+            //responder interceptor
+            for (RSocketInterceptor interceptor : responderInterceptors) {
+                rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forResponder(interceptor));
+            }
+
+            //request interceptor in request
+            for (Function<RSocket, ? extends RequestInterceptor> interceptor : requesterRequestInterceptors) {
+                rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInRequester(interceptor));
+            }
+
+            //request interceptor in responder
+            for (Function<RSocket, ? extends RequestInterceptor> interceptor : responderRequestInterceptors) {
+                rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
+            }
+
+            Disposable disposable = rsocketServer
+                    .acceptor(acceptor)
+                    //zero copy
+                    .payloadDecoder(PayloadDecoder.ZERO_COPY)
+                    .bind(transport)
+                    .onTerminateDetach()
+                    .subscribe();
+            responders.add(disposable);
+            log.info("succeed to start RSocket on " + schema + "://" + host + ":" + port);
+
+            RSocketAppContext.rsocketPorts = schemas;
         }
     }
 
@@ -189,10 +200,10 @@ public class RSocketBinder implements Closeable {
      */
     @Override
     public void close() {
-        if (stopped) {
+        if (!state.compareAndSet(STATE_START, STATE_TERMINATED)) {
             return;
         }
-        stopped = true;
+
         for (Disposable responder : responders) {
             responder.dispose();
         }

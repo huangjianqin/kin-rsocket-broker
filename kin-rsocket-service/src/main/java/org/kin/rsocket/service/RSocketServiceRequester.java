@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +25,14 @@ import java.util.stream.Collectors;
  */
 public final class RSocketServiceRequester implements UpstreamClusterManager {
     private static final Logger log = LoggerFactory.getLogger(RSocketServiceRequester.class);
+
+    //状态-初始
+    private static final int STATE_INIT = 0;
+    //状态-已启动
+    private static final int STATE_START = 1;
+    //状态-已closed
+    private static final int STATE_TERMINATED = 2;
+
     /** app name */
     private final String appName;
     /** 配置 */
@@ -36,8 +45,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     private final RSocketRequesterSupportImpl requesterSupport;
     /** rsocket binder */
     private final RSocketBinder binder;
-    /** 是否已初始化 */
-    private volatile boolean inited;
+    /** 状态 */
+    private AtomicInteger state = new AtomicInteger(STATE_INIT);
 
     private RSocketServiceRequester(String appName,
                                     RSocketServiceProperties rsocketServiceProperties,
@@ -83,9 +92,10 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 初始化requester
      */
     public void init() {
-        if (inited) {
+        if (!state.compareAndSet(STATE_INIT, STATE_START)) {
             return;
         }
+
         //1. bind
         if (Objects.nonNull(binder)) {
             binder.bind();
@@ -93,16 +103,13 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
         //2. connect
         add(rsocketServiceProperties);
-
-        //3. mark
-        inited = true;
     }
 
     /**
-     * 某些接口调用需要检查是否已初始化
+     * 某些接口调用需要检查是否已启动
      */
-    private void checkInit() {
-        if (!inited) {
+    private void checkStart() {
+        if (state.get() != STATE_START) {
             throw new IllegalStateException("RSocketServiceRequester doesn't init");
         }
     }
@@ -281,8 +288,26 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         CloudEventConsumers.INSTANCE.addConsumers(consumers);
     }
 
+    /**
+     * 设置app状态为提供服务中, 并暴露所有已注册的服务
+     */
+    public void serving() {
+        UpstreamCluster broker = getBroker();
+        if (Objects.nonNull(broker)) {
+            //notify broker app status update
+            broker.broadcastCloudEvent(AppStatusEvent.serving(RSocketAppContext.ID).toCloudEvent())
+                    .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", rsocketServiceProperties.getBrokers()))))
+                    .subscribe();
+            publishServices();
+        }
+    }
+
     @Override
     public void close() {
+        if (!state.compareAndSet(STATE_START, STATE_TERMINATED)) {
+            return;
+        }
+
         upstreamClusterManager.close();
         if (Objects.nonNull(binder)) {
             binder.close();
@@ -302,25 +327,25 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     @Override
     public Collection<UpstreamCluster> getAll() {
-        checkInit();
+        checkStart();
         return upstreamClusterManager.getAll();
     }
 
     @Override
     public UpstreamCluster get(String serviceId) {
-        checkInit();
+        checkStart();
         return upstreamClusterManager.get(serviceId);
     }
 
     @Override
     public UpstreamCluster getBroker() {
-        checkInit();
+        checkStart();
         return upstreamClusterManager.getBroker();
     }
 
     @Override
     public void refresh(String serviceId, List<String> uris) {
-        checkInit();
+        checkStart();
         upstreamClusterManager.refresh(serviceId, uris);
     }
 
@@ -331,7 +356,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     @Override
     public void remove(String serviceId) {
-        checkInit();
+        checkStart();
         upstreamClusterManager.remove(serviceId);
     }
 
@@ -347,7 +372,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
 
     @Override
     public UpstreamCluster select(String serviceId) {
-        checkInit();
+        checkStart();
         return upstreamClusterManager.select(serviceId);
     }
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------

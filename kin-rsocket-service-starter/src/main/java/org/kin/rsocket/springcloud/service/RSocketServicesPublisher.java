@@ -3,7 +3,6 @@ package org.kin.rsocket.springcloud.service;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.UpstreamCluster;
-import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
 import org.kin.rsocket.service.RSocketServiceRequester;
 import org.slf4j.Logger;
@@ -56,12 +55,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
             brokerCluster.broadcastCloudEvent(portsUpdateEvent.toCloudEvent()).subscribe();
         }
 
-        //notify broker app status update
-        brokerCluster.broadcastCloudEvent(AppStatusEvent.serving(RSocketAppContext.ID).toCloudEvent())
-                .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", serviceConfig.getBrokers()))))
-                .subscribe();
-
         //暴露服务
-        requester.publishServices();
+        requester.serving();
     }
 }

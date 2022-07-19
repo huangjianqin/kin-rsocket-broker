@@ -19,7 +19,7 @@ import java.util.UUID;
  * @date 2021/3/23
  */
 public class CloudEventBuilder<T> {
-    private static final URI DEFAULT_SOURCE = URI.create("app://" + NetUtils.getIp() + "/" + "?uuid=" + RSocketAppContext.ID);
+    private static final URI DEFAULT_SOURCE = URI.create("app://" + RSocketAppContext.ID + "?ip=" + NetUtils.getIp());
     /** 包装的builder */
     private final io.cloudevents.core.builder.CloudEventBuilder builder =
             io.cloudevents.core.builder.CloudEventBuilder

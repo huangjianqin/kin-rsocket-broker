@@ -8,11 +8,14 @@ package org.kin.rsocket.core.upstream.loadbalance;
  */
 public enum UpstreamLoadBalanceStrategy {
     /** 轮询 */
-    RoundRobin("roundRobin"),
+    ROUND_ROBIN("roundRobin"),
     /** 随机 */
     RANDOM("random"),
     /** 一致性hash */
-    ConsistentHash("consistentHash");;
+    CONSISTENT_HASH("consistentHash"),
+    /** 基于请求响应时间计算权重 */
+    WEIGHTED_STATS("weightedStats"),
+    ;
 
     private final String name;
 

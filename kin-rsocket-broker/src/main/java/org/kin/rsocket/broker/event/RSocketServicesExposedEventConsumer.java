@@ -21,7 +21,7 @@ public final class RSocketServicesExposedEventConsumer extends AbstractCloudEven
 
     @Override
     public Mono<Void> consume(CloudEventData<?> cloudEventData, RSocketServicesExposedEvent event) {
-        if (event != null && event.getAppId().equals(cloudEventData.getAttributes().getSource().getHost())) {
+        if (event != null) {
             RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(event.getAppId());
             if (rsocketEndpoint != null) {
                 Set<ServiceLocator> serviceLocators = event.getServices();

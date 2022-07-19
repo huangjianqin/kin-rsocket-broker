@@ -21,7 +21,6 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
-import org.kin.rsocket.core.utils.UriUtils;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -331,14 +330,14 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
                 if (cloudEvent != null) {
                     //如果downstream没有设置, 则设置默认的
                     cloudEvent.updateSourceIfEmpty("downstream::*");
-                    /**
+                    /*
                      * 如果不是该responder对应的app uuid的cloud event, 则不处理
                      * 因为broker需要做拦截处理, 防止该app修改别的app
                      */
-                    if (appMetadata.getUuid().equalsIgnoreCase(UriUtils.getAppUUID(cloudEvent.getAttributes().getSource()))) {
-                        return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
+                    if (!appMetadata.getUuid().equalsIgnoreCase(cloudEvent.getAttributes().getSource().getHost())) {
+                        return Mono.empty();
                     }
-                    return Mono.empty();
+                    return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
                 }
             }
         } catch (Exception e) {

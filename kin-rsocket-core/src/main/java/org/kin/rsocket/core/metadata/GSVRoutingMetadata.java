@@ -5,6 +5,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.metadata.RoutingMetadata;
 import io.rsocket.metadata.TaggingMetadataCodec;
 import org.kin.framework.utils.MurmurHash3;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.utils.Separators;
@@ -47,6 +48,7 @@ public final class GSVRoutingMetadata implements MetadataAware {
         inst.handler = handler;
         inst.version = version;
         inst.endpoint = endpoint;
+        inst.sticky = sticky;
         return inst;
     }
 
@@ -175,19 +177,19 @@ public final class GSVRoutingMetadata implements MetadataAware {
         //service
         routingBuilder.append(service);
         //method
-        if (handler != null && !handler.isEmpty()) {
+        if (StringUtils.isNotBlank(handler)) {
             routingBuilder.append(Separators.SERVICE_HANDLER).append(handler);
         }
         //version
-        if (version != null && !version.isEmpty()) {
+        if (StringUtils.isNotBlank(version)) {
             routingBuilder.append(Separators.SERVICE_VERSION).append(version);
         }
-        if (this.sticky || this.endpoint != null) {
+        if (this.sticky || StringUtils.isNotBlank(this.endpoint)) {
             routingBuilder.append(Separators.SERVICE_DEF_TAGS);
             if (this.sticky) {
                 routingBuilder.append("sticky=1").append(Separators.TAG);
             }
-            if (this.endpoint != null) {
+            if (StringUtils.isNotBlank(endpoint)) {
                 routingBuilder.append("e=").append(endpoint).append(Separators.TAG);
             }
         }
