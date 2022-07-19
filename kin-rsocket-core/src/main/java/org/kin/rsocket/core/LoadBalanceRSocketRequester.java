@@ -53,8 +53,8 @@ import java.util.function.Predicate;
  * @date 2021/3/27
  */
 @SuppressWarnings("unchecked")
-public class LoadBalanceRsocketRequester extends AbstractRSocket implements CloudEventRSocket, RequesterRsocket {
-    private static final Logger log = LoggerFactory.getLogger(LoadBalanceRsocketRequester.class);
+public class LoadBalanceRSocketRequester extends AbstractRSocket implements CloudEventRSocket, RequesterRSocket {
+    private static final Logger log = LoggerFactory.getLogger(LoadBalanceRSocketRequester.class);
     /** health check interval seconds */
     private static final int HEALTH_CHECK_INTERVAL_SECONDS = 15;
     /** unhealth uris reconnect minutes */
@@ -98,7 +98,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /** 首次创建时, 用于等待连接建立成功, 然后释放掉 */
     private volatile CountDownLatch latch = new CountDownLatch(1);
 
-    public LoadBalanceRsocketRequester(String serviceGsv,
+    public LoadBalanceRSocketRequester(String serviceGsv,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
         this(serviceGsv, null, urisFactory, requesterSupport);
@@ -107,7 +107,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     /**
      * @param loadBalanceStrategy 负载均衡策略名
      */
-    public LoadBalanceRsocketRequester(String serviceGsv,
+    public LoadBalanceRSocketRequester(String serviceGsv,
                                        String loadBalanceStrategy,
                                        Flux<Collection<String>> urisFactory,
                                        RSocketRequesterSupport requesterSupport) {
@@ -143,7 +143,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
         return ExtensionLoader.getExtensionOrDefault(UpstreamLoadBalance.class, loadBalanceStrategy);
     }
 
-    /** 刷新Rsocket实例 */
+    /** 刷新RSocket实例 */
     private void refreshRSockets(Collection<String> rsocketUris) {
         //no changes
         if (CollectionUtils.isSame(this.lastRefreshRSocketUris, rsocketUris)) {
@@ -236,7 +236,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     }
 
     /**
-     * 根据{@link LoadBalanceRsocketRequester#loadBalance}选择一个有效的RSocket
+     * 根据{@link LoadBalanceRSocketRequester#loadBalance}选择一个有效的RSocket
      */
     private Mono<RSocket> next(ByteBuf paramBytes) {
         return Mono.fromSupplier(() -> {
@@ -479,7 +479,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
                 .delayElements(Duration.ofSeconds(5))
                 .filter(id -> activeRSockets.isEmpty() || !activeRSockets.containsKey(rsocketUri))
                 .subscribe(count -> {
-                    if (LoadBalanceRsocketRequester.this.isDisposed()) {
+                    if (LoadBalanceRSocketRequester.this.isDisposed()) {
                         return;
                     }
                     connect(rsocketUri)
@@ -575,7 +575,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     }
 
     /**
-     * 每{@link LoadBalanceRsocketRequester#HEALTH_CHECK_INTERVAL_SECONDS}秒检查connection是否连接
+     * 每{@link LoadBalanceRSocketRequester#HEALTH_CHECK_INTERVAL_SECONDS}秒检查connection是否连接
      */
     private void startHealthCheck() {
         this.lastHealthCheckTimestamp = System.currentTimeMillis();
@@ -595,7 +595,7 @@ public class LoadBalanceRsocketRequester extends AbstractRSocket implements Clou
     }
 
     /**
-     * 每{@link LoadBalanceRsocketRequester#UNHEALTH_URIS_RECONNECT_MINS}分钟尝试重连
+     * 每{@link LoadBalanceRSocketRequester#UNHEALTH_URIS_RECONNECT_MINS}分钟尝试重连
      */
     private void startUnhealthyUrisCheck() {
         unhealthUrisCheckDisposable = Flux.interval(Duration.ofMinutes(UNHEALTH_URIS_RECONNECT_MINS))

@@ -25,7 +25,7 @@ public final class PortsUpdateEventConsumer extends AbstractCloudEventConsumer<P
                 AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
                 appMetadata.updateWebPort(event.getWebPort());
                 appMetadata.updateManagementPort(event.getManagementPort());
-                appMetadata.updateRSocketPorts(event.getRsocketPorts());
+                appMetadata.updateRSocketPorts(event.getRSocketPorts());
             }
         }
         return Mono.empty();

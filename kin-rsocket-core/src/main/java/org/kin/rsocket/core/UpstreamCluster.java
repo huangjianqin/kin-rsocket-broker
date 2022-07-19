@@ -22,7 +22,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocket, Closeable, org.kin.framework.Closeable, UpstreamClusterSelector {
+public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocket, Closeable, org.kin.framework.Closeable, UpstreamClusterSelector {
     private static final Logger log = LoggerFactory.getLogger(UpstreamCluster.class);
 
     /** group */
@@ -34,7 +34,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
     /** upstream uris  processor */
     private final Sinks.Many<Collection<String>> urisSink = Sinks.many().replay().latest();
     /** load balanced RSocket to connect service provider or broker instances */
-    private final LoadBalanceRsocketRequester loadBalanceRequester;
+    private final LoadBalanceRSocketRequester loadBalanceRequester;
     /** 上次刷新的uris */
     private volatile List<String> lastUris = Collections.emptyList();
     /** cluster是否stopped */
@@ -86,7 +86,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         this.service = service;
         this.version = version;
 
-        this.loadBalanceRequester = new LoadBalanceRsocketRequester(ServiceLocator.gsv(group, service, version), loadBalanceStrategy, urisSink.asFlux(), requesterSupport);
+        this.loadBalanceRequester = new LoadBalanceRSocketRequester(ServiceLocator.gsv(group, service, version), loadBalanceStrategy, urisSink.asFlux(), requesterSupport);
         if (CollectionUtils.isNonEmpty(uris)) {
             refreshUris(uris);
         }
@@ -213,7 +213,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRsocke
         return lastUris;
     }
 
-    public LoadBalanceRsocketRequester getLoadBalanceRequester() {
+    public LoadBalanceRSocketRequester getLoadBalanceRequester() {
         return loadBalanceRequester;
     }
 }

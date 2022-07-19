@@ -299,7 +299,7 @@ public final class AppMetadata implements MetadataAware {
         return device;
     }
 
-    public Map<Integer, String> getRsocketPorts() {
+    public Map<Integer, String> getRSocketPorts() {
         return rsocketPorts;
     }
 

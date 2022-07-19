@@ -79,7 +79,7 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
         builder.uuid(RSocketAppContext.ID);
         builder.name(appName);
         builder.ip(NetUtils.getIp());
-        builder.device("KinRsocketBroker");
+        builder.device("KinRSocketBroker");
         //upstream brokers
         builder.brokers(brokerConfig.getUpstreamBrokers());
         builder.rsocketPorts(RSocketAppContext.rsocketPorts);

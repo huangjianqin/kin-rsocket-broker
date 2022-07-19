@@ -197,11 +197,11 @@ public class AppVO implements Serializable {
         this.device = device;
     }
 
-    public Map<Integer, String> getRsocketPorts() {
+    public Map<Integer, String> getRSocketPorts() {
         return rsocketPorts;
     }
 
-    public void setRsocketPorts(Map<Integer, String> rsocketPorts) {
+    public void setRSocketPorts(Map<Integer, String> rsocketPorts) {
         this.rsocketPorts = rsocketPorts;
     }
 

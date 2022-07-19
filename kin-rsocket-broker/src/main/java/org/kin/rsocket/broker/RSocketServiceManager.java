@@ -440,7 +440,7 @@ public final class RSocketServiceManager {
     }
 
     /**
-     * return rejected Rsocket with dispose logic
+     * return rejected RSocket with dispose logic
      */
     private Mono<RSocket> returnRejectedRSocket(String errorMsg, RSocket requesterSocket) {
         return Mono.<RSocket>error(new RejectedSetupException(errorMsg)).doFinally((signalType -> {
@@ -640,7 +640,7 @@ public final class RSocketServiceManager {
                 continue;
             }
 
-            Map<Integer, String> rsocketPorts = rsocketEndpoint.getAppMetadata().getRsocketPorts();
+            Map<Integer, String> rsocketPorts = rsocketEndpoint.getAppMetadata().getRSocketPorts();
             if (rsocketPorts != null && !rsocketPorts.isEmpty()) {
                 //组装成uri
                 Map.Entry<Integer, String> entry = rsocketPorts.entrySet().stream().findFirst().get();

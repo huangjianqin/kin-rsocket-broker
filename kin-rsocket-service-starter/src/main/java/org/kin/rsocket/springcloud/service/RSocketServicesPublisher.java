@@ -51,7 +51,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
             portsUpdateEvent.setAppId(RSocketAppContext.ID);
             portsUpdateEvent.setWebPort(RSocketAppContext.webPort);
             portsUpdateEvent.setManagementPort(RSocketAppContext.managementPort);
-            portsUpdateEvent.setRsocketPorts(RSocketAppContext.rsocketPorts);
+            portsUpdateEvent.setRSocketPorts(RSocketAppContext.rsocketPorts);
             brokerCluster.broadcastCloudEvent(portsUpdateEvent.toCloudEvent()).subscribe();
         }
 

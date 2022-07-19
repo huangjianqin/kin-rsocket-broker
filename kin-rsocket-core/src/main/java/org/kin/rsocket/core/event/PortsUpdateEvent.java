@@ -26,11 +26,11 @@ public final class PortsUpdateEvent implements CloudEventSupport {
         this.appId = appId;
     }
 
-    public Map<Integer, String> getRsocketPorts() {
+    public Map<Integer, String> getRSocketPorts() {
         return rsocketPorts;
     }
 
-    public void setRsocketPorts(Map<Integer, String> rsocketPorts) {
+    public void setRSocketPorts(Map<Integer, String> rsocketPorts) {
         this.rsocketPorts = rsocketPorts;
     }
 

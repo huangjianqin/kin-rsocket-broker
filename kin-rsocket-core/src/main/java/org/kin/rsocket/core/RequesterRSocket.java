@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public interface RequesterRsocket extends RSocket {
+public interface RequesterRSocket extends RSocket {
     /**
      * 向所有有效的upstream rsocket广播cloud event
      */
