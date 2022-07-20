@@ -287,9 +287,9 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         }
         return next(payload.data())
                 .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
-                .flatMap(rSocket -> rSocket.fireAndForget(payload)
+                .flatMap(rsocket -> rsocket.fireAndForget(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                            onRSocketClosed(rSocket, error);
+                            onRSocketClosed(rsocket, error);
                             return fireAndForget(payload);
                         }));
     }
@@ -335,9 +335,9 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         }
         return next(payload.data())
                 .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
-                .flatMapMany(rSocket -> rSocket.requestStream(payload)
+                .flatMapMany(rsocket -> rsocket.requestStream(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                            onRSocketClosed(rSocket, error);
+                            onRSocketClosed(rsocket, error);
                             return requestStream(payload);
                         }));
     }
@@ -351,9 +351,9 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
 
         return next(null)
                 .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payloads))
-                .flatMapMany(rSocket -> rSocket.requestChannel(payloads)
+                .flatMapMany(rsocket -> rsocket.requestChannel(payloads)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
-                            onRSocketClosed(rSocket, error);
+                            onRSocketClosed(rsocket, error);
                             return requestChannel(payloads);
                         }));
     }
@@ -365,7 +365,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
             return (Mono<Void>) disposedMono();
         }
         awaitFirstConnect();
-        return Flux.fromIterable(activeRSockets.values()).flatMap(rSocket -> rSocket.metadataPush(payload)).then();
+        return Flux.fromIterable(activeRSockets.values()).flatMap(rsocket -> rsocket.metadataPush(payload)).then();
     }
 
     @Override

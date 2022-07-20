@@ -79,7 +79,7 @@ public interface RSocketAppPrincipal extends Principal {
     Set<String> getRoles();
 
     /**
-     * @return
+     * @return 作者s
      */
     Set<String> getAuthorities();
 

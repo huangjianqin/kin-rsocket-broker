@@ -22,7 +22,7 @@ public class WeightedStatsUpstreamLoadBalance implements UpstreamLoadBalance {
     /** 存储每个{@link RSocket} connector的状态信息, 用于计算其权重 */
     private final NonBlockingHashMap<RSocket, WeightedStats> statsMap = new NonBlockingHashMap<>();
     /** {@link WeightedLoadbalanceStrategy}实例 */
-    private final WeightedLoadbalanceStrategy strategy = WeightedLoadbalanceStrategy.builder().weightedStatsResolver(rSocket -> statsMap.get(rSocket)).build();
+    private final WeightedLoadbalanceStrategy strategy = WeightedLoadbalanceStrategy.builder().weightedStatsResolver(statsMap::get).build();
 
     @Override
     public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> rsockets) {
