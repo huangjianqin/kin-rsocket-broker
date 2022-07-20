@@ -23,7 +23,10 @@ public final class CloudEventConsumers implements Closeable {
     private final List<CloudEventConsumer> consumers = new CopyOnWriteArrayList<>();
     /** event topic processor subscribe disposable */
     private final Disposable disposable;
-    /** cloud event处理, 有界无限队列线程池执行, 主要是因为app刷新配置时需要请求broker配置信息并且spring的加载配置也不支持异步, 需要block */
+    /**
+     * elastic scheduler处理cloud event消费逻辑,
+     * 主要是因为app刷新配置时需要阻塞请求(http)配置信息并且spring的加载配置也不支持异步
+     */
     private static final Scheduler CLOUD_EVENT_CONSUMER_SCHEDULER = Schedulers.newBoundedElastic(3, Integer.MAX_VALUE, "cloudEventConsumer");
 
     public CloudEventConsumers() {
