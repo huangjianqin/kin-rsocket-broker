@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.spingcloud.registry.client.RSocketRegistryClientAutoConfiguration
+org.kin.rsocket.cloud.registry.client.RSocketRegistryClientAutoConfiguration

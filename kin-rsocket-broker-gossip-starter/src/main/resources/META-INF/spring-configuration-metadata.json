@@ -4,14 +4,14 @@
       "name": "kin.rsocket.broker.gossip.port",
       "type": "java.lang.Integer",
       "description": "rsocket gossip broker绑定端口",
-      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.gossip.RSocketBrokerGossipProperties",
+      "sourceType": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties",
       "defaultValue": "10999"
     },
     {
       "name": "kin.rsocket.broker.gossip.seeds",
       "type": "java.lang.String[]",
       "description": "集群中rsocket gossip broker节点uris",
-      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.gossip.RSocketBrokerGossipProperties",
+      "sourceType": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties",
       "defaultValue": "[]"
     }
   ]

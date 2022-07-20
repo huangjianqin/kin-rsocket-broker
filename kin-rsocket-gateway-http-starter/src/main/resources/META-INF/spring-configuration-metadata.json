@@ -2,8 +2,8 @@
   "groups": [
     {
       "name": "kin.rsocket.gateway",
-      "type": "org.kin.rsocket.springcloud.gateway.http.RSocketBrokerHttpGatewayProperties",
-      "sourceType": "org.kin.rsocket.springcloud.gateway.http.RSocketBrokerHttpGatewayProperties"
+      "type": "org.kin.rsocket.gateway.http.RSocketBrokerHttpGatewayProperties",
+      "sourceType": "org.kin.rsocket.gateway.http.RSocketBrokerHttpGatewayProperties"
     }
   ],
   "properties": [
@@ -11,7 +11,7 @@
       "name": "kin.rsocket.gateway.rest-api-auth",
       "type": "java.lang.Boolean",
       "description": "http gateway是否开启api校验",
-      "sourceType": "org.kin.rsocket.springcloud.gateway.http.RSocketBrokerHttpGatewayProperties",
+      "sourceType": "org.kin.rsocket.gateway.http.RSocketBrokerHttpGatewayProperties",
       "defaultValue": false
     }
   ],

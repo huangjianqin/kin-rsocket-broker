@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.spring.rsocket.support.SpringRSocketServiceDiscoveryAutoConfiguration
+org.kin.rsocket.spring.support.SpringRSocketServiceDiscoveryAutoConfiguration

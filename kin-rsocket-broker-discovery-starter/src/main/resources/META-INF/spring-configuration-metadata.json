@@ -2,8 +2,8 @@
   "groups": [
     {
       "name": "kin.rsocket.broker.k8s",
-      "type": "org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryProperties",
-      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryProperties"
+      "type": "org.kin.rsocket.broker.cluster.discovery.RSocketBrokerDiscoveryProperties",
+      "sourceType": "org.kin.rsocket.broker.cluster.discovery.RSocketBrokerDiscoveryProperties"
     }
   ],
   "properties": [
@@ -11,14 +11,14 @@
       "name": "kin.rsocket.broker.k8s.refresh-internal",
       "type": "java.lang.Integer",
       "description": "集群broker信息刷新间隔",
-      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryProperties",
+      "sourceType": "org.kin.rsocket.broker.cluster.discovery.RSocketBrokerDiscoveryProperties",
       "defaultValue": 0
     },
     {
       "name": "kin.rsocket.broker.k8s.service",
       "type": "java.lang.String",
       "description": "spring cloud k8s服务实例名",
-      "sourceType": "org.kin.rsocket.springcloud.broker.cluster.discovery.RSocketBrokerDiscoveryProperties"
+      "sourceType": "org.kin.rsocket.broker.cluster.discovery.RSocketBrokerDiscoveryProperties"
     }
   ],
   "hints": []

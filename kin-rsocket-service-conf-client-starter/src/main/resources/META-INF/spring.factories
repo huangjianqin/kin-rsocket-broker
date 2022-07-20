@@ -1,4 +1,4 @@
 org.springframework.cloud.bootstrap.BootstrapConfiguration=\
-org.kin.rsocket.spingcloud.conf.client.RSocketConfDiamondClientBootstrapConfiguration
+org.kin.rsocket.cloud.conf.client.RSocketConfDiamondClientBootstrapConfiguration
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.spingcloud.conf.client.RSocketConfDiamondClientAutoConfiguration
+org.kin.rsocket.cloud.conf.client.RSocketConfDiamondClientAutoConfiguration

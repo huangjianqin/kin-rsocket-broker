@@ -1,6 +1,6 @@
 package org.kin.rsocket.example.service;
 
-import org.kin.rsocket.springcloud.service.EnableRSocketService;
+import org.kin.rsocket.service.spring.EnableRSocketService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

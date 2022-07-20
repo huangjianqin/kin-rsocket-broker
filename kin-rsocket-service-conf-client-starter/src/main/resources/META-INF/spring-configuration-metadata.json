@@ -2,8 +2,8 @@
   "groups": [
     {
       "name": "kin.rsocket.conf",
-      "type": "org.kin.rsocket.spingcloud.conf.client.RSocketServiceConfProperties",
-      "sourceType": "org.kin.rsocket.spingcloud.conf.client.RSocketServiceConfProperties"
+      "type": "org.kin.rsocket.cloud.conf.client.RSocketServiceConfProperties",
+      "sourceType": "org.kin.rsocket.cloud.conf.client.RSocketServiceConfProperties"
     }
   ],
   "properties": [
@@ -11,7 +11,7 @@
       "name": "kin.rsocket.conf.auto-refresh",
       "type": "java.lang.Boolean",
       "description": "是否自动刷新配置",
-      "sourceType": "org.kin.rsocket.spingcloud.conf.client.RSocketServiceConfProperties",
+      "sourceType": "org.kin.rsocket.cloud.conf.client.RSocketServiceConfProperties",
       "defaultValue": false
     }
   ],

@@ -2,88 +2,88 @@
   "groups": [
     {
       "name": "kin.rsocket",
-      "type": "org.kin.rsocket.springcloud.service.RSocketServiceProperties",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "type": "org.kin.rsocket.service.spring.RSocketServiceProperties",
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "management.endpoint.rsocket",
-      "type": "org.kin.rsocket.springcloud.service.health.RSocketEndpoint",
-      "sourceType": "org.kin.rsocket.springcloud.service.health.RSocketEndpoint"
+      "type": "org.kin.rsocket.service.spring.health.RSocketEndpoint",
+      "sourceType": "org.kin.rsocket.service.spring.health.RSocketEndpoint"
     }
   ],
   "properties": [
     {
       "name": "kin.rsocket.broker-web-host-ports",
       "type": "java.util.List<java.lang.String>",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.brokers",
       "type": "java.util.List<java.lang.String>",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.endpoints",
       "type": "java.util.List<org.kin.rsocket.service.EndpointProperties>",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.group",
       "type": "java.lang.String",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.jwt-token",
       "type": "java.lang.String",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.load-balance",
       "type": "java.lang.String",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.metadata",
       "type": "java.util.Map<java.lang.String,java.lang.String>",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.port",
       "type": "java.lang.Integer",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.schema",
       "type": "java.lang.String",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.timeout",
       "type": "java.lang.Integer",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.topology",
       "type": "java.lang.String",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "kin.rsocket.version",
       "type": "java.lang.String",
-      "sourceType": "org.kin.rsocket.springcloud.service.RSocketServiceProperties"
+      "sourceType": "org.kin.rsocket.service.spring.RSocketServiceProperties"
     },
     {
       "name": "management.endpoint.rsocket.cache.time-to-live",
       "type": "java.time.Duration",
       "description": "Maximum time that a response can be cached.",
-      "sourceType": "org.kin.rsocket.springcloud.service.health.RSocketEndpoint",
+      "sourceType": "org.kin.rsocket.service.spring.health.RSocketEndpoint",
       "defaultValue": "0ms"
     },
     {
       "name": "management.endpoint.rsocket.enabled",
       "type": "java.lang.Boolean",
       "description": "Whether to enable the rsocket endpoint.",
-      "sourceType": "org.kin.rsocket.springcloud.service.health.RSocketEndpoint",
+      "sourceType": "org.kin.rsocket.service.spring.health.RSocketEndpoint",
       "defaultValue": true
     }
   ],
