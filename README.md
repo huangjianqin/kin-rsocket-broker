@@ -48,7 +48,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
   * **kin-rsocket-conf-server-starter**: rsocket service配置中心实现, 以broker作为桥梁, 为同一broker集群下的app提供配置中心服务
 * **kin-rsocket-core**: rsocket核心功能, 实现一些共用的基础功能类
 * **kin-rsocket-example**: rsocket示例
-  * **kin-rsocket-cloud-function-example**: rsocket function示例
+  * **kin-rsocket-example-cloud-function**: rsocket function示例
   * **kin-rsocket-example-api**: rsocket broker示例api
   * **kin-rsocket-example-broker**: rsocket broker示例
   * **kin-rsocket-example-requester**: rsocket consumer示例
@@ -60,7 +60,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-rsocket-service**: rsocket服务实现
 * **kin-rsocket-service-conf-client-starter**: rsocket service conf client
 * **kin-rsocket-service-starter**: rsocket服务实现, 整合spring cloud
-* **kin-spring-rsocket-support-starter**: 对spring rsocket进行增强
+* **kin-rsocket-service-spring-support-starter**: 对spring rsocket进行增强
 
 ## **RSocket服务示例**
 

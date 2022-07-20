@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/4/9
  */
-@ReactiveFeignClient(value = "rsocket-example-requester")
+@ReactiveFeignClient(value = "rsocket-example-responder")
 @RequestMapping("/api/org.kin.rsocket.example.UserService")
 public interface UserService {
     @GetMapping(value = "/findAll")

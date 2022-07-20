@@ -123,19 +123,19 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-spring-rsocket-example-api</artifactId>
+                <artifactId>kin-rsocket-example-spring-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-spring-rsocket-example-requester</artifactId>
+                <artifactId>kin-rsocket-example-spring-requester</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-spring-rsocket-example-responder</artifactId>
+                <artifactId>kin-rsocket-example-spring-responder</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -177,7 +177,7 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-spring-rsocket-support-starter</artifactId>
+                <artifactId>kin-rsocket-service-spring-support-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

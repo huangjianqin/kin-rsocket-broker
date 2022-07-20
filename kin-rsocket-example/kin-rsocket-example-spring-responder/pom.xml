@@ -8,13 +8,13 @@
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>kin-spring-rsocket-example-responder</artifactId>
+    <artifactId>kin-rsocket-example-spring-responder</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-spring-rsocket-example-api</artifactId>
+            <artifactId>kin-rsocket-example-spring-api</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -1,4 +1,4 @@
-# kin-spring-rsocket-support-starter
+# kin-rsocket-service-spring-support-starter
 相当于`spring-messaging`的工具类
 
 * `@EnableSpringRSocketServiceReference`, 提供自动扫描并构建rsocket service reference
