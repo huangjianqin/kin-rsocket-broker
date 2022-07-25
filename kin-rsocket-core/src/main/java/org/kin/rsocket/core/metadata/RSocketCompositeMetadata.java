@@ -6,7 +6,6 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.CompositeMetadataCodec;
 import io.rsocket.metadata.WellKnownMimeType;
-import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.RSocketMimeType;
 
 import java.util.*;
@@ -80,14 +79,10 @@ public final class RSocketCompositeMetadata implements MetadataAware {
 
             RSocketMimeType rsocketMimeType = RSocketMimeType.getByType(mimeType);
             if (Objects.nonNull(rsocketMimeType)) {
-                try {
-                    bytes.markReaderIndex();
-                    MetadataAware metadataAware = MetadataAwares.instance(rsocketMimeType, bytes);
-                    bytes.resetReaderIndex();
-                    metadataStore.put(rsocketMimeType, metadataAware);
-                } catch (Exception e) {
-                    ExceptionUtils.throwExt(e);
-                }
+                bytes.markReaderIndex();
+                MetadataAware metadataAware = MetadataAwares.instance(rsocketMimeType, bytes);
+                bytes.resetReaderIndex();
+                metadataStore.put(rsocketMimeType, metadataAware);
             }
         }
     }
