@@ -10,6 +10,7 @@ import io.scalecube.cluster.membership.MembershipEvent;
 import io.scalecube.cluster.transport.api.Message;
 import io.scalecube.net.Address;
 import io.scalecube.transport.netty.tcp.TcpTransportFactory;
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
@@ -56,7 +57,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     /** 本机broker数据 */
     private BrokerInfo localBrokerInfo;
     /** key -> ip address, value -> rsocket brokers数据 */
-    private final Map<String, BrokerInfo> brokers = new HashMap<>();
+    private final Map<String, BrokerInfo> brokers = new UnifiedMap<>();
     /** 集群broker信息变化sink, 使用者可以监听集群变化并作出响应 */
     private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
 

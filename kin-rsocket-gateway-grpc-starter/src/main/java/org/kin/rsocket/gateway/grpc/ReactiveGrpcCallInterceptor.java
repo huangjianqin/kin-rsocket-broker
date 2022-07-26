@@ -16,6 +16,7 @@ import io.rsocket.util.ByteBufPayload;
 import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
+import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.*;
@@ -30,7 +31,6 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -72,7 +72,7 @@ public final class ReactiveGrpcCallInterceptor {
     private Tracer tracer;
 
     /** grpc服务方法元数据 */
-    private final Map<Method, ReactiveGrpcMethodMetadata> methodMetadataMap = new ConcurrentHashMap<>();
+    private final Map<Method, ReactiveGrpcMethodMetadata> methodMetadataMap = new NonBlockingHashMap<>();
 
     @SuppressWarnings("unchecked")
     @RuntimeType

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @date 2021/5/7
  */
 public class RoundRobinRouter implements ProviderRouter {
-    /** key -> serviceId, value -> {@link WeightedRoundRobin} list */
+    /** key -> serviceId, value -> {@link WeightedRoundRobin} list, copy on write更新 */
     private FastListMultimap<Integer, WeightedRoundRobin> serviceId2WeightedRoundRobins = new FastListMultimap<>();
 
     @Override

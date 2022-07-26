@@ -13,7 +13,8 @@ import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.ByteBufPayload;
-import org.kin.framework.collection.ConcurrentHashSet;
+import org.jctools.maps.NonBlockingHashMap;
+import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
@@ -29,7 +30,6 @@ import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * service -> broker
@@ -46,7 +46,7 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
     /** authorized principal */
     private final RSocketAppPrincipal principal;
     /** sticky services, key -> serviceId, value -> instanceId */
-    private final Map<Integer, Integer> stickyServices = new ConcurrentHashMap<>();
+    private final Map<Integer, Integer> stickyServices = new NonBlockingHashMap<>();
     /** upstream broker */
     private final UpstreamCluster upstreamBrokers;
     private final RSocketServiceManager serviceManager;
@@ -54,7 +54,7 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
     /** default消息编码类型 */
     private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
     /** 记录请求过的服务id */
-    private final Set<String> consumedServices = new ConcurrentHashSet<>();
+    private final Set<String> consumedServices = new NonBlockingHashSet<>();
 
     public RSocketBrokerResponderHandler(ConnectionSetupPayload setupPayload,
                                          AppMetadata appMetadata,

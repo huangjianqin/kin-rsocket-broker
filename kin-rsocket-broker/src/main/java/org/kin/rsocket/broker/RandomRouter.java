@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  * @date 2021/5/7
  */
 public class RandomRouter implements ProviderRouter {
-    /** key -> serviceId, value -> {@link InstanceIdWeightList} */
+    /** key -> serviceId, value -> {@link InstanceIdWeightList}, copy on write更新 */
     private UnifiedMap<Integer, InstanceIdWeightList> serviceId2InstanceIdWeightList = new UnifiedMap<>();
 
     @Override

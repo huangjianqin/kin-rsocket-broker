@@ -13,7 +13,7 @@ import io.rsocket.plugins.DuplexConnectionInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
 import io.rsocket.plugins.RequestInterceptor;
 import io.rsocket.util.ByteBufPayload;
-import org.kin.framework.collection.ConcurrentHashSet;
+import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExtensionLoader;
 import org.kin.rsocket.core.codec.Codecs;
@@ -82,7 +82,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
     /** 有效的rsocket连接, 一写, 多读, copy-on-write */
     private volatile Map<String, RSocket> activeRSockets = Collections.emptyMap();
     /** unhealthy uris */
-    private final Set<String> unhealthyUris = new ConcurrentHashSet<>();
+    private final Set<String> unhealthyUris = new NonBlockingHashSet<>();
     /** 上一次health check时间 */
     private volatile long lastHealthCheckTimestamp;
     /** requester配置 */

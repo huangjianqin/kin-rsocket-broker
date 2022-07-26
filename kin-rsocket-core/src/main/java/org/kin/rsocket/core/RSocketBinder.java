@@ -16,6 +16,7 @@ import io.rsocket.transport.ServerTransport;
 import io.rsocket.transport.local.LocalServerTransport;
 import io.rsocket.transport.netty.server.TcpServerTransport;
 import io.rsocket.transport.netty.server.WebsocketServerTransport;
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.NetUtils;
@@ -31,7 +32,6 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,7 +54,7 @@ public class RSocketBinder implements Closeable {
     private static final int STATE_TERMINATED = 2;
 
     /** bind的schema */
-    private final Map<Integer, String> schemas = new HashMap<>();
+    private final Map<Integer, String> schemas = new UnifiedMap<>();
     private String host = "0.0.0.0";
     /** 证书 */
     private Certificate certificate;

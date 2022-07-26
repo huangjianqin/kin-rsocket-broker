@@ -24,7 +24,7 @@ public class WeightedStatsRouter implements ProviderRouter {
 
     /** 存储每个{@link RSocket} requester的状态信息, 用于计算其权重 */
     private final NonBlockingHashMap<RSocket, WeightedStats> statsMap = new NonBlockingHashMap<>();
-    /** key -> serviceId, value -> {@link WeightedInstance} list */
+    /** key -> serviceId, value -> {@link WeightedInstance} list, copy on write更新 */
     private FastListMultimap<Integer, WeightedInstance> serviceId2WeightedInstances = new FastListMultimap<>();
 
     @SuppressWarnings("StatementWithEmptyBody")

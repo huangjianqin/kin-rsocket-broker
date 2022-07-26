@@ -1,6 +1,7 @@
 package org.kin.rsocket.conf.memory;
 
-import org.kin.framework.collection.ConcurrentHashSet;
+import org.jctools.maps.NonBlockingHashMap;
+import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.conf.AbstractConfDiamond;
 import org.kin.rsocket.conf.ConfDiamond;
@@ -12,7 +13,6 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author huangjianqin
@@ -22,9 +22,9 @@ public class MemoryStorageConfDiamond extends AbstractConfDiamond {
     private static final Logger log = LoggerFactory.getLogger(MemoryStorageConfDiamond.class);
 
     /** group, 也就是app name */
-    private final Set<String> group = new ConcurrentHashSet<>();
+    private final Set<String> group = new NonBlockingHashSet<>();
     /** key value存储 */
-    private final Map<String, String> storage = new ConcurrentHashMap<>();
+    private final Map<String, String> storage = new NonBlockingHashMap<>();
 
     @Override
     public Flux<String> getGroups() {

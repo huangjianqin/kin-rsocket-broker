@@ -4,6 +4,7 @@ import net.bytebuddy.implementation.bind.annotation.AllArguments;
 import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 import org.checkerframework.common.returnsreceiver.qual.This;
+import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.MethodHandleUtils;
@@ -15,7 +16,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static io.rsocket.frame.FrameType.*;
 
@@ -25,7 +25,7 @@ import static io.rsocket.frame.FrameType.*;
  */
 public final class RequesterProxy implements InvocationHandler {
     /** reactive方法元数据 */
-    private final Map<Method, ReactiveMethodMetadata> methodMetadatas = new ConcurrentHashMap<>();
+    private final Map<Method, ReactiveMethodMetadata> methodMetadatas = new NonBlockingHashMap<>();
     /** 底层remote requester */
     private final RSocketRequester rsocketRequester;
     /** service interface */

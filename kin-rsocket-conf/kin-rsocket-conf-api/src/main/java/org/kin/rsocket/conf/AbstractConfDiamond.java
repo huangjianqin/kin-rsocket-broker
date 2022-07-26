@@ -1,5 +1,6 @@
 package org.kin.rsocket.conf;
 
+import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.StringUtils;
 import reactor.core.publisher.Flux;
@@ -8,7 +9,6 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author huangjianqin
@@ -19,7 +19,7 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
     protected static final Scheduler SCHEDULER = Schedulers.newSingle("ConfDiamond");
 
     /** watcher */
-    private final Map<String, Sinks.Many<Tuple<String, String>>> watchNotifications = new ConcurrentHashMap<>();
+    private final Map<String, Sinks.Many<Tuple<String, String>>> watchNotifications = new NonBlockingHashMap<>();
 
     @Override
     public final Flux<Tuple<String, String>> watch(String group, String key) {

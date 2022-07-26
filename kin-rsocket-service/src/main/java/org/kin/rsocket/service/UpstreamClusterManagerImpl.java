@@ -1,6 +1,7 @@
 package org.kin.rsocket.service;
 
 import com.google.common.collect.ImmutableSet;
+import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.RSocketAppContext;
@@ -20,7 +21,6 @@ import reactor.util.function.Tuples;
 import java.net.URI;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
@@ -40,7 +40,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
     /** upstream requester配置 */
     private final RSocketRequesterSupport requesterSupport;
     /** upstream clusters */
-    private final Map<String, UpstreamCluster> clusters = new ConcurrentHashMap<>();
+    private final Map<String, UpstreamCluster> clusters = new NonBlockingHashMap<>();
     /** broker upstream cluster */
     private UpstreamCluster brokerCluster;
     /** broker的服务发现reference, 用于获取broker集群信息 */

@@ -2,13 +2,14 @@ package org.kin.rsocket.core.upstream.loadbalance;
 
 import io.netty.buffer.ByteBuf;
 import io.rsocket.RSocket;
+import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.Extension;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author huangjianqin
@@ -16,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Extension("consistentHash")
 public class ConsistentHashUpstreamLoadBalance extends RoundRobinUpstreamLoadBalance {
-    private final ConcurrentHashMap<Integer, ConsistentHash> consistentHashMap = new ConcurrentHashMap<>();
+    private final Map<Integer, ConsistentHash> consistentHashMap = new NonBlockingHashMap<>();
 
     @Override
     public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> rsockets) {
