@@ -12,9 +12,9 @@ import java.lang.annotation.*;
  * &#64;Configuration
  * public class RequesterConfiguration {
  *     &#64;Bean
- *     public UserService userService(@Autowired RSocketServiceRequester requester) {
+ *     public UserService userService(@Autowired RSocketRequester rsocketRequester) {
  *         return SpringRSocketServiceReferenceBuilder
- *                 .requester(requester, UserService.class)
+ *                 .reference(rsocketRequester, UserService.class)
  *                 .build();
  *     }
  * }

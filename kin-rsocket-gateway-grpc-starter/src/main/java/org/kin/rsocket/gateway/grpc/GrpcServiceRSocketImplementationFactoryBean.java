@@ -2,7 +2,7 @@ package org.kin.rsocket.gateway.grpc;
 
 import brave.Tracing;
 import io.grpc.BindableService;
-import org.kin.rsocket.service.RSocketServiceRequester;
+import org.kin.rsocket.service.RSocketBrokerClient;
 import org.kin.rsocket.service.spring.RSocketServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
@@ -17,7 +17,7 @@ import java.util.Objects;
  */
 public final class GrpcServiceRSocketImplementationFactoryBean<T extends BindableService> extends AbstractFactoryBean<T> {
     @Autowired
-    private RSocketServiceRequester requester;
+    private RSocketBrokerClient brokerClient;
     @Autowired
     private RSocketServiceProperties rsocketServiceProperties;
     /** 缓存rsocket rpc service reference builder, 创建reference后会clear掉 */
@@ -48,7 +48,7 @@ public final class GrpcServiceRSocketImplementationFactoryBean<T extends Bindabl
         builder.groupIfEmpty(rsocketServiceProperties.getGroup())
                 .versionIfEmpty(rsocketServiceProperties.getVersion())
                 .callTimeout(rsocketServiceProperties.getTimeout());
-        builder.upstreamClusterManager(requester);
+        builder.upstreamClusters(brokerClient);
         builder.tracing(tracing);
         builder.connect();
         //release

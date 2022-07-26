@@ -16,10 +16,10 @@ public class RequesterConfiguration {
 //     * 方式1. 通过{@link Bean}+{@link RSocketServiceReferenceBuilder}构建rsocket service reference
 //     */
 //    @Bean
-//    public UserService userService(@Autowired RSocketServiceRequester requester) {
+//    public UserService userService(@Autowired RSocketBrokerClient brokerClient) {
 //        return RSocketServiceReferenceBuilder
-//                .requester(UserService.class)
-//                .upstreamClusterManager(requester)
+//                .reference(UserService.class)
+//                .upstreamClusters(brokerClient)
 //                .build();
 //    }
 

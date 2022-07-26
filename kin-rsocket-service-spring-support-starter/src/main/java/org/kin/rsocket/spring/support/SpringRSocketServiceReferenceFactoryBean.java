@@ -103,7 +103,7 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
                 rsocketRequester = this.requester;
             }
 
-            SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.requester(rsocketRequester, serviceInterface);
+            SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.reference(rsocketRequester, serviceInterface);
             //此处必须只取service name, 不然在broker模式下, route metadata会存在异常
             builder.service(takeRealServiceName(serviceName));
             builder.timeout(callTimeout, TimeUnit.SECONDS);

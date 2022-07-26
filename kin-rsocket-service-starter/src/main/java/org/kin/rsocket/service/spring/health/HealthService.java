@@ -2,6 +2,7 @@ package org.kin.rsocket.service.spring.health;
 
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.RSocketBrokerClient;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
 import org.springframework.boot.actuate.health.Status;
@@ -27,7 +28,7 @@ import java.util.List;
 public final class HealthService implements HealthCheck, ApplicationListener<ContextRefreshedEvent> {
     /**
      * 使用{@link ApplicationListener}为了解决循环依赖
-     * {@link org.kin.rsocket.service.RSocketServiceRequester} ----> {@link HealthService} ----> {@link HealthIndicator} ----> {@link RSocketEndpoint}
+     * {@link RSocketBrokerClient} ----> {@link HealthService} ----> {@link HealthIndicator} ----> {@link RSocketEndpoint}
      * ^                                                                                                              |
      * |                                                                                                              |
      * |                                                                                                              |

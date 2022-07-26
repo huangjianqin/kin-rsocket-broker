@@ -4,7 +4,7 @@ import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
-import org.kin.rsocket.service.RSocketServiceRequester;
+import org.kin.rsocket.service.RSocketBrokerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,16 +28,14 @@ import javax.annotation.Nonnull;
 final class RSocketServicesPublisher implements ApplicationListener<ApplicationStartedEvent> {
     private static final Logger log = LoggerFactory.getLogger(RSocketServicesPublisher.class);
     @Autowired
-    private RSocketServiceRequester requester;
-    @Autowired
-    private RSocketServiceProperties serviceConfig;
+    private RSocketBrokerClient brokerClient;
 
     @Override
     public void onApplicationEvent(@Nonnull ApplicationStartedEvent event) {
-        //requester init
-        requester.init();
+        //broker client init
+        brokerClient.create();
 
-        UpstreamCluster brokerCluster = requester.getBroker();
+        UpstreamCluster brokerCluster = brokerClient.getBroker();
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
             //本质上就是直连的方式
@@ -56,6 +54,6 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
         }
 
         //暴露服务
-        requester.serving();
+        brokerClient.serving();
     }
 }

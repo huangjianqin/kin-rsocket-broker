@@ -18,9 +18,9 @@ public final class BrokerHealthCheckReference implements HealthCheck {
 
     public BrokerHealthCheckReference(UpstreamClusterManager upstreamClusterManager) {
         reference = RSocketServiceReferenceBuilder
-                .requester(HealthCheck.class)
+                .reference(HealthCheck.class)
                 .nativeImage()
-                .upstreamClusterManager(upstreamClusterManager)
+                .upstreamClusters(upstreamClusterManager)
                 .build();
     }
 

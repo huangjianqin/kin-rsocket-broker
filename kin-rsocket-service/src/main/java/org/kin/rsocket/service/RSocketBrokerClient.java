@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
 
 /**
  * all in one
- * broker requester, 包含绑定rsocket server, 连接broker, 注册服务, 注销服务, 添加cloud event consumer和broker连接管理等功能
+ * broker(upstream service) client, 包含绑定rsocket server, 连接broker, 注册服务, 注销服务, 添加cloud event consumer, broker连接管理, app应用状态管理和p2p服务请求等功能
  *
  * @author huangjianqin
  * @date 2021/3/28
  */
-public final class RSocketServiceRequester implements UpstreamClusterManager {
-    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRequester.class);
+public final class RSocketBrokerClient implements UpstreamClusterManager {
+    private static final Logger log = LoggerFactory.getLogger(RSocketBrokerClient.class);
 
     //状态-初始
     private static final int STATE_INIT = 0;
@@ -41,30 +41,30 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     private final UpstreamClusterManagerImpl upstreamClusterManager;
     /** requester连接配置 */
     private final RSocketRequesterSupportImpl requesterSupport;
-    /** rsocket binder */
-    private final RSocketBinder binder;
+    /** rsocket server */
+    private final RSocketServer rsocketServer;
     /** 状态 */
     private final AtomicInteger state = new AtomicInteger(STATE_INIT);
 
-    private RSocketServiceRequester(String appName,
-                                    RSocketServiceProperties rsocketServiceProperties,
-                                    Tracer tracer,
-                                    List<RSocketBinderCustomizer> binderCustomizers,
-                                    List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
-                                    HealthCheck customHealthCheck) {
+    private RSocketBrokerClient(String appName,
+                                RSocketServiceProperties rsocketServiceProperties,
+                                Tracer tracer,
+                                List<RSocketBinderCustomizer> binderCustomizers,
+                                List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
+                                HealthCheck customHealthCheck) {
         this.appName = appName;
         this.rsocketServiceProperties = rsocketServiceProperties;
 
-        //1. create binder
+        //1. create server
         int rsocketBindPort = rsocketServiceProperties.getPort();
         if (rsocketBindPort > 0) {
-            RSocketBinder.Builder binderBuilder = RSocketBinder.builder();
-            binderBuilder.acceptor((setupPayload, requester) -> Mono.just(new RSocketResponderHandler(requester, setupPayload, tracer)));
-            binderBuilder.listen(rsocketServiceProperties.getSchema(), rsocketBindPort);
-            binderCustomizers.forEach((customizer) -> customizer.customize(binderBuilder));
-            binder = binderBuilder.build();
+            RSocketServer.Builder builder = RSocketServer.builder();
+            builder.acceptor((setupPayload, requester) -> Mono.just(new RSocketResponderHandler(requester, setupPayload, tracer)));
+            builder.listen(rsocketServiceProperties.getSchema(), rsocketBindPort);
+            binderCustomizers.forEach((customizer) -> customizer.customize(builder));
+            rsocketServer = builder.build();
         } else {
-            binder = null;
+            rsocketServer = null;
         }
 
         //2.1 create requester support
@@ -88,14 +88,14 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 初始化requester
      */
-    public void init() {
+    public void create() {
         if (!state.compareAndSet(STATE_INIT, STATE_START)) {
             return;
         }
 
         //1. bind
-        if (Objects.nonNull(binder)) {
-            binder.bind();
+        if (Objects.nonNull(rsocketServer)) {
+            rsocketServer.bind();
         }
 
         //2. connect
@@ -107,21 +107,21 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      */
     private void checkStart() {
         if (state.get() != STATE_START) {
-            throw new IllegalStateException("RSocketServiceRequester doesn't init");
+            throw new IllegalStateException("RSocketBrokerClient doesn't init");
         }
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(Class<?> serviceInterface, Object provider) {
+    public RSocketBrokerClient registerService(Class<?> serviceInterface, Object provider) {
         return registerService(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion(), serviceInterface, provider);
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String group, String version, Class<?> serviceInterface, Object provider, String... tags) {
+    public RSocketBrokerClient registerService(String group, String version, Class<?> serviceInterface, Object provider, String... tags) {
         LocalRSocketServiceRegistry.INSTANCE.addProvider(group, version, serviceInterface, provider, tags);
         return this;
     }
@@ -129,14 +129,14 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String service, Class<?> serviceInterface, Object provider, String... tags) {
+    public RSocketBrokerClient registerService(String service, Class<?> serviceInterface, Object provider, String... tags) {
         return registerService(rsocketServiceProperties.getGroup(), service, rsocketServiceProperties.version, serviceInterface, provider, tags);
     }
 
     /**
      * 注册service
      */
-    public RSocketServiceRequester registerService(String group, String service, String version, Class<?> serviceInterface, Object provider, String... tags) {
+    public RSocketBrokerClient registerService(String group, String service, String version, Class<?> serviceInterface, Object provider, String... tags) {
         LocalRSocketServiceRegistry.INSTANCE.addProvider(group, service, version, serviceInterface, provider, tags);
         return this;
     }
@@ -145,7 +145,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册service
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
-    public RSocketServiceRequester registerService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
+    public RSocketBrokerClient registerService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
         LocalRSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
         return this;
     }
@@ -153,14 +153,14 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 注册并发布service
      */
-    public RSocketServiceRequester registerAndPubService(Class<?> serviceInterface, Object provider) {
+    public RSocketBrokerClient registerAndPubService(Class<?> serviceInterface, Object provider) {
         return registerAndPubService(rsocketServiceProperties.getGroup(), rsocketServiceProperties.getVersion(), serviceInterface, provider);
     }
 
     /**
      * 注册并发布service
      */
-    public RSocketServiceRequester registerAndPubService(String group, String version, Class<?> serviceInterface, Object provider) {
+    public RSocketBrokerClient registerAndPubService(String group, String version, Class<?> serviceInterface, Object provider) {
         registerService(group, version, serviceInterface, provider);
         publishService(group, serviceInterface.getName(), version);
         return this;
@@ -169,14 +169,14 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /**
      * 注册并发布service
      */
-    public RSocketServiceRequester registerAndPubService(String service, Class<?> serviceInterface, Object provider) {
+    public RSocketBrokerClient registerAndPubService(String service, Class<?> serviceInterface, Object provider) {
         return registerAndPubService(rsocketServiceProperties.getGroup(), service, rsocketServiceProperties.getVersion(), serviceInterface, provider);
     }
 
     /**
      * 注册并发布service
      */
-    public RSocketServiceRequester registerAndPubService(String group, String service, String version, Class<?> serviceInterface, Object provider) {
+    public RSocketBrokerClient registerAndPubService(String group, String service, String version, Class<?> serviceInterface, Object provider) {
         registerService(group, service, version, serviceInterface, provider);
         publishService(group, service, version);
         return this;
@@ -186,7 +186,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
      * 注册并发布service
      * 供cloud function使用, 因为其无法获取真实的service信息, 所以, 只能在外部从spring function registry中尽量提取service信息, 然后进行注册
      */
-    public RSocketServiceRequester registerAndPubService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
+    public RSocketBrokerClient registerAndPubService(String handler, Object provider, ReactiveMethodInvoker invoker, RSocketServiceInfo serviceInfo) {
         LocalRSocketServiceRegistry.INSTANCE.addProvider(handler, provider, invoker, serviceInfo);
         publishService(serviceInfo.getGroup(), serviceInfo.getService(), serviceInfo.getVersion());
         return this;
@@ -293,9 +293,22 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         if (Objects.nonNull(broker)) {
             //notify broker app status update
             broker.broadcastCloudEvent(AppStatusEvent.serving(RSocketAppContext.ID).toCloudEvent())
-                    .doOnSuccess(aVoid -> log.info(String.format("application connected with RSocket Brokers(%s) successfully", String.join(",", rsocketServiceProperties.getBrokers()))))
+                    .doOnSuccess(aVoid -> log.info(String.format("application service serving on RSocket Brokers(%s) successfully", String.join(",", rsocketServiceProperties.getBrokers()))))
                     .subscribe();
             publishServices();
+        }
+    }
+
+    /**
+     * 设置app状态为服务下线, 即broker不会路由到这些服务
+     */
+    public void down() {
+        UpstreamCluster broker = getBroker();
+        if (Objects.nonNull(broker)) {
+            //notify broker app status update
+            broker.broadcastCloudEvent(AppStatusEvent.down(RSocketAppContext.ID).toCloudEvent())
+                    .doOnSuccess(aVoid -> log.info(String.format("application service down on RSocket Brokers(%s) successfully", String.join(",", rsocketServiceProperties.getBrokers()))))
+                    .subscribe();
         }
     }
 
@@ -306,8 +319,8 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
         }
 
         upstreamClusterManager.close();
-        if (Objects.nonNull(binder)) {
-            binder.close();
+        if (Objects.nonNull(rsocketServer)) {
+            rsocketServer.close();
         }
     }
 
@@ -414,14 +427,14 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
             return this;
         }
 
-        public RSocketServiceRequester build() {
-            return new RSocketServiceRequester(appName, rsocketServiceProperties, tracer, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
+        public RSocketBrokerClient build() {
+            return new RSocketBrokerClient(appName, rsocketServiceProperties, tracer, binderCustomizers, requesterSupportCustomizers, customHealthCheck);
         }
 
-        public RSocketServiceRequester buildAndInit() {
-            RSocketServiceRequester requester = build();
-            requester.init();
-            return requester;
+        public RSocketBrokerClient buildAndInit() {
+            RSocketBrokerClient brokerClient = build();
+            brokerClient.create();
+            return brokerClient;
         }
     }
 }

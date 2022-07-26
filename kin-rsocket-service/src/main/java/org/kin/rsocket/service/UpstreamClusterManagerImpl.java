@@ -166,9 +166,9 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
 
     private DiscoveryService findBrokerDiscoveryService() {
         if (Objects.nonNull(brokerCluster) && Objects.isNull(brokerDiscoveryService)) {
-            this.brokerDiscoveryService = RSocketServiceReferenceBuilder.requester(DiscoveryService.class)
+            this.brokerDiscoveryService = RSocketServiceReferenceBuilder.reference(DiscoveryService.class)
                     .callTimeout(3000)
-                    .upstreamClusterManager(this)
+                    .upstreamClusters(this)
                     .build();
         }
         return brokerDiscoveryService;

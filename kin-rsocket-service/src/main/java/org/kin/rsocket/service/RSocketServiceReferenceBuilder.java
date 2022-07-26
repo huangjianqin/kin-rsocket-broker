@@ -68,7 +68,7 @@ public final class RSocketServiceReferenceBuilder<T> {
      * !!!注意: 如果自己使用{@link RSocketServiceReferenceBuilder}来创建bean, 不会使用{@link RSocketServiceProperties#getGroup()}和
      * {@link RSocketServiceProperties#getVersion()}来作为全局默认group或者version. 想要达到该效果, 需要手动设置
      */
-    public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface) {
+    public static <T> RSocketServiceReferenceBuilder<T> reference(Class<T> serviceInterface) {
         RSocketServiceReferenceBuilder<T> builder = new RSocketServiceReferenceBuilder<>();
         builder.serviceInterface = serviceInterface;
         builder.service = serviceInterface.getName();
@@ -79,8 +79,8 @@ public final class RSocketServiceReferenceBuilder<T> {
      * 适用于基于spring容器启动的Application
      * 会读取注解在field或者bean factory method下{@link RSocketServiceReference}的属性生成builder实例
      */
-    public static <T> RSocketServiceReferenceBuilder<T> requester(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
-        RSocketServiceReferenceBuilder<T> builder = requester(serviceInterface);
+    public static <T> RSocketServiceReferenceBuilder<T> reference(Class<T> serviceInterface, AnnotationAttributes annoAttrs) {
+        RSocketServiceReferenceBuilder<T> builder = reference(serviceInterface);
 
         String service = annoAttrs.getString("name");
         if (StringUtils.isNotBlank(service)) {
@@ -183,9 +183,9 @@ public final class RSocketServiceReferenceBuilder<T> {
     }
 
     /**
-     * 一般使用{@link #upstreamClusterManager(UpstreamClusterManager)}, 因为其会自动寻找对应serviceId的UpstreamCluster
+     * 一般使用{@link #upstreamClusters(UpstreamClusterManager)}, 因为其会自动寻找对应serviceId的UpstreamCluster
      */
-    public RSocketServiceReferenceBuilder<T> upstream(UpstreamCluster upstreamCluster) {
+    public RSocketServiceReferenceBuilder<T> upstreamCluster(UpstreamCluster upstreamCluster) {
         this.selector = upstreamCluster;
         group(upstreamCluster.getGroup());
         service(upstreamCluster.getService());
@@ -224,7 +224,7 @@ public final class RSocketServiceReferenceBuilder<T> {
     /**
      * 如果配置了rsocket service endpoint, 则使用该connection, 否则使用broker connection, 然后路由回对应的rsocket service app处理
      */
-    public RSocketServiceReferenceBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
+    public RSocketServiceReferenceBuilder<T> upstreamClusters(UpstreamClusterManager upstreamClusterManager) {
         this.selector = upstreamClusterManager;
         this.sourceUri = upstreamClusterManager.getRequesterSupport().originUri();
         return this;

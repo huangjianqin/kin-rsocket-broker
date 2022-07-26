@@ -90,7 +90,7 @@ public final class GrpcServiceRSocketImplementationBuilder<T extends BindableSer
     /**
      * 选择一个合适的{@link UpstreamCluster}(可broker可直连)的selector
      */
-    public GrpcServiceRSocketImplementationBuilder<T> upstreamClusterManager(UpstreamClusterManager upstreamClusterManager) {
+    public GrpcServiceRSocketImplementationBuilder<T> upstreamClusters(UpstreamClusterManager upstreamClusterManager) {
         interceptor.setSelector(upstreamClusterManager);
         return this;
     }

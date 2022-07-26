@@ -6,7 +6,6 @@ import io.netty.handler.ssl.SslProvider;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
-import io.rsocket.core.RSocketServer;
 import io.rsocket.frame.decoder.PayloadDecoder;
 import io.rsocket.plugins.DuplexConnectionInterceptor;
 import io.rsocket.plugins.RSocketInterceptor;
@@ -39,11 +38,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
+ * 绑定rsocket端口, 监听rsocket协议
+ *
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RSocketBinder implements Closeable {
-    private static final Logger log = LoggerFactory.getLogger(RSocketBinder.class);
+public class RSocketServer implements Closeable {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServer.class);
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
 
     //状态-初始
@@ -60,6 +61,7 @@ public class RSocketBinder implements Closeable {
     private Certificate certificate;
     /** 私钥 */
     private PrivateKey privateKey;
+    /** rsocket client connect setup逻辑 */
     private SocketAcceptor acceptor;
     /** @see io.rsocket.plugins.InterceptorRegistry#forRequester(RSocketInterceptor) */
     private final List<RSocketInterceptor> requesterInterceptors = new ArrayList<>();
@@ -76,7 +78,7 @@ public class RSocketBinder implements Closeable {
     //---------------------------------------------------------------------------------------------------------------------------------------
     /** 状态 */
     private final AtomicInteger state = new AtomicInteger(STATE_INIT);
-    /** 已启动的{@link RSocketServer}对应的{@link Disposable} */
+    /** 已启动的{@link io.rsocket.core.RSocketServer}对应的{@link Disposable} */
     private List<Disposable> responders;
 
     /**
@@ -149,7 +151,7 @@ public class RSocketBinder implements Closeable {
                     break;
             }
 
-            RSocketServer rsocketServer = RSocketServer.create();
+            io.rsocket.core.RSocketServer rsocketServer = io.rsocket.core.RSocketServer.create();
             //acceptor interceptor
             for (SocketAcceptorInterceptor interceptor : acceptorInterceptors) {
                 rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forSocketAcceptor(interceptor));
@@ -226,25 +228,25 @@ public class RSocketBinder implements Closeable {
     }
 
     public static class Builder {
-        private final RSocketBinder binder = new RSocketBinder();
+        private final RSocketServer rsocketServer = new RSocketServer();
 
         private Builder() {
 
         }
 
-        public RSocketBinder.Builder host(String host) {
-            binder.host = host;
+        public RSocketServer.Builder host(String host) {
+            rsocketServer.host = host;
             return this;
         }
 
-        public RSocketBinder.Builder listen(String schema, int port) {
-            binder.schemas.put(port, schema);
+        public RSocketServer.Builder listen(String schema, int port) {
+            rsocketServer.schemas.put(port, schema);
             return this;
         }
 
-        public RSocketBinder.Builder sslContext(Certificate certificate, PrivateKey privateKey) {
-            binder.certificate = certificate;
-            binder.privateKey = privateKey;
+        public RSocketServer.Builder sslContext(Certificate certificate, PrivateKey privateKey) {
+            rsocketServer.certificate = certificate;
+            rsocketServer.privateKey = privateKey;
             return this;
         }
 
@@ -252,46 +254,46 @@ public class RSocketBinder implements Closeable {
          * 可以拦截并将requester rsocket转换成别的{@link RSocket}实现, {@link SocketAcceptor#accept(ConnectionSetupPayload, RSocket)}中第二个参数就是该{@link RSocket}实现
          * 但在{@link RequestInterceptor}却观察不到这个变化
          */
-        public RSocketBinder.Builder addRequesterInterceptors(RSocketInterceptor interceptor) {
-            binder.requesterInterceptors.add(interceptor);
+        public RSocketServer.Builder addRequesterInterceptors(RSocketInterceptor interceptor) {
+            rsocketServer.requesterInterceptors.add(interceptor);
             return this;
         }
 
         /**
          * 可以拦截并将responder rsocket转换成别的{@link RSocket}实现, 该responder rsocket就是{@link SocketAcceptor#accept(ConnectionSetupPayload, RSocket)}的返回值
          */
-        public RSocketBinder.Builder addResponderInterceptor(RSocketInterceptor interceptor) {
-            binder.responderInterceptors.add(interceptor);
+        public RSocketServer.Builder addResponderInterceptor(RSocketInterceptor interceptor) {
+            rsocketServer.responderInterceptors.add(interceptor);
             return this;
         }
 
-        public RSocketBinder.Builder addSocketAcceptorInterceptor(SocketAcceptorInterceptor interceptor) {
-            binder.acceptorInterceptors.add(interceptor);
+        public RSocketServer.Builder addSocketAcceptorInterceptor(SocketAcceptorInterceptor interceptor) {
+            rsocketServer.acceptorInterceptors.add(interceptor);
             return this;
         }
 
-        public RSocketBinder.Builder addConnectionInterceptor(DuplexConnectionInterceptor interceptor) {
-            binder.connectionInterceptors.add(interceptor);
+        public RSocketServer.Builder addConnectionInterceptor(DuplexConnectionInterceptor interceptor) {
+            rsocketServer.connectionInterceptors.add(interceptor);
             return this;
         }
 
-        public RSocketBinder.Builder addRequesterRequestInterceptors(Function<RSocket, ? extends RequestInterceptor> interceptor) {
-            binder.requesterRequestInterceptors.add(interceptor);
+        public RSocketServer.Builder addRequesterRequestInterceptors(Function<RSocket, ? extends RequestInterceptor> interceptor) {
+            rsocketServer.requesterRequestInterceptors.add(interceptor);
             return this;
         }
 
-        public RSocketBinder.Builder addResponderRequestInterceptor(Function<RSocket, ? extends RequestInterceptor> interceptor) {
-            binder.responderRequestInterceptors.add(interceptor);
+        public RSocketServer.Builder addResponderRequestInterceptor(Function<RSocket, ? extends RequestInterceptor> interceptor) {
+            rsocketServer.responderRequestInterceptors.add(interceptor);
             return this;
         }
 
-        public RSocketBinder.Builder acceptor(SocketAcceptor acceptor) {
-            binder.acceptor = acceptor;
+        public RSocketServer.Builder acceptor(SocketAcceptor acceptor) {
+            rsocketServer.acceptor = acceptor;
             return this;
         }
 
-        public RSocketBinder build() {
-            return binder;
+        public RSocketServer build() {
+            return rsocketServer;
         }
     }
 }

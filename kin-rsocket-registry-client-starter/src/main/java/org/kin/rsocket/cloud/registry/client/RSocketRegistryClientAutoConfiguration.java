@@ -23,8 +23,8 @@ public class RSocketRegistryClientAutoConfiguration {
     @Bean
     public DiscoveryService discoveryService(@Autowired UpstreamClusterManager upstreamClusterManager) {
         return RSocketServiceReferenceBuilder
-                .requester(DiscoveryService.class)
-                .upstreamClusterManager(upstreamClusterManager)
+                .reference(DiscoveryService.class)
+                .upstreamClusters(upstreamClusterManager)
                 .build();
     }
 

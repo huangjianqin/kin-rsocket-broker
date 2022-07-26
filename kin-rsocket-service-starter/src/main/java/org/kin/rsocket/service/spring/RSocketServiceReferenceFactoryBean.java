@@ -1,10 +1,10 @@
 package org.kin.rsocket.service.spring;
 
 import brave.Tracing;
+import org.kin.rsocket.service.RSocketBrokerClient;
 import org.kin.rsocket.service.RSocketServiceProperties;
 import org.kin.rsocket.service.RSocketServiceReference;
 import org.kin.rsocket.service.RSocketServiceReferenceBuilder;
-import org.kin.rsocket.service.RSocketServiceRequester;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.*;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
@@ -27,7 +27,7 @@ import java.util.Objects;
  */
 public final class RSocketServiceReferenceFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware, BeanNameAware, InitializingBean {
     @Autowired
-    private RSocketServiceRequester requester;
+    private RSocketBrokerClient brokerClient;
     @Autowired
     private RSocketServiceProperties rsocketServiceProperties;
     @Autowired(required = false)
@@ -50,12 +50,12 @@ public final class RSocketServiceReferenceFactoryBean<T> implements FactoryBean<
     /**
      * 暴露给{@link RSocketServiceReferenceFieldPostProcessor}使用, 因为是直接create, 所以无法通过{@link Autowired}获取spring bean
      */
-    RSocketServiceReferenceFactoryBean(@Nonnull RSocketServiceRequester requester,
+    RSocketServiceReferenceFactoryBean(@Nonnull RSocketBrokerClient brokerClient,
                                        @Nonnull RSocketServiceProperties rsocketServiceProperties,
                                        @Nullable Tracing tracing,
                                        @Nonnull Class<T> claxx,
                                        @Nonnull AnnotationAttributes annoAttrs) {
-        this.requester = requester;
+        this.brokerClient = brokerClient;
         this.rsocketServiceProperties = rsocketServiceProperties;
         this.tracing = tracing;
         initBuilder(claxx, annoAttrs);
@@ -63,7 +63,7 @@ public final class RSocketServiceReferenceFactoryBean<T> implements FactoryBean<
 
     @SuppressWarnings("unchecked")
     private void initBuilder(Class<T> claxx, AnnotationAttributes annoAttrs) {
-        builder = RSocketServiceReferenceBuilder.requester(claxx, annoAttrs);
+        builder = RSocketServiceReferenceBuilder.reference(claxx, annoAttrs);
         builder.groupIfEmpty(rsocketServiceProperties.getGroup())
                 .versionIfEmpty(rsocketServiceProperties.getVersion());
     }
@@ -71,7 +71,7 @@ public final class RSocketServiceReferenceFactoryBean<T> implements FactoryBean<
     @Override
     public T getObject() {
         if (Objects.isNull(reference)) {
-            builder.upstreamClusterManager(requester);
+            builder.upstreamClusters(brokerClient);
             builder.tracing(tracing);
             reference = builder.build();
             //release

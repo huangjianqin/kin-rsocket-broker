@@ -148,8 +148,8 @@ public class RSocketBrokerAutoConfiguration {
 
     //----------------------------------------------broker binder相关----------------------------------------------
     @Bean(initMethod = "bind", destroyMethod = "close")
-    public RSocketBinder rsocketBinder(@Autowired List<RSocketBinderCustomizer> customizers) {
-        RSocketBinder.Builder builder = RSocketBinder.builder();
+    public RSocketServer rsocketServer(@Autowired List<RSocketBinderCustomizer> customizers) {
+        RSocketServer.Builder builder = RSocketServer.builder();
         customizers.forEach((customizer) -> customizer.customize(builder));
         return builder.build();
     }

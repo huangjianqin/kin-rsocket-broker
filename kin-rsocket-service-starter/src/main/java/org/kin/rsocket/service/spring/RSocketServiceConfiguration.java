@@ -6,8 +6,8 @@ import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.CloudEventConsumer;
 import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.health.HealthCheck;
+import org.kin.rsocket.service.RSocketBrokerClient;
 import org.kin.rsocket.service.RSocketRequesterSupportCustomizer;
-import org.kin.rsocket.service.RSocketServiceRequester;
 import org.kin.rsocket.service.health.BrokerHealthCheckReference;
 import org.kin.rsocket.service.spring.event.CloudEvent2ApplicationEventConsumer;
 import org.kin.rsocket.service.spring.event.InvalidCacheEventConsumer;
@@ -38,14 +38,14 @@ import java.util.Objects;
 @EnableConfigurationProperties(RSocketServiceProperties.class)
 public class RSocketServiceConfiguration {
     @Bean(destroyMethod = "close")
-    public RSocketServiceRequester rsocketServiceRequester(@Autowired Environment env,
-                                                           @Autowired RSocketServiceProperties rsocketServiceProperties,
-                                                           @Autowired List<RSocketBinderCustomizer> binderCustomizers,
-                                                           @Autowired List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
-                                                           @Autowired(required = false) HealthService healthService,
-                                                           @Autowired(required = false) Tracing tracing) {
+    public RSocketBrokerClient rsocketBrokerClient(@Autowired Environment env,
+                                                   @Autowired RSocketServiceProperties rsocketServiceProperties,
+                                                   @Autowired List<RSocketBinderCustomizer> binderCustomizers,
+                                                   @Autowired List<RSocketRequesterSupportCustomizer> requesterSupportCustomizers,
+                                                   @Autowired(required = false) HealthService healthService,
+                                                   @Autowired(required = false) Tracing tracing) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        RSocketServiceRequester.Builder builder = RSocketServiceRequester.builder(appName, rsocketServiceProperties)
+        RSocketBrokerClient.Builder builder = RSocketBrokerClient.builder(appName, rsocketServiceProperties)
                 .binderCustomizers(binderCustomizers)
                 .requesterSupportBuilderCustomizers(requesterSupportCustomizers)
                 .healthCheck(healthService);
@@ -79,8 +79,8 @@ public class RSocketServiceConfiguration {
      */
     @Bean
     public RSocketEndpoint rsocketEndpoint(@Autowired RSocketServiceProperties rsocketServiceProperties,
-                                           @Autowired RSocketServiceRequester requester) {
-        return new RSocketEndpoint(rsocketServiceProperties, requester);
+                                           @Autowired RSocketBrokerClient brokerClient) {
+        return new RSocketEndpoint(rsocketServiceProperties, brokerClient);
     }
 
     /**
@@ -142,8 +142,8 @@ public class RSocketServiceConfiguration {
      * 独立出来bean, 是为了让{@link HealthIndicator}引用到
      */
     @Bean("healthCheckRef")
-    public HealthCheck healthCheckRef(@Autowired RSocketServiceRequester requester) {
-        return new BrokerHealthCheckReference(requester);
+    public HealthCheck healthCheckRef(@Autowired RSocketBrokerClient brokerClient) {
+        return new BrokerHealthCheckReference(brokerClient);
     }
 
     //----------------------------------------------cloud event consumers----------------------------------------------

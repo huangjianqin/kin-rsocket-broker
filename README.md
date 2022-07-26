@@ -226,10 +226,10 @@ kin:
 @Configuration
 public class RequesterConfiguration {
   @Bean
-  public UserService userService(@Autowired RSocketServiceRequester requester) {
+  public UserService userService(@Autowired RSocketBrokerClient brokerClient) {
     return RSocketServiceReferenceBuilder
-            .requester(UserService.class)
-            .upstreamClusterManager(requester)
+            .reference(UserService.class)
+            .upstreamClusters(requester)
             .build();
   }
 }
@@ -257,10 +257,10 @@ public class RequesterSpringApplication {
 @Configuration
 public class RequesterConfiguration {
   @Bean
-  public UserService userService(@Autowired RSocketServiceRequester requester) {
+  public UserService userService(@Autowired RSocketBrokerClient brokerClient) {
     return RSocketServiceReferenceBuilder
-            .requester(UserService.class)
-            .upstreamClusterManager(requester)
+            .reference(UserService.class)
+            .upstreamClusters(requester)
             .build();
   }
 }

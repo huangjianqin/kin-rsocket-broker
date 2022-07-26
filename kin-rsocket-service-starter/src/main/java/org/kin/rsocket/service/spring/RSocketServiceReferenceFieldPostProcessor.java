@@ -2,9 +2,9 @@ package org.kin.rsocket.service.spring;
 
 import brave.Tracing;
 import org.kin.framework.spring.AbstractAnnotationBeanPostProcessor;
+import org.kin.rsocket.service.RSocketBrokerClient;
 import org.kin.rsocket.service.RSocketServiceProperties;
 import org.kin.rsocket.service.RSocketServiceReference;
-import org.kin.rsocket.service.RSocketServiceRequester;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -23,7 +23,7 @@ import java.util.StringJoiner;
 @Component
 public class RSocketServiceReferenceFieldPostProcessor extends AbstractAnnotationBeanPostProcessor {
     @Autowired
-    private RSocketServiceRequester requester;
+    private RSocketBrokerClient brokerClient;
     @Autowired
     private RSocketServiceProperties rsocketServiceProperties;
     @Autowired(required = false)
@@ -37,7 +37,7 @@ public class RSocketServiceReferenceFieldPostProcessor extends AbstractAnnotatio
     @Override
     protected Object doGetInjectedBean(AnnotationAttributes attributes, Object bean, String beanName,
                                        Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) {
-        return new RSocketServiceReferenceFactoryBean<>(requester, rsocketServiceProperties, tracing, injectedType, attributes).getObject();
+        return new RSocketServiceReferenceFactoryBean<>(brokerClient, rsocketServiceProperties, tracing, injectedType, attributes).getObject();
     }
 
     @Override

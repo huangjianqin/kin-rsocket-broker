@@ -15,10 +15,10 @@ import java.lang.annotation.*;
  * &#64;Configuration
  * public class RequesterConfiguration {
  *     &#64;Bean
- *     public UserService userService(@Autowired RSocketServiceRequester requester) {
+ *     public UserService userService(@Autowired RSocketBrokerClient brokerClient) {
  *         return RSocketServiceReferenceBuilder
- *                 .requester(UserService.class)
- *                 .upstreamClusterManager(requester)
+ *                 .reference(UserService.class)
+ *                 .upstreamClusters(brokerClient)
  *                 .build();
  *     }
  * }
