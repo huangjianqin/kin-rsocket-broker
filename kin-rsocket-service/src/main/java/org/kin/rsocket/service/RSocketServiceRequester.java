@@ -37,8 +37,6 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     private final String appName;
     /** 配置 */
     private final RSocketServiceProperties rsocketServiceProperties;
-    /** zipkin */
-    private final Tracer tracer;
     /** upstream cluster manager */
     private final UpstreamClusterManagerImpl upstreamClusterManager;
     /** requester连接配置 */
@@ -46,7 +44,7 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
     /** rsocket binder */
     private final RSocketBinder binder;
     /** 状态 */
-    private AtomicInteger state = new AtomicInteger(STATE_INIT);
+    private final AtomicInteger state = new AtomicInteger(STATE_INIT);
 
     private RSocketServiceRequester(String appName,
                                     RSocketServiceProperties rsocketServiceProperties,
@@ -56,7 +54,6 @@ public final class RSocketServiceRequester implements UpstreamClusterManager {
                                     HealthCheck customHealthCheck) {
         this.appName = appName;
         this.rsocketServiceProperties = rsocketServiceProperties;
-        this.tracer = tracer;
 
         //1. create binder
         int rsocketBindPort = rsocketServiceProperties.getPort();

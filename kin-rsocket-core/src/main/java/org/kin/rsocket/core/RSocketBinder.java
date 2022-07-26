@@ -75,7 +75,7 @@ public class RSocketBinder implements Closeable {
     private final List<Function<RSocket, ? extends RequestInterceptor>> responderRequestInterceptors = new ArrayList<>();
     //---------------------------------------------------------------------------------------------------------------------------------------
     /** 状态 */
-    private AtomicInteger state = new AtomicInteger(STATE_INIT);
+    private final AtomicInteger state = new AtomicInteger(STATE_INIT);
     /** 已启动的{@link RSocketServer}对应的{@link Disposable} */
     private List<Disposable> responders;
 
