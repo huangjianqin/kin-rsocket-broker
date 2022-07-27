@@ -1,7 +1,7 @@
 package org.kin.rsocket.service.spring;
 
 import brave.Tracing;
-import org.kin.framework.spring.AbstractAnnotationBeanPostProcessor;
+import org.kin.framework.spring.beans.AbstractAnnotationBeanPostProcessor;
 import org.kin.rsocket.service.RSocketBrokerClient;
 import org.kin.rsocket.service.RSocketServiceProperties;
 import org.kin.rsocket.service.RSocketServiceReference;

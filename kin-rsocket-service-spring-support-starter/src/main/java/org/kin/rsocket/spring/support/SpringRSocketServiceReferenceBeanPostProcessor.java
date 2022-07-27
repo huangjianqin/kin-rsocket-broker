@@ -1,6 +1,6 @@
 package org.kin.rsocket.spring.support;
 
-import org.kin.framework.spring.AbstractAnnotationBeanPostProcessor;
+import org.kin.framework.spring.beans.AbstractAnnotationBeanPostProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.InjectionMetadata;
 import org.springframework.core.annotation.AnnotationAttributes;

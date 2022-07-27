@@ -30,6 +30,7 @@
         <reactive-grpc.version>1.1.0</reactive-grpc.version>
         <grpc-spring-boot-starter.version>4.5.5</grpc-spring-boot-starter.version>
         <kin-serialization.version>0.1.0.0</kin-serialization.version>
+        <kin-framework-spring.version>0.1.0.0</kin-framework-spring.version>
     </properties>
 
     <dependencyManagement>
@@ -174,6 +175,12 @@
                 <version>${grpc-spring-boot-starter.version}</version>
             </dependency>
 
+            <!-- spring工具类 -->
+            <dependency>
+                <groupId>org.kin</groupId>
+                <artifactId>kin-framework-spring</artifactId>
+                <version>${kin-framework-spring.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
