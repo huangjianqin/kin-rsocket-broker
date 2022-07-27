@@ -40,6 +40,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 * **kin-rsocket-broker**: rsocket broker基础功能实现
 * **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud
 * **kin-rsocket-broker-standalone-starter**: standalone broker实现, 整合spring cloud
+* **kin-rsocket-broker-cloud-discovery-starter**: 基于spring cloud discovery broker实现, 整合spring cloud
 * **kin-rsocket-cloud-function-starter**: rsocket service兼容spring cloud function实现
 * **kin-rsocket-conf**: rsocket service配置中心模块
   * **kin-rsocket-conf-api**: : rsocket service配置中心接口api模块
