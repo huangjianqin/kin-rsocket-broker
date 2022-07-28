@@ -57,13 +57,13 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     /** app status */
     private AppStatus appStatus = AppStatus.CONNECTED;
     /** rsocket consumer请求处理handler */
-    private final RSocketBrokerResponderHandler responderHandler;
+    private final RSocketServiceRequestHandler responderHandler;
 
     public RSocketEndpoint(RSocketCompositeMetadata compositeMetadata,
                            AppMetadata appMetadata,
                            RSocket requester,
                            RSocketServiceManager serviceManager,
-                           RSocketBrokerResponderHandler responderHandler) {
+                           RSocketServiceRequestHandler responderHandler) {
         this.appMetadata = appMetadata;
         //app tags hashcode set
         Set<Integer> appTagsHashCodeSet = new HashSet<>(4);

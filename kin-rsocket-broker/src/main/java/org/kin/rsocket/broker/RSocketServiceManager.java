@@ -192,7 +192,7 @@ public final class RSocketServiceManager {
         }
         //create rsocket endpoint
         try {
-            RSocketBrokerResponderHandler responderHandler = new RSocketBrokerResponderHandler(setupPayload, appMetadata, principal,
+            RSocketServiceRequestHandler responderHandler = new RSocketServiceRequestHandler(setupPayload, appMetadata, principal,
                     this, serviceMeshInspector, upstreamBrokers, rsocketFilterChain);
             RSocketEndpoint rsocketEndpoint = new RSocketEndpoint(compositeMetadata, appMetadata, requester, this, responderHandler);
             rsocketEndpoint.onClose()

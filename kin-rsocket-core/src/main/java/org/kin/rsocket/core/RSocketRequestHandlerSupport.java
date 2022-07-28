@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/26
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public abstract class RSocketResponderHandlerSupport extends AbstractRSocket implements LoggerOprs {
+public abstract class RSocketRequestHandlerSupport extends AbstractRSocket implements LoggerOprs {
     /** cloud event source */
     protected volatile String cloudEventSource;
 

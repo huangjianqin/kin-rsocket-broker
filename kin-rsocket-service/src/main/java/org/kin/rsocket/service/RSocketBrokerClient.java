@@ -59,7 +59,7 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
         int rsocketBindPort = rsocketServiceProperties.getPort();
         if (rsocketBindPort > 0) {
             RSocketServer.Builder builder = RSocketServer.builder();
-            builder.acceptor((setupPayload, requester) -> Mono.just(new RSocketResponderHandler(requester, setupPayload, tracer)));
+            builder.acceptor((setupPayload, requester) -> Mono.just(new RSocketBrokerOrServiceRequestHandler(requester, setupPayload, tracer)));
             builder.listen(rsocketServiceProperties.getSchema(), rsocketBindPort);
             binderCustomizers.forEach((customizer) -> customizer.customize(builder));
             rsocketServer = builder.build();

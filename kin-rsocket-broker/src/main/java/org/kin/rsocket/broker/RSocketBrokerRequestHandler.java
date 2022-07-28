@@ -34,16 +34,16 @@ import java.util.Objects;
  * @author huangjianqin
  * @date 2021/3/30
  */
-final class BrokerRequestHandler extends AbstractRSocket {
-    private static final Logger log = LoggerFactory.getLogger(BrokerRequestHandler.class);
+final class RSocketBrokerRequestHandler extends AbstractRSocket {
+    private static final Logger log = LoggerFactory.getLogger(RSocketBrokerRequestHandler.class);
     private final RSocketServiceManager serviceManager;
     private final RSocketFilterChain filterChain;
     /** broker requester app metadata */
     private final AppMetadata upstreamBrokerMetadata;
 
-    public BrokerRequestHandler(RSocketServiceManager serviceManager,
-                                RSocketFilterChain filterChain,
-                                Payload setupPayload) {
+    public RSocketBrokerRequestHandler(RSocketServiceManager serviceManager,
+                                       RSocketFilterChain filterChain,
+                                       Payload setupPayload) {
         this.filterChain = filterChain;
         this.serviceManager = serviceManager;
 

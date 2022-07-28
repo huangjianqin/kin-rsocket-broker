@@ -38,7 +38,7 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/4/21
  */
-public final class RSocketBrokerResponderHandler extends RSocketResponderHandlerSupport {
+public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSupport {
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;
     /** app metadata */
@@ -56,13 +56,13 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
     /** 记录请求过的服务id */
     private final Set<String> consumedServices = new NonBlockingHashSet<>();
 
-    public RSocketBrokerResponderHandler(ConnectionSetupPayload setupPayload,
-                                         AppMetadata appMetadata,
-                                         RSocketAppPrincipal principal,
-                                         RSocketServiceManager serviceManager,
-                                         RSocketServiceMeshInspector serviceMeshInspector,
-                                         UpstreamCluster upstreamBrokers,
-                                         RSocketFilterChain filterChain) {
+    public RSocketServiceRequestHandler(ConnectionSetupPayload setupPayload,
+                                        AppMetadata appMetadata,
+                                        RSocketAppPrincipal principal,
+                                        RSocketServiceManager serviceManager,
+                                        RSocketServiceMeshInspector serviceMeshInspector,
+                                        UpstreamCluster upstreamBrokers,
+                                        RSocketFilterChain filterChain) {
         this.upstreamBrokers = upstreamBrokers;
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
 

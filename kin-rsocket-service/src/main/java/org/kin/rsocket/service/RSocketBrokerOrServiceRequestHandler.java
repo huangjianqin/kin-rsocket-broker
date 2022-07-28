@@ -10,7 +10,7 @@ import io.rsocket.RSocket;
 import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.RSocketResponderHandlerSupport;
+import org.kin.rsocket.core.RSocketRequestHandlerSupport;
 import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
@@ -30,7 +30,7 @@ import java.util.Objects;
  * @date 2021/3/28
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
-final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
+final class RSocketBrokerOrServiceRequestHandler extends RSocketRequestHandlerSupport {
     /** requester from peer */
     private final RSocket requester;
     /**
@@ -43,7 +43,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
     /** zipkin */
     private final Tracer tracer;
 
-    RSocketResponderHandler(RSocket requester, ConnectionSetupPayload setupPayload, Tracer tracer) {
+    RSocketBrokerOrServiceRequestHandler(RSocket requester, ConnectionSetupPayload setupPayload, Tracer tracer) {
         this.requester = requester;
         this.comboOnClose = Mono.firstWithSignal(super.onClose(), requester.onClose());
 
