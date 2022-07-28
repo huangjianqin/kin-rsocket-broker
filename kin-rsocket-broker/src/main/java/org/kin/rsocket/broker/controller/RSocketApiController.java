@@ -32,7 +32,7 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 @RequestMapping("/api")
 public class RSocketApiController {
     /** json编码元数据 */
-    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
+    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.from(RSocketMimeType.JSON);
 
     @Autowired
     private RSocketBrokerProperties rsocketBrokerProperties;
@@ -52,7 +52,7 @@ public class RSocketApiController {
                                                @RequestHeader(name = "X-Endpoint", required = false, defaultValue = "") String endpoint,
                                                @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false, defaultValue = "") String token) {
         try {
-            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, method, version);
+            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.from(group, service, method, version);
             int serviceId = routingMetadata.serviceId();
 
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);
@@ -71,7 +71,7 @@ public class RSocketApiController {
                         return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));
                     }
                 }
-                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, JSON_ENCODING_METADATA);
                 return rsocketEndpoint.requestResponse(DefaultPayload.create(bodyBuf, compositeMetadata.getContent()))
                         .map(payload -> {
                             HttpHeaders headers = new HttpHeaders();

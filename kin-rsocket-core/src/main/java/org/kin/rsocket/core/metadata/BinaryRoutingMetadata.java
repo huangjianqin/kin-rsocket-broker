@@ -38,11 +38,11 @@ public final class BinaryRoutingMetadata implements MetadataAware {
     /** route key里面的handler, 用于metrics */
     private String handler;
 
-    public static BinaryRoutingMetadata of(GSVRoutingMetadata gsvRoutingMetadata) {
-        return of(gsvRoutingMetadata.genRoutingKey(), gsvRoutingMetadata.serviceId(), gsvRoutingMetadata.handlerId(), gsvRoutingMetadata.getHandler(), gsvRoutingMetadata.isSticky());
+    public static BinaryRoutingMetadata from(GSVRoutingMetadata gsvRoutingMetadata) {
+        return from(gsvRoutingMetadata.genRoutingKey(), gsvRoutingMetadata.serviceId(), gsvRoutingMetadata.handlerId(), gsvRoutingMetadata.getHandler(), gsvRoutingMetadata.isSticky());
     }
 
-    public static BinaryRoutingMetadata of(String routeKey, int serviceId, int handlerId, String handler, boolean... flags) {
+    public static BinaryRoutingMetadata from(String routeKey, int serviceId, int handlerId, String handler, boolean... flags) {
         Preconditions.checkArgument(StringUtils.isNotBlank(routeKey), "routeKey must be not blank");
         BinaryRoutingMetadata inst = new BinaryRoutingMetadata();
         inst.routeKey = routeKey;
@@ -55,7 +55,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         return inst;
     }
 
-    public static BinaryRoutingMetadata of(ByteBuf content) {
+    public static BinaryRoutingMetadata from(ByteBuf content) {
         BinaryRoutingMetadata temp = new BinaryRoutingMetadata();
         temp.load(content);
         return temp;
@@ -68,7 +68,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         long typeAndService = compositeByteBuf.getLong(0);
         if ((typeAndService >> 56) == BINARY_ROUTING_MARK) {
             int metadataContentLen = (int) (typeAndService >> 32) & 0x00FFFFFF;
-            return BinaryRoutingMetadata.of(compositeByteBuf.slice(4, metadataContentLen));
+            return BinaryRoutingMetadata.from(compositeByteBuf.slice(4, metadataContentLen));
         }
         return null;
     }
@@ -135,7 +135,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
      * 转换成{@link GSVRoutingMetadata}
      */
     public GSVRoutingMetadata toGSVRoutingMetadata() {
-        return GSVRoutingMetadata.of(this);
+        return GSVRoutingMetadata.from(this);
     }
 
     //getter

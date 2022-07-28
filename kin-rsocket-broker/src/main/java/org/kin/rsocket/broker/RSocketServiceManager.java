@@ -131,7 +131,7 @@ public final class RSocketServiceManager {
         RSocketAppPrincipal principal = null;
         String errorMsg = null;
         try {
-            compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
+            compositeMetadata = RSocketCompositeMetadata.from(setupPayload.metadata());
             if (!authRequired) {
                 //authentication not required
                 principal = RSocketAppPrincipal.DEFAULT;

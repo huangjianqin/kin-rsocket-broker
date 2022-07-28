@@ -19,13 +19,13 @@ public final class MessageTagsMetadata implements MetadataAware {
     /** credentials */
     private Map<String, String> tags;
 
-    public static MessageTagsMetadata of(Map<String, String> tags) {
+    public static MessageTagsMetadata from(Map<String, String> tags) {
         MessageTagsMetadata metadata = new MessageTagsMetadata();
         metadata.tags = tags;
         return metadata;
     }
 
-    public static MessageTagsMetadata of(ByteBuf content) {
+    public static MessageTagsMetadata from(ByteBuf content) {
         MessageTagsMetadata metadata = new MessageTagsMetadata();
         metadata.load(content);
         return metadata;

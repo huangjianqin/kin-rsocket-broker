@@ -63,7 +63,7 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
             }
 
             //composite metadata with app metadata
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(metadataAwares);
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(metadataAwares);
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, compositeMetadata.getContent());
         };
     }

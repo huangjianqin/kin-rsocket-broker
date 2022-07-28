@@ -22,7 +22,7 @@ public final class BearerTokenMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static BearerTokenMetadata of(ByteBuf content) {
+    public static BearerTokenMetadata from(ByteBuf content) {
         BearerTokenMetadata metadata = new BearerTokenMetadata();
         metadata.load(content);
         return metadata;

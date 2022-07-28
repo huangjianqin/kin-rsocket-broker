@@ -22,7 +22,7 @@ public final class RSocketServiceRegistryMetadata implements MetadataAware {
     /** subscribed services */
     private final Set<ServiceLocator> subscribed = new HashSet<>();
 
-    public static RSocketServiceRegistryMetadata of(ByteBuf content) {
+    public static RSocketServiceRegistryMetadata from(ByteBuf content) {
         RSocketServiceRegistryMetadata temp = new RSocketServiceRegistryMetadata();
         temp.load(content);
         return temp;

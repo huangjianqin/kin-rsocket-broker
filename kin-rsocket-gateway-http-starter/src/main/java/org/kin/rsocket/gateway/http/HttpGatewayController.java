@@ -24,7 +24,7 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 @RestController
 @RequestMapping("/api")
 public class HttpGatewayController {
-    private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
+    private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.from(RSocketMimeType.JSON);
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -51,8 +51,8 @@ public class HttpGatewayController {
             return Mono.error(new Exception("Failed to validate JWT token, please supply correct token."));
         }
         try {
-            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, method, version);
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_MIME_TYPE);
+            GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.from(group, service, method, version);
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, JSON_ENCODING_MIME_TYPE);
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : body;
             return upstreamClusterManager.getBroker().requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(payload -> {

@@ -57,7 +57,7 @@ public final class AppMetadata implements MetadataAware {
     /** connected timestamp */
     private Date connectedAt;
 
-    public static AppMetadata of(ByteBuf byteBuf) {
+    public static AppMetadata from(ByteBuf byteBuf) {
         AppMetadata metadata = new AppMetadata();
         metadata.load(byteBuf);
         return metadata;

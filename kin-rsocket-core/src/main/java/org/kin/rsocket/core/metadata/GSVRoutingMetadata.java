@@ -37,11 +37,11 @@ public final class GSVRoutingMetadata implements MetadataAware {
     /** handler ID */
     private transient int handlerId;
 
-    public static GSVRoutingMetadata of(String group, String service, String handler, String version) {
-        return of(group, service, handler, version, "", false);
+    public static GSVRoutingMetadata from(String group, String service, String handler, String version) {
+        return from(group, service, handler, version, "", false);
     }
 
-    public static GSVRoutingMetadata of(String group, String service, String handler, String version, String endpoint, boolean sticky) {
+    public static GSVRoutingMetadata from(String group, String service, String handler, String version, String endpoint, boolean sticky) {
         GSVRoutingMetadata inst = new GSVRoutingMetadata();
         inst.group = group;
         inst.service = service;
@@ -55,7 +55,7 @@ public final class GSVRoutingMetadata implements MetadataAware {
     /**
      * @param serviceHandlerKey service.handler
      */
-    public static GSVRoutingMetadata of(String group, String serviceHandlerKey, String version) {
+    public static GSVRoutingMetadata from(String group, String serviceHandlerKey, String version) {
         String service;
         String handler = "";
         int methodSymbolPosition = serviceHandlerKey.lastIndexOf(Separators.SERVICE_HANDLER);
@@ -65,16 +65,16 @@ public final class GSVRoutingMetadata implements MetadataAware {
         } else {
             service = serviceHandlerKey;
         }
-        return of(group, service, handler, version);
+        return from(group, service, handler, version);
     }
 
-    public static GSVRoutingMetadata of(ByteBuf content) {
+    public static GSVRoutingMetadata from(ByteBuf content) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.load(content);
         return metadata;
     }
 
-    public static GSVRoutingMetadata of(String routingKey) {
+    public static GSVRoutingMetadata from(String routingKey) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.parseRoutingKey(routingKey);
         return metadata;
@@ -84,7 +84,7 @@ public final class GSVRoutingMetadata implements MetadataAware {
      * 将{@link BinaryRoutingMetadata}转换成{@link GSVRoutingMetadata}, 但实例会缺失部分服务信息细节
      * 只用于broker寻找目标rsocket service时使用
      */
-    public static GSVRoutingMetadata of(BinaryRoutingMetadata binaryRoutingMetadata) {
+    public static GSVRoutingMetadata from(BinaryRoutingMetadata binaryRoutingMetadata) {
         GSVRoutingMetadata metadata = new GSVRoutingMetadata();
         metadata.serviceId = binaryRoutingMetadata.getServiceId();
         metadata.handlerId = binaryRoutingMetadata.getHandlerId();

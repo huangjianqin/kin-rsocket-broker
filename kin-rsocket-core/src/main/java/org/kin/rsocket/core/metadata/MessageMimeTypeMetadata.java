@@ -20,7 +20,7 @@ public final class MessageMimeTypeMetadata implements MetadataAware {
     /** rsocket mime type str */
     private String mimeType;
 
-    public static MessageMimeTypeMetadata of(String mimeType) {
+    public static MessageMimeTypeMetadata from(String mimeType) {
         MessageMimeTypeMetadata metadata = new MessageMimeTypeMetadata();
         metadata.mimeType = mimeType;
         try {
@@ -33,7 +33,7 @@ public final class MessageMimeTypeMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageMimeTypeMetadata of(WellKnownMimeType knownMimeType) {
+    public static MessageMimeTypeMetadata from(WellKnownMimeType knownMimeType) {
         MessageMimeTypeMetadata metadata = new MessageMimeTypeMetadata();
         metadata.mimeTypeId = knownMimeType.getIdentifier();
         metadata.mimeType = knownMimeType.getString();
@@ -41,7 +41,7 @@ public final class MessageMimeTypeMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageMimeTypeMetadata of(RSocketMimeType rsocketMimeType) {
+    public static MessageMimeTypeMetadata from(RSocketMimeType rsocketMimeType) {
         MessageMimeTypeMetadata metadata = new MessageMimeTypeMetadata();
         metadata.mimeTypeId = rsocketMimeType.getId();
         metadata.mimeType = rsocketMimeType.getType();
@@ -49,7 +49,7 @@ public final class MessageMimeTypeMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageMimeTypeMetadata of(ByteBuf content) {
+    public static MessageMimeTypeMetadata from(ByteBuf content) {
         MessageMimeTypeMetadata metadata = new MessageMimeTypeMetadata();
         metadata.load(content);
         return metadata;

@@ -47,7 +47,7 @@ public class TracingMetadata implements MetadataAware {
     private boolean isDebug;
 
     public static TracingMetadata zipkin(TraceContext traceContext) {
-        return TracingMetadata.of(
+        return TracingMetadata.from(
                 traceContext.traceIdHigh(),
                 traceContext.traceId(),
                 traceContext.spanId(),
@@ -55,7 +55,7 @@ public class TracingMetadata implements MetadataAware {
                 true, false);
     }
 
-    public static TracingMetadata of(long traceIdHigh, long traceId, long spanId, long parentId, boolean sampled, boolean debug) {
+    public static TracingMetadata from(long traceIdHigh, long traceId, long spanId, long parentId, boolean sampled, boolean debug) {
         TracingMetadata metadata = new TracingMetadata();
         metadata.traceIdHigh = traceIdHigh;
         metadata.traceId = traceId;
@@ -72,7 +72,7 @@ public class TracingMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static TracingMetadata of(ByteBuf content) {
+    public static TracingMetadata from(ByteBuf content) {
         TracingMetadata temp = new TracingMetadata();
         temp.load(content);
         return temp;

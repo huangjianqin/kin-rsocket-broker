@@ -50,7 +50,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
         //requester默认data编码类型
         RSocketMimeType dataMimeType = RSocketMimeType.defaultEncodingType();
         //解析composite metadata
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(setupPayload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(setupPayload.metadata());
         if (compositeMetadata.contains(RSocketMimeType.APPLICATION)) {
             AppMetadata appMetadata = compositeMetadata.getMetadata(RSocketMimeType.APPLICATION);
             //from remote requester
@@ -62,7 +62,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
             }
         }
 
-        this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataMimeType);
+        this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.from(dataMimeType);
         this.tracer = tracer;
     }
 
@@ -97,7 +97,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
     @Nonnull
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(payload);
@@ -115,7 +115,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
     @Nonnull
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(payload);
@@ -133,7 +133,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
     @Nonnull
     @Override
     public Flux<Payload> requestStream(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(payload);
@@ -149,7 +149,7 @@ final class RSocketResponderHandler extends RSocketResponderHandlerSupport {
     }
 
     private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
         GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
         if (routingMetaData == null) {
             ReferenceCountUtil.safeRelease(signal);

@@ -127,25 +127,25 @@ final class ReactiveMethodMetadata extends ReactiveMethodSupport {
      */
     private void initCompositeMetadata(URI origin, String group, String service, String version) {
         //routing metadata
-        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, handler, version, endpoint, sticky);
+        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.from(group, service, handler, version, endpoint, sticky);
 
         //encoding mime type
-        MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataEncodingType);
+        MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.from(dataEncodingType);
 
         //accepted mimetype
-        MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata = MessageAcceptMimeTypesMetadata.of(acceptEncodingTypes);
+        MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata = MessageAcceptMimeTypesMetadata.from(acceptEncodingTypes);
 
         //origin metadata
-        OriginMetadata originMetadata = OriginMetadata.of(origin);
+        OriginMetadata originMetadata = OriginMetadata.from(origin);
 
         //default composite metadata
-        compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
+        compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata, originMetadata);
         CompositeByteBuf compositeMetadataBytes = (CompositeByteBuf) this.compositeMetadata.getContent();
 
         if (StringUtils.isBlank(endpoint)) {
             //使用快速路由
             //binary routing metadata
-            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata);
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.from(routingMetadata);
 
             //add BinaryRoutingMetadata as first
             compositeMetadataBytes.addComponent(true, 0, binaryRoutingMetadata.getHeaderAndContent());

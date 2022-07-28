@@ -25,7 +25,7 @@ public final class RSocketCompositeMetadata implements MetadataAware {
     /** key -> {@link RSocketMimeType}, value -> 对应mime type 的{@link MetadataAware}实现类 */
     private final Map<RSocketMimeType, MetadataAware> metadataStore = new HashMap<>(4);
 
-    public static RSocketCompositeMetadata of(ByteBuf content) {
+    public static RSocketCompositeMetadata from(ByteBuf content) {
         RSocketCompositeMetadata metadata = new RSocketCompositeMetadata();
         if (content.isReadable()) {
             metadata.load(content);
@@ -33,11 +33,11 @@ public final class RSocketCompositeMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static RSocketCompositeMetadata of(MetadataAware... metadatas) {
-        return of(Arrays.asList(metadatas));
+    public static RSocketCompositeMetadata from(MetadataAware... metadatas) {
+        return from(Arrays.asList(metadatas));
     }
 
-    public static RSocketCompositeMetadata of(Collection<MetadataAware> metadatas) {
+    public static RSocketCompositeMetadata from(Collection<MetadataAware> metadatas) {
         RSocketCompositeMetadata metadata = new RSocketCompositeMetadata();
         for (MetadataAware childMetadata : metadatas) {
             metadata.addMetadata(childMetadata);

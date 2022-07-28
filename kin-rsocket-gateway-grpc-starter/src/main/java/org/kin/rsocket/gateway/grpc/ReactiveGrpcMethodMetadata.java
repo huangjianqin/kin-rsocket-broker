@@ -89,22 +89,22 @@ final class ReactiveGrpcMethodMetadata extends ReactiveMethodSupport {
      */
     private void initCompositeMetadata(String group, String service, String version) {
         //routing metadata
-        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.of(group, service, method.getName(), version, endpoint, sticky);
+        GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.from(group, service, method.getName(), version, endpoint, sticky);
 
         //encoding mime type
-        MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.of(WellKnownMimeType.APPLICATION_PROTOBUF);
+        MessageMimeTypeMetadata messageMimeTypeMetadata = MessageMimeTypeMetadata.from(WellKnownMimeType.APPLICATION_PROTOBUF);
 
         //accepted mimetype
-        MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata = MessageAcceptMimeTypesMetadata.of(WellKnownMimeType.APPLICATION_PROTOBUF);
+        MessageAcceptMimeTypesMetadata messageAcceptMimeTypesMetadata = MessageAcceptMimeTypesMetadata.from(WellKnownMimeType.APPLICATION_PROTOBUF);
 
         //default composite metadata
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata);
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, messageMimeTypeMetadata, messageAcceptMimeTypesMetadata);
         CompositeByteBuf compositeMetadataBytes = (CompositeByteBuf) compositeMetadata.getContent();
 
         if (StringUtils.isBlank(endpoint)) {
             //默认使用快速路由
             //binary routing metadata
-            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.of(routingMetadata);
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.from(routingMetadata);
 
             //add BinaryRoutingMetadata as first
             compositeMetadataBytes.addComponent(true, 0, binaryRoutingMetadata.getHeaderAndContent());

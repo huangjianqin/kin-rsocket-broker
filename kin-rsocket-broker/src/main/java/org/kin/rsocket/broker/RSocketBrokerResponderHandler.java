@@ -67,10 +67,10 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
         RSocketMimeType dataType = RSocketMimeType.getByType(setupPayload.dataMimeType());
 
         if (dataType != null) {
-            this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(dataType);
+            this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.from(dataType);
         } else {
             //如果requester的RSocketConnector没有设置dataMimeType(), 则默认json
-            this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.of(RSocketMimeType.defaultEncodingType());
+            this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.from(RSocketMimeType.defaultEncodingType());
         }
 
         this.appMetadata = appMetadata;
@@ -94,7 +94,7 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
             MessageMimeTypeMetadata messageMimeTypeMetadata;
             if (Objects.isNull(binaryRoutingMetadata)) {
                 //回退到取GSVRoutingMetadata
-                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
                     return Mono.error(new InvalidException("no routing metadata"));
@@ -161,7 +161,7 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
             MessageMimeTypeMetadata messageMimeTypeMetadata;
             if (Objects.isNull(binaryRoutingMetadata)) {
                 //回退到取GSVRoutingMetadata
-                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
                     return Mono.error(new InvalidException("no routing metadata"));
@@ -228,7 +228,7 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
             MessageMimeTypeMetadata messageMimeTypeMetadata;
             if (Objects.isNull(binaryRoutingMetadata)) {
                 //回退到取GSVRoutingMetadata
-                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
                     return Flux.error(new InvalidException("no routing metadata"));
@@ -286,7 +286,7 @@ public final class RSocketBrokerResponderHandler extends RSocketResponderHandler
             GSVRoutingMetadata gsvRoutingMetadata;
             if (Objects.isNull(binaryRoutingMetadata)) {
                 //回退到取GSVRoutingMetadata
-                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(signal.metadata());
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
                     return Flux.error(new InvalidException("no routing metadata"));

@@ -161,7 +161,7 @@ public class RequesterProxy implements InvocationHandler {
             Flux<Object> result = requestChannel(methodMetadata, methodMetadata.getCompositeMetadataBytes(), routeBytes, paramBodys)
                     .concatMap(payload -> {
                         try {
-                            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                             return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
                                     extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata1.getAcceptEncodingTypes()[0]),
                                     payload.data(),
@@ -186,7 +186,7 @@ public class RequesterProxy implements InvocationHandler {
                 Mono<Object> result = requestResponse(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes)
                         .handle((payload, sink) -> {
                             try {
-                                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                                 Object obj = Codecs.INSTANCE.decodeResult(
                                         extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
                                         payload.data(),
@@ -218,7 +218,7 @@ public class RequesterProxy implements InvocationHandler {
                 Flux<Object> result = requestStream(methodMetadata, methodMetadata.getCompositeMetadataBytes(), paramBodyBytes)
                         .concatMap((payload) -> {
                             try {
-                                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(payload.metadata());
+                                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                                 return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
                                         extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
                                         payload.data(),

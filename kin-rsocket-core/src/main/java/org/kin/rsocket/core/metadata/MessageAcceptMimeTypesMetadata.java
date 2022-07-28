@@ -23,7 +23,7 @@ public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
     /** bytebuf size */
     private int byteBufLength = 0;
 
-    public static MessageAcceptMimeTypesMetadata of(String... acceptedMimeTypes) {
+    public static MessageAcceptMimeTypesMetadata from(String... acceptedMimeTypes) {
         MessageAcceptMimeTypesMetadata metadata = new MessageAcceptMimeTypesMetadata();
         for (String acceptedMimeType : acceptedMimeTypes) {
             WellKnownMimeType wellKnownMimeType = WellKnownMimeType.fromString(acceptedMimeType);
@@ -39,7 +39,7 @@ public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageAcceptMimeTypesMetadata of(WellKnownMimeType... wellKnownMimeTypes) {
+    public static MessageAcceptMimeTypesMetadata from(WellKnownMimeType... wellKnownMimeTypes) {
         MessageAcceptMimeTypesMetadata metadata = new MessageAcceptMimeTypesMetadata();
         for (WellKnownMimeType wellKnownMimeType : wellKnownMimeTypes) {
             metadata.mimeTypes.add(wellKnownMimeType.getIdentifier());
@@ -48,7 +48,7 @@ public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageAcceptMimeTypesMetadata of(RSocketMimeType... rsocketMimeTypes) {
+    public static MessageAcceptMimeTypesMetadata from(RSocketMimeType... rsocketMimeTypes) {
         MessageAcceptMimeTypesMetadata metadata = new MessageAcceptMimeTypesMetadata();
         for (RSocketMimeType rsocketMimeType : rsocketMimeTypes) {
             metadata.mimeTypes.add(rsocketMimeType.getId());
@@ -57,7 +57,7 @@ public final class MessageAcceptMimeTypesMetadata implements MetadataAware {
         return metadata;
     }
 
-    public static MessageAcceptMimeTypesMetadata of(ByteBuf content) {
+    public static MessageAcceptMimeTypesMetadata from(ByteBuf content) {
         MessageAcceptMimeTypesMetadata metadata = new MessageAcceptMimeTypesMetadata();
         metadata.load(content);
         return metadata;

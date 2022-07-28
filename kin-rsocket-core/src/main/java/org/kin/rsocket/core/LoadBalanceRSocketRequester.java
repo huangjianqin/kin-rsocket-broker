@@ -123,8 +123,8 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         //health check composite metadata
         //这里没有设置MessageMimeTypeMetadata, 是因为缺省的情况使用rsocket connector设置的dataMimeType来encode,
         //因为双端默认都是使用RSocketMimeType.defaultEncodingType进行数据序列化和反序列化, 所以没必要设置了, 还可以节省内存占用和socket bytes
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
-                GSVRoutingMetadata.of(null, HealthCheck.class.getName(), "check", null));
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(
+                GSVRoutingMetadata.from(null, HealthCheck.class.getName(), "check", null));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.healthCheckCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);
         ReferenceCountUtil.safeRelease(compositeMetadataContent);

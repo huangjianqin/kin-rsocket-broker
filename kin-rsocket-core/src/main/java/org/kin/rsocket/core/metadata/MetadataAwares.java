@@ -22,17 +22,17 @@ final class MetadataAwares {
     static {
         Map<RSocketMimeType, MetadataAwareMetadata> map = new HashMap<>(16);
 
-        map.put(RSocketMimeType.APPLICATION, new MetadataAwareMetadata(AppMetadata.class, AppMetadata::of));
-        map.put(RSocketMimeType.CACHE_CONTROL, new MetadataAwareMetadata(CacheControlMetadata.class, CacheControlMetadata::of));
-        map.put(RSocketMimeType.SERVICE_REGISTRY, new MetadataAwareMetadata(RSocketServiceRegistryMetadata.class, RSocketServiceRegistryMetadata::of));
-        map.put(RSocketMimeType.BEARER_TOKEN, new MetadataAwareMetadata(BearerTokenMetadata.class, BearerTokenMetadata::of));
-        map.put(RSocketMimeType.ROUTING, new MetadataAwareMetadata(GSVRoutingMetadata.class, GSVRoutingMetadata::of));
-        map.put(RSocketMimeType.BINARY_ROUTING, new MetadataAwareMetadata(BinaryRoutingMetadata.class, BinaryRoutingMetadata::of));
-        map.put(RSocketMimeType.MESSAGE_MIME_TYPE, new MetadataAwareMetadata(MessageMimeTypeMetadata.class, MessageMimeTypeMetadata::of));
-        map.put(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES, new MetadataAwareMetadata(MessageAcceptMimeTypesMetadata.class, MessageAcceptMimeTypesMetadata::of));
-        map.put(RSocketMimeType.COMPOSITE_METADATA, new MetadataAwareMetadata(RSocketCompositeMetadata.class, RSocketCompositeMetadata::of));
-        map.put(RSocketMimeType.MESSAGE_TAGS, new MetadataAwareMetadata(MessageTagsMetadata.class, MessageTagsMetadata::of));
-        map.put(RSocketMimeType.MESSAGE_ORIGIN, new MetadataAwareMetadata(OriginMetadata.class, OriginMetadata::of));
+        map.put(RSocketMimeType.APPLICATION, new MetadataAwareMetadata(AppMetadata.class, AppMetadata::from));
+        map.put(RSocketMimeType.CACHE_CONTROL, new MetadataAwareMetadata(CacheControlMetadata.class, CacheControlMetadata::from));
+        map.put(RSocketMimeType.SERVICE_REGISTRY, new MetadataAwareMetadata(RSocketServiceRegistryMetadata.class, RSocketServiceRegistryMetadata::from));
+        map.put(RSocketMimeType.BEARER_TOKEN, new MetadataAwareMetadata(BearerTokenMetadata.class, BearerTokenMetadata::from));
+        map.put(RSocketMimeType.ROUTING, new MetadataAwareMetadata(GSVRoutingMetadata.class, GSVRoutingMetadata::from));
+        map.put(RSocketMimeType.BINARY_ROUTING, new MetadataAwareMetadata(BinaryRoutingMetadata.class, BinaryRoutingMetadata::from));
+        map.put(RSocketMimeType.MESSAGE_MIME_TYPE, new MetadataAwareMetadata(MessageMimeTypeMetadata.class, MessageMimeTypeMetadata::from));
+        map.put(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES, new MetadataAwareMetadata(MessageAcceptMimeTypesMetadata.class, MessageAcceptMimeTypesMetadata::from));
+        map.put(RSocketMimeType.COMPOSITE_METADATA, new MetadataAwareMetadata(RSocketCompositeMetadata.class, RSocketCompositeMetadata::from));
+        map.put(RSocketMimeType.MESSAGE_TAGS, new MetadataAwareMetadata(MessageTagsMetadata.class, MessageTagsMetadata::from));
+        map.put(RSocketMimeType.MESSAGE_ORIGIN, new MetadataAwareMetadata(OriginMetadata.class, OriginMetadata::from));
 
         TYPE_2_METADATA_AWARE_METADATA = map;
     }

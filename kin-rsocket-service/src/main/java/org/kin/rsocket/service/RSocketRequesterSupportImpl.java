@@ -89,7 +89,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
             if (StringUtils.isNotBlank(rsocketServiceProperties.getJwtToken())) {
                 metadataAwares.add(BearerTokenMetadata.jwt(rsocketServiceProperties.getJwtToken().toCharArray()));
             }
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(metadataAwares);
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(metadataAwares);
             return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, compositeMetadata.getContent());
         };
     }

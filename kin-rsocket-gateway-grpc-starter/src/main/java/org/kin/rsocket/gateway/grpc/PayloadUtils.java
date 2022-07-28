@@ -32,7 +32,7 @@ final class PayloadUtils {
     private static final ByteBuf COMPOSITE_METADATA_WITH_ENCODING;
 
     static {
-        ByteBuf byteBuf = RSocketCompositeMetadata.of(MessageMimeTypeMetadata.of(RSocketMimeType.PROTOBUF)).getContent();
+        ByteBuf byteBuf = RSocketCompositeMetadata.from(MessageMimeTypeMetadata.from(RSocketMimeType.PROTOBUF)).getContent();
         COMPOSITE_METADATA_WITH_ENCODING = Unpooled.copiedBuffer(byteBuf);
         ReferenceCountUtil.release(byteBuf);
     }

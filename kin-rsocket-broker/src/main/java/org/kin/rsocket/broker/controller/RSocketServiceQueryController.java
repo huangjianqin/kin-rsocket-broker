@@ -30,7 +30,7 @@ import java.util.Objects;
 @RequestMapping("/services")
 public class RSocketServiceQueryController {
     /** json编码元数据 */
-    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.of(RSocketMimeType.JSON);
+    private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.from(RSocketMimeType.JSON);
     @Autowired
     private RSocketServiceManager serviceManager;
 
@@ -59,8 +59,8 @@ public class RSocketServiceQueryController {
         RSocketEndpoint RSocketEndpoint = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
         if (Objects.nonNull(RSocketEndpoint)) {
             GSVRoutingMetadata routingMetadata =
-                    GSVRoutingMetadata.of("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(routingMetadata, JSON_ENCODING_METADATA);
+                    GSVRoutingMetadata.from("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, JSON_ENCODING_METADATA);
             return RSocketEndpoint
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
                     .map(Payload::getDataUtf8);

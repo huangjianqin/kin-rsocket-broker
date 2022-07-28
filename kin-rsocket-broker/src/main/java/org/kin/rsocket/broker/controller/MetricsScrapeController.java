@@ -51,10 +51,10 @@ public class MetricsScrapeController {
         /**
          * 初始化请求{@link MetricsService#scrape()}方法的metadata
          */
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.of(
-                GSVRoutingMetadata.of(null, MetricsService.class.getName(), "scrape", null),
-                MessageMimeTypeMetadata.of(RSocketMimeType.JSON),
-                MessageAcceptMimeTypesMetadata.of(RSocketMimeType.JSON));
+        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(
+                GSVRoutingMetadata.from(null, MetricsService.class.getName(), "scrape", null),
+                MessageMimeTypeMetadata.from(RSocketMimeType.JSON),
+                MessageAcceptMimeTypesMetadata.from(RSocketMimeType.JSON));
         ByteBuf compositeMetadataContent = compositeMetadata.getContent();
         this.metricsScrapeCompositeByteBuf = Unpooled.copiedBuffer(compositeMetadataContent);
         ReferenceCountUtil.safeRelease(compositeMetadataContent);

@@ -12,13 +12,13 @@ public final class CacheControlMetadata implements MetadataAware {
     /** expired timestamp */
     private long expiredAt;
 
-    public static CacheControlMetadata of(long expiredAt) {
+    public static CacheControlMetadata from(long expiredAt) {
         CacheControlMetadata metadata = new CacheControlMetadata();
         metadata.expiredAt = expiredAt;
         return metadata;
     }
 
-    public static CacheControlMetadata of(ByteBuf content) {
+    public static CacheControlMetadata from(ByteBuf content) {
         CacheControlMetadata metadata = new CacheControlMetadata();
         metadata.load(content);
         return metadata;

@@ -39,7 +39,7 @@ public final class Codecs {
             RSocketMimeType mimeType = codec.mimeType();
             codecBuilder.put(codec.mimeType(), codec);
 
-            RSocketCompositeMetadata resultCompositeMetadata = RSocketCompositeMetadata.of(MessageMimeTypeMetadata.of(mimeType));
+            RSocketCompositeMetadata resultCompositeMetadata = RSocketCompositeMetadata.from(MessageMimeTypeMetadata.from(mimeType));
             ByteBuf compositeMetadataContent = resultCompositeMetadata.getContent();
             mimeTypeMetadataBytesBuilder.put(mimeType, Unpooled.copiedBuffer(compositeMetadataContent));
             ReferenceCountUtil.safeRelease(compositeMetadataContent);

@@ -14,13 +14,13 @@ import java.nio.charset.StandardCharsets;
 public final class OriginMetadata implements MetadataAware {
     private URI origin;
 
-    public static OriginMetadata of(URI origin) {
+    public static OriginMetadata from(URI origin) {
         OriginMetadata metadata = new OriginMetadata();
         metadata.origin = origin;
         return metadata;
     }
 
-    public static OriginMetadata of(ByteBuf content) {
+    public static OriginMetadata from(ByteBuf content) {
         OriginMetadata metadata = new OriginMetadata();
         metadata.load(content);
         return metadata;
