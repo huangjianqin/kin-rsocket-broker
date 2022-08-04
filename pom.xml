@@ -20,8 +20,8 @@
         <module>kin-rsocket-conf</module>
         <module>kin-rsocket-service-starter</module>
         <module>kin-rsocket-bom</module>
-        <module>kin-rsocket-cloud-function-starter</module>
-        <module>kin-rsocket-broker-cloud-discovery-starter</module>
+        <module>kin-rsocket-springcloud-function-starter</module>
+        <module>kin-rsocket-broker-springcloud-discovery-starter</module>
         <module>kin-rsocket-service-spring-support-starter</module>
         <module>kin-rsocket-gateway-grpc-starter</module>
     </modules>

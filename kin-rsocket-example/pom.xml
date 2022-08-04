@@ -22,7 +22,7 @@
         <module>kin-rsocket-example-grpc-gateway</module>
         <module>kin-rsocket-example-grpc-requester</module>
         <module>kin-rsocket-example-conf-server-service</module>
-        <module>kin-rsocket-example-cloud-function</module>
+        <module>kin-rsocket-example-springcloud-function</module>
     </modules>
 
     <properties>

@@ -1,4 +1,4 @@
-# kin-rsocket-cloud-function-starter
+# kin-rsocket-springcloud-function-starter
 
 基于`spring-cloud-starter-function-webflux`, 整合serviceless和rsocket service, 将`function`以rsocket service方式向rsocket
 broker注册.

@@ -9,12 +9,12 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kin-rsocket-example-cloud-function</artifactId>
+    <artifactId>kin-rsocket-example-springcloud-function</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-cloud-function-starter</artifactId>
+            <artifactId>kin-rsocket-springcloud-function-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
 

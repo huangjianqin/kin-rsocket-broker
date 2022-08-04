@@ -39,7 +39,7 @@
 
             <dependency>
                 <groupId>org.kin</groupId>
-                <artifactId>kin-rsocket-cloud-function-starter</artifactId>
+                <artifactId>kin-rsocket-springcloud-function-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
