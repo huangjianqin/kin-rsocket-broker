@@ -1,4 +1,4 @@
-package org.kin.rsocket.cloud.function;
+package org.kin.rsocket.springcloud.function;
 
 import java.lang.annotation.*;
 

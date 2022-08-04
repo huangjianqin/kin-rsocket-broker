@@ -1,4 +1,4 @@
-package org.kin.rsocket.broker.cluster.discovery;
+package org.kin.rsocket.broker.cluster.springcloud.discovery;
 
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;

@@ -1,4 +1,4 @@
-package org.kin.rsocket.broker.cluster.discovery;
+package org.kin.rsocket.broker.cluster.springcloud.discovery;
 
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;

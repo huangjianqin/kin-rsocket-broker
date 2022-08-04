@@ -1,4 +1,4 @@
-package org.kin.rsocket.cloud.function;
+package org.kin.rsocket.springcloud.function;
 
 import org.kin.framework.spring.beans.BeanDefinitionUtils;
 import org.kin.framework.utils.ClassUtils;
