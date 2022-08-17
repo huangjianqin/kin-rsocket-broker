@@ -1,18 +1,25 @@
 {
+  "groups": [
+    {
+      "name": "kin.rsocket.broker.gossip",
+      "type": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties",
+      "sourceType": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties"
+    }
+  ],
   "properties": [
     {
       "name": "kin.rsocket.broker.gossip.port",
       "type": "java.lang.Integer",
-      "description": "rsocket gossip broker绑定端口",
+      "description": "Gossip listen port",
       "sourceType": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties",
-      "defaultValue": "10999"
+      "defaultValue": 10999
     },
     {
       "name": "kin.rsocket.broker.gossip.seeds",
       "type": "java.lang.String[]",
-      "description": "集群中rsocket gossip broker节点uris",
-      "sourceType": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties",
-      "defaultValue": "[]"
+      "description": "gossip node, host:port",
+      "sourceType": "org.kin.rsocket.broker.cluster.gossip.RSocketBrokerGossipProperties"
     }
-  ]
+  ],
+  "hints": []
 }
