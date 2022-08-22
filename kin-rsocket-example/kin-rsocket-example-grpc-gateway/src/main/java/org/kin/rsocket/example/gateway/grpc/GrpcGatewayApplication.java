@@ -1,8 +1,11 @@
 package org.kin.rsocket.example.gateway.grpc;
 
+import org.kin.rsocket.example.ReactorUserServiceGrpc;
 import org.kin.rsocket.gateway.grpc.EnableGrpcServiceRSocketImplementation;
+import org.kin.rsocket.gateway.grpc.GrpcServiceRSocketImplementationFactoryBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 /**
@@ -16,8 +19,8 @@ public class GrpcGatewayApplication implements WebFluxConfigurer {
         SpringApplication.run(GrpcGatewayApplication.class, args);
     }
 
-//    @Bean
-//    public GrpcServiceRSocketImplementationFactoryBean<ReactorUserServiceGrpc.UserServiceImplBase> userService(){
-//        return new GrpcServiceRSocketImplementationFactoryBean<>(ReactorUserServiceGrpc.UserServiceImplBase.class);
-//    }
+    @Bean
+    public GrpcServiceRSocketImplementationFactoryBean<ReactorUserServiceGrpc.UserServiceImplBase> userService() {
+        return new GrpcServiceRSocketImplementationFactoryBean<>(ReactorUserServiceGrpc.UserServiceImplBase.class);
+    }
 }
