@@ -26,6 +26,9 @@ import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 public class HttpGatewayController {
     private static final MessageMimeTypeMetadata JSON_ENCODING_MIME_TYPE = MessageMimeTypeMetadata.from(RSocketMimeType.JSON);
 
+    /**
+     * gateway的token校验
+     */
     @Autowired
     private AuthenticationService authenticationService;
     @Autowired

@@ -14,7 +14,7 @@ kin:
   rsocket:
     broker:
       port: 9999
-      auth: false
+      auth: true
       router: weightedStats
 
 # management

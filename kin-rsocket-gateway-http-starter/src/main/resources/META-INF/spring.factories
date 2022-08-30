@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.gateway.http.HttpGatewayAutoConfiguration
+org.kin.rsocket.gateway.http.HttpGatewayAutoConfiguration,\
+org.kin.rsocket.gateway.http.HttpGatewayJwtAuthAutoConfiguration

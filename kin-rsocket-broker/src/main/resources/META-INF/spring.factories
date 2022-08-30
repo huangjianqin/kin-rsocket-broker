@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.broker.RSocketBrokerAutoConfiguration
+org.kin.rsocket.broker.RSocketBrokerAutoConfiguration,\
+org.kin.rsocket.broker.RSocketBrokerJwtAuthAutoConfiguration

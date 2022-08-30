@@ -33,9 +33,7 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 
 ## **实现模块**
 
-* **kin-rsocket-auth**: 权限校验模块
-  * **kin-rsocket-auth-api**: 权限校验接口api模块
-  * **kin-rsocket-auth-jwt-starter**: jwt权限校验实现
+* **kin-rsocket-auth**: jwt权限校验实现
 * **kin-rsocket-bom**: kin rsocket依赖统一管理
 * **kin-rsocket-broker**: rsocket broker基础功能实现
 * **kin-rsocket-broker-gossip-starter**: gossip broker实现, 整合spring cloud

@@ -9,9 +9,28 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>kin-rsocket-auth</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>kin-rsocket-auth-api</module>
-        <module>kin-rsocket-auth-jwt-starter</module>
-    </modules>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!--security-->
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+        </dependency>
+    </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package org.kin.rsocket.auth.jwt;
+package org.kin.rsocket.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
@@ -7,8 +7,6 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.JWTVerifier;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import org.kin.rsocket.auth.AuthenticationService;
-import org.kin.rsocket.auth.RSocketAppPrincipal;
 
 import java.io.*;
 import java.security.Key;
@@ -31,7 +29,6 @@ import java.util.concurrent.TimeUnit;
  * @date 2021/3/30
  */
 public final class JwtAuthenticationService implements AuthenticationService {
-    private static final String ISS = "KinRSocketBroker";
     /** 公钥文件名 */
     private static final String PUBLIC_KEY_FILE = "jwt_rsa.pub";
     /** 私钥文件名 */
@@ -47,35 +44,35 @@ public final class JwtAuthenticationService implements AuthenticationService {
             .build();
     private final RSAPrivateKey privateKey;
 
-    public JwtAuthenticationService() throws Exception {
-        this(false);
-    }
+    private final String issuer;
 
-    public JwtAuthenticationService(boolean autoGen) throws Exception {
-        this(autoGen, null);
+    public JwtAuthenticationService(String issuer) throws Exception {
+        this(issuer, null);
     }
 
     /**
-     * @param autoGen 是否自动生成RSAKeyPairs
      * @param authDir 密钥目录
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public JwtAuthenticationService(boolean autoGen, File authDir) throws Exception {
-        if (autoGen) {
-            if (Objects.nonNull(authDir) && !authDir.exists()) {
-                authDir.mkdir();
+    public JwtAuthenticationService(String issuer, String authDir) throws Exception {
+        this.issuer = issuer;
+        File authDirFile = null;
+        if (Objects.nonNull(authDir) && !authDir.isEmpty()) {
+            authDirFile = new File(authDir);
+        }
+        File pubKeyFile = new File(authDir, PUBLIC_KEY_FILE);
+        if (!pubKeyFile.exists()) {
+            //RSAKey公钥文件不存在, 则自动生成key
+            if (Objects.nonNull(authDirFile) && !authDirFile.exists()) {
+                authDirFile.mkdir();
             }
-            File pubKeyFile = new File(authDir, PUBLIC_KEY_FILE);
-            File priKeyFile = new File(authDir, PRIVATE_KEY_FILE);
-            if (!pubKeyFile.exists() && !priKeyFile.exists()) {
-                //RSAKey公钥和密钥文件都不存在
-                generateRSAKeyPairs(authDir);
-            }
+
+            generateRSAKeyPairs(authDirFile);
         }
 
         //使用暴露的公钥去校验签名
-        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDir), null)).withIssuer(ISS).build());
-        this.privateKey = readPrivateKey(authDir);
+        this.verifiers.add(JWT.require(Algorithm.RSA256(readPublicKey(authDirFile), null)).withIssuer(issuer).build());
+        this.privateKey = readPrivateKey(authDirFile);
     }
 
     @Override
@@ -102,24 +99,25 @@ public final class JwtAuthenticationService implements AuthenticationService {
 
 
     @Override
-    public String generateCredentials(String id, String[] organizations,
-                                      String[] serviceAccounts, String[] roles,
-                                      String[] authorities, String sub,
-                                      String[] audience) {
-        Arrays.sort(audience);
-        Arrays.sort(organizations);
+    public String generateCredentials(CredentialParam param) {
+        Arrays.sort(param.getAudience());
+        Arrays.sort(param.getOrganizations());
         JWTCreator.Builder builder = JWT.create()
-                .withIssuer(ISS)
-                .withSubject(sub)
-                .withAudience(audience)
+                .withIssuer(issuer)
+                .withSubject(param.getSub())
+                .withAudience(param.getAudience())
                 .withIssuedAt(new Date())
-                .withClaim("id", id)
-                .withArrayClaim("sas", serviceAccounts)
-                .withArrayClaim("orgs", organizations);
+                .withClaim("id", param.getId())
+                .withArrayClaim("sas", param.getServiceAccounts())
+                .withArrayClaim("orgs", param.getOrganizations());
+
+        String[] roles = param.getRoles();
         if (roles != null && roles.length > 0) {
             Arrays.sort(roles);
             builder = builder.withArrayClaim("roles", roles);
         }
+
+        String[] authorities = param.getAuthorities();
         if (authorities != null && authorities.length > 0) {
             builder = builder.withArrayClaim("authorities", authorities);
         }

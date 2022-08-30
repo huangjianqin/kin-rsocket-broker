@@ -1,8 +1,7 @@
-package org.kin.rsocket.auth.jwt;
+package org.kin.rsocket.auth;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import org.kin.rsocket.auth.RSocketAppPrincipal;
 
 import javax.security.auth.Subject;
 import java.util.*;

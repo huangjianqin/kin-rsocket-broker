@@ -20,7 +20,7 @@
 
         <dependency>
             <groupId>org.kin</groupId>
-            <artifactId>kin-rsocket-auth-jwt-starter</artifactId>
+            <artifactId>kin-rsocket-auth</artifactId>
             <version>${project.version}</version>
         </dependency>
 
