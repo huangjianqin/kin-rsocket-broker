@@ -33,8 +33,10 @@ import java.util.stream.Collectors;
 
 /**
  * metrics scrape controller: scrape metrics from apps
+ * broker监控信息相关restful查询(操作)接口
  *
- * @author leijuan
+ * @author huangjianqin
+ * @date 2021/3/31
  */
 @RestController
 @RequestMapping("/metrics")

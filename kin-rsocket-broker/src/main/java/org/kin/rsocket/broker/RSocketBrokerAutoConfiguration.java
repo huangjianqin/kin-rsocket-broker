@@ -272,13 +272,13 @@ public class RSocketBrokerAutoConfiguration {
 
     //----------------------------------------------controller----------------------------------------------
     @Bean
-    public AppQueryController appQueryController() {
-        return new AppQueryController();
+    public AppController appController() {
+        return new AppController();
     }
 
     @Bean
-    public OprController oprController() {
-        return new OprController();
+    public BrokerClusterController brokerClusterController() {
+        return new BrokerClusterController();
     }
 
     @Bean
@@ -287,8 +287,8 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    public RSocketServiceQueryController serviceQueryController() {
-        return new RSocketServiceQueryController();
+    public RSocketServiceController rsocketServiceController() {
+        return new RSocketServiceController();
     }
 
     public MetricsScrapeController metricsScrapeController() {

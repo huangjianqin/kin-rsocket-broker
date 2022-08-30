@@ -11,23 +11,27 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
+ * rsocket app相关restful查询接口
+ *
  * @author huangjianqin
  * @date 2021/3/30
  */
 @RestController
 @RequestMapping("/app")
-public class AppQueryController {
+public class AppController {
     @Autowired
     private RSocketServiceManager serviceManager;
 
     @GetMapping("/{appName}")
-    public Flux<AppVO> query(@PathVariable(name = "appName") String appName) {
+    public Flux<AppVO> queryByAppName(@PathVariable(name = "appName") String appName) {
         List<AppVO> apps = new ArrayList<>();
         Collection<RSocketEndpoint> rsocketEndpoints = serviceManager.getByAppName(appName);
         if (CollectionUtils.isEmpty(rsocketEndpoints)) {
@@ -38,5 +42,12 @@ public class AppQueryController {
             apps.add(appMetadata.toVo());
         }
         return Flux.fromIterable(apps);
+    }
+
+    @RequestMapping("/all")
+    public Mono<Map<String, Collection<String>>> all() {
+        return Flux.fromIterable(serviceManager.getAllRSocketEndpoints())
+                .map(RSocketEndpoint::getAppMetadata)
+                .collectMultimap(AppMetadata::getName, AppMetadata::getIp);
     }
 }

@@ -18,24 +18,27 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
+ * rsocket service相关restful查询接口
+ *
  * @author huangjianqin
  * @date 2021/3/30
  */
 @RestController
-@RequestMapping("/services")
-public class RSocketServiceQueryController {
+@RequestMapping("/service")
+public class RSocketServiceController {
     /** json编码元数据 */
     private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.from(RSocketMimeType.JSON);
     @Autowired
     private RSocketServiceManager serviceManager;
 
     @GetMapping("/{service}")
-    public Flux<Map<String, Object>> query(@PathVariable(name = "service") String service) {
+    public Flux<Map<String, Object>> queryByService(@PathVariable(name = "service") String service) {
         return Flux.fromIterable(serviceManager.getAllServices())
                 .filter(locator -> locator.getService().equals(service))
                 .map(locator -> {
@@ -52,9 +55,9 @@ public class RSocketServiceQueryController {
     }
 
     @GetMapping(value = "/definition/{service}")
-    public Mono<String> queryDefinition(@RequestParam(name = "group", defaultValue = "") String group,
-                                        @PathVariable(name = "service") String service,
-                                        @RequestParam(name = "version", defaultValue = "") String version) {
+    public Mono<String> queryDefinitionByService(@RequestParam(name = "group", defaultValue = "") String group,
+                                                 @PathVariable(name = "service") String service,
+                                                 @RequestParam(name = "version", defaultValue = "") String version) {
         ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8));
         RSocketEndpoint RSocketEndpoint = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
         if (Objects.nonNull(RSocketEndpoint)) {
@@ -68,4 +71,8 @@ public class RSocketServiceQueryController {
         return Mono.error(new Exception(String.format("Service not found '%s'", service)));
     }
 
+    @RequestMapping("/all")
+    public Mono<Collection<ServiceLocator>> all() {
+        return Mono.just(serviceManager.getAllServices());
+    }
 }

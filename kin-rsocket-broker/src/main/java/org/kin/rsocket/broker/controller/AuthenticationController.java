@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 /**
+ * rsocket broker权限相关restful查询(操作)接口
+ *
  * @author huangjianqin
  * @date 2022/8/30
  */
@@ -19,6 +21,9 @@ public class AuthenticationController {
     @Autowired
     private AuthenticationService authenticationService;
 
+    /**
+     * 生成app jwt token接口
+     */
     @GetMapping("/token")
     public Mono<String> token(@RequestBody CredentialParam param) {
         return Mono.just(authenticationService.generateCredentials(param));
