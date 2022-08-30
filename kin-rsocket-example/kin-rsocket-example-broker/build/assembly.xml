@@ -1,0 +1,40 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
+    <!-- java -Dspring.config.location=config/ -cp .:lib/*:config/*:${CLASSPATH} org.kin.rsocket.example.broker.RSocketBrokerApplication -->
+    <!-- name -->
+    <id>tar</id>
+    <formats>
+        <!-- 打包成tar.gz -->
+        <format>tar.gz</format>
+    </formats>
+    <!-- 是否包装一层 -->
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <files>
+        <!-- 复制module jar包 -->
+        <file>
+            <source>${project.build.directory}/${project.build.finalName}.jar</source>
+            <outputDirectory>lib</outputDirectory>
+        </file>
+    </files>
+    <fileSets>
+        <!-- 将src/main/resources下配置文件打包到config目录 -->
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>config</outputDirectory>
+            <includes>
+                <include>**/*.xml</include>
+                <include>**/*.properties</include>
+                <include>**/*.yml</include>
+            </includes>
+            <!-- 是否进行属性替换 -->
+            <filtered>true</filtered>
+        </fileSet>
+    </fileSets>
+    <!-- 复制依赖 -->
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+</assembly>

@@ -30,4 +30,34 @@
         <!--        </dependency>-->
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- 利用assembly.xml打包, 可以根据配置指定打包结构,
+                特别适用于spring boot项目, 有些资源配置放在resources下面, 通过file协议会读取不到(因为在jar里面了)
+                这里面需要将部分文件放到jar外包, 并在启动时, 将其包在classpath里面 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.5.5</version>
+                <executions>
+                    <execution>
+                        <id>packetToTar</id>
+                        <goals>
+                            <!-- 会把依赖直接写进另外一个单独的jar包-->
+                            <goal>single</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- zip包文件名不加上assembly.xml中配置的id属性值 -->
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptors>
+                        <!-- 相当于${project.basedir}/assembly/assembly.xml -->
+                        <descriptor>build/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
