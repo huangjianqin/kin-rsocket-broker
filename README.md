@@ -44,7 +44,8 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
   * **kin-rsocket-conf-api**: : rsocket service配置中心接口api模块
   * **kin-rsocket-conf-h2-starter**: 基于h2文件系统实现的配置中心
   * **kin-rsocket-conf-memory-starter**: 基于内存实现的配置中心
-  * **kin-rsocket-conf-server-starter**: rsocket service配置中心实现, 以broker作为桥梁, 为同一broker集群下的app提供配置中心服务
+  * **kin-rsocket-conf-server-starter**: rsocket service配置中心实现, 以broker作为桥梁, 为同一broker集群下的app提供配置中心服务.
+    内部只是实现将配置服务注册到broker上, 其配置中心实现还需使用者额外配置(如同module下的h2,memory和redis等)或是自定义实现.
 * **kin-rsocket-core**: rsocket核心功能, 实现一些共用的基础功能类
 * **kin-rsocket-example**: rsocket示例
   * **kin-rsocket-example-springcloud-function**: rsocket function示例
