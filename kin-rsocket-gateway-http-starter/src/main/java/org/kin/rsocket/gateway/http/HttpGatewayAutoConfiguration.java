@@ -2,7 +2,7 @@ package org.kin.rsocket.gateway.http;
 
 import org.kin.rsocket.gateway.http.converter.ByteBufDecoder;
 import org.kin.rsocket.gateway.http.converter.ByteBufEncoder;
-import org.kin.rsocket.service.spring.RSocketServiceProperties;
+import org.kin.rsocket.service.boot.RSocketServiceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

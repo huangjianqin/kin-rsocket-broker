@@ -1,8 +1,8 @@
 package org.kin.rsocket.example.cloud.function;
 
+import org.kin.rsocket.cloud.function.RSocketFunction;
 import org.kin.rsocket.example.User;
-import org.kin.rsocket.service.spring.EnableRSocketService;
-import org.kin.rsocket.springcloud.function.RSocketFunction;
+import org.kin.rsocket.service.boot.EnableRSocketService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;

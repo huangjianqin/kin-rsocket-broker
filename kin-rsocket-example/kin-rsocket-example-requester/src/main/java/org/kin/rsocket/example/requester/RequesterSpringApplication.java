@@ -1,6 +1,6 @@
 package org.kin.rsocket.example.requester;
 
-import org.kin.rsocket.service.spring.EnableRSocketServiceReference;
+import org.kin.rsocket.service.boot.EnableRSocketServiceReference;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

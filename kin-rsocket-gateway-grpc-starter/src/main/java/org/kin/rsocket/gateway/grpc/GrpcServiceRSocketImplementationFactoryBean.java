@@ -3,7 +3,7 @@ package org.kin.rsocket.gateway.grpc;
 import brave.Tracing;
 import io.grpc.BindableService;
 import org.kin.rsocket.service.RSocketBrokerClient;
-import org.kin.rsocket.service.spring.RSocketServiceProperties;
+import org.kin.rsocket.service.boot.RSocketServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 

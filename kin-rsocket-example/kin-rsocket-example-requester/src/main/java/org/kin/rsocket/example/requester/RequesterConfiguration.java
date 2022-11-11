@@ -2,7 +2,7 @@ package org.kin.rsocket.example.requester;
 
 import org.kin.rsocket.example.UserService;
 import org.kin.rsocket.service.RSocketServiceReference;
-import org.kin.rsocket.service.spring.RSocketServiceReferenceFactoryBean;
+import org.kin.rsocket.service.boot.RSocketServiceReferenceFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

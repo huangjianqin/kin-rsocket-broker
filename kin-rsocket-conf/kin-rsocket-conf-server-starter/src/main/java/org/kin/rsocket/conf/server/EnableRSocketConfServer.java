@@ -1,6 +1,6 @@
 package org.kin.rsocket.conf.server;
 
-import org.kin.rsocket.service.spring.EnableRSocketService;
+import org.kin.rsocket.service.boot.EnableRSocketService;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
