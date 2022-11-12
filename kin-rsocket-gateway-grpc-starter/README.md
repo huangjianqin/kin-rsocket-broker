@@ -15,12 +15,12 @@
 
 目前支持两种方式构建grpc service rsocket implementation:
 
-* 通过`@EnableGrpcServiceRSocketImplementation.basePackages()`扫明指定classpath, 并构建grpc service rsocket implementation
+* 通过`@EnableGrpcServiceRSocketImpl.basePackages()`扫明指定classpath, 并构建grpc service rsocket implementation
 
 ```java
 
 @SpringBootApplication
-@EnableGrpcServiceRSocketImplementation(basePackages = "org.kin.rsocket.example")
+@EnableGrpcServiceRSocketImpl(basePackages = "org.kin.rsocket.example")
 public class GrpcGatewayApplication implements WebFluxConfigurer {
     public static void main(String[] args) {
         SpringApplication.run(GrpcGatewayApplication.class, args);
@@ -33,7 +33,7 @@ public class GrpcGatewayApplication implements WebFluxConfigurer {
 ```java
 
 @SpringBootApplication
-@EnableGrpcServiceRSocketImplementation
+@EnableGrpcServiceRSocketImpl
 public class GrpcGatewayApplication implements WebFluxConfigurer {
     public static void main(String[] args) {
         SpringApplication.run(GrpcGatewayApplication.class, args);

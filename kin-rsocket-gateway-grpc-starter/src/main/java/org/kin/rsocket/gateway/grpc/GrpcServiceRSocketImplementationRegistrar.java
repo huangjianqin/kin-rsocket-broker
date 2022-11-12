@@ -23,7 +23,7 @@ public final class GrpcServiceRSocketImplementationRegistrar implements ImportBe
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, @Nonnull BeanDefinitionRegistry registry) {
         AnnotationAttributes annoAttrs = AnnotationAttributes
-                .fromMap(importingClassMetadata.getAnnotationAttributes(EnableGrpcServiceRSocketImplementation.class.getName()));
+                .fromMap(importingClassMetadata.getAnnotationAttributes(EnableGrpcServiceRSocketImpl.class.getName()));
         if (Objects.nonNull(annoAttrs)) {
             //扫描实现BindableService实现类
             registerScanner(importingClassMetadata, registry, annoAttrs,

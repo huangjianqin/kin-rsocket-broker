@@ -14,7 +14,7 @@ import org.kin.rsocket.service.boot.health.HealthIndicator;
 import org.kin.rsocket.service.boot.health.HealthService;
 import org.kin.rsocket.service.boot.health.RSocketEndpoint;
 import org.kin.rsocket.service.boot.metrics.MetricsServicePrometheusImpl;
-import org.kin.rsocket.service.health.BrokerHealthCheckReference;
+import org.kin.rsocket.service.health.BrokerHealthCheckService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -90,7 +90,7 @@ public class RSocketServiceConfiguration {
     @ConditionalOnProperty("kin.rsocket.brokers")
     public HealthIndicator healthIndicator(@Autowired RSocketServiceProperties rsocketServiceProperties,
                                            @Autowired RSocketEndpoint endpoint,
-                                           @Autowired @Qualifier("healthCheckRef") HealthCheck healthCheck) {
+                                           @Autowired @Qualifier("brokerHealthCheckService") HealthCheck healthCheck) {
         return new HealthIndicator(endpoint, healthCheck, StringUtils.collectionToCommaDelimitedString(rsocketServiceProperties.getBrokers()));
     }
 
@@ -141,9 +141,9 @@ public class RSocketServiceConfiguration {
     /**
      * 独立出来bean, 是为了让{@link HealthIndicator}引用到
      */
-    @Bean("healthCheckRef")
-    public HealthCheck healthCheckRef(@Autowired RSocketBrokerClient brokerClient) {
-        return new BrokerHealthCheckReference(brokerClient);
+    @Bean("brokerHealthCheckService")
+    public HealthCheck brokerHealthCheckService(@Autowired RSocketBrokerClient brokerClient) {
+        return new BrokerHealthCheckService(brokerClient);
     }
 
     //----------------------------------------------cloud event consumers----------------------------------------------

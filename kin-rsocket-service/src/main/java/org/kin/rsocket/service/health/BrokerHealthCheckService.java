@@ -12,11 +12,11 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2022/1/16
  */
-public final class BrokerHealthCheckReference implements HealthCheck {
+public final class BrokerHealthCheckService implements HealthCheck {
     /** broker health check */
     private final HealthCheck reference;
 
-    public BrokerHealthCheckReference(UpstreamClusterManager upstreamClusterManager) {
+    public BrokerHealthCheckService(UpstreamClusterManager upstreamClusterManager) {
         reference = RSocketServiceReferenceBuilder
                 .reference(HealthCheck.class)
                 .nativeImage()

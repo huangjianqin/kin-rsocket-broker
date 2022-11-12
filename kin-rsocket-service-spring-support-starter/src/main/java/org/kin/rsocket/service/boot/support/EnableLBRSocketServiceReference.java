@@ -17,5 +17,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Import({RSocketServiceDiscoveryMarkerConfiguration.class})
 @EnableRSocketServiceReference
-public @interface EnableLoadBalanceRSocketServiceReference {
+public @interface EnableLBRSocketServiceReference {
 }

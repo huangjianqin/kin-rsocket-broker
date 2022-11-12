@@ -65,9 +65,9 @@ public @interface RSocketServiceReference {
 
     /**
      * naming service上注册的rsocket service application name
-     * 目前字段仅仅在使用{@link EnableLoadBalanceRSocketServiceReference}前提下有效
+     * 目前字段仅仅在使用{@link EnableLBRSocketServiceReference}前提下有效
      *
-     * @see EnableLoadBalanceRSocketServiceReference
+     * @see EnableLBRSocketServiceReference
      */
     String appName() default "";
 }

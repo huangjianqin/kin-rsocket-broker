@@ -4,7 +4,7 @@
 * `@EnableRSocketServiceReference`, 提供自动扫描并构建rsocket service reference
     * 需要提供`org.springframework.messaging.rsocket.RSocketRequester` bean, 默认构建,
       但broker模式下需开发者手动指定broker元数据信息并构建`org.springframework.messaging.rsocket.RSocketRequester` bean
-* `@EnableLoadBalanceRSocketServiceReference`, 相当于`@RSocketServiceReference`的增强版本.
+* `@EnableLBRSocketServiceReference`, 相当于`@RSocketServiceReference`的增强版本.
   基于`ReactiveDiscoveryClient`发现并缓存naming service上注册的rsocket service实例,
   并创建支持负载均衡的`org.springframework.messaging.rsocket.RSocketRequester`, 从而实现支持负载均衡的rsocket service
   reference.

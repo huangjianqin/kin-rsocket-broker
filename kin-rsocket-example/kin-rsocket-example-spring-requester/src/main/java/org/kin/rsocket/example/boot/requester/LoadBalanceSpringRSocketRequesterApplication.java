@@ -1,7 +1,7 @@
 package org.kin.rsocket.example.boot.requester;
 
 import org.kin.rsocket.example.boot.UserService;
-import org.kin.rsocket.service.boot.support.EnableLoadBalanceRSocketServiceReference;
+import org.kin.rsocket.service.boot.support.EnableLBRSocketServiceReference;
 import org.kin.rsocket.service.boot.support.RSocketServiceReference;
 import org.kin.rsocket.service.boot.support.RSocketServiceReferenceFactoryBean;
 import org.springframework.boot.SpringApplication;
@@ -21,7 +21,7 @@ import org.springframework.messaging.rsocket.RSocketStrategies;
  */
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableLoadBalanceRSocketServiceReference
+@EnableLBRSocketServiceReference
 public class LoadBalanceSpringRSocketRequesterApplication {
     public static void main(String[] args) {
         SpringApplication.run(LoadBalanceSpringRSocketRequesterApplication.class, args);

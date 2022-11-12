@@ -7,7 +7,7 @@ import org.kin.rsocket.core.event.*;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.event.ServiceInstanceChangedEventConsumer;
 import org.kin.rsocket.service.event.UpstreamClusterChangedEventConsumer;
-import org.kin.rsocket.service.health.BrokerHealthCheckReference;
+import org.kin.rsocket.service.health.BrokerHealthCheckService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -76,7 +76,7 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
 
         //3. register health check
         if (Objects.isNull(customHealthCheck)) {
-            customHealthCheck = new BrokerHealthCheckReference(upstreamClusterManager);
+            customHealthCheck = new BrokerHealthCheckService(upstreamClusterManager);
         }
         registerService(HealthCheck.class, customHealthCheck);
 
