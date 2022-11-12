@@ -16,24 +16,24 @@ import java.util.StringJoiner;
  * @date 2022/3/23
  */
 @Component
-public class SpringRSocketServiceReferenceBeanPostProcessor extends AbstractAnnotationBeanPostProcessor {
+public class RSocketServiceReferenceBeanPostProcessor extends AbstractAnnotationBeanPostProcessor {
     @Autowired
     private RSocketRequester.Builder requesterBuilder;
     @Autowired(required = false)
     private RSocketRequester requester;
     @Autowired(required = false)
-    private SpringRSocketServiceDiscoveryRegistry registry;
+    private RSocketServiceDiscoveryRegistry registry;
     @Autowired(required = false)
     private LoadbalanceStrategyFactory loadbalanceStrategyFactory;
 
-    public SpringRSocketServiceReferenceBeanPostProcessor() {
-        super(SpringRSocketServiceReference.class);
+    public RSocketServiceReferenceBeanPostProcessor() {
+        super(RSocketServiceReference.class);
     }
 
     @Override
     protected Object doGetInjectedBean(AnnotationAttributes attributes, Object bean, String beanName,
                                        Class<?> injectedType, InjectionMetadata.InjectedElement injectedElement) throws Exception {
-        return new SpringRSocketServiceReferenceFactoryBean<>(injectedType, attributes, requesterBuilder, requester, registry, loadbalanceStrategyFactory).getObject();
+        return new RSocketServiceReferenceFactoryBean<>(injectedType, attributes, requesterBuilder, requester, registry, loadbalanceStrategyFactory).getObject();
     }
 
     @Override
@@ -42,7 +42,7 @@ public class SpringRSocketServiceReferenceBeanPostProcessor extends AbstractAnno
         StringBuilder sb = new StringBuilder();
         StringJoiner sj = new StringJoiner(",");
         sb.append(injectedType.getName());
-        sb.append("@").append(SpringRSocketServiceReference.class.getSimpleName()).append("{");
+        sb.append("@").append(RSocketServiceReference.class.getSimpleName()).append("{");
         for (Map.Entry<String, Object> entry : attributes.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();

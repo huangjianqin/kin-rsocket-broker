@@ -20,9 +20,9 @@ import java.util.Objects;
 @RequestMapping("/user")
 public class UserController {
     @Autowired
-//    @SpringRSocketServiceReference()
+//    @RSocketServiceReference()
     private UserService userService;
-//    @SpringRSocketServiceReference()
+//    @RSocketServiceReference()
 //    private UserService userServiceCopy;
 
     @GetMapping("/all")

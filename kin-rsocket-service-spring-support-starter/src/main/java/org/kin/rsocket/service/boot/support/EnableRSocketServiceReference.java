@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
- * 开启自动扫描并注册spring rsocket service reference bean
+ * 开启自动扫描并注册rsocket service reference bean
  *
  * @author huangjianqin
  * @date 2021/5/20
@@ -14,6 +14,6 @@ import java.lang.annotation.*;
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({SpringRSocketServiceReferenceBeanPostProcessor.class})
-public @interface EnableSpringRSocketServiceReference {
+@Import({RSocketServiceReferenceBeanPostProcessor.class})
+public @interface EnableRSocketServiceReference {
 }

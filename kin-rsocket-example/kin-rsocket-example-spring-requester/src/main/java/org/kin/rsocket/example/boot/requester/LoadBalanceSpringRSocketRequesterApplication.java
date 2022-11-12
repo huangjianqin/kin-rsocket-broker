@@ -1,9 +1,9 @@
 package org.kin.rsocket.example.boot.requester;
 
 import org.kin.rsocket.example.boot.UserService;
-import org.kin.rsocket.service.boot.support.EnableLoadBalanceSpringRSocketServiceReference;
-import org.kin.rsocket.service.boot.support.SpringRSocketServiceReference;
-import org.kin.rsocket.service.boot.support.SpringRSocketServiceReferenceFactoryBean;
+import org.kin.rsocket.service.boot.support.EnableLoadBalanceRSocketServiceReference;
+import org.kin.rsocket.service.boot.support.RSocketServiceReference;
+import org.kin.rsocket.service.boot.support.RSocketServiceReferenceFactoryBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -21,16 +21,16 @@ import org.springframework.messaging.rsocket.RSocketStrategies;
  */
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableLoadBalanceSpringRSocketServiceReference
+@EnableLoadBalanceRSocketServiceReference
 public class LoadBalanceSpringRSocketRequesterApplication {
     public static void main(String[] args) {
         SpringApplication.run(LoadBalanceSpringRSocketRequesterApplication.class, args);
     }
 
     @Bean
-    @SpringRSocketServiceReference(interfaceClass = UserService.class, appName = "org-kin-spring-rsocket-example")
-    public SpringRSocketServiceReferenceFactoryBean<UserService> userService() {
-        return new SpringRSocketServiceReferenceFactoryBean<>();
+    @RSocketServiceReference(interfaceClass = UserService.class, appName = "org-kin-spring-rsocket-example")
+    public RSocketServiceReferenceFactoryBean<UserService> userService() {
+        return new RSocketServiceReferenceFactoryBean<>();
     }
 
     @Bean

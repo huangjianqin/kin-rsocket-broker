@@ -6,17 +6,17 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import java.lang.annotation.*;
 
 /**
- * {@link MessageMapping}替换, 用于标识rsocket service
+ * {@link MessageMapping}替换, 用于标识rsocket service handler
  *
  * @author huangjianqin
  * @date 2022/3/18
  */
 @Documented
 @Inherited
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @MessageMapping
-public @interface SpringRSocketService {
+public @interface RSocketHandler {
     @AliasFor(annotation = MessageMapping.class, attribute = "value")
     String[] value() default {};
 }

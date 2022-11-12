@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2022/3/15
  */
-@Endpoint(id = "springRSocketServiceDiscoveryRegistry")
-public final class SpringRSocketServiceDiscoveryRegistryEndpoint {
-    private final SpringRSocketServiceDiscoveryRegistry registry;
+@Endpoint(id = "rsocketServiceDiscoveryRegistry")
+public final class RSocketServiceDiscoveryRegistryEndpoint {
+    private final RSocketServiceDiscoveryRegistry registry;
 
-    public SpringRSocketServiceDiscoveryRegistryEndpoint(SpringRSocketServiceDiscoveryRegistry registry) {
+    public RSocketServiceDiscoveryRegistryEndpoint(RSocketServiceDiscoveryRegistry registry) {
         this.registry = registry;
     }
 

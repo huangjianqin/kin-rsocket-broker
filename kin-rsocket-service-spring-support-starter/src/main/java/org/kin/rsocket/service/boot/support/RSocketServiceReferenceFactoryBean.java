@@ -21,22 +21,22 @@ import java.util.concurrent.TimeUnit;
  * @author huangjianqin
  * @date 2021/5/19
  */
-public final class SpringRSocketServiceReferenceFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware,
+public final class RSocketServiceReferenceFactoryBean<T> implements FactoryBean<T>, BeanFactoryAware,
         BeanNameAware, InitializingBean, DisposableBean {
     /**
-     * spring创建的rsocket requester builder
+     * spring rsocket requester builder
      * prototype类型
      *
      * @see RSocketRequesterAutoConfiguration
      */
     @Autowired
     private RSocketRequester.Builder requesterBuilder;
-    /** spring创建的rsocket requester */
+    /** spring rsocket requester */
     @Autowired(required = false)
     private RSocketRequester requester;
     /** 基于服务发现的rsocket service instance注册中心, 用于获取loadbalance rsocket requester */
     @Autowired(required = false)
-    private SpringRSocketServiceDiscoveryRegistry registry;
+    private RSocketServiceDiscoveryRegistry registry;
     /** 使用自定义的负载均衡策略 */
     @Autowired(required = false)
     private LoadbalanceStrategyFactory loadbalanceStrategyFactory;
@@ -57,12 +57,12 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
     /** rsocket service 服务reference, 仅仅build一次 */
     private volatile T reference;
 
-    public SpringRSocketServiceReferenceFactoryBean() {
+    public RSocketServiceReferenceFactoryBean() {
     }
 
-    SpringRSocketServiceReferenceFactoryBean(Class<T> serviceInterface, AnnotationAttributes annoAttrs,
-                                             RSocketRequester.Builder requesterBuilder, RSocketRequester requester,
-                                             SpringRSocketServiceDiscoveryRegistry registry, LoadbalanceStrategyFactory loadbalanceStrategyFactory) {
+    RSocketServiceReferenceFactoryBean(Class<T> serviceInterface, AnnotationAttributes annoAttrs,
+                                       RSocketRequester.Builder requesterBuilder, RSocketRequester requester,
+                                       RSocketServiceDiscoveryRegistry registry, LoadbalanceStrategyFactory loadbalanceStrategyFactory) {
         if (!serviceInterface.isInterface()) {
             throw new IllegalArgumentException(
                     String.format("class '%s' must be interface", serviceInterface.getName()));
@@ -103,7 +103,7 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
                 rsocketRequester = this.requester;
             }
 
-            SpringRSocketServiceReferenceBuilder<T> builder = SpringRSocketServiceReferenceBuilder.reference(rsocketRequester, serviceInterface);
+            RSocketServiceReferenceBuilder<T> builder = RSocketServiceReferenceBuilder.reference(rsocketRequester, serviceInterface);
             //此处必须只取service name, 不然在broker模式下, route metadata会存在异常
             builder.service(takeRealServiceName(serviceName));
             builder.timeout(callTimeout, TimeUnit.SECONDS);
@@ -176,20 +176,20 @@ public final class SpringRSocketServiceReferenceFactoryBean<T> implements Factor
             return;
         }
         AnnotatedBeanDefinition annotatedBeanDefinition = (AnnotatedBeanDefinition) beanDefinition;
-        //获取@SpringRSocketServiceReference注解属性
+        //获取@RSocketServiceReference注解属性
         MethodMetadata factoryMethodMetadata = annotatedBeanDefinition.getFactoryMethodMetadata();
         if (Objects.isNull(factoryMethodMetadata)) {
-            throw new IllegalArgumentException(String.format("unavailable to create %s instance without @Bean", SpringRSocketServiceReferenceFactoryBean.class.getSimpleName()));
+            throw new IllegalArgumentException(String.format("unavailable to create %s instance without @Bean", RSocketServiceReferenceFactoryBean.class.getSimpleName()));
         }
-        Map<String, Object> annoAttrsMap = factoryMethodMetadata.getAnnotationAttributes(SpringRSocketServiceReference.class.getName());
+        Map<String, Object> annoAttrsMap = factoryMethodMetadata.getAnnotationAttributes(RSocketServiceReference.class.getName());
         if (Objects.isNull(annoAttrsMap)) {
-            throw new IllegalArgumentException("bean factory method is not annotated with @" + SpringRSocketServiceReference.class.getSimpleName());
+            throw new IllegalArgumentException("bean factory method is not annotated with @" + RSocketServiceReference.class.getSimpleName());
         }
-        //通过@RSpringRSocketServiceReference.interfaceClass()获取bean class
+        //通过@RSocketServiceReference.interfaceClass()获取bean class
         //noinspection unchecked
         serviceInterface = (Class<T>) annoAttrsMap.get("interfaceClass");
         if (Objects.isNull(serviceInterface)) {
-            throw new IllegalArgumentException(SpringRSocketServiceReference.class.getSimpleName() + "does not set `interfaceClass` value");
+            throw new IllegalArgumentException(RSocketServiceReference.class.getSimpleName() + "does not set `interfaceClass` value");
         }
         //初始化builder
         parseAnno(new AnnotationAttributes(annoAttrsMap));

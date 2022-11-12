@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/3/27
  */
 final class ByteBuddyUtils {
-    /** key -> spring rsocket service interface, value -> 对应的proxy class */
+    /** key -> rsocket service interface, value -> 对应的proxy class */
     private static final Map<Class<?>, Class<?>> SERVICE_INTERFACE_CLASS_2_PROXY_CLASS = new ConcurrentHashMap<>();
 
     private ByteBuddyUtils() {

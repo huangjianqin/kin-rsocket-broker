@@ -15,7 +15,7 @@ import java.lang.annotation.*;
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import({SpringRSocketServiceDiscoveryMarkerConfiguration.class})
-@EnableSpringRSocketServiceReference
-public @interface EnableLoadBalanceSpringRSocketServiceReference {
+@Import({RSocketServiceDiscoveryMarkerConfiguration.class})
+@EnableRSocketServiceReference
+public @interface EnableLoadBalanceRSocketServiceReference {
 }

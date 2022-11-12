@@ -2,8 +2,8 @@ package org.kin.rsocket.example.boot.service;
 
 import org.kin.rsocket.example.boot.User;
 import org.kin.rsocket.example.boot.UserService;
-import org.kin.rsocket.service.boot.support.SpringRSocketHandler;
-import org.kin.rsocket.service.boot.support.SpringRSocketService;
+import org.kin.rsocket.service.boot.support.RSocketHandler;
+import org.kin.rsocket.service.boot.support.RSocketService;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @date 2021/8/23
  */
 @Controller
-@SpringRSocketService("org.kin.spring.rsocket.example.UserService")
+@RSocketService("org.kin.spring.rsocket.example.UserService")
 public class UserServiceImpl implements UserService {
     private static final List<User> USERS = Arrays.asList(
             User.of("A", 1),
@@ -27,13 +27,13 @@ public class UserServiceImpl implements UserService {
             User.of("E", 5)
     );
 
-    @SpringRSocketHandler("findAll")
+    @RSocketHandler("findAll")
     @Override
     public Flux<User> findAll() {
         return Flux.fromIterable(USERS);
     }
 
-    @SpringRSocketHandler("find")
+    @RSocketHandler("find")
     @Override
     public Mono<User> find(String name) {
         int random = ThreadLocalRandom.current().nextInt(100);

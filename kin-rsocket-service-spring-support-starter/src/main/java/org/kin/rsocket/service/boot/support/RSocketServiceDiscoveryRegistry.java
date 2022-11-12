@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2022/3/15
  */
-public final class SpringRSocketServiceDiscoveryRegistry {
-    private static final Logger log = LoggerFactory.getLogger(SpringRSocketServiceDiscoveryRegistry.class);
+public final class RSocketServiceDiscoveryRegistry {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceDiscoveryRegistry.class);
 
     /** spring reactive discovery client */
     private final ReactiveDiscoveryClient discoveryClient;
@@ -45,11 +45,11 @@ public final class SpringRSocketServiceDiscoveryRegistry {
     /** 是否在刷新中 */
     private volatile boolean refreshing;
 
-    public SpringRSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient) {
+    public RSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient) {
         this(discoveryClient, null);
     }
 
-    public SpringRSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient, @Nullable RSocketRequesterBuilderCustomizer requesterBuilderCustomizer) {
+    public RSocketServiceDiscoveryRegistry(ReactiveDiscoveryClient discoveryClient, @Nullable RSocketRequesterBuilderCustomizer requesterBuilderCustomizer) {
         this.discoveryClient = discoveryClient;
         this.requesterBuilderCustomizer = requesterBuilderCustomizer;
     }

@@ -5,36 +5,36 @@ import org.springframework.context.annotation.Bean;
 import java.lang.annotation.*;
 
 /**
- * 标识并创建spring rsocket service reference
+ * 标识并创建rsocket service reference
  * 3种使用方式:
- * 1. {@link Bean}+{@link SpringRSocketServiceReferenceBuilder}构建rsocket service reference
+ * 1. {@link Bean}+{@link RSocketServiceReferenceBuilder}构建rsocket service reference
  * <pre class="code">
  * &#64;Configuration
  * public class RequesterConfiguration {
  *     &#64;Bean
  *     public UserService userService(@Autowired RSocketRequester rsocketRequester) {
- *         return SpringRSocketServiceReferenceBuilder
+ *         return RSocketServiceReferenceBuilder
  *                 .reference(rsocketRequester, UserService.class)
  *                 .build();
  *     }
  * }
  * </pre>
- * 2. {@link Bean}+{@link SpringRSocketServiceReference}构建rsocket service reference
+ * 2. {@link Bean}+{@link RSocketServiceReference}构建rsocket service reference
  * <pre class="code">
  * &#64;Configuration
  * public class RequesterConfiguration {
  *     &#64;Bean
- *     &#64;SpringRSocketServiceReference(interfaceClass = UserService.class, appName = "XXXX")
- *     public SpringRSocketServiceReferenceFactoryBean<UserService> userService() {
- *         return new SpringRSocketServiceReferenceFactoryBean<>();
+ *     &#64;RSocketServiceReference(interfaceClass = UserService.class, appName = "XXXX")
+ *     public RSocketServiceReferenceFactoryBean<UserService> userService() {
+ *         return new RSocketServiceReferenceFactoryBean<>();
  *     }
  * }
  * </pre>
- * 3. 使用{@link SpringRSocketServiceReference}注解在字段变量上构建rsocket service reference
+ * 3. 使用{@link RSocketServiceReference}注解在字段变量上构建rsocket service reference
  * <pre class="code">
  * &#64;RestController
  * public class UserController {
- *     &#64;SpringRSocketServiceReference(appName = "XXXX")
+ *     &#64;RSocketServiceReference(appName = "XXXX")
  *     private UserService userService;
  * }
  * </pre>
@@ -45,7 +45,7 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface SpringRSocketServiceReference {
+public @interface RSocketServiceReference {
     /**
      * 返回rsocket service class, 目前仅仅方法2需要开发者指出
      *
@@ -65,9 +65,9 @@ public @interface SpringRSocketServiceReference {
 
     /**
      * naming service上注册的rsocket service application name
-     * 目前字段仅仅在使用{@link EnableLoadBalanceSpringRSocketServiceReference}前提下有效
+     * 目前字段仅仅在使用{@link EnableLoadBalanceRSocketServiceReference}前提下有效
      *
-     * @see EnableLoadBalanceSpringRSocketServiceReference
+     * @see EnableLoadBalanceRSocketServiceReference
      */
     String appName() default "";
 }
