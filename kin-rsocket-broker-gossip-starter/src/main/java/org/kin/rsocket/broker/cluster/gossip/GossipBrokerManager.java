@@ -165,7 +165,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     //-------------------------------------------------------------------------------------------
 
     /**
-     *
+     * gossip消息处理
      */
     private class GossipMessageHandler implements ClusterMessageHandler {
         @Override
