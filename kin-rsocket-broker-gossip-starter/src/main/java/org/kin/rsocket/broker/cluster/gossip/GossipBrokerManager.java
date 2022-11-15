@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public class GossipBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, ClusterMessageHandler, DisposableBean {
+public class GossipBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
     /** 请求新增broker数据(也就是{@link BrokerInfo})的gossip header key */
     private static final String BROKER_INFO_HEADER = "brokerInfo";
@@ -78,7 +78,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
                                 .transportFactory(new TcpTransportFactory())
                                 .messageCodec(JacksonMessageCodec.INSTANCE)
                                 .port(gossipPort))
-                .handler(cluster1 -> this)
+                .handler(cluster1 -> new GossipMessageHandler())
                 .start();
         //subscribe and start & join the cluster
         cluster.subscribe();
@@ -134,31 +134,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     }
 
     @Override
-    public void onMessage(Message message) {
-        if (message.header(BROKER_INFO_HEADER) != null) {
-            Message replyMessage = Message.builder()
-                    .correlationId(message.correlationId())
-                    .data(localBrokerInfo)
-                    .build();
-            this.cluster.flatMap(cluster -> cluster.send(message.sender(), replyMessage)).subscribe();
-        }
-    }
-
-    @Override
-    public void onGossip(Message gossip) {
-        String cloudEventHeader = gossip.header(CLOUD_EVENT_HEADER);
-        if (StringUtils.isNotBlank(cloudEventHeader)) {
-            try {
-                Class<?> cloudEventClass = Class.forName(cloudEventHeader);
-                String json = gossip.data();
-                handleCloudEvent(CloudEventBuilder.builder(JSON.read(json, cloudEventClass)).build());
-            } catch (Exception e) {
-                log.error("gossip broadcast cloud event error", e);
-            }
-        }
-    }
-
-    @Override
     public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
         Message message = Message.builder()
                 .header(CLOUD_EVENT_HEADER, cloudEvent.getAttributes().getType())
@@ -177,26 +152,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     }
 
     @Override
-    public void onMembershipEvent(MembershipEvent event) {
-        Member member = event.member();
-        String brokerIp = member.address().host();
-        int brokerPort = member.address().port();
-        if (event.isAdded()) {
-            makeJsonRpcCall(member).subscribe(rsocketBroker -> {
-                brokers.put(brokerIp, rsocketBroker);
-                log.info("Broker '{}:{}' added from cluster", brokerIp, brokerPort);
-            });
-        } else if (event.isRemoved()) {
-            brokers.remove(brokerIp);
-            log.info("Broker '{}:{}' removed from cluster", brokerIp, brokerPort);
-        } else if (event.isLeaving()) {
-            brokers.remove(brokerIp);
-            log.info("Broker '{}:{}' left from cluster", brokerIp, brokerPort);
-        }
-        brokersSink.tryEmitNext(brokers.values());
-    }
-
-    @Override
     public void close() {
         cluster.subscribe(Cluster::shutdown);
         brokersSink.tryEmitComplete();
@@ -205,6 +160,58 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     @Override
     public void destroy() {
         close();
+    }
+
+    //-------------------------------------------------------------------------------------------
+
+    /**
+     *
+     */
+    private class GossipMessageHandler implements ClusterMessageHandler {
+        @Override
+        public void onMessage(Message message) {
+            if (message.header(BROKER_INFO_HEADER) != null) {
+                Message replyMessage = Message.builder()
+                        .correlationId(message.correlationId())
+                        .data(localBrokerInfo)
+                        .build();
+                cluster.flatMap(cluster -> cluster.send(message.sender(), replyMessage)).subscribe();
+            }
+        }
+
+        @Override
+        public void onGossip(Message gossip) {
+            String cloudEventHeader = gossip.header(CLOUD_EVENT_HEADER);
+            if (StringUtils.isNotBlank(cloudEventHeader)) {
+                try {
+                    Class<?> cloudEventClass = Class.forName(cloudEventHeader);
+                    String json = gossip.data();
+                    handleCloudEvent(CloudEventBuilder.builder(JSON.read(json, cloudEventClass)).build());
+                } catch (Exception e) {
+                    log.error("gossip broadcast cloud event error", e);
+                }
+            }
+        }
+
+        @Override
+        public void onMembershipEvent(MembershipEvent event) {
+            Member member = event.member();
+            String brokerIp = member.address().host();
+            int brokerPort = member.address().port();
+            if (event.isAdded()) {
+                makeJsonRpcCall(member).subscribe(rsocketBroker -> {
+                    brokers.put(brokerIp, rsocketBroker);
+                    log.info("Broker '{}:{}' added from cluster", brokerIp, brokerPort);
+                });
+            } else if (event.isRemoved()) {
+                brokers.remove(brokerIp);
+                log.info("Broker '{}:{}' removed from cluster", brokerIp, brokerPort);
+            } else if (event.isLeaving()) {
+                brokers.remove(brokerIp);
+                log.info("Broker '{}:{}' left from cluster", brokerIp, brokerPort);
+            }
+            brokersSink.tryEmitNext(brokers.values());
+        }
     }
 }
 
