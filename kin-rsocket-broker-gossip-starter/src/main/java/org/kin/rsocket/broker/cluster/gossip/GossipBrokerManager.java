@@ -145,6 +145,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     private Mono<BrokerInfo> makeJsonRpcCall(Member member) {
         String uuid = UUID.randomUUID().toString();
         Message jsonRpcMessage = Message.builder()
+                //req-resp需要带correlationId
                 .correlationId(uuid)
                 .header(BROKER_INFO_HEADER, "true")
                 .build();
