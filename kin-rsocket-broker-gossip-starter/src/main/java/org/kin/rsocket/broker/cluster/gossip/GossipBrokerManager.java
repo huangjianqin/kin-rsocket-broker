@@ -72,7 +72,9 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         int gossipPort = gossipConfig.getPort();
         cluster = new ClusterImpl()
                 .config(clusterConfig -> clusterConfig.externalHost(localIp).externalPort(gossipPort))
-                .membership(membershipConfig -> membershipConfig.seedMembers(seedMembers()).syncInterval(5_000))
+                .membership(membershipConfig -> membershipConfig.seedMembers(seedMembers())
+                        .namespace(gossipConfig.getNamespace())
+                        .syncInterval(5_000))
                 .transport(transportConfig ->
                         transportConfig
                                 .transportFactory(new TcpTransportFactory())
