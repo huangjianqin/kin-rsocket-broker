@@ -4,6 +4,7 @@ import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import org.springframework.core.annotation.Order;
  */
 @Order(101)
 @ConditionalOnBean({RSocketBrokerProperties.class, ReactiveDiscoveryClient.class})
+@ConditionalOnExpression("!'${kin.rsocket.broker.k8s}'.isEmpty()")
 @Configuration
 @EnableConfigurationProperties(RSocketBrokerDiscoveryProperties.class)
 public class RSocketBrokerDiscoveryAutoConfiguration {
