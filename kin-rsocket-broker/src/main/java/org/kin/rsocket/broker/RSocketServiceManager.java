@@ -104,11 +104,11 @@ public final class RSocketServiceManager {
         this.router = router;
         this.p2pServiceNotificationSink = p2pServiceNotificationSink;
 
-        Metrics.gauge(MetricsNames.BROKER_APPS_COUNT, this, manager -> manager.appName2Endpoint.size());
-        Metrics.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_COUNT, this,
+        Metrics.gauge(MetricsNames.BROKER_APPS_NUM, this, manager -> manager.appName2Endpoint.size());
+        Metrics.gauge(MetricsNames.BROKER_SERVICE_PROVIDER_NUM, this,
                 manager -> manager.appName2Endpoint.valuesView()
                         .sumOfInt(rsocketEndpoint -> (rsocketEndpoint.isPublishServicesOnly() || rsocketEndpoint.isConsumeAndPublishServices()) ? 0 : 1));
-        Metrics.gauge(MetricsNames.BROKER_SERVICE_COUNT, this, manager -> manager.services.size());
+        Metrics.gauge(MetricsNames.BROKER_SERVICE_NUM, this, manager -> manager.services.size());
     }
 
     /**

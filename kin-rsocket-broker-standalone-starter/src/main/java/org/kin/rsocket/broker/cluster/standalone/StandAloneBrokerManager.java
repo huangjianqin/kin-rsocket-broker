@@ -48,7 +48,7 @@ public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager 
                 localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
         log.info("start standalone cluster");
 
-        Metrics.gauge(MetricsNames.CLUSTER_BROKER_COUNT, brokerConfig.getUpstreamBrokers().size());
+        Metrics.gauge(MetricsNames.CLUSTER_BROKER_NUM, brokerConfig.getUpstreamBrokers().size());
     }
 
     @Override

@@ -5,18 +5,21 @@ package org.kin.rsocket.core;
  * @date 2021/8/18
  */
 public interface MetricsNames {
-    /** 监控变量后缀 */
+    /** 计数器指标后缀 */
     String COUNT_SUFFIX = ".count";
+
+    /** 数量上报指标后缀 */
+    String NUM_SUFFIX = ".num";
 
     //-----------------------------------------------broker-----------------------------------------------
     /** 集群broker数量 */
-    String CLUSTER_BROKER_COUNT = "rsocket.cluster.broker".concat(COUNT_SUFFIX);
+    String CLUSTER_BROKER_NUM = "rsocket.cluster.broker" + NUM_SUFFIX;
     /** broker连接的app数量 */
-    String BROKER_APPS_COUNT = "rsocket.broker.apps".concat(COUNT_SUFFIX);
+    String BROKER_APPS_NUM = "rsocket.broker.apps" + NUM_SUFFIX;
     /** broker连接的对外提供服务app实例数量 */
-    String BROKER_SERVICE_PROVIDER_COUNT = "rsocket.broker.service.provider".concat(COUNT_SUFFIX);
+    String BROKER_SERVICE_PROVIDER_NUM = "rsocket.broker.service.provider" + NUM_SUFFIX;
     /** broker暴露的服务数量 */
-    String BROKER_SERVICE_COUNT = "rsocket.broker.service".concat(COUNT_SUFFIX);
+    String BROKER_SERVICE_NUM = "rsocket.broker.service" + NUM_SUFFIX;
     /** broker接受upstream服务请求次数 */
     String RSOCKET_REQUEST_COUNT = "rsocket.request".concat(COUNT_SUFFIX);
 
