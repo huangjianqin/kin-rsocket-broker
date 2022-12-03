@@ -20,7 +20,7 @@ public final class BrokerInfo {
     /** broker status */
     private Integer status = 1;
     /** broker start time */
-    private long startedAt;
+    private long startTime;
 
     public static BrokerInfo of(String id, String schema,
                                 String ip, String externalDomain,
@@ -31,7 +31,7 @@ public final class BrokerInfo {
         inst.ip = ip;
         inst.externalDomain = externalDomain;
         inst.port = port;
-        inst.startedAt = System.currentTimeMillis();
+        inst.startTime = System.currentTimeMillis();
         return inst;
     }
 
@@ -103,11 +103,11 @@ public final class BrokerInfo {
         this.status = status;
     }
 
-    public long getStartedAt() {
-        return startedAt;
+    public long getStartTime() {
+        return startTime;
     }
 
-    public void setStartedAt(long startedAt) {
-        this.startedAt = startedAt;
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
     }
 }

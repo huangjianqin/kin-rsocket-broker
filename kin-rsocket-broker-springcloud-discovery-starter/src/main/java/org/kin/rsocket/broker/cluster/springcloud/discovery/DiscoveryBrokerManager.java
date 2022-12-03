@@ -79,9 +79,14 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
                     }
                     if (changed) {
                         brokers = serviceInstances.stream().map(serviceInstance -> {
-                            BrokerInfo broker = new BrokerInfo();
-                            broker.setIp(serviceInstance.getHost());
-                            return broker;
+                            Map<String, String> metadata = serviceInstance.getMetadata();
+                            String brokerId = metadata.getOrDefault("brokerId", "");
+                            String externalDomain = metadata.getOrDefault("externalDomain", "");
+                            long startTime = Long.parseLong(metadata.getOrDefault("startTime", "0"));
+                            BrokerInfo brokerInfo = BrokerInfo.of(brokerId, serviceInstance.getScheme(), serviceInstance.getHost(), externalDomain,
+                                    serviceInstance.getPort());
+                            brokerInfo.setStartTime(startTime);
+                            return brokerInfo;
                         }).collect(Collectors.toMap(BrokerInfo::getIp, bi -> bi));
                         log.info(String.format("RSocket Cluster server list changed: %s", String.join(",", brokers.keySet())));
                         brokersSink.tryEmitNext(brokers.values());
