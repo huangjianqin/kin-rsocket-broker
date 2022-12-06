@@ -174,6 +174,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         @Override
         public void onMessage(Message message) {
             if (message.header(BROKER_INFO_HEADER) != null) {
+                //目前仅支持请求broker信息
                 Message replyMessage = Message.builder()
                         .correlationId(message.correlationId())
                         .data(localBrokerInfo)
