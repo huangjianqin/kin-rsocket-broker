@@ -299,12 +299,12 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
     }
 
     @Override
-    public Mono<Void> fireCloudEvent(String cloudEventJson) {
+    public Mono<Void> fireCloudEvent(byte[] cloudEventBytes) {
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
         try {
-            Payload payload = CloudEventSupport.cloudEventJson2Payload(cloudEventJson);
+            Payload payload = CloudEventSupport.cloudEventBytes2Payload(cloudEventBytes);
             return metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);

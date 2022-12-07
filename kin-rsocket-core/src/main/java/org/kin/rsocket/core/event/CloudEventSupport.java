@@ -70,9 +70,19 @@ public interface CloudEventSupport extends Serializable {
      */
     @Nonnull
     static Payload cloudEventJson2Payload(String cloudEventJson) {
+        return cloudEventBytes2Payload(cloudEventJson.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * cloud event bytes转换成{@link ByteBufPayload}
+     *
+     * @param cloudEventBytes cloud event bytes
+     * @return payload
+     */
+    @Nonnull
+    static Payload cloudEventBytes2Payload(byte[] cloudEventBytes) {
         try {
-            byte[] bytes = cloudEventJson.getBytes(StandardCharsets.UTF_8);
-            return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes));
+            return ByteBufPayload.create(Unpooled.EMPTY_BUFFER, PooledByteBufAllocator.DEFAULT.buffer(cloudEventBytes.length).writeBytes(cloudEventBytes));
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
         }

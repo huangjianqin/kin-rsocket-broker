@@ -13,11 +13,17 @@ import reactor.core.publisher.Mono;
 public interface CloudEventRSocket extends RSocket {
     /**
      * 广播cloud event
+     *
+     * @param cloudEvent cloud event
+     * @return complete signal
      */
     Mono<Void> fireCloudEvent(CloudEvent cloudEvent);
 
     /**
-     * 广播cloud event json
+     * 广播cloud event bytes
+     *
+     * @param cloudEventBytes cloud event bytes
+     * @return complete signal
      */
-    Mono<Void> fireCloudEvent(String cloudEventJson);
+    Mono<Void> fireCloudEvent(byte[] cloudEventBytes);
 }

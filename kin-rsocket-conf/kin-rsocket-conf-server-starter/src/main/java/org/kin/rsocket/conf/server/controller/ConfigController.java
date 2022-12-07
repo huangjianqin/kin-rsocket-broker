@@ -33,8 +33,7 @@ public class ConfigController {
     public Mono<Void> refresh(@PathVariable(name = "appName") String appName) {
         return confDiamond.get(appName, KEY_APPLICATION_CONFIGURATION)
                 .map(content -> ConfigChangedEvent.of(appName, content))
-                .map(event -> JSON.write(event.toCloudEvent()))
-                .flatMap(json -> cloudEventNotifyService.notifyAll(appName, json));
+                .flatMap(event -> cloudEventNotifyService.notifyAll(appName, JSON.serializeCloudEvent(event.toCloudEvent())));
     }
 
     /**
@@ -45,8 +44,7 @@ public class ConfigController {
                               @PathVariable(name = "appId") String appId) {
         return confDiamond.get(appName, KEY_APPLICATION_CONFIGURATION)
                 .map(content -> ConfigChangedEvent.of(appName, content))
-                .map(event -> JSON.write(event.toCloudEvent()))
-                .flatMap(json -> cloudEventNotifyService.notify(appId, json));
+                .flatMap(event -> cloudEventNotifyService.notify(appId, JSON.serializeCloudEvent(event.toCloudEvent())));
     }
 
     /**

@@ -42,4 +42,6 @@ public interface UserService {
     Mono<User> exception2();
 
     Mono<Boolean> find3(String name, int age);
+
+    Mono<String> find4(String s1, byte[] bytes);
 }

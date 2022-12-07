@@ -12,11 +12,19 @@ import reactor.core.publisher.Mono;
 public interface CloudEventNotifyService {
     /**
      * 向指定app广播事件
+     *
+     * @param appId           app id
+     * @param cloudEventBytes cloud event bytes
+     * @return complete signal
      */
-    Mono<Void> notify(String appId, String cloudEventJson);
+    Mono<Void> notify(String appId, byte[] cloudEventBytes);
 
     /**
      * 向所有命名为XX的app广播事件
+     *
+     * @param appName         app name
+     * @param cloudEventBytes cloud event bytes
+     * @return complete signal
      */
-    Mono<Void> notifyAll(String appName, String cloudEventJson);
+    Mono<Void> notifyAll(String appName, byte[] cloudEventBytes);
 }

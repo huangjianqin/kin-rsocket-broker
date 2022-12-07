@@ -131,8 +131,8 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
     }
 
     @Override
-    public Mono<Void> fireCloudEvent(String cloudEventJson) {
-        return loadBalanceRequester.fireCloudEvent(cloudEventJson);
+    public Mono<Void> fireCloudEvent(byte[] cloudEventBytes) {
+        return loadBalanceRequester.fireCloudEvent(cloudEventBytes);
     }
 
     @Nonnull

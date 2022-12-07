@@ -1,11 +1,11 @@
 package org.kin.rsocket.conf.redis;
 
-import org.kin.framework.utils.JSON;
 import org.kin.framework.utils.PropertiesUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.conf.AbstractConfDiamond;
 import org.kin.rsocket.core.event.CloudEventNotifyService;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
+import org.kin.rsocket.core.utils.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,12 +62,12 @@ public class RedisStorageConfDiamond extends AbstractConfDiamond {
                     ConfigChangedEvent configChangedEvent = ConfigChangedEvent.of(group, value);
                     return configChangedEvent.toCloudEvent();
                 }).subscribe(cloudEvent -> {
-                    String jsonText = JSON.write(cloudEvent);
+                    byte[] bytes = JSON.serializeCloudEvent(cloudEvent);
                     if (body.containsKey("appId")) {
                         //如果有appId, 则是针对指定app广播cloud event
-                        notifyService.notify(body.get("appId"), jsonText).subscribe();
+                        notifyService.notify(body.get("appId"), bytes).subscribe();
                     } else {
-                        notifyService.notifyAll(group, jsonText).subscribe();
+                        notifyService.notifyAll(group, bytes).subscribe();
                     }
                 });
             }

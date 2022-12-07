@@ -87,4 +87,9 @@ public class UserServiceImpl implements UserService {
     public Mono<Boolean> find3(String name, int age) {
         return find(name).map(u -> u.getName().equals(name) && u.getAge() == age);
     }
+
+    @Override
+    public Mono<String> find4(String s1, byte[] bytes) {
+        return Mono.just(s1 + "---" + new String(bytes, StandardCharsets.UTF_8));
+    }
 }

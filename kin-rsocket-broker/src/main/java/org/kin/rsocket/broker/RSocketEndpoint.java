@@ -142,9 +142,9 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     }
 
     @Override
-    public Mono<Void> fireCloudEvent(String cloudEventJson) {
+    public Mono<Void> fireCloudEvent(byte[] cloudEventBytes) {
         try {
-            Payload payload = CloudEventSupport.cloudEventJson2Payload(cloudEventJson);
+            Payload payload = CloudEventSupport.cloudEventBytes2Payload(cloudEventBytes);
             return metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);

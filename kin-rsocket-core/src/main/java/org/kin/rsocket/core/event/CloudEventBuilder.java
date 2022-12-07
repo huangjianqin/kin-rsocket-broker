@@ -4,9 +4,9 @@ import com.google.common.base.Preconditions;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.rsocket.metadata.WellKnownMimeType;
-import org.kin.framework.utils.JSON;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.RSocketAppContext;
+import org.kin.rsocket.core.utils.JSON;
 
 import javax.annotation.Nonnull;
 import java.net.URI;

@@ -47,6 +47,8 @@ public class RequesterApplication {
 
             userService.find3("BB", ThreadLocalRandom.current().nextInt(100)).subscribe(r -> System.out.println("find3 result: " + r));
 
+            userService.find4("abc", "ABC".getBytes(StandardCharsets.UTF_8)).subscribe(System.out::println);
+
             Thread.sleep(1_000);
         } finally {
             brokerClient.close();

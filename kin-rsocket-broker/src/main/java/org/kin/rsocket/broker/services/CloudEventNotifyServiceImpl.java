@@ -20,19 +20,19 @@ public class CloudEventNotifyServiceImpl implements CloudEventNotifyService {
     private RSocketServiceManager serviceManager;
 
     @Override
-    public Mono<Void> notify(String appId, String cloudEventJson) {
+    public Mono<Void> notify(String appId, byte[] cloudEventBytes) {
         RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(appId);
         if (Objects.nonNull(rsocketEndpoint)) {
-            return rsocketEndpoint.fireCloudEvent(cloudEventJson);
+            return rsocketEndpoint.fireCloudEvent(cloudEventBytes);
         } else {
             return Mono.empty();
         }
     }
 
     @Override
-    public Mono<Void> notifyAll(String appName, String cloudEventJson) {
+    public Mono<Void> notifyAll(String appName, byte[] cloudEventBytes) {
         return Flux.fromIterable(serviceManager.getByAppName(appName))
-                .flatMap(endpoint -> endpoint.fireCloudEvent(cloudEventJson))
+                .flatMap(endpoint -> endpoint.fireCloudEvent(cloudEventBytes))
                 .then();
     }
 }

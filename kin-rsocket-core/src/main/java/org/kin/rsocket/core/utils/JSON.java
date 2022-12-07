@@ -286,7 +286,7 @@ public class JSON {
     //-----------------------------------------------------------------------cloud event
 
     /**
-     * 将cloud event序列化成json
+     * 将cloud event序列化成json bytes
      *
      * @param cloudEvent cloud event
      * @return cloud event json bytes
@@ -299,7 +299,7 @@ public class JSON {
     /**
      * 从json中反序列化出cloud event
      *
-     * @param bytes cloud event json
+     * @param json cloud event json
      * @return cloud event
      */
     @SuppressWarnings("ConstantConditions")
