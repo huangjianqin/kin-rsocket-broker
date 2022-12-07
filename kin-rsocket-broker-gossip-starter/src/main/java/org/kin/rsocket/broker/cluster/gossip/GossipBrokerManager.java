@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker.cluster.gossip;
 
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Metrics;
 import io.scalecube.cluster.Cluster;
 import io.scalecube.cluster.ClusterImpl;
@@ -12,15 +13,12 @@ import io.scalecube.net.Address;
 import io.scalecube.transport.netty.tcp.TcpTransportFactory;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.kin.framework.utils.NetUtils;
-import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.event.CloudEventBuilder;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.utils.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +42,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
     /** 请求新增broker数据(也就是{@link BrokerInfo})的gossip header key */
     private static final String BROKER_INFO_HEADER = "brokerInfo";
-    /** 通过gossip广播cloud event的gossip header key */
-    private static final String CLOUD_EVENT_HEADER = "cloudEvent";
 
     /** broker配置 */
     private final RSocketBrokerProperties brokerConfig;
@@ -136,10 +132,9 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     }
 
     @Override
-    public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
+    public Mono<String> broadcast(CloudEvent cloudEvent) {
         Message message = Message.builder()
-                .header(CLOUD_EVENT_HEADER, cloudEvent.getAttributes().getType())
-                .data(JSON.write(cloudEvent.getData()))
+                .data(JSON.serializeCloudEvent(cloudEvent))
                 .build();
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
@@ -185,15 +180,11 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
 
         @Override
         public void onGossip(Message gossip) {
-            String cloudEventHeader = gossip.header(CLOUD_EVENT_HEADER);
-            if (StringUtils.isNotBlank(cloudEventHeader)) {
-                try {
-                    Class<?> cloudEventClass = Class.forName(cloudEventHeader);
-                    String json = gossip.data();
-                    handleCloudEvent(CloudEventBuilder.builder(JSON.read(json, cloudEventClass)).build());
-                } catch (Exception e) {
-                    log.error("gossip broadcast cloud event error", e);
-                }
+            try {
+                String json = gossip.data();
+                handleCloudEvent(JSON.deserializeCloudEvent(json));
+            } catch (Exception e) {
+                log.error("gossip broadcast cloud event error", e);
             }
         }
 

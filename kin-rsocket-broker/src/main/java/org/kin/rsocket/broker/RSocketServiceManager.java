@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Metrics;
 import io.netty.util.collection.IntObjectHashMap;
 import io.rsocket.ConnectionSetupPayload;
@@ -17,8 +18,14 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.*;
-import org.kin.rsocket.core.event.*;
+import org.kin.rsocket.core.MetricsNames;
+import org.kin.rsocket.core.RSocketMimeType;
+import org.kin.rsocket.core.ServiceLocator;
+import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.event.AppStatusEvent;
+import org.kin.rsocket.core.event.CloudEventBus;
+import org.kin.rsocket.core.event.ServiceInstanceChangedEvent;
+import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -32,7 +39,6 @@ import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 import javax.annotation.Nonnull;
-import java.net.URI;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -247,7 +253,7 @@ public final class RSocketServiceManager {
             writeLock.unlock();
         }
         //广播事件
-        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(AppStatusEvent.connected(appMetadata.getUuid()).toCloudEvent());
+        CloudEventBus.INSTANCE.postCloudEvent(AppStatusEvent.connected(appMetadata.getUuid()).toCloudEvent());
         if (!brokerManager.isStandAlone()) {
             //如果不是单节点, 则广播broker uris变化给downstream
             rsocketEndpoint.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
@@ -290,7 +296,7 @@ public final class RSocketServiceManager {
         }
 
         log.info(String.format("succeed to remove connection from application '%s'", appMetadata.getName()));
-        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(AppStatusEvent.stopped(appMetadata.getUuid()).toCloudEvent());
+        CloudEventBus.INSTANCE.postCloudEvent(AppStatusEvent.stopped(appMetadata.getUuid()).toCloudEvent());
         this.notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' offline now!", appMetadata.getName(), appMetadata.getIp()));
     }
 
@@ -344,7 +350,7 @@ public final class RSocketServiceManager {
     /**
      * 向同一app name的所有app广播cloud event
      */
-    public Mono<Void> broadcast(String appName, CloudEventData<?> cloudEvent) {
+    public Mono<Void> broadcast(String appName, CloudEvent cloudEvent) {
         if (appName.equals(Symbols.BROKER)) {
             return Flux.<RSocketEndpoint>create(s -> {
                 for (RSocketEndpoint RSocketEndpoint : instanceId2Endpoint.values()) {
@@ -365,7 +371,7 @@ public final class RSocketServiceManager {
     /**
      * 向所有已注册的app广播cloud event
      */
-    public Mono<Void> broadcast(CloudEventData<?> cloudEvent) {
+    public Mono<Void> broadcast(CloudEvent cloudEvent) {
         return Flux.<RSocketEndpoint>create(s -> {
             for (RSocketEndpoint RSocketEndpoint : appName2Endpoint.valuesView()) {
                 s.next(RSocketEndpoint);
@@ -376,7 +382,7 @@ public final class RSocketServiceManager {
     /**
      * 向指定uuid的app广播cloud event
      */
-    public Mono<Void> send(String uuid, CloudEventData<?> cloudEvent) {
+    public Mono<Void> send(String uuid, CloudEvent cloudEvent) {
         RSocketEndpoint rsocketEndpoint = uuid2Endpoint.get(uuid);
         if (rsocketEndpoint != null) {
             return rsocketEndpoint.fireCloudEvent(cloudEvent);
@@ -388,7 +394,7 @@ public final class RSocketServiceManager {
     /**
      * 创建upstream broker变化的cloud event
      */
-    private CloudEventData<UpstreamClusterChangedEvent> newBrokerClustersChangedCloudEvent(Collection<BrokerInfo> rsocketBrokerInfos, String topology) {
+    private CloudEvent newBrokerClustersChangedCloudEvent(Collection<BrokerInfo> rsocketBrokerInfos, String topology) {
         List<String> uris;
         if (Topologys.INTERNET.equals(topology)) {
             uris = rsocketBrokerInfos.stream()
@@ -402,15 +408,13 @@ public final class RSocketServiceManager {
                     .collect(Collectors.toList());
         }
 
-        UpstreamClusterChangedEvent upstreamClusterChangedEvent = new UpstreamClusterChangedEvent();
-        upstreamClusterChangedEvent.setGroup("");
-        upstreamClusterChangedEvent.setInterfaceName(Symbols.BROKER);
-        upstreamClusterChangedEvent.setVersion("");
-        upstreamClusterChangedEvent.setUris(uris);
+        UpstreamClusterChangedEvent event = new UpstreamClusterChangedEvent();
+        event.setGroup("");
+        event.setInterfaceName(Symbols.BROKER);
+        event.setVersion("");
+        event.setUris(uris);
 
-        return CloudEventBuilder.builder(upstreamClusterChangedEvent)
-                .dataSchema(URI.create("rsocket:" + UpstreamClusterChangedEvent.class.getName()))
-                .build();
+        return event.toCloudEvent();
     }
 
     /**
@@ -418,15 +422,13 @@ public final class RSocketServiceManager {
      * 通知downstream upstream broker集群发生变化, 并及时{@link UpstreamCluster#refreshUris(List)}
      */
     private Flux<Void> broadcastClusterTopology(Collection<BrokerInfo> brokerInfos) {
-        CloudEventData<UpstreamClusterChangedEvent> brokerClustersEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTRANET);
-        CloudEventData<UpstreamClusterChangedEvent> brokerClusterAliasesEvent = newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTERNET);
         return Flux.fromIterable(getAllRSocketEndpoints()).flatMap(rsocketEndpoint -> {
             String topology = rsocketEndpoint.getAppMetadata().getTopology();
             Mono<Void> fireEvent;
             if (Topologys.INTERNET.equals(topology)) {
-                fireEvent = rsocketEndpoint.fireCloudEvent(brokerClusterAliasesEvent);
+                fireEvent = rsocketEndpoint.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTERNET));
             } else {
-                fireEvent = rsocketEndpoint.fireCloudEvent(brokerClustersEvent);
+                fireEvent = rsocketEndpoint.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerInfos, Topologys.INTRANET));
             }
             if (rsocketEndpoint.isPublishServicesOnly()) {
                 return fireEvent;
@@ -629,7 +631,7 @@ public final class RSocketServiceManager {
     /**
      * 获取p2p服务实例变化事件
      */
-    private CloudEventData<ServiceInstanceChangedEvent> newServiceInstanceChangedCloudEvent(String gsv) {
+    private CloudEvent newServiceInstanceChangedCloudEvent(String gsv) {
         ServiceLocator serviceLocator = ServiceLocator.parse(gsv);
         Collection<Integer> instanceIdList = getAllInstanceIds(serviceLocator.getId());
 
@@ -667,7 +669,7 @@ public final class RSocketServiceManager {
      * 广播rsocket服务实例变化
      */
     private Flux<Void> broadcastServiceInstanceChanged(String gsv) {
-        CloudEventData<ServiceInstanceChangedEvent> cloudEvent = newServiceInstanceChangedCloudEvent(gsv);
+        CloudEvent cloudEvent = newServiceInstanceChangedCloudEvent(gsv);
         return Flux.fromIterable(getP2pServiceConsumerInstanceIds(gsv))
                 .flatMap(instanceId -> {
                     RSocketEndpoint rsocketEndpoint = getByInstanceId(instanceId);

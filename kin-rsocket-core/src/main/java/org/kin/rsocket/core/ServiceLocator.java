@@ -3,6 +3,7 @@ package org.kin.rsocket.core;
 import org.kin.framework.utils.MurmurHash3;
 import org.kin.rsocket.core.utils.Separators;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -154,5 +155,17 @@ public class ServiceLocator {
     @Override
     public int hashCode() {
         return Objects.hash(group, service, version);
+    }
+
+    @Override
+    public String toString() {
+        return "ServiceLocator{" +
+                "group='" + group + '\'' +
+                ", service='" + service + '\'' +
+                ", version='" + version + '\'' +
+                ", tags=" + Arrays.toString(tags) +
+                ", gsv='" + gsv + '\'' +
+                ", id=" + id +
+                '}';
     }
 }

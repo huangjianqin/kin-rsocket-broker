@@ -20,12 +20,12 @@ public class ServiceInstanceChangedEvent implements CloudEventSupport {
     private List<String> uris;
 
     public static ServiceInstanceChangedEvent of(String group, String service, String version, List<String> uris) {
-        ServiceInstanceChangedEvent inst = new ServiceInstanceChangedEvent();
-        inst.group = group;
-        inst.service = service;
-        inst.version = version;
-        inst.uris = uris;
-        return inst;
+        ServiceInstanceChangedEvent event = new ServiceInstanceChangedEvent();
+        event.group = group;
+        event.service = service;
+        event.version = version;
+        event.uris = uris;
+        return event;
     }
 
     //setter && getter

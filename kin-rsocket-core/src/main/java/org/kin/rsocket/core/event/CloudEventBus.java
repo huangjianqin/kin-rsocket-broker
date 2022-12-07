@@ -1,9 +1,10 @@
 package org.kin.rsocket.core.event;
 
+import io.cloudevents.CloudEvent;
 import org.kin.framework.Closeable;
-import org.kin.rsocket.core.RSocketAppContext;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
@@ -16,9 +17,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public final class CloudEventConsumers implements Closeable {
-    public static final CloudEventConsumers INSTANCE = new CloudEventConsumers();
+public final class CloudEventBus implements Closeable {
+    public static final CloudEventBus INSTANCE = new CloudEventBus();
 
+    /** 接受cloud event的flux */
+    public final Sinks.Many<CloudEvent> cloudEventSink = Sinks.many().multicast().onBackpressureBuffer();
     /** cloud event consumers */
     private final List<CloudEventConsumer> consumers = new CopyOnWriteArrayList<>();
     /** event topic processor subscribe disposable */
@@ -29,8 +32,8 @@ public final class CloudEventConsumers implements Closeable {
      */
     private static final Scheduler CLOUD_EVENT_CONSUMER_SCHEDULER = Schedulers.newBoundedElastic(3, Integer.MAX_VALUE, "cloudEventConsumer");
 
-    public CloudEventConsumers() {
-        disposable = RSocketAppContext.CLOUD_EVENT_SINK.asFlux().subscribe(cloudEvent ->
+    public CloudEventBus() {
+        disposable = cloudEventSink.asFlux().subscribe(cloudEvent ->
                 Flux.fromIterable(consumers)
                         .publishOn(CLOUD_EVENT_CONSUMER_SCHEDULER)
                         .filter(consumer -> consumer.shouldAccept(cloudEvent))
@@ -57,6 +60,13 @@ public final class CloudEventConsumers implements Closeable {
      */
     public void addConsumers(Collection<CloudEventConsumer> consumers) {
         this.consumers.addAll(consumers);
+    }
+
+    /**
+     * '投递' cloud event, 即将cloud event分派出去交给{@link CloudEventConsumer}处理
+     */
+    public void postCloudEvent(CloudEvent cloudEvent) {
+        cloudEventSink.tryEmitNext(cloudEvent);
     }
 
     @Override

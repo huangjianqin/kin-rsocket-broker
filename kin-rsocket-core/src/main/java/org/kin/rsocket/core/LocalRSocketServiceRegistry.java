@@ -1,16 +1,17 @@
 package org.kin.rsocket.core;
 
+import io.cloudevents.CloudEvent;
 import org.kin.framework.utils.ClassUtils;
 import org.kin.framework.utils.MurmurHash3;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodInfo;
 import org.kin.rsocket.core.domain.ReactiveMethodParameterInfo;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.utils.Separators;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -48,13 +49,14 @@ public final class LocalRSocketServiceRegistry implements RSocketServiceInfoSupp
     /**
      * @return services exposed cloud event
      */
-    public static CloudEventData<RSocketServicesExposedEvent> servicesExposedEvent() {
+    @Nullable
+    public static CloudEvent servicesExposedCloudEvent() {
         Collection<ServiceLocator> serviceLocators = exposedServices();
         if (serviceLocators.isEmpty()) {
             return null;
         }
 
-        return RSocketServicesExposedEvent.of(serviceLocators);
+        return RSocketServicesExposedEvent.of(serviceLocators).toCloudEvent();
     }
 
     /** 修改数据需加锁 */

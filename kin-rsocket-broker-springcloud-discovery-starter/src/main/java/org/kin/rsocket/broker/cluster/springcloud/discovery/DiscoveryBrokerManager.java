@@ -1,11 +1,11 @@
 package org.kin.rsocket.broker.cluster.springcloud.discovery;
 
+import io.cloudevents.CloudEvent;
 import org.kin.framework.utils.NetUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -124,7 +124,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     }
 
     @Override
-    public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
+    public Mono<String> broadcast(CloudEvent cloudEvent) {
         //TODO 目前还不支持broker间广播事件, 考虑CloudEventNotifyService??
         return Mono.empty();
     }

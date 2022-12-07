@@ -1,7 +1,7 @@
 package org.kin.rsocket.core;
 
+import io.cloudevents.CloudEvent;
 import io.rsocket.RSocket;
-import org.kin.rsocket.core.event.CloudEventData;
 import reactor.core.publisher.Mono;
 
 /**
@@ -14,7 +14,7 @@ public interface RequesterRSocket extends RSocket {
     /**
      * 向所有有效的upstream rsocket广播cloud event
      */
-    Mono<Void> broadcastCloudEvent(CloudEventData<?> cloudEvent);
+    Mono<Void> broadcastCloudEvent(CloudEvent cloudEvent);
 
     /**
      * 强制刷新unhealth uri, 也就是强制重连

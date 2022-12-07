@@ -1,6 +1,6 @@
 package org.kin.rsocket.core.event;
 
-import reactor.core.publisher.Mono;
+import io.cloudevents.CloudEvent;
 
 import java.util.UUID;
 
@@ -18,9 +18,8 @@ public class AppStatusEventConsumerTest {
 
     private static class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> {
         @Override
-        protected Mono<Void> consume(CloudEventData<?> cloudEventData, AppStatusEvent cloudEvent) {
+        protected void consume(CloudEvent cloudEvent, AppStatusEvent event) {
             System.out.println(cloudEvent);
-            return Mono.empty();
         }
     }
 }

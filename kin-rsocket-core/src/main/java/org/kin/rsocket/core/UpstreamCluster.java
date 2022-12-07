@@ -1,8 +1,8 @@
 package org.kin.rsocket.core;
 
+import io.cloudevents.CloudEvent;
 import io.rsocket.Payload;
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
@@ -22,7 +22,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocket, Closeable, org.kin.framework.Closeable, UpstreamClusterSelector {
+public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocket, Closeable, UpstreamClusterSelector {
     private static final Logger log = LoggerFactory.getLogger(UpstreamCluster.class);
 
     /** group */
@@ -116,7 +116,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
     }
 
     @Override
-    public Mono<Void> broadcastCloudEvent(CloudEventData<?> cloudEvent) {
+    public Mono<Void> broadcastCloudEvent(CloudEvent cloudEvent) {
         return loadBalanceRequester.broadcastCloudEvent(cloudEvent);
     }
 
@@ -126,7 +126,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
     }
 
     @Override
-    public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
+    public Mono<Void> fireCloudEvent(CloudEvent cloudEvent) {
         return loadBalanceRequester.fireCloudEvent(cloudEvent);
     }
 

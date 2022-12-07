@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.cloudevents.CloudEvent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -19,7 +20,7 @@ import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.core.*;
-import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
 import org.reactivestreams.Publisher;
@@ -326,18 +327,16 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
     public Mono<Void> metadataPush(@Nonnull Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
-                CloudEventData<?> cloudEvent = CloudEventSupport.extractCloudEventsFromMetadata(payload);
+                CloudEvent cloudEvent = CloudEventSupport.extractCloudEventFromMetadata(payload);
                 if (cloudEvent != null) {
-                    //如果downstream没有设置, 则设置默认的
-                    cloudEvent.updateSourceIfEmpty("downstream::*");
                     /*
                      * 如果不是该responder对应的app uuid的cloud event, 则不处理
                      * 因为broker需要做拦截处理, 防止该app修改别的app
                      */
-                    if (!appMetadata.getUuid().equalsIgnoreCase(cloudEvent.getAttributes().getSource().getHost())) {
+                    if (!appMetadata.getUuid().equalsIgnoreCase(cloudEvent.getSource().getHost())) {
                         return Mono.empty();
                     }
-                    return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
+                    return Mono.fromRunnable(() -> CloudEventBus.INSTANCE.postCloudEvent(cloudEvent));
                 }
             }
         } catch (Exception e) {

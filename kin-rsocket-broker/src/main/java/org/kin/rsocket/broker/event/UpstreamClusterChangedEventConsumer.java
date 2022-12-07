@@ -1,13 +1,12 @@
 package org.kin.rsocket.broker.event;
 
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
@@ -22,11 +21,12 @@ public final class UpstreamClusterChangedEventConsumer extends AbstractCloudEven
     private UpstreamCluster brokerUpstreamCluster;
 
     @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEventData, UpstreamClusterChangedEvent event) {
-        if (Objects.nonNull(brokerUpstreamCluster) && Objects.nonNull(event)) {
-            brokerUpstreamCluster.refreshUris(event.getUris());
-            log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", "UpstreamBroker", String.join(",", event.getUris())));
+    public void consume(CloudEvent cloudEvent, UpstreamClusterChangedEvent event) {
+        if (Objects.isNull(brokerUpstreamCluster)) {
+            return;
         }
-        return Mono.empty();
+
+        log.info(String.format("RSocket Broker Topology updated for '%s' with '%s'", "UpstreamBroker", String.join(",", event.getUris())));
+        brokerUpstreamCluster.refreshUris(event.getUris());
     }
 }

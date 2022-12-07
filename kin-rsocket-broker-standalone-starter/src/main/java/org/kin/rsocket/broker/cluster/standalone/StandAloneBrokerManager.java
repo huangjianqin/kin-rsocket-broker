@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker.cluster.standalone;
 
+import io.cloudevents.CloudEvent;
 import io.micrometer.core.instrument.Metrics;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
@@ -8,7 +9,6 @@ import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsNames;
 import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -83,7 +83,7 @@ public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager 
     }
 
     @Override
-    public Mono<String> broadcast(CloudEventData<?> cloudEvent) {
+    public Mono<String> broadcast(CloudEvent cloudEvent) {
         //本broker已做处理, 本broker不需要再触发cloud event
         //返回ip即可
         return Mono.just(localBrokerInfo.getIp());

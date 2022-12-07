@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.format.EventFormat;
 import io.cloudevents.core.provider.EventFormatProvider;
-import io.cloudevents.jackson.JsonCloudEventData;
 import io.cloudevents.jackson.JsonFormat;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -21,7 +20,6 @@ import org.checkerframework.checker.units.qual.C;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.codec.Codec;
 import org.kin.rsocket.core.codec.CodecException;
-import org.kin.rsocket.core.event.CloudEventData;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -274,27 +272,6 @@ public class JSON {
     }
 
     /**
-     * 将cloud event序列化成json
-     */
-    @SuppressWarnings("ConstantConditions")
-    public static byte[] serialize(CloudEventData<?> event) {
-        return EVENT_FORMAT.serialize(event.getCloudEvent());
-    }
-
-    /**
-     * 从json中反序列化出cloud event
-     */
-    @SuppressWarnings("ConstantConditions")
-    public static CloudEventData<JsonNode> decodeValue(String str) {
-        CloudEvent cloudEvent = EVENT_FORMAT.deserialize(str.getBytes(StandardCharsets.UTF_8));
-        if (cloudEvent.getData() instanceof JsonCloudEventData) {
-            JsonCloudEventData jsonCloudEventData = (JsonCloudEventData) cloudEvent.getData();
-            return new CloudEventData<>(jsonCloudEventData.getNode(), cloudEvent);
-        }
-        return new CloudEventData<>(null, cloudEvent);
-    }
-
-    /**
      * 按数组形式读取json, 然后再根据指定class反序列每个item
      */
     public static Object[] readJsonArray(ByteBuf byteBuf, Class<?>[] targetClasses) throws IOException {
@@ -304,5 +281,40 @@ public class JSON {
             targets[i] = PARSER.treeToValue(jsonNodes.get(i), targetClasses[i]);
         }
         return targets;
+    }
+
+    //-----------------------------------------------------------------------cloud event
+
+    /**
+     * 将cloud event序列化成json
+     *
+     * @param cloudEvent cloud event
+     * @return cloud event json bytes
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static byte[] serializeCloudEvent(CloudEvent cloudEvent) {
+        return EVENT_FORMAT.serialize(cloudEvent);
+    }
+
+    /**
+     * 从json中反序列化出cloud event
+     *
+     * @param bytes cloud event json
+     * @return cloud event
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static CloudEvent deserializeCloudEvent(String json) {
+        return EVENT_FORMAT.deserialize(json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 从json bytes中反序列化出cloud event
+     *
+     * @param bytes cloud event json bytes
+     * @return cloud event
+     */
+    @SuppressWarnings("ConstantConditions")
+    public static CloudEvent deserializeCloudEvent(byte[] bytes) {
+        return EVENT_FORMAT.deserialize(bytes);
     }
 }

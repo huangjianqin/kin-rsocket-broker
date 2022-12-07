@@ -12,10 +12,10 @@ public final class FilterEnableEvent implements CloudEventSupport {
     private boolean enabled;
 
     public static FilterEnableEvent of(String filterClassName, boolean enabled) {
-        FilterEnableEvent inst = new FilterEnableEvent();
-        inst.filterClassName = filterClassName;
-        inst.enabled = enabled;
-        return inst;
+        FilterEnableEvent event = new FilterEnableEvent();
+        event.filterClassName = filterClassName;
+        event.enabled = enabled;
+        return event;
     }
 
     //setter && getter

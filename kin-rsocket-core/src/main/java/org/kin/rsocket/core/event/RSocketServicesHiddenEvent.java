@@ -21,12 +21,12 @@ public final class RSocketServicesHiddenEvent implements CloudEventSupport {
     /** need hidden services */
     private Set<ServiceLocator> services = Collections.emptySet();
 
-    public static CloudEventData<RSocketServicesHiddenEvent> of(Collection<ServiceLocator> serviceLocators) {
-        RSocketServicesHiddenEvent inst = new RSocketServicesHiddenEvent();
-        inst.appId = RSocketAppContext.ID;
-        inst.services = new HashSet<>(serviceLocators.size());
-        inst.services.addAll(serviceLocators);
-        return inst.toCloudEvent();
+    public static RSocketServicesHiddenEvent of(Collection<ServiceLocator> serviceLocators) {
+        RSocketServicesHiddenEvent event = new RSocketServicesHiddenEvent();
+        event.appId = RSocketAppContext.ID;
+        event.services = new HashSet<>(serviceLocators.size());
+        event.services.addAll(serviceLocators);
+        return event;
     }
 
     //setter && getter

@@ -27,10 +27,10 @@ public final class ConfigChangedEvent implements CloudEventSupport {
     }
 
     public static ConfigChangedEvent of(String appName, String content) {
-        ConfigChangedEvent inst = new ConfigChangedEvent();
-        inst.appName = appName;
-        inst.content = content;
-        return inst;
+        ConfigChangedEvent event = new ConfigChangedEvent();
+        event.appName = appName;
+        event.content = content;
+        return event;
     }
 
     //setter && getter

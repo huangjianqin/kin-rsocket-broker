@@ -1,5 +1,6 @@
 package org.kin.rsocket.core.event;
 
+import io.cloudevents.CloudEvent;
 import io.rsocket.RSocket;
 import reactor.core.publisher.Mono;
 
@@ -13,7 +14,7 @@ public interface CloudEventRSocket extends RSocket {
     /**
      * 广播cloud event
      */
-    Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent);
+    Mono<Void> fireCloudEvent(CloudEvent cloudEvent);
 
     /**
      * 广播cloud event json

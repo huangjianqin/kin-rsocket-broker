@@ -12,8 +12,8 @@ import org.kin.rsocket.broker.services.DiscoveryServiceImpl;
 import org.kin.rsocket.broker.services.HealthService;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.discovery.DiscoveryService;
+import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.event.CloudEventNotifyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -63,9 +63,9 @@ public class RSocketBrokerAutoConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean(destroyMethod = "close")
-    public CloudEventConsumers cloudEventConsumers(@Autowired List<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers);
-        return CloudEventConsumers.INSTANCE;
+    public CloudEventBus cloudEventBus(@Autowired List<CloudEventConsumer> consumers) {
+        CloudEventBus.INSTANCE.addConsumers(consumers);
+        return CloudEventBus.INSTANCE;
     }
 
     @Bean

@@ -1,9 +1,9 @@
 package org.kin.rsocket.service.boot.health;
 
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.AppStatusEvent;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
 import org.kin.rsocket.core.event.RSocketServicesHiddenEvent;
 import org.kin.rsocket.core.health.HealthCheck;
@@ -143,7 +143,7 @@ public final class RSocketEndpoint {
      * 向所有upstream注册服务
      */
     private Mono<Void> sendRegisterService(ServiceLocator targetService) {
-        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServicesExposedEvent.of(Collections.singletonList(targetService));
+        CloudEvent cloudEvent = RSocketServicesExposedEvent.of(Collections.singletonList(targetService)).toCloudEvent();
         return Flux.fromIterable(upstreamClusterManager.getAll()).flatMap(upstreamCluster -> upstreamCluster.broadcastCloudEvent(cloudEvent)).then();
     }
 
@@ -151,7 +151,7 @@ public final class RSocketEndpoint {
      * 向所有upstream注销服务
      */
     private Mono<Void> sendUnregisterService(ServiceLocator targetService) {
-        CloudEventData<RSocketServicesHiddenEvent> cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetService));
+        CloudEvent cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetService)).toCloudEvent();
         return Flux.fromIterable(upstreamClusterManager.getAll()).flatMap(upstreamCluster -> upstreamCluster.broadcastCloudEvent(cloudEvent)).then();
     }
 

@@ -1,11 +1,10 @@
 package org.kin.rsocket.broker.event;
 
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.P2pServiceChangedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Mono;
 
 /**
  * @author huangjianqin
@@ -16,10 +15,7 @@ public final class P2pServiceChangedEventConsumer extends AbstractCloudEventCons
     private RSocketServiceManager serviceManager;
 
     @Override
-    protected Mono<Void> consume(CloudEventData<?> cloudEventData, P2pServiceChangedEvent cloudEvent) {
-        if (cloudEvent != null) {
-           serviceManager.updateP2pServiceConsumers(cloudEvent.getAppId(), cloudEvent.getP2pServiceIds());
-        }
-        return Mono.empty();
+    protected void consume(CloudEvent cloudEvent, P2pServiceChangedEvent event) {
+        serviceManager.updateP2pServiceConsumers(event.getAppId(), event.getP2pServiceIds());
     }
 }

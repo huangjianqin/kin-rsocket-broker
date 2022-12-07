@@ -21,15 +21,15 @@ public final class RSocketServicesExposedEvent implements CloudEventSupport {
     /** exposed services */
     private Set<ServiceLocator> services = new HashSet<>();
 
-    public static CloudEventData<RSocketServicesExposedEvent> of(ServiceLocator... serviceLocators) {
+    public static RSocketServicesExposedEvent of(ServiceLocator... serviceLocators) {
         return of(Arrays.asList(serviceLocators));
     }
 
-    public static CloudEventData<RSocketServicesExposedEvent> of(Collection<ServiceLocator> serviceLocators) {
-        RSocketServicesExposedEvent servicesExposedEvent = new RSocketServicesExposedEvent();
-        servicesExposedEvent.services.addAll(serviceLocators);
-        servicesExposedEvent.setAppId(RSocketAppContext.ID);
-        return servicesExposedEvent.toCloudEvent();
+    public static RSocketServicesExposedEvent of(Collection<ServiceLocator> serviceLocators) {
+        RSocketServicesExposedEvent event = new RSocketServicesExposedEvent();
+        event.services.addAll(serviceLocators);
+        event.setAppId(RSocketAppContext.ID);
+        return event;
     }
 
     //setter && getter

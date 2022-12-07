@@ -1,13 +1,12 @@
 package org.kin.rsocket.broker.event;
 
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.PortsUpdateEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Mono;
 
 /**
  * @author huangjianqin
@@ -18,16 +17,13 @@ public final class PortsUpdateEventConsumer extends AbstractCloudEventConsumer<P
     private RSocketServiceManager serviceManager;
 
     @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEventData, PortsUpdateEvent event) {
-        if (event != null) {
-            RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(event.getAppId());
-            if (rsocketEndpoint != null) {
-                AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
-                appMetadata.updateWebPort(event.getWebPort());
-                appMetadata.updateManagementPort(event.getManagementPort());
-                appMetadata.updateRSocketPorts(event.getRSocketPorts());
-            }
+    public void consume(CloudEvent cloudEvent, PortsUpdateEvent event) {
+        RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(event.getAppId());
+        if (rsocketEndpoint != null) {
+            AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
+            appMetadata.updateWebPort(event.getWebPort());
+            appMetadata.updateManagementPort(event.getManagementPort());
+            appMetadata.updateRSocketPorts(event.getRSocketPorts());
         }
-        return Mono.empty();
     }
 }

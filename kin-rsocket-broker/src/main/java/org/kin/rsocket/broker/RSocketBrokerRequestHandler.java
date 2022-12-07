@@ -1,6 +1,6 @@
 package org.kin.rsocket.broker;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.cloudevents.CloudEvent;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
@@ -9,9 +9,8 @@ import io.rsocket.exceptions.InvalidException;
 import io.rsocket.frame.FrameType;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.AbstractRSocket;
-import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BinaryRoutingMetadata;
@@ -186,11 +185,11 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
     public Mono<Void> metadataPush(@Nonnull Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
-                CloudEventData<JsonNode> cloudEvent = JSON.decodeValue(payload.getMetadataUtf8());
-                String type = cloudEvent.getAttributes().getType();
+                CloudEvent cloudEvent = JSON.deserializeCloudEvent(payload.getMetadataUtf8());
+                String type = cloudEvent.getType();
                 if (UpstreamClusterChangedEvent.class.getName().equalsIgnoreCase(type)) {
                     //因为upstream broker是其他rsocket broker集群, 为了保证隔离, 不需要处理其他类型的事件广播
-                    RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent);
+                    CloudEventBus.INSTANCE.postCloudEvent(cloudEvent);
                 }
             }
         } catch (Exception e) {

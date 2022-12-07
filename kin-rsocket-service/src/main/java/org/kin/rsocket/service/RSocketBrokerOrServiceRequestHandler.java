@@ -3,6 +3,7 @@ package org.kin.rsocket.service;
 import brave.Span;
 import brave.Tracer;
 import brave.propagation.TraceContext;
+import io.cloudevents.CloudEvent;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
@@ -11,7 +12,7 @@ import io.rsocket.exceptions.InvalidException;
 import org.kin.rsocket.core.RSocketAppContext;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.RSocketRequestHandlerSupport;
-import org.kin.rsocket.core.event.CloudEventData;
+import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
 import org.reactivestreams.Publisher;
@@ -179,9 +180,9 @@ final class RSocketBrokerOrServiceRequestHandler extends RSocketRequestHandlerSu
     public Mono<Void> metadataPush(@Nonnull Payload payload) {
         try {
             if (payload.metadata().readableBytes() > 0) {
-                CloudEventData<?> cloudEvent = CloudEventSupport.extractCloudEventsFromMetadata(payload);
+                CloudEvent cloudEvent = CloudEventSupport.extractCloudEventFromMetadata(payload);
                 if (cloudEvent != null) {
-                    return Mono.fromRunnable(() -> RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent));
+                    return Mono.fromRunnable(() -> CloudEventBus.INSTANCE.postCloudEvent(cloudEvent));
                 }
             }
         } catch (Exception e) {

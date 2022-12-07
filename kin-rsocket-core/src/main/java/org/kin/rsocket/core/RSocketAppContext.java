@@ -1,8 +1,5 @@
 package org.kin.rsocket.core;
 
-import org.kin.rsocket.core.event.CloudEventData;
-import reactor.core.publisher.Sinks;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -14,9 +11,6 @@ import java.util.UUID;
 public class RSocketAppContext {
     /** app uuid */
     public static final String ID = UUID.randomUUID().toString();
-    /** 接受cloud event的flux */
-    public static final Sinks.Many<CloudEventData<?>> CLOUD_EVENT_SINK = Sinks.many().multicast().onBackpressureBuffer();
-
     /** 是否支持字节码增强 */
     public static final boolean ENHANCE;
     /** spring web port */

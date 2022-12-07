@@ -1,15 +1,14 @@
 package org.kin.rsocket.service.event;
 
+import io.cloudevents.CloudEvent;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ServiceInstanceChangedEvent;
 import org.kin.rsocket.service.UpstreamClusterManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,21 +26,12 @@ public final class ServiceInstanceChangedEventConsumer extends AbstractCloudEven
     }
 
     @Override
-    protected Mono<Void> consume(CloudEventData<?> cloudEventData, ServiceInstanceChangedEvent cloudEvent) {
-        return Mono.fromRunnable(() -> consume0(cloudEvent));
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private void consume0(ServiceInstanceChangedEvent cloudEvent) {
-        if (Objects.isNull(cloudEvent)) {
-            return;
-        }
-
-        String group = cloudEvent.getGroup();
-        String service = cloudEvent.getService();
-        String version = cloudEvent.getVersion();
+    protected void consume(CloudEvent cloudEvent, ServiceInstanceChangedEvent event) {
+        String group = event.getGroup();
+        String service = event.getService();
+        String version = event.getVersion();
         String serviceId = ServiceLocator.gsv(group, service, version);
-        List<String> uris = cloudEvent.getUris();
+        List<String> uris = event.getUris();
         UpstreamCluster upstreamCluster = upstreamClusterManager.get(serviceId);
         String uriChangeLog = String.format("RSocket Broker Topology updated for %s with %s", serviceId, String.join(",", uris));
         if (Objects.nonNull(upstreamCluster)) {

@@ -1,5 +1,6 @@
 package org.kin.rsocket.core;
 
+import io.cloudevents.CloudEvent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
@@ -17,10 +18,8 @@ import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExtensionLoader;
 import org.kin.rsocket.core.codec.Codecs;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventSupport;
-import org.kin.rsocket.core.event.RSocketServicesExposedEvent;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
@@ -295,7 +294,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
     }
 
     @Override
-    public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
+    public Mono<Void> fireCloudEvent(CloudEvent cloudEvent) {
         return broadcastCloudEvent(cloudEvent);
     }
 
@@ -305,7 +304,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
             return (Mono<Void>) disposedMono();
         }
         try {
-            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEventJson);
+            Payload payload = CloudEventSupport.cloudEventJson2Payload(cloudEventJson);
             return metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);
@@ -313,7 +312,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
     }
 
     @Override
-    public Mono<Void> broadcastCloudEvent(CloudEventData<?> cloudEvent) {
+    public Mono<Void> broadcastCloudEvent(CloudEvent cloudEvent) {
         if (isDisposed()) {
             return (Mono<Void>) disposedMono();
         }
@@ -430,7 +429,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         this.unhealthyUris.remove(rsocketUri);
         onRSocketConnected(rsocketUri, rsocket);
 
-        CloudEventData<RSocketServicesExposedEvent> cloudEvent = LocalRSocketServiceRegistry.servicesExposedEvent();
+        CloudEvent cloudEvent = LocalRSocketServiceRegistry.servicesExposedCloudEvent();
         if (cloudEvent != null) {
             Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             rsocket.metadataPush(payload).subscribe();

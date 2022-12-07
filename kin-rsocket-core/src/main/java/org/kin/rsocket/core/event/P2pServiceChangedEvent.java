@@ -17,10 +17,10 @@ public class P2pServiceChangedEvent implements CloudEventSupport {
     private Set<String> p2pServiceIds;
 
     public static P2pServiceChangedEvent of(String appId, Set<String> p2pServiceIds) {
-        P2pServiceChangedEvent inst = new P2pServiceChangedEvent();
-        inst.appId = appId;
-        inst.p2pServiceIds = p2pServiceIds;
-        return inst;
+        P2pServiceChangedEvent event = new P2pServiceChangedEvent();
+        event.appId = appId;
+        event.p2pServiceIds = p2pServiceIds;
+        return event;
     }
 
     //setter && getter

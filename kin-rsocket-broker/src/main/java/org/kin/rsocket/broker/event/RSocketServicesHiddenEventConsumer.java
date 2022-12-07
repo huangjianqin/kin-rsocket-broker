@@ -1,13 +1,12 @@
 package org.kin.rsocket.broker.event;
 
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.RSocketServicesHiddenEvent;
 import org.springframework.beans.factory.annotation.Autowired;
-import reactor.core.publisher.Mono;
 
 import java.util.Set;
 
@@ -20,14 +19,11 @@ public final class RSocketServicesHiddenEventConsumer extends AbstractCloudEvent
     private RSocketServiceManager serviceManager;
 
     @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEventData, RSocketServicesHiddenEvent event) {
-        if (event != null) {
-            RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(event.getAppId());
-            if (rsocketEndpoint != null) {
-                Set<ServiceLocator> serviceLocators = event.getServices();
-                rsocketEndpoint.unregisterServices(serviceLocators);
-            }
+    public void consume(CloudEvent cloudEvent, RSocketServicesHiddenEvent event) {
+        RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(event.getAppId());
+        if (rsocketEndpoint != null) {
+            Set<ServiceLocator> serviceLocators = event.getServices();
+            rsocketEndpoint.unregisterServices(serviceLocators);
         }
-        return Mono.empty();
     }
 }

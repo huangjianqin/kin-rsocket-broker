@@ -3,8 +3,8 @@ package org.kin.rsocket.service.boot;
 import brave.Tracing;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import org.kin.rsocket.core.*;
+import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventConsumers;
 import org.kin.rsocket.core.health.HealthCheck;
 import org.kin.rsocket.service.RSocketBrokerClient;
 import org.kin.rsocket.service.RSocketRequesterSupportCustomizer;
@@ -152,9 +152,9 @@ public class RSocketServiceConfiguration {
      * 管理所有{@link CloudEventConsumer}的实例
      */
     @Bean(destroyMethod = "close")
-    public CloudEventConsumers cloudEventConsumers(@Autowired List<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers);
-        return CloudEventConsumers.INSTANCE;
+    public CloudEventBus cloudEventBus(@Autowired List<CloudEventConsumer> consumers) {
+        CloudEventBus.INSTANCE.addConsumers(consumers);
+        return CloudEventBus.INSTANCE;
     }
 
     @Bean

@@ -14,10 +14,10 @@ public final class AppStatusEvent implements CloudEventSupport {
     private AppStatus status;
 
     public static AppStatusEvent of(String id, AppStatus status) {
-        AppStatusEvent inst = new AppStatusEvent();
-        inst.id = id;
-        inst.status = status;
-        return inst;
+        AppStatusEvent event = new AppStatusEvent();
+        event.id = id;
+        event.status = status;
+        return event;
     }
 
     public static AppStatusEvent stopped(String id) {

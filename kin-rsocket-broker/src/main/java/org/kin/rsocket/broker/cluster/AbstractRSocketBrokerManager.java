@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.cluster;
 
-import org.kin.rsocket.core.RSocketAppContext;
-import org.kin.rsocket.core.event.CloudEventData;
+import io.cloudevents.CloudEvent;
+import org.kin.rsocket.core.event.CloudEventBus;
 
 /**
  * @author huangjianqin
@@ -11,7 +11,7 @@ public abstract class AbstractRSocketBrokerManager implements RSocketBrokerManag
     /**
      * 处理通过gossip广播的cloud event
      */
-    protected void handleCloudEvent(CloudEventData<?> cloudEvent) {
-        RSocketAppContext.CLOUD_EVENT_SINK.tryEmitNext(cloudEvent);
+    protected void handleCloudEvent(CloudEvent cloudEvent) {
+        CloudEventBus.INSTANCE.postCloudEvent(cloudEvent);
     }
 }

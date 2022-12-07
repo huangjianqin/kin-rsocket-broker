@@ -14,9 +14,9 @@ public final class CacheInvalidEvent implements CloudEventSupport {
     private List<String> keys;
 
     public static CacheInvalidEvent of(List<String> keys) {
-        CacheInvalidEvent inst = new CacheInvalidEvent();
-        inst.keys = keys;
-        return inst;
+        CacheInvalidEvent event = new CacheInvalidEvent();
+        event.keys = keys;
+        return event;
     }
 
     //setter && getter

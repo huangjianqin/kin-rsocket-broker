@@ -1,9 +1,9 @@
 package org.kin.rsocket.broker.controller;
 
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.utils.Symbols;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class BrokerClusterController {
         UpstreamClusterChangedEvent upstreamClusterChangedEvent =
                 UpstreamClusterChangedEvent.of("", Symbols.BROKER, "", Arrays.asList(uris.split(",")));
 
-        CloudEventData<UpstreamClusterChangedEvent> cloudEvent = upstreamClusterChangedEvent.toCloudEvent();
+        CloudEvent cloudEvent = upstreamClusterChangedEvent.toCloudEvent();
 
         return serviceManager.broadcast(Symbols.BROKER, cloudEvent);
     }

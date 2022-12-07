@@ -1,15 +1,14 @@
 package org.kin.rsocket.cloud.conf.client;
 
+import io.cloudevents.CloudEvent;
 import org.kin.framework.utils.PropertiesUtils;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.ConfigChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.refresh.ContextRefresher;
-import reactor.core.publisher.Mono;
 
 import java.util.Properties;
 
@@ -30,7 +29,7 @@ public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<Confi
     private RSocketConfigPropertySourceLocator locator;
 
     @Override
-    public Mono<Void> consume(CloudEventData<?> cloudEventData, ConfigChangedEvent event) {
+    public void consume(CloudEvent cloudEvent, ConfigChangedEvent event) {
         // validate app name
         if (event != null && applicationName.equalsIgnoreCase(event.getAppName())) {
             String content = event.getContent();
@@ -52,6 +51,5 @@ public class ConfigChangedEventConsumer extends AbstractCloudEventConsumer<Confi
                 }
             }
         }
-        return Mono.empty();
     }
 }

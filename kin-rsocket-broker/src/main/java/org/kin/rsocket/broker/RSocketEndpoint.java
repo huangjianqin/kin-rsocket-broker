@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker;
 
+import io.cloudevents.CloudEvent;
 import io.rsocket.DuplexConnection;
 import io.rsocket.Payload;
 import io.rsocket.RSocket;
@@ -8,7 +9,6 @@ import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.domain.AppStatus;
-import org.kin.rsocket.core.event.CloudEventData;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -132,7 +132,7 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     }
 
     @Override
-    public Mono<Void> fireCloudEvent(CloudEventData<?> cloudEvent) {
+    public Mono<Void> fireCloudEvent(CloudEvent cloudEvent) {
         try {
             Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             return metadataPush(payload);
@@ -144,7 +144,7 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     @Override
     public Mono<Void> fireCloudEvent(String cloudEventJson) {
         try {
-            Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEventJson);
+            Payload payload = CloudEventSupport.cloudEventJson2Payload(cloudEventJson);
             return metadataPush(payload);
         } catch (Exception e) {
             return Mono.error(e);

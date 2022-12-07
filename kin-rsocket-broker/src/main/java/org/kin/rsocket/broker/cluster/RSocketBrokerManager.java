@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.cluster;
 
+import io.cloudevents.CloudEvent;
 import org.kin.framework.Closeable;
-import org.kin.rsocket.core.event.CloudEventData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -38,5 +38,5 @@ public interface RSocketBrokerManager extends Closeable {
      *
      * @return Mono<String>, 即ip
      */
-    Mono<String> broadcast(CloudEventData<?> cloudEvent);
+    Mono<String> broadcast(CloudEvent cloudEvent);
 }

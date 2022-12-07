@@ -1,6 +1,7 @@
 package org.kin.rsocket.service;
 
 import brave.Tracer;
+import io.cloudevents.CloudEvent;
 import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.domain.RSocketServiceInfo;
 import org.kin.rsocket.core.event.*;
@@ -81,8 +82,8 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
         registerService(HealthCheck.class, customHealthCheck);
 
         //4. add internal cloud event consumer
-        CloudEventConsumers.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
-        CloudEventConsumers.INSTANCE.addConsumer(new ServiceInstanceChangedEventConsumer(upstreamClusterManager));
+        CloudEventBus.INSTANCE.addConsumer(new UpstreamClusterChangedEventConsumer(upstreamClusterManager));
+        CloudEventBus.INSTANCE.addConsumer(new ServiceInstanceChangedEventConsumer(upstreamClusterManager));
     }
 
     /**
@@ -204,22 +205,22 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
      */
     public void publishServices() {
         // service exposed
-        CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent = LocalRSocketServiceRegistry.servicesExposedEvent();
-        if (servicesExposedEventCloudEvent != null) {
-            publishServices(servicesExposedEventCloudEvent);
+        CloudEvent cloudEvent = LocalRSocketServiceRegistry.servicesExposedCloudEvent();
+        if (cloudEvent != null) {
+            publishServices(cloudEvent);
         }
     }
 
     /**
      * 通知broker暴露新服务
      */
-    private void publishServices(CloudEventData<RSocketServicesExposedEvent> servicesExposedEventCloudEvent) {
+    private void publishServices(CloudEvent cloudEvent) {
         UpstreamCluster broker = getBroker();
         if (Objects.isNull(broker)) {
             return;
         }
 
-        broker.broadcastCloudEvent(servicesExposedEventCloudEvent)
+        broker.broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(aVoid -> {
                     //broker uris
                     String brokerUris = String.join(",", rsocketServiceProperties.getBrokers());
@@ -232,9 +233,8 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
      * 通知broker暴露新服务
      */
     private void publishService(String group, String service, String version) {
-        //publish
-        CloudEventData<RSocketServicesExposedEvent> cloudEvent = RSocketServicesExposedEvent.of(ServiceLocator.of(group, service, version));
-        publishServices(cloudEvent);
+        //publish services exposed event
+        publishServices(RSocketServicesExposedEvent.of(ServiceLocator.of(group, service, version)).toCloudEvent());
     }
 
     /**
@@ -253,7 +253,7 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
             return;
         }
         ServiceLocator targetServiceLocator = ServiceLocator.of(group, service, version);
-        CloudEventData<RSocketServicesHiddenEvent> cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator));
+        CloudEvent cloudEvent = RSocketServicesHiddenEvent.of(Collections.singletonList(targetServiceLocator)).toCloudEvent();
         broker.broadcastCloudEvent(cloudEvent)
                 .doOnSuccess(unused -> {
                     //broker uris
@@ -268,21 +268,21 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
      * 添加一个{@link CloudEventConsumer}
      */
     public void addConsumer(CloudEventConsumer consumer) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumer);
+        CloudEventBus.INSTANCE.addConsumers(consumer);
     }
 
     /**
      * 批量添加{@link CloudEventConsumer}
      */
     public void addConsumers(CloudEventConsumer... consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(Arrays.asList(consumers));
+        CloudEventBus.INSTANCE.addConsumers(Arrays.asList(consumers));
     }
 
     /**
      * 批量添加{@link CloudEventConsumer}
      */
     public void addConsumers(Collection<CloudEventConsumer> consumers) {
-        CloudEventConsumers.INSTANCE.addConsumers(consumers);
+        CloudEventBus.INSTANCE.addConsumers(consumers);
     }
 
     /**
