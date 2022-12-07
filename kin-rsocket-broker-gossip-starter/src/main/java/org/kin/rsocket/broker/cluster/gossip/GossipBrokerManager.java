@@ -139,14 +139,14 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
 
-    private Mono<BrokerInfo> makeJsonRpcCall(Member member) {
-        String uuid = UUID.randomUUID().toString();
-        Message jsonRpcMessage = Message.builder()
+    private Mono<BrokerInfo> requestBrokerMember(Member member) {
+        Message request = Message.builder()
                 //req-resp需要带correlationId
-                .correlationId(uuid)
+                .correlationId(UUID.randomUUID().toString())
                 .header(BROKER_INFO_HEADER, "true")
                 .build();
-        return cluster.flatMap(cluster -> cluster.requestResponse(member, jsonRpcMessage)).map(Message::data);
+        return cluster.flatMap(cluster -> cluster.requestResponse(member, request))
+                .map(Message::data);
     }
 
     @Override
@@ -181,8 +181,8 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         @Override
         public void onGossip(Message gossip) {
             try {
-                String json = gossip.data();
-                handleCloudEvent(JSON.deserializeCloudEvent(json));
+                String cloudEventJson = gossip.data();
+                handleCloudEvent(JSON.deserializeCloudEvent(cloudEventJson));
             } catch (Exception e) {
                 log.error("gossip broadcast cloud event error", e);
             }
@@ -194,8 +194,9 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
             String brokerIp = member.address().host();
             int brokerPort = member.address().port();
             if (event.isAdded()) {
-                makeJsonRpcCall(member).subscribe(rsocketBroker -> {
-                    brokers.put(brokerIp, rsocketBroker);
+                //req-resp
+                requestBrokerMember(member).subscribe(brokerInfo -> {
+                    brokers.put(brokerIp, brokerInfo);
                     log.info("Broker '{}:{}' added from cluster", brokerIp, brokerPort);
                 });
             } else if (event.isRemoved()) {
