@@ -6,16 +6,20 @@ import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
+import org.kin.rsocket.core.utils.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.ReactiveDiscoveryClient;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,7 +62,8 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
         this(discoveryClient, DEFAULT_BROKER_DISCOVERY_SERVICE, internal);
     }
 
-    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient, String brokerDiscoveryService, int internal) {
+    public DiscoveryBrokerManager(ReactiveDiscoveryClient discoveryClient,
+                                  String brokerDiscoveryService, int internal) {
         if (StringUtils.isBlank(brokerDiscoveryService)) {
             brokerDiscoveryService = DEFAULT_BROKER_DISCOVERY_SERVICE;
         }
@@ -83,8 +88,9 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
                             String brokerId = metadata.getOrDefault("brokerId", "");
                             String externalDomain = metadata.getOrDefault("externalDomain", "");
                             long startTime = Long.parseLong(metadata.getOrDefault("startTime", "0"));
-                            BrokerInfo brokerInfo = BrokerInfo.of(brokerId, serviceInstance.getScheme(), serviceInstance.getHost(), externalDomain,
-                                    serviceInstance.getPort());
+                            int webPort = Integer.parseInt(metadata.getOrDefault("webPort", "0"));
+                            BrokerInfo brokerInfo = BrokerInfo.of(brokerId, serviceInstance.getScheme(), serviceInstance.getHost(),
+                                    externalDomain, serviceInstance.getPort(), webPort);
                             brokerInfo.setStartTime(startTime);
                             return brokerInfo;
                         }).collect(Collectors.toMap(BrokerInfo::getIp, bi -> bi));
@@ -125,8 +131,26 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
 
     @Override
     public Mono<String> broadcast(CloudEvent cloudEvent) {
-        //TODO 目前还不支持broker间广播事件, 考虑CloudEventNotifyService??
-        return Mono.empty();
+        String cloudEventJson = new String(JSON.serializeCloudEvent(cloudEvent), StandardCharsets.UTF_8);
+        return Flux.fromIterable(brokers.values())
+                .flatMap(info -> WebClient.create().post()
+                        .uri(getPostCloudEventUrl(info))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(cloudEventJson)
+                        .retrieve()
+                        .bodyToMono(String.class))
+                .then(Mono.just(NetUtils.getIp()));
+    }
+
+    /**
+     * 获取post cloud event http接口url
+     *
+     * @param info broker info
+     * @return post cloud event http接口url
+     * @see org.kin.rsocket.broker.controller.CloudEventController#postCloudEvent(byte[])
+     */
+    private String getPostCloudEventUrl(BrokerInfo info) {
+        return info.getIp() + ":" + info.getWebPort() + "/cloudEvent/post";
     }
 
     @Override

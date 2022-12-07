@@ -21,18 +21,21 @@ public final class BrokerInfo {
     private Integer status = 1;
     /** broker start time */
     private long startTime;
+    /** broker暴露的web port */
+    private int webPort;
 
     public static BrokerInfo of(String id, String schema,
                                 String ip, String externalDomain,
-                                int port) {
-        BrokerInfo inst = new BrokerInfo();
-        inst.id = id;
-        inst.schema = schema;
-        inst.ip = ip;
-        inst.externalDomain = externalDomain;
-        inst.port = port;
-        inst.startTime = System.currentTimeMillis();
-        return inst;
+                                int port, int webPort) {
+        BrokerInfo info = new BrokerInfo();
+        info.id = id;
+        info.schema = schema;
+        info.ip = ip;
+        info.externalDomain = externalDomain;
+        info.port = port;
+        info.startTime = System.currentTimeMillis();
+        info.webPort = webPort;
+        return info;
     }
 
     public String getUrl() {
@@ -109,5 +112,13 @@ public final class BrokerInfo {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
+    }
+
+    public int getWebPort() {
+        return webPort;
+    }
+
+    public void setWebPort(int webPort) {
+        this.webPort = webPort;
     }
 }

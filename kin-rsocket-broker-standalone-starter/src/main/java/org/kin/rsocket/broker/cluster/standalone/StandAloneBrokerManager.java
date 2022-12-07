@@ -45,7 +45,8 @@ public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager 
             schema = "tcps";
         }
         this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, schema,
-                localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
+                localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort(),
+                RSocketAppContext.webPort);
         log.info("start standalone cluster");
 
         Metrics.gauge(MetricsNames.CLUSTER_BROKER_NUM, brokerConfig.getUpstreamBrokers().size());

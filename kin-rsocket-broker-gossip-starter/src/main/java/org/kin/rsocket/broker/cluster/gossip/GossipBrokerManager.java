@@ -82,7 +82,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         cluster.subscribe();
         RSocketBrokerProperties.RSocketSSL sslConfig = brokerConfig.getSsl();
         this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, Objects.nonNull(sslConfig) && sslConfig.isEnabled() ? "tcps" : "tcp",
-                localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort());
+                localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort(), RSocketAppContext.webPort);
         brokers.put(localIp, localBrokerInfo);
         log.info("start cluster with Gossip support");
 

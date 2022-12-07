@@ -1,5 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
+import org.kin.rsocket.core.event.CloudEventBus;
+import org.kin.rsocket.core.utils.JSON;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +18,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/cloudEvent")
 public class CloudEventController {
     @PostMapping("/post")
-    public Mono<Void> postCloudEvent(@RequestBody String uris) {
-        return Mono.empty();
+    public Mono<Void> postCloudEvent(@RequestBody byte[] cloudEventBytes) {
+        return Mono.fromRunnable(() -> CloudEventBus.INSTANCE.postCloudEvent(JSON.deserializeCloudEvent(cloudEventBytes)));
     }
 }
