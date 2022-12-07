@@ -4,7 +4,6 @@ import io.cloudevents.CloudEvent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
@@ -363,7 +362,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
      * 详细编解码过程可以看{@link io.rsocket.metadata.CompositeMetadataCodec#decodeMimeAndContentBuffersSlices}
      */
     private static ByteBuf toMimeAndContentBuffersSlices(MessageMimeTypeMetadata metadata) {
-        ByteBuf buf = Unpooled.buffer(5, 5);
+        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer(5, 5);
         //|0x80 代表第一个byte仅仅是mime type
         buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
         //24bit代表内容长度

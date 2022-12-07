@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.util.DefaultPayload;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
@@ -55,7 +55,7 @@ public class RSocketApiController {
             GSVRoutingMetadata routingMetadata = GSVRoutingMetadata.from(group, service, method, version);
             int serviceId = routingMetadata.serviceId();
 
-            ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : Unpooled.wrappedBuffer(body);
+            ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : PooledByteBufAllocator.DEFAULT.buffer(body.length).writeBytes(body);
             RSocketEndpoint rsocketEndpoint;
             if (endpoint.startsWith("id:")) {
                 //存在endpoint

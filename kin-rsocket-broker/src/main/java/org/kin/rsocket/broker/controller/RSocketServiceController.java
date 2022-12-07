@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.RSocketEndpoint;
@@ -58,7 +58,8 @@ public class RSocketServiceController {
     public Mono<String> queryDefinitionByService(@RequestParam(name = "group", defaultValue = "") String group,
                                                  @PathVariable(name = "service") String service,
                                                  @RequestParam(name = "version", defaultValue = "") String version) {
-        ByteBuf bodyBuf = Unpooled.wrappedBuffer(("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8));
+        byte[] bytes = ("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8);
+        ByteBuf bodyBuf = PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes);
         RSocketEndpoint RSocketEndpoint = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
         if (Objects.nonNull(RSocketEndpoint)) {
             GSVRoutingMetadata routingMetadata =

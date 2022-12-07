@@ -102,25 +102,31 @@ public final class ReactiveGrpcCallInterceptor {
             //request response
             Mono<GeneratedMessageV3> monoParam = (Mono<GeneratedMessageV3>) params[0];
             return monoParam
-                    .map(param -> Unpooled.wrappedBuffer(param.toByteArray()))
-                    .flatMap(paramBodyBytes ->
-                            rsocketRpc(requester, methodMetadata, paramBodyBytes)
-                    );
+                    .map(param -> {
+                        byte[] bytes = param.toByteArray();
+                        return PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes);
+                    })
+                    .flatMap(paramBodyBytes -> rsocketRpc(requester, methodMetadata, paramBodyBytes));
         } else if (methodMetadata.getRpcType().equals(ReactiveGrpcMethodMetadata.SERVER_STREAMING)) {
             //request stream
             Mono<GeneratedMessageV3> monoParam = (Mono<GeneratedMessageV3>) params[0];
             return monoParam
-                    .map(param -> Unpooled.wrappedBuffer(param.toByteArray()))
-                    .flatMapMany(paramBodyBytes ->
-                            rsocketStream(requester, methodMetadata, paramBodyBytes));
+                    .map(param -> {
+                        byte[] bytes = param.toByteArray();
+                        return PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes);
+                    })
+                    .flatMapMany(paramBodyBytes -> rsocketStream(requester, methodMetadata, paramBodyBytes));
         } else if (methodMetadata.getRpcType().equals(ReactiveGrpcMethodMetadata.CLIENT_STREAMING) ||
                 methodMetadata.getRpcType().equals(ReactiveGrpcMethodMetadata.BIDIRECTIONAL_STREAMING)) {
             //client streaming or bidirectional streaming, rsocket request channel
 
             //param flux
             Flux<Payload> paramsPayloadFlux = ((Flux<GeneratedMessageV3>) params[0])
-                    .map(param -> ByteBufPayload.create(Unpooled.wrappedBuffer(param.toByteArray()), PayloadUtils.getCompositeMetaDataWithEncoding()));
-
+                    .map(param -> {
+                        byte[] bytes = param.toByteArray();
+                        return ByteBufPayload.create(PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes),
+                                PayloadUtils.getCompositeMetaDataWithEncoding());
+                    });
             Flux<?> responseFlux = rsocketChannel(requester, methodMetadata, paramsPayloadFlux);
             if (methodMetadata.getRpcType().equals(ReactiveGrpcMethodMetadata.CLIENT_STREAMING)) {
                 //return one

@@ -2,7 +2,6 @@ package org.kin.rsocket.core.metadata;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.rsocket.metadata.WellKnownMimeType;
 import org.kin.rsocket.core.RSocketMimeType;
 
@@ -67,7 +66,8 @@ public final class MessageMimeTypeMetadata implements MetadataAware {
     public ByteBuf getContent() {
         if (mimeTypeId > 0) {
             //已知的mimeType第8位都是0, 即小于0x80
-            return Unpooled.wrappedBuffer(new byte[]{(byte) (mimeTypeId | 0x80)});
+            byte[] bytes = {(byte) (mimeTypeId | 0x80)};
+            return PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes);
         } else {
             //unknown mimeType
             byte[] bytes = mimeType.getBytes(StandardCharsets.US_ASCII);
