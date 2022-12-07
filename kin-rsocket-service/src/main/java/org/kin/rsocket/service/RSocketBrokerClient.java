@@ -385,7 +385,11 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
         checkStart();
         return upstreamClusterManager.select(serviceId);
     }
-    //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------
+
+    //--------------------------------------------------getter----------------------------------------------------------------------
+    public String getAppName() {
+        return appName;
+    }
 
     //--------------------------------------------------内部类----------------------------------------------------------------------
     public static Builder builder(String appName, RSocketServiceProperties rsocketServiceProperties) {

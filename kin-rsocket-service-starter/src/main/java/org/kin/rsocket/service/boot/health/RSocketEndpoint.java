@@ -92,9 +92,11 @@ public final class RSocketEndpoint {
     @WriteOperation
     public Mono<String> operate(String action) {
         if ("online".equalsIgnoreCase(action)) {
+            //整体服务上线
             this.serviceStatus = AppStatus.SERVING;
             return updateAppStatus(this.serviceStatus).thenReturn("Succeed to register RSocket services on brokers!");
         } else if (action.startsWith("online-")) {
+            //部分rsocket服务上线
             String service = action.substring("online-".length());
             ServiceLocator targetService = getServiceLocator(service);
             if (targetService == null) {
@@ -104,9 +106,11 @@ public final class RSocketEndpoint {
                 return sendRegisterService(targetService).thenReturn("Succeed to register " + service + " on brokers!");
             }
         } else if ("offline".equalsIgnoreCase(action)) {
+            //整体服务下线
             this.serviceStatus = AppStatus.DOWN;
             return updateAppStatus(this.serviceStatus).thenReturn("Succeed to unregister RSocket services on brokers!");
         } else if (action.startsWith("offline-")) {
+            //部分rsocket服务下线
             String service = action.substring("offline-".length());
             ServiceLocator targetService = getServiceLocator(service);
             if (targetService == null) {
@@ -116,10 +120,12 @@ public final class RSocketEndpoint {
                 return sendUnregisterService(targetService).thenReturn("Succeed to unregister " + service + " on brokers!");
             }
         } else if ("shutdown".equalsIgnoreCase(action)) {
+            //整体服务shutdown
             this.serviceStatus = AppStatus.STOPPED;
             return updateAppStatus(this.serviceStatus)
                     .thenReturn("Succeed to unregister RSocket services on brokers! Please wait almost 60 seconds to shutdown the Spring Boot App!");
         } else if ("refreshUpstreams".equalsIgnoreCase(action)) {
+            //refresh upstream cluster url
             Collection<UpstreamCluster> allClusters = this.upstreamClusterManager.getAll();
             for (UpstreamCluster upstreamCluster : allClusters) {
                 upstreamCluster.refreshUnhealthyUris();
