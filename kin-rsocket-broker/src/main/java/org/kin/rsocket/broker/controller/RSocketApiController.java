@@ -23,7 +23,7 @@ import java.util.Objects;
 import static io.netty.buffer.Unpooled.EMPTY_BUFFER;
 
 /**
- * 以http形式请求服务调用, 不走rsocket
+ * 以http形式请求服务调用, 不走rsocket协议
  *
  * @author huangjianqin
  * @date 2021/3/31
