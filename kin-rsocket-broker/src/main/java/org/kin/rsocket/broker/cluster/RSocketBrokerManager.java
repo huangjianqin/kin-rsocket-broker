@@ -8,6 +8,11 @@ import reactor.core.publisher.Mono;
 import java.util.Collection;
 
 /**
+ * 自动发现rsocket broker, 动态支持rsocket broker水平扩展
+ * <p>
+ * 集群broker变化时, 会广播{@link org.kin.rsocket.core.event.UpstreamClusterChangedEvent}给rsocket service, 通知其
+ * 刷新upstream rsocket broker uris
+ *
  * @author huangjianqin
  * @date 2021/3/29
  */
