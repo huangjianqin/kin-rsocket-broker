@@ -3,7 +3,6 @@ package org.kin.rsocket.broker.event;
 import io.cloudevents.CloudEvent;
 import org.kin.rsocket.broker.RSocketEndpoint;
 import org.kin.rsocket.broker.RSocketServiceManager;
-import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.AppStatusEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +37,7 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
                 break;
             case STOPPED:
                 //app stopped
-                rsocketEndpoint.hideServices();
-                rsocketEndpoint.setAppStatus(AppStatus.STOPPED);
+                rsocketEndpoint.forceDispose();
                 break;
             default:
                 //like app connected

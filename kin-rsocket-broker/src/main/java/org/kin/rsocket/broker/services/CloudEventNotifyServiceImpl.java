@@ -32,7 +32,7 @@ public class CloudEventNotifyServiceImpl implements CloudEventNotifyService {
     @Override
     public Mono<Void> notifyAll(String appName, String cloudEventJson) {
         return Flux.fromIterable(serviceManager.getByAppName(appName))
-                .flatMap(responderHandler -> responderHandler.fireCloudEvent(cloudEventJson))
+                .flatMap(endpoint -> endpoint.fireCloudEvent(cloudEventJson))
                 .then();
     }
 }
