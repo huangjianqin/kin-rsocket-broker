@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * rsocket broker集群相关restful查询(操作)接口
+ * rsocket broker集群相关接口
  *
  * @author huangjianqin
  * @date 2021/3/31

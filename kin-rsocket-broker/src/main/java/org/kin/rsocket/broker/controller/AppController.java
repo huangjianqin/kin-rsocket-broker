@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * rsocket app相关restful查询接口
+ * rsocket服务应用相关接口
  *
  * @author huangjianqin
  * @date 2021/3/30

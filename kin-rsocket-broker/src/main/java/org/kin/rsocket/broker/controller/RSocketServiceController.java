@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * rsocket service相关restful查询接口
+ * rsocket service相关接口
  *
  * @author huangjianqin
  * @date 2021/3/30

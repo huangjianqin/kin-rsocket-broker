@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 /**
- * rsocket broker权限相关restful查询(操作)接口
+ * rsocket broker权限相关接口
  *
  * @author huangjianqin
  * @date 2022/8/30
