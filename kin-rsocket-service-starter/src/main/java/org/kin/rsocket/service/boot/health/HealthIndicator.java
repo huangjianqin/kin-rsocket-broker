@@ -17,15 +17,15 @@ public final class HealthIndicator implements ReactiveHealthIndicator {
     /** health checker */
     private final HealthCheck healthCheck;
     /** rsocket service监控信息 */
-    private final RSocketEndpoint rsocketEndpoint;
+    private final RSocketServiceEndpoint endpoint;
     /** broker uris */
     private final String brokerUris;
 
-    public HealthIndicator(RSocketEndpoint rsocketEndpoint,
+    public HealthIndicator(RSocketServiceEndpoint endpoint,
                            HealthCheck healthCheck,
                            String brokerUris) {
         this.healthCheck = healthCheck;
-        this.rsocketEndpoint = rsocketEndpoint;
+        this.endpoint = endpoint;
         this.brokerUris = brokerUris;
     }
 
@@ -35,8 +35,8 @@ public final class HealthIndicator implements ReactiveHealthIndicator {
                 .map(result -> {
                             boolean brokerAlive = result != null && result == 1;
                     //endpoint health status
-                            AppStatus serviceStatus = rsocketEndpoint.getServiceStatus();
-                            boolean localServicesAlive = !serviceStatus.equals(AppStatus.STOPPED);
+                    AppStatus serviceStatus = endpoint.getServiceStatus();
+                    boolean localServicesAlive = !serviceStatus.equals(AppStatus.STOPPED);
                             Health.Builder builder = brokerAlive && localServicesAlive ? Health.up() : Health.outOfService();
                             builder.withDetail("brokers", brokerUris);
                             builder.withDetail("localServiceStatus", serviceStatus.getDesc());

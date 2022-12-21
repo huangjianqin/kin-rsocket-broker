@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/28
  */
-@Endpoint(id = "rsocket")
-public final class RSocketEndpoint {
+@Endpoint(id = "rsocketService")
+public final class RSocketServiceEndpoint {
     private final RSocketServiceProperties rsocketServiceProperties;
     private final UpstreamClusterManager upstreamClusterManager;
     private final boolean serviceProvider;
@@ -35,8 +35,8 @@ public final class RSocketEndpoint {
     /** 下线的服务 */
     private final Set<String> offlineServices = new HashSet<>();
 
-    public RSocketEndpoint(RSocketServiceProperties rsocketServiceProperties,
-                           UpstreamClusterManager upstreamClusterManager) {
+    public RSocketServiceEndpoint(RSocketServiceProperties rsocketServiceProperties,
+                                  UpstreamClusterManager upstreamClusterManager) {
         this.rsocketServiceProperties = rsocketServiceProperties;
         this.upstreamClusterManager = upstreamClusterManager;
         Set<ServiceLocator> exposedServices = LocalRSocketServiceRegistry.exposedServices();

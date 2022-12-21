@@ -28,7 +28,7 @@ import java.util.List;
 public final class HealthService implements HealthCheck, ApplicationListener<ContextRefreshedEvent> {
     /**
      * 使用{@link ApplicationListener}为了解决循环依赖
-     * {@link RSocketBrokerClient} ----> {@link HealthService} ----> {@link HealthIndicator} ----> {@link RSocketEndpoint}
+     * {@link RSocketBrokerClient} ----> {@link HealthService} ----> {@link HealthIndicator} ----> {@link RSocketServiceEndpoint}
      * ^                                                                                                              |
      * |                                                                                                              |
      * |                                                                                                              |

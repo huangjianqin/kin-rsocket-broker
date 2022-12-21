@@ -12,7 +12,7 @@ import org.kin.rsocket.service.boot.event.CloudEvent2ApplicationEventConsumer;
 import org.kin.rsocket.service.boot.event.InvalidCacheEventConsumer;
 import org.kin.rsocket.service.boot.health.HealthIndicator;
 import org.kin.rsocket.service.boot.health.HealthService;
-import org.kin.rsocket.service.boot.health.RSocketEndpoint;
+import org.kin.rsocket.service.boot.health.RSocketServiceEndpoint;
 import org.kin.rsocket.service.boot.metrics.MetricsServicePrometheusImpl;
 import org.kin.rsocket.service.health.BrokerHealthCheckService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,9 +78,9 @@ public class RSocketServiceConfiguration {
      * 开启actuator监控
      */
     @Bean
-    public RSocketEndpoint rsocketEndpoint(@Autowired RSocketServiceProperties rsocketServiceProperties,
-                                           @Autowired RSocketBrokerClient brokerClient) {
-        return new RSocketEndpoint(rsocketServiceProperties, brokerClient);
+    public RSocketServiceEndpoint rsocketServiceEndpoint(@Autowired RSocketServiceProperties rsocketServiceProperties,
+                                                         @Autowired RSocketBrokerClient brokerClient) {
+        return new RSocketServiceEndpoint(rsocketServiceProperties, brokerClient);
     }
 
     /**
@@ -89,7 +89,7 @@ public class RSocketServiceConfiguration {
     @Bean
     @ConditionalOnProperty("kin.rsocket.brokers")
     public HealthIndicator healthIndicator(@Autowired RSocketServiceProperties rsocketServiceProperties,
-                                           @Autowired RSocketEndpoint endpoint,
+                                           @Autowired RSocketServiceEndpoint endpoint,
                                            @Autowired @Qualifier("brokerHealthCheckService") HealthCheck healthCheck) {
         return new HealthIndicator(endpoint, healthCheck, StringUtils.collectionToCommaDelimitedString(rsocketServiceProperties.getBrokers()));
     }
