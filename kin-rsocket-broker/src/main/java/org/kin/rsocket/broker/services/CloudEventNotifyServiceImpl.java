@@ -31,7 +31,7 @@ public class CloudEventNotifyServiceImpl implements CloudEventNotifyService {
     @Override
     public Mono<Void> notifyAll(String appName, byte[] cloudEventBytes) {
         return Flux.fromIterable(serviceManager.getByAppName(appName))
-                .flatMap(endpoint -> endpoint.fireCloudEvent(cloudEventBytes))
+                .flatMap(rs -> rs.fireCloudEvent(cloudEventBytes))
                 .then();
     }
 }
