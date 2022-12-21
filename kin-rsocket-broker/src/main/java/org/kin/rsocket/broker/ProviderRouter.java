@@ -22,7 +22,7 @@ public interface ProviderRouter {
      * app注册完触发
      * {@link RSocketServiceManager#lock}加锁下完成
      */
-    void onAppRegistered(RSocketEndpoint rsocketEndpoint, int weight, Collection<ServiceLocator> services);
+    void onAppRegistered(RSocketService rsocketService, int weight, Collection<ServiceLocator> services);
 
     /**
      * app注销完触发

@@ -1,10 +1,9 @@
 package org.kin.rsocket.broker.services;
 
-import org.kin.rsocket.broker.RSocketEndpoint;
+import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.discovery.RSocketServiceInstance;
@@ -18,7 +17,7 @@ import reactor.core.publisher.Flux;
  * @author huangjianqin
  * @date 2021/3/30
  */
-@RSocketService(DiscoveryService.class)
+@org.kin.rsocket.core.RSocketService(DiscoveryService.class)
 public class DiscoveryServiceImpl implements DiscoveryService {
     @Autowired
     private RSocketServiceManager serviceManager;
@@ -62,8 +61,8 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /**
      * 构建{@link RSocketServiceInstance}实例
      */
-    private RSocketServiceInstance newServiceInstance(RSocketEndpoint rsocketEndpoint) {
-        AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
+    private RSocketServiceInstance newServiceInstance(RSocketService rsocketService) {
+        AppMetadata appMetadata = rsocketService.getAppMetadata();
         RSocketServiceInstance serviceInstance = new RSocketServiceInstance();
         serviceInstance.setInstanceId(appMetadata.getUuid());
         serviceInstance.setServiceId(appMetadata.getName());

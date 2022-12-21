@@ -30,10 +30,10 @@ public class RandomRouter implements ProviderRouter {
     }
 
     @Override
-    public void onAppRegistered(RSocketEndpoint rsocketEndpoint, int weight, Collection<ServiceLocator> services) {
+    public void onAppRegistered(RSocketService rsocketService, int weight, Collection<ServiceLocator> services) {
         //copy on write
         UnifiedMap<Integer, InstanceIdWeightList> serviceId2InstanceIdWeightList = new UnifiedMap<>(this.serviceId2InstanceIdWeightList);
-        int instanceId = rsocketEndpoint.getId();
+        int instanceId = rsocketService.getId();
         for (ServiceLocator serviceLocator : services) {
             int serviceId = serviceLocator.getId();
 

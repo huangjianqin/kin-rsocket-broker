@@ -31,13 +31,14 @@ import java.util.*;
 
 /**
  * service <- broker
- * broker请求service
+ * broker向service发送请求
+ * broker端缓存的rsocket service应用信息以及requester入口
  *
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class RSocketEndpoint implements CloudEventRSocket {
-    private static final Logger log = LoggerFactory.getLogger(RSocketEndpoint.class);
+public final class RSocketService implements CloudEventRSocket {
+    private static final Logger log = LoggerFactory.getLogger(RSocketService.class);
     /** app metadata */
     private final AppMetadata appMetadata;
     /**
@@ -59,11 +60,11 @@ public final class RSocketEndpoint implements CloudEventRSocket {
     /** rsocket consumer请求处理handler */
     private final RSocketServiceRequestHandler requestHandler;
 
-    public RSocketEndpoint(RSocketCompositeMetadata compositeMetadata,
-                           AppMetadata appMetadata,
-                           RSocket requester,
-                           RSocketServiceManager serviceManager,
-                           RSocketServiceRequestHandler requestHandler) {
+    public RSocketService(RSocketCompositeMetadata compositeMetadata,
+                          AppMetadata appMetadata,
+                          RSocket requester,
+                          RSocketServiceManager serviceManager,
+                          RSocketServiceRequestHandler requestHandler) {
         this.appMetadata = appMetadata;
         //app tags hashcode set
         Set<Integer> appTagsHashCodeSet = new HashSet<>(4);

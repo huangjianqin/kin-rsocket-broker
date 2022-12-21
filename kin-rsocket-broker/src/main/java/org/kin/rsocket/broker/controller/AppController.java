@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import org.kin.framework.utils.CollectionUtils;
-import org.kin.rsocket.broker.RSocketEndpoint;
+import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.domain.AppVO;
 import org.kin.rsocket.core.metadata.AppMetadata;
@@ -33,12 +33,12 @@ public class AppController {
     @GetMapping("/{appName}")
     public Flux<AppVO> queryByAppName(@PathVariable(name = "appName") String appName) {
         List<AppVO> apps = new ArrayList<>();
-        Collection<RSocketEndpoint> rsocketEndpoints = serviceManager.getByAppName(appName);
-        if (CollectionUtils.isEmpty(rsocketEndpoints)) {
+        Collection<RSocketService> rsocketServices = serviceManager.getByAppName(appName);
+        if (CollectionUtils.isEmpty(rsocketServices)) {
             return Flux.empty();
         }
-        for (RSocketEndpoint rsocketEndpoint : rsocketEndpoints) {
-            AppMetadata appMetadata = rsocketEndpoint.getAppMetadata();
+        for (RSocketService rsocketService : rsocketServices) {
+            AppMetadata appMetadata = rsocketService.getAppMetadata();
             apps.add(appMetadata.toVo());
         }
         return Flux.fromIterable(apps);
@@ -46,8 +46,8 @@ public class AppController {
 
     @RequestMapping("/all")
     public Mono<Map<String, Collection<String>>> all() {
-        return Flux.fromIterable(serviceManager.getAllRSocketEndpoints())
-                .map(RSocketEndpoint::getAppMetadata)
+        return Flux.fromIterable(serviceManager.getAllRSocketServices())
+                .map(RSocketService::getAppMetadata)
                 .collectMultimap(AppMetadata::getName, AppMetadata::getIp);
     }
 }

@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import io.cloudevents.CloudEvent;
-import org.kin.rsocket.broker.RSocketEndpoint;
+import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
@@ -20,10 +20,10 @@ public final class RSocketServicesExposedEventConsumer extends AbstractCloudEven
 
     @Override
     public void consume(CloudEvent cloudEvent, RSocketServicesExposedEvent event) {
-        RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(event.getAppId());
-        if (rsocketEndpoint != null) {
+        RSocketService rsocketService = serviceManager.getByUUID(event.getAppId());
+        if (rsocketService != null) {
             Set<ServiceLocator> serviceLocators = event.getServices();
-            rsocketEndpoint.registerServices(serviceLocators);
+            rsocketService.registerServices(serviceLocators);
         }
     }
 }

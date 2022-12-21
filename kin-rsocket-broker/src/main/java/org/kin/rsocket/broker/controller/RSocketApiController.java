@@ -6,7 +6,7 @@ import io.rsocket.util.DefaultPayload;
 import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
-import org.kin.rsocket.broker.RSocketEndpoint;
+import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.RSocketServiceMeshInspector;
 import org.kin.rsocket.core.RSocketMimeType;
@@ -56,23 +56,23 @@ public class RSocketApiController {
             int serviceId = routingMetadata.serviceId();
 
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : PooledByteBufAllocator.DEFAULT.buffer(body.length).writeBytes(body);
-            RSocketEndpoint rsocketEndpoint;
+            RSocketService rsocketService;
             if (endpoint.startsWith("id:")) {
                 //存在endpoint
                 int instanceId = Integer.parseInt(endpoint.substring(3).trim());
-                rsocketEndpoint = serviceManager.getByInstanceId(instanceId);
+                rsocketService = serviceManager.getByInstanceId(instanceId);
             } else {
-                rsocketEndpoint = serviceManager.routeByServiceId(serviceId);
+                rsocketService = serviceManager.routeByServiceId(serviceId);
             }
-            if (Objects.nonNull(rsocketEndpoint)) {
+            if (Objects.nonNull(rsocketService)) {
                 if (rsocketBrokerProperties.isAuth()) {
                     RSocketAppPrincipal principal = authenticationService.auth(token);
-                    if (principal == null || !serviceMeshInspector.isAllowed(principal, serviceId, rsocketEndpoint.getPrincipal())) {
+                    if (principal == null || !serviceMeshInspector.isAllowed(principal, serviceId, rsocketService.getPrincipal())) {
                         return Mono.just(error(String.format("Service request not allowed '%s'", routingMetadata.gsv())));
                     }
                 }
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, JSON_ENCODING_METADATA);
-                return rsocketEndpoint.requestResponse(DefaultPayload.create(bodyBuf, compositeMetadata.getContent()))
+                return rsocketService.requestResponse(DefaultPayload.create(bodyBuf, compositeMetadata.getContent()))
                         .map(payload -> {
                             HttpHeaders headers = new HttpHeaders();
                             headers.setContentType(MediaType.APPLICATION_JSON);

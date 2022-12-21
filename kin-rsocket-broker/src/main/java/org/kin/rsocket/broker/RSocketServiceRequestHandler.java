@@ -387,33 +387,33 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             Exception error = null;
             //sticky session responder
             boolean sticky = routingMetaData.isSticky();
-            RSocketEndpoint targetEndpoint = null;
+            RSocketService targetService = null;
             if (sticky) {
                 // responder from sticky services
-                targetEndpoint = findStickyServiceInstance(serviceId);
+                targetService = findStickyServiceInstance(serviceId);
             }
 
-            if (targetEndpoint != null) {
-                rsocket = targetEndpoint;
+            if (targetService != null) {
+                rsocket = targetService;
             } else {
                 String endpoint = routingMetaData.getEndpoint();
                 if (StringUtils.isNotBlank(endpoint)) {
-                    targetEndpoint = findDestinationWithEndpoint(endpoint, serviceId);
-                    if (targetEndpoint == null) {
+                    targetService = findDestinationWithEndpoint(endpoint, serviceId);
+                    if (targetService == null) {
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", serviceErrorMsg, endpoint));
                     }
                 } else {
-                    targetEndpoint = serviceManager.routeByServiceId(serviceId);
-                    if (Objects.isNull(targetEndpoint)) {
+                    targetService = serviceManager.routeByServiceId(serviceId);
+                    if (Objects.isNull(targetService)) {
                         error = new InvalidException(String.format("Service not found '%s'", serviceErrorMsg));
                     }
                 }
-                if (targetEndpoint != null) {
-                    if (serviceMeshInspector.isAllowed(this.principal, serviceId, targetEndpoint.getPrincipal())) {
-                        rsocket = targetEndpoint;
+                if (targetService != null) {
+                    if (serviceMeshInspector.isAllowed(this.principal, serviceId, targetService.getPrincipal())) {
+                        rsocket = targetService;
                         //save responder id if sticky
                         if (sticky) {
-                            this.stickyServices.put(serviceId, targetEndpoint.getId());
+                            this.stickyServices.put(serviceId, targetService.getId());
                         }
                     } else {
                         error = new ApplicationErrorException(String.format("Service request not allowed '%s'", serviceErrorMsg));
@@ -436,14 +436,14 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
     /**
      * 根据endpoint属性寻找target service instance
      */
-    private RSocketEndpoint findDestinationWithEndpoint(String endpoint, Integer serviceId) {
+    private RSocketService findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
             return serviceManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
-        for (RSocketEndpoint rsocketEndpoint : serviceManager.getAllByServiceId(serviceId)) {
-            if (rsocketEndpoint.getAppTagsHashCodeSet().contains(endpointHashCode)) {
-                return rsocketEndpoint;
+        for (RSocketService rsocketService : serviceManager.getAllByServiceId(serviceId)) {
+            if (rsocketService.getAppTagsHashCodeSet().contains(endpointHashCode)) {
+                return rsocketService;
             }
         }
         return null;
@@ -452,7 +452,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
     /**
      * 寻找sticky service instance
      */
-    private RSocketEndpoint findStickyServiceInstance(Integer serviceId) {
+    private RSocketService findStickyServiceInstance(Integer serviceId) {
         if (stickyServices.containsKey(serviceId)) {
             return serviceManager.getByInstanceId(stickyServices.get(serviceId));
         }

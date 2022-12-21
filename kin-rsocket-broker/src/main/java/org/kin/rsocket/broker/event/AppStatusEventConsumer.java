@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import io.cloudevents.CloudEvent;
-import org.kin.rsocket.broker.RSocketEndpoint;
+import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.AppStatusEvent;
@@ -21,23 +21,23 @@ public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<App
     public void consume(CloudEvent cloudEvent, AppStatusEvent event) {
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
         String appId = event.getId();
-        RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(appId);
-        if (Objects.isNull(rsocketEndpoint)) {
+        RSocketService rsocketService = serviceManager.getByUUID(appId);
+        if (Objects.isNull(rsocketService)) {
             return;
         }
 
         switch (event.getStatus()) {
             case SERVING:
                 //app serving
-                rsocketEndpoint.publishServices();
+                rsocketService.publishServices();
                 break;
             case DOWN:
                 //app out of service
-                rsocketEndpoint.hideServices();
+                rsocketService.hideServices();
                 break;
             case STOPPED:
                 //app stopped
-                rsocketEndpoint.forceDispose();
+                rsocketService.forceDispose();
                 break;
             default:
                 //like app connected

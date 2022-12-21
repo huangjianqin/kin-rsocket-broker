@@ -207,25 +207,25 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
         return Mono.create(sink -> {
             String gsv = routingMetaData.gsv();
             int serviceId = routingMetaData.serviceId();
-            RSocketEndpoint targetEndpoint;
+            RSocketService targetService;
             RSocket rsocket = null;
             Exception error = null;
 
             String endpoint = routingMetaData.getEndpoint();
             if (StringUtils.isNotBlank(endpoint)) {
-                targetEndpoint = findDestinationWithEndpoint(endpoint, serviceId);
-                if (targetEndpoint == null) {
+                targetService = findDestinationWithEndpoint(endpoint, serviceId);
+                if (targetService == null) {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                 }
             } else {
-                targetEndpoint = serviceManager.routeByServiceId(serviceId);
-                if (Objects.isNull(targetEndpoint)) {
+                targetService = serviceManager.routeByServiceId(serviceId);
+                if (Objects.isNull(targetService)) {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }
             }
 
-            if (targetEndpoint != null) {
-                rsocket = targetEndpoint;
+            if (targetService != null) {
+                rsocket = targetService;
             }
             if (rsocket != null) {
                 sink.success(rsocket);
@@ -238,14 +238,14 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
     /**
      * 根据endpoint属性寻找target service instance
      */
-    private RSocketEndpoint findDestinationWithEndpoint(String endpoint, Integer serviceId) {
+    private RSocketService findDestinationWithEndpoint(String endpoint, Integer serviceId) {
         if (endpoint.startsWith("id:")) {
             return serviceManager.getByUUID(endpoint.substring(3));
         }
         int endpointHashCode = endpoint.hashCode();
-        for (RSocketEndpoint rsocketEndpoint : serviceManager.getAllByServiceId(serviceId)) {
-            if (rsocketEndpoint.getAppTagsHashCodeSet().contains(endpointHashCode)) {
-                return rsocketEndpoint;
+        for (RSocketService rsocketService : serviceManager.getAllByServiceId(serviceId)) {
+            if (rsocketService.getAppTagsHashCodeSet().contains(endpointHashCode)) {
+                return rsocketService;
             }
         }
         return null;

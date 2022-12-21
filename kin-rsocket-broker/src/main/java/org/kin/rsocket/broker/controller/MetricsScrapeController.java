@@ -5,7 +5,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
-import org.kin.rsocket.broker.RSocketEndpoint;
+import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
@@ -67,7 +67,7 @@ public class MetricsScrapeController {
         String port = env.getProperty("server.port");
         List<String> hosts = brokerManager.all().stream().map(BrokerInfo::getIp).collect(Collectors.toList());
         int hostSize = hosts.size();
-        return Mono.just(serviceManager.getAllRSocketEndpoints().stream()
+        return Mono.just(serviceManager.getAllRSocketServices().stream()
                 .map(responder -> {
                     //随机抽一个broker的/metrics接口作为访问指定app intances的接口
                     String host = hosts.get(responder.getId() % hostSize);
@@ -86,12 +86,12 @@ public class MetricsScrapeController {
 
     @GetMapping(value = "/{uuid}", produces = MimeTypeUtils.TEXT_PLAIN_VALUE)
     public Mono<String> scrape(@PathVariable(name = "uuid") String uuid) {
-        RSocketEndpoint rsocketEndpoint = serviceManager.getByUUID(uuid);
-        if (rsocketEndpoint == null) {
+        RSocketService rsocketService = serviceManager.getByUUID(uuid);
+        if (rsocketService == null) {
             return Mono.error(new IllegalArgumentException(String.format("app instance not found: %s", uuid)));
         }
         //请求metrics service
-        return rsocketEndpoint.requestResponse(ByteBufPayload.create(Unpooled.EMPTY_BUFFER, metricsScrapeCompositeByteBuf.retainedDuplicate()))
+        return rsocketService.requestResponse(ByteBufPayload.create(Unpooled.EMPTY_BUFFER, metricsScrapeCompositeByteBuf.retainedDuplicate()))
                 .map(Payload::getDataUtf8);
     }
 

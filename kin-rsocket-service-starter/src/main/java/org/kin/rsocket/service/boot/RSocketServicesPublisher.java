@@ -39,7 +39,7 @@ final class RSocketServicesPublisher implements ApplicationListener<ApplicationS
         if (brokerCluster == null) {
             //没有配置broker可以不用向broker注册暴露的服务
             //本质上就是直连的方式
-            log.info("rsocket endpoint to endpoint mode!");
+            log.info("rsocket peer to peer mode!");
             return;
         }
 
