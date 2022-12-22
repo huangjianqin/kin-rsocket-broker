@@ -1,6 +1,7 @@
 package org.kin.rsocket.core;
 
 import io.rsocket.RSocket;
+import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import reactor.core.Scannable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -19,7 +20,7 @@ public class AbstractRSocket implements RSocket {
 
     @Override
     public void dispose() {
-        onClose.tryEmitEmpty();
+        onClose.emitEmpty(RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
     }
 
     @SuppressWarnings("ConstantConditions")

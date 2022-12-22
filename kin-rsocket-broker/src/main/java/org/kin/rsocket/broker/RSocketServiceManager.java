@@ -29,6 +29,7 @@ import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.kin.rsocket.core.metadata.BearerTokenMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
+import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import org.kin.rsocket.core.utils.Symbols;
 import org.kin.rsocket.core.utils.Topologys;
 import org.slf4j.Logger;
@@ -258,7 +259,8 @@ public final class RSocketServiceManager {
             //如果不是单节点, 则广播broker uris变化给downstream
             rsocketService.fireCloudEvent(newBrokerClustersChangedCloudEvent(brokerManager.all(), appMetadata.getTopology())).subscribe();
         }
-        notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' online now!", appMetadata.getName(), appMetadata.getIp()));
+        notificationSink.emitNext(String.format("app '%s' with ip '%s' online now!", appMetadata.getName(), appMetadata.getIp()),
+                RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
     }
 
     /**
@@ -297,7 +299,8 @@ public final class RSocketServiceManager {
 
         log.info(String.format("succeed to remove connection from application '%s'", appMetadata.getName()));
         CloudEventBus.INSTANCE.postCloudEvent(AppStatusEvent.stopped(appMetadata.getUuid()).toCloudEvent());
-        this.notificationSink.tryEmitNext(String.format("app '%s' with ip '%s' offline now!", appMetadata.getName(), appMetadata.getIp()));
+        this.notificationSink.emitNext(String.format("app '%s' with ip '%s' offline now!", appMetadata.getName(), appMetadata.getIp()),
+                RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
     }
 
     /**
@@ -481,7 +484,7 @@ public final class RSocketServiceManager {
 
                     //p2p service notification
                     if (p2pServiceConsumers.containsKey(gsv)) {
-                        p2pServiceNotificationSink.tryEmitNext(gsv);
+                        p2pServiceNotificationSink.emitNext(gsv, RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
                     }
                 }
             }
@@ -515,7 +518,7 @@ public final class RSocketServiceManager {
                     if (Objects.nonNull(serviceLocator)) {
                         String gsv = serviceLocator.getGsv();
                         if (p2pServiceConsumers.containsKey(gsv)) {
-                            p2pServiceNotificationSink.tryEmitNext(gsv);
+                            p2pServiceNotificationSink.emitNext(gsv, RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
                         }
                     }
                 }

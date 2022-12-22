@@ -4,6 +4,7 @@ import io.cloudevents.CloudEvent;
 import io.rsocket.Payload;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.core.event.CloudEventRSocket;
+import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
     /** version */
     private final String version;
     /** upstream uris  processor */
-    private final Sinks.Many<Collection<String>> urisSink = Sinks.many().replay().latest();
+    private final Sinks.Many<Collection<String>> urisSink = Sinks.many().unicast().onBackpressureBuffer();
     /** load balanced RSocket to connect service provider or broker instances */
     private final LoadBalanceRSocketRequester loadBalanceRequester;
     /** 上次刷新的uris */
@@ -105,7 +106,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
             return;
         }
         lastUris = uris;
-        urisSink.tryEmitNext(uris);
+        urisSink.emitNext(uris, RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
     }
 
     /**
@@ -178,7 +179,7 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
     @Override
     public void close() {
         stopped = true;
-        urisSink.tryEmitComplete();
+        urisSink.emitComplete(RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
         loadBalanceRequester.dispose();
         log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, service, version)));
     }

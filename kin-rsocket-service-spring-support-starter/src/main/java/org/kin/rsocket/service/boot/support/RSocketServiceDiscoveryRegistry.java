@@ -30,6 +30,12 @@ import java.util.stream.Collectors;
 public final class RSocketServiceDiscoveryRegistry {
     private static final Logger log = LoggerFactory.getLogger(RSocketServiceDiscoveryRegistry.class);
 
+    /** 如果fail结果是FAIL_NON_SERIALIZED, 则重试 */
+    private static final Sinks.EmitFailureHandler RETRY_NON_SERIALIZED = (signalType, emitResult) -> {
+        //多线程emit可能会导致FAIL_NON_SERIALIZED, 故此重试emit, 如果subscriber写得不好, 可能会导致100% cpu, 一直retry
+        return emitResult == Sinks.EmitResult.FAIL_NON_SERIALIZED;
+    };
+
     /** spring reactive discovery client */
     private final ReactiveDiscoveryClient discoveryClient;
     /** 自定义{@link RSocketRequester.Builder}自定义额外逻辑 */
@@ -96,7 +102,7 @@ public final class RSocketServiceDiscoveryRegistry {
             return;
         }
 
-        this.app2ServiceInstances.get(appName).tryEmitNext(serviceInstances);
+        this.app2ServiceInstances.get(appName).emitNext(serviceInstances, RETRY_NON_SERIALIZED);
         this.snapshots.put(appName, serviceInstances);
     }
 

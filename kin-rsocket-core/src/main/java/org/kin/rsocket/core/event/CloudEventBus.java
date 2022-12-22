@@ -2,6 +2,7 @@ package org.kin.rsocket.core.event;
 
 import io.cloudevents.CloudEvent;
 import org.kin.framework.Closeable;
+import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -21,7 +22,7 @@ public final class CloudEventBus implements Closeable {
     public static final CloudEventBus INSTANCE = new CloudEventBus();
 
     /** 接受cloud event的flux */
-    public final Sinks.Many<CloudEvent> cloudEventSink = Sinks.many().multicast().onBackpressureBuffer();
+    public final Sinks.Many<CloudEvent> cloudEventSink = Sinks.many().unicast().onBackpressureBuffer();
     /** cloud event consumers */
     private final List<CloudEventConsumer> consumers = new CopyOnWriteArrayList<>();
     /** event topic processor subscribe disposable */
@@ -66,7 +67,7 @@ public final class CloudEventBus implements Closeable {
      * '投递' cloud event, 即将cloud event分派出去交给{@link CloudEventConsumer}处理
      */
     public void postCloudEvent(CloudEvent cloudEvent) {
-        cloudEventSink.tryEmitNext(cloudEvent);
+        cloudEventSink.emitNext(cloudEvent, RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
     }
 
     @Override

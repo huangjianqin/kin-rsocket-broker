@@ -7,6 +7,7 @@ import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.utils.JSON;
+import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -95,7 +96,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
                             return brokerInfo;
                         }).collect(Collectors.toMap(BrokerInfo::getIp, bi -> bi));
                         log.info(String.format("RSocket Cluster server list changed: %s", String.join(",", brokers.keySet())));
-                        brokersSink.tryEmitNext(brokers.values());
+                        brokersSink.emitNext(brokers.values(), RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
                     }
                 });
     }

@@ -3,6 +3,7 @@ package org.kin.rsocket.conf;
 import org.jctools.maps.NonBlockingHashMap;
 import org.kin.framework.collection.Tuple;
 import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Scheduler;
@@ -48,10 +49,10 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
      */
     protected final void onKvAdd(String group, String key, String value) {
         if (watchNotifications.containsKey(key)) {
-            watchNotifications.get(key).tryEmitNext(new Tuple<>(key, value));
+            watchNotifications.get(key).emitNext(new Tuple<>(key, value), RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
         }
         if (watchNotifications.containsKey(group)) {
-            watchNotifications.get(group).tryEmitNext(new Tuple<>(key, value));
+            watchNotifications.get(group).emitNext(new Tuple<>(key, value), RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
         }
     }
 
@@ -60,10 +61,10 @@ public abstract class AbstractConfDiamond implements ConfDiamond {
      */
     protected final void onKvRemoved(String group, String key) {
         if (watchNotifications.containsKey(key)) {
-            watchNotifications.get(key).tryEmitNext(new Tuple<>(key, ""));
+            watchNotifications.get(key).emitNext(new Tuple<>(key, ""), RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
         }
         if (watchNotifications.containsKey(group)) {
-            watchNotifications.get(group).tryEmitNext(new Tuple<>(key, ""));
+            watchNotifications.get(group).emitNext(new Tuple<>(key, ""), RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
         }
     }
 
