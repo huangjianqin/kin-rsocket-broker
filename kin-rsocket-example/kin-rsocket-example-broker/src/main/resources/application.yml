@@ -28,6 +28,9 @@ management:
   metrics:
     enable:
       http: false
+    export:
+      prometheus:
+        enabled: true
   trace:
     http:
       enabled: false
