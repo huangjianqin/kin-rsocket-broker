@@ -17,7 +17,7 @@ kin:
 # management
 management:
   server:
-    port: 10003
+    port: ${server.port}
   endpoints:
     web:
       exposure:
