@@ -21,10 +21,10 @@ public class RoundRobinUpstreamLoadBalance implements UpstreamLoadBalance {
 
     @Override
     public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> uris) {
-        AtomicInteger counter = counters.computeIfAbsent(serviceId, k -> new AtomicInteger());
         if (CollectionUtils.isEmpty(uris)) {
             return null;
         }
+        AtomicInteger counter = counters.computeIfAbsent(serviceId, k -> new AtomicInteger());
         return uris.get(counter.incrementAndGet() % uris.size());
     }
 }
