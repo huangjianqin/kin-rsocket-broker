@@ -51,7 +51,7 @@ public class RequesterApplication {
 
             Thread.sleep(1_000);
         } finally {
-            brokerClient.close();
+            brokerClient.dispose();
         }
     }
 }

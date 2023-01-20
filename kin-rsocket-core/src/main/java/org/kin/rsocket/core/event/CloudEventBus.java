@@ -1,7 +1,6 @@
 package org.kin.rsocket.core.event;
 
 import io.cloudevents.CloudEvent;
-import org.kin.framework.Closeable;
 import org.kin.rsocket.core.utils.RetryNonSerializedEmitFailureHandler;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -18,7 +17,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author huangjianqin
  * @date 2021/3/24
  */
-public final class CloudEventBus implements Closeable {
+public final class CloudEventBus implements Disposable {
     public static final CloudEventBus INSTANCE = new CloudEventBus();
 
     /** 接受cloud event的flux */
@@ -71,7 +70,12 @@ public final class CloudEventBus implements Closeable {
     }
 
     @Override
-    public void close() {
+    public boolean isDisposed() {
+        return disposable.isDisposed();
+    }
+
+    @Override
+    public void dispose() {
         disposable.dispose();
     }
 }

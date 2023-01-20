@@ -313,15 +313,20 @@ public final class RSocketBrokerClient implements UpstreamClusterManager {
     }
 
     @Override
-    public void close() {
+    public void dispose() {
         if (!state.compareAndSet(STATE_START, STATE_TERMINATED)) {
             return;
         }
 
-        upstreamClusterManager.close();
+        upstreamClusterManager.dispose();
         if (Objects.nonNull(rsocketServer)) {
-            rsocketServer.close();
+            rsocketServer.dispose();
         }
+    }
+
+    @Override
+    public boolean isDisposed() {
+        return state.get() == STATE_TERMINATED;
     }
 
     //--------------------------------------------------overwrite UpstreamClusterManager----------------------------------------------------------------------

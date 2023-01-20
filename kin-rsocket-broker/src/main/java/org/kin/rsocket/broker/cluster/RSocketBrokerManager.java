@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.cluster;
 
 import io.cloudevents.CloudEvent;
-import org.kin.framework.Closeable;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,7 +16,7 @@ import java.util.Collection;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public interface RSocketBrokerManager extends Closeable {
+public interface RSocketBrokerManager extends Disposable {
     /**
      * broker信息发生变更时, 会触发subscriber操作(subscribe数据为所有broker信息)
      */

@@ -48,7 +48,7 @@ public class BrokerClusterController {
 
     @PostMapping("/stop")
     public Mono<String> stopLocalBroker() {
-        brokerManager.close();
+        brokerManager.dispose();
         return Mono.just("Succeed to stop local broker from Cluster! Please shutdown app after 15 seconds!");
     }
 }

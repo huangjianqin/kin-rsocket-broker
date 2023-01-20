@@ -79,7 +79,7 @@ public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager 
     }
 
     @Override
-    public void close() {
+    public void dispose() {
         //do nothing
     }
 

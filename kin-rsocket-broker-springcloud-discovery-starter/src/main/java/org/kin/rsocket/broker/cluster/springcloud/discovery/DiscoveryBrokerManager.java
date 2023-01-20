@@ -155,12 +155,17 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
     }
 
     @Override
-    public void close() {
+    public void dispose() {
         brokersRefresher.dispose();
     }
 
     @Override
+    public boolean isDisposed() {
+        return brokersRefresher.isDisposed();
+    }
+
+    @Override
     public void destroy() {
-        close();
+        dispose();
     }
 }

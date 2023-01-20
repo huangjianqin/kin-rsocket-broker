@@ -123,11 +123,23 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
         clusters.get(serviceId).refreshUris(uris);
     }
 
+
     @Override
-    public void close() {
+    public void dispose() {
         for (UpstreamCluster cluster : clusters.values()) {
-            cluster.close();
+            cluster.dispose();
         }
+    }
+
+    @Override
+    public boolean isDisposed() {
+        for (UpstreamCluster cluster : clusters.values()) {
+            if (!cluster.isDisposed()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -140,7 +152,7 @@ final class UpstreamClusterManagerImpl implements UpstreamClusterManager {
         UpstreamCluster removed = clusters.remove(serviceId);
         if (Objects.nonNull(removed)) {
             //30s后关闭链接
-            Mono.delay(Duration.ofSeconds(30)).subscribe(timestamp -> removed.close());
+            Mono.delay(Duration.ofSeconds(30)).subscribe(timestamp -> removed.dispose());
         }
     }
 

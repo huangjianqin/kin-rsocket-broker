@@ -37,7 +37,7 @@ import java.util.Objects;
 @Configuration
 @EnableConfigurationProperties(RSocketServiceProperties.class)
 public class RSocketServiceConfiguration {
-    @Bean(destroyMethod = "close")
+    @Bean(destroyMethod = "dispose")
     public RSocketBrokerClient rsocketBrokerClient(@Autowired Environment env,
                                                    @Autowired RSocketServiceProperties rsocketServiceProperties,
                                                    @Autowired List<RSocketBinderCustomizer> binderCustomizers,
@@ -151,7 +151,7 @@ public class RSocketServiceConfiguration {
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean(destroyMethod = "close")
+    @Bean(destroyMethod = "dispose")
     public CloudEventBus cloudEventBus(@Autowired List<CloudEventConsumer> consumers) {
         CloudEventBus.INSTANCE.addConsumers(consumers);
         return CloudEventBus.INSTANCE;

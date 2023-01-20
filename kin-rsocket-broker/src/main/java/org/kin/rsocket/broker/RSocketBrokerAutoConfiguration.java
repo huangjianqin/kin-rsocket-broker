@@ -10,7 +10,10 @@ import org.kin.rsocket.broker.event.*;
 import org.kin.rsocket.broker.services.CloudEventNotifyServiceImpl;
 import org.kin.rsocket.broker.services.DiscoveryServiceImpl;
 import org.kin.rsocket.broker.services.HealthService;
-import org.kin.rsocket.core.*;
+import org.kin.rsocket.core.RSocketBinderCustomizer;
+import org.kin.rsocket.core.RSocketServer;
+import org.kin.rsocket.core.RSocketServiceBeanPostProcessor;
+import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.discovery.DiscoveryService;
 import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventConsumer;
@@ -62,7 +65,7 @@ public class RSocketBrokerAutoConfiguration {
     /**
      * 管理所有{@link CloudEventConsumer}的实例
      */
-    @Bean(destroyMethod = "close")
+    @Bean(destroyMethod = "dispose")
     public CloudEventBus cloudEventBus(@Autowired List<CloudEventConsumer> consumers) {
         CloudEventBus.INSTANCE.addConsumers(consumers);
         return CloudEventBus.INSTANCE;
@@ -147,7 +150,7 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     //----------------------------------------------broker binder相关----------------------------------------------
-    @Bean(initMethod = "bind", destroyMethod = "close")
+    @Bean(initMethod = "bind", destroyMethod = "dispose")
     public RSocketServer rsocketServer(@Autowired List<RSocketBinderCustomizer> customizers) {
         RSocketServer.Builder builder = RSocketServer.builder();
         customizers.forEach((customizer) -> customizer.customize(builder));

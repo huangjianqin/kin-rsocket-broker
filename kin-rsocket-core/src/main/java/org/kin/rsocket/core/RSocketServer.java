@@ -16,7 +16,6 @@ import io.rsocket.transport.local.LocalServerTransport;
 import io.rsocket.transport.netty.server.TcpServerTransport;
 import io.rsocket.transport.netty.server.WebsocketServerTransport;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
-import org.kin.framework.Closeable;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.utils.Schemas;
@@ -43,7 +42,7 @@ import java.util.function.Function;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public class RSocketServer implements Closeable {
+public class RSocketServer implements Disposable {
     private static final Logger log = LoggerFactory.getLogger(RSocketServer.class);
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
 
@@ -197,11 +196,8 @@ public class RSocketServer implements Closeable {
         }
     }
 
-    /**
-     * close
-     */
     @Override
-    public void close() {
+    public void dispose() {
         if (!state.compareAndSet(STATE_START, STATE_TERMINATED)) {
             return;
         }
@@ -209,6 +205,11 @@ public class RSocketServer implements Closeable {
         for (Disposable responder : responders) {
             responder.dispose();
         }
+    }
+
+    @Override
+    public boolean isDisposed() {
+        return state.get() == STATE_TERMINATED;
     }
 
     /**

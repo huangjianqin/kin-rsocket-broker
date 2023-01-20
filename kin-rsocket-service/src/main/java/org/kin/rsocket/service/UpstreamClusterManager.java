@@ -1,9 +1,9 @@
 package org.kin.rsocket.service;
 
-import org.kin.framework.Closeable;
 import org.kin.rsocket.core.RSocketRequesterSupport;
 import org.kin.rsocket.core.UpstreamCluster;
 import org.kin.rsocket.core.UpstreamClusterSelector;
+import reactor.core.Disposable;
 
 import java.util.*;
 
@@ -11,7 +11,7 @@ import java.util.*;
  * @author huangjianqin
  * @date 2021/4/18
  */
-public interface UpstreamClusterManager extends UpstreamClusterSelector, Closeable {
+public interface UpstreamClusterManager extends UpstreamClusterSelector, Disposable {
     /**
      * 添加upstream cluster
      */

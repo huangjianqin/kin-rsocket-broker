@@ -151,14 +151,14 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     }
 
     @Override
-    public void close() {
+    public void dispose() {
         cluster.subscribe(Cluster::shutdown);
         brokersSink.emitComplete(RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
     }
 
     @Override
     public void destroy() {
-        close();
+        dispose();
     }
 
     //-------------------------------------------------------------------------------------------

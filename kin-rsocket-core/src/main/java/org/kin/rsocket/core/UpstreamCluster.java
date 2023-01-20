@@ -9,12 +9,12 @@ import org.kin.rsocket.core.utils.Symbols;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import javax.annotation.Nonnull;
-import java.io.Closeable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocket, Closeable, UpstreamClusterSelector {
+public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocket, Disposable, UpstreamClusterSelector {
     private static final Logger log = LoggerFactory.getLogger(UpstreamCluster.class);
 
     /** group */
@@ -168,20 +168,15 @@ public final class UpstreamCluster implements CloudEventRSocket, RequesterRSocke
 
     @Override
     public void dispose() {
-        close();
+        stopped = true;
+        urisSink.emitComplete(RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
+        loadBalanceRequester.dispose();
+        log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, service, version)));
     }
 
     @Override
     public boolean isDisposed() {
         return stopped;
-    }
-
-    @Override
-    public void close() {
-        stopped = true;
-        urisSink.emitComplete(RetryNonSerializedEmitFailureHandler.RETRY_NON_SERIALIZED);
-        loadBalanceRequester.dispose();
-        log.info(String.format("succeed to disconnect from the upstream '%s'", ServiceLocator.gsv(group, service, version)));
     }
 
     @Override
