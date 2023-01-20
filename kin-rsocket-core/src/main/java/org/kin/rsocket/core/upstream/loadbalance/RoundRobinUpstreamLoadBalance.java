@@ -20,11 +20,11 @@ public class RoundRobinUpstreamLoadBalance implements UpstreamLoadBalance {
     private final Map<Integer, AtomicInteger> counters = new NonBlockingHashMap<>();
 
     @Override
-    public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> uris) {
-        if (CollectionUtils.isEmpty(uris)) {
+    public RSocket select(int serviceId, ByteBuf paramBytes, List<RSocket> rsockets) {
+        if (CollectionUtils.isEmpty(rsockets)) {
             return null;
         }
         AtomicInteger counter = counters.computeIfAbsent(serviceId, k -> new AtomicInteger());
-        return uris.get(counter.incrementAndGet() % uris.size());
+        return rsockets.get(counter.incrementAndGet() % rsockets.size());
     }
 }

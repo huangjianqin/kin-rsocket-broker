@@ -139,7 +139,6 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
      */
     private UpstreamLoadBalance tryLoadUpstreamLoadBalance(String loadBalanceStrategy) {
         //默认round-robin
-        // TODO: 2023/1/16 是否不用单例更好
         return ExtensionLoader.getExtensionOrDefault(UpstreamLoadBalance.class, loadBalanceStrategy);
     }
 
