@@ -7,8 +7,8 @@ import org.kin.serialization.hessian2.Hessian2Serialization;
  * @author huangjianqin
  * @date 2021/3/26
  */
-public class HessianCodec extends AbstractSerializationCodec {
-    public HessianCodec() {
+public class HessianObjectCodec extends AbstractSerializationObjectCodec {
+    public HessianObjectCodec() {
         super(new Hessian2Serialization());
     }
 

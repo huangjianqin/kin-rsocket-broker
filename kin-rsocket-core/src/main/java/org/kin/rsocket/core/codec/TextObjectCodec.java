@@ -12,14 +12,14 @@ import java.nio.charset.StandardCharsets;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public class TextCodec implements Codec {
+public class TextObjectCodec implements ObjectCodec {
     @Override
     public RSocketMimeType mimeType() {
         return RSocketMimeType.TEXT;
     }
 
     @Override
-    public ByteBuf encodeParams(Object[] args) throws CodecException {
+    public ByteBuf encodeParams(Object[] args) throws ObjectCodecException {
         if (CollectionUtils.isEmpty(args)) {
             return Unpooled.EMPTY_BUFFER;
         }
@@ -29,7 +29,7 @@ public class TextCodec implements Codec {
     }
 
     @Override
-    public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws CodecException {
+    public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws ObjectCodecException {
         if (data.readableBytes() > 0) {
             return data.toString(StandardCharsets.UTF_8);
         }
@@ -37,7 +37,7 @@ public class TextCodec implements Codec {
     }
 
     @Override
-    public ByteBuf encodeResult(Object result) throws CodecException {
+    public ByteBuf encodeResult(Object result) throws ObjectCodecException {
         if (result == null) {
             return Unpooled.EMPTY_BUFFER;
         }
@@ -47,7 +47,7 @@ public class TextCodec implements Codec {
     }
 
     @Override
-    public Object decodeResult(ByteBuf data, Class<?> targetClass) throws CodecException {
+    public Object decodeResult(ByteBuf data, Class<?> targetClass) throws ObjectCodecException {
         if (data.readableBytes() > 0 && targetClass != null) {
             return data.toString(StandardCharsets.UTF_8);
         }
@@ -57,11 +57,11 @@ public class TextCodec implements Codec {
     /**
      * string转换成bytes
      */
-    private byte[] stringToBytes(Object obj) throws CodecException {
+    private byte[] stringToBytes(Object obj) throws ObjectCodecException {
         try {
             return obj.toString().getBytes(StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new CodecException(e.getMessage());
+            throw new ObjectCodecException(e.getMessage());
         }
     }
 }

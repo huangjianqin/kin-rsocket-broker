@@ -18,8 +18,8 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import org.checkerframework.checker.units.qual.C;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.core.codec.Codec;
-import org.kin.rsocket.core.codec.CodecException;
+import org.kin.rsocket.core.codec.ObjectCodec;
+import org.kin.rsocket.core.codec.ObjectCodecException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +67,7 @@ public class JSON {
         try {
             return PARSER.writeValueAsString(obj);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -83,7 +83,7 @@ public class JSON {
         try {
             return PARSER.writeValueAsBytes(obj);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -99,7 +99,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, clazz);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -115,7 +115,7 @@ public class JSON {
         try {
             return PARSER.readValue(bytes, clazz);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -134,7 +134,7 @@ public class JSON {
             JavaType javaType = PARSER.getTypeFactory().constructParametricType(parametrized, parameterClasses);
             return PARSER.readValue(jsonStr, javaType);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -150,7 +150,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, typeReference);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -190,7 +190,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, collectionType);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -208,7 +208,7 @@ public class JSON {
         try {
             return PARSER.readValue(jsonStr, mapType);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
 
         throw new IllegalStateException("encounter unknown error");
@@ -228,7 +228,7 @@ public class JSON {
         try {
             return PARSER.readValue((InputStream) new ByteBufInputStream(byteBuf), type);
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
         throw new IllegalStateException("encounter unknown error");
     }
@@ -237,14 +237,14 @@ public class JSON {
      * 将Obj通过json序列化成{@link ByteBuf}
      */
     public static ByteBuf writeByteBuf(Object object) {
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(Codec.DEFAULT_BUFFER_SIZE);
+        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(ObjectCodec.DEFAULT_BUFFER_SIZE);
         try {
             ByteBufOutputStream bos = new ByteBufOutputStream(byteBuf);
             PARSER.writeValue((OutputStream) bos, object);
             return byteBuf;
         } catch (Exception e) {
             ReferenceCountUtil.safeRelease(byteBuf);
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
         throw new IllegalStateException("encounter unknown error");
     }
@@ -256,7 +256,7 @@ public class JSON {
         try {
             PARSER.readerForUpdating(object).readValue((InputStream) new ByteBufInputStream(byteBuf));
         } catch (IOException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
     }
 
@@ -267,7 +267,7 @@ public class JSON {
         try {
             PARSER.readerForUpdating(object).readValue(text);
         } catch (JsonProcessingException e) {
-            ExceptionUtils.throwExt(new CodecException(e.getMessage()));
+            ExceptionUtils.throwExt(new ObjectCodecException(e.getMessage()));
         }
     }
 

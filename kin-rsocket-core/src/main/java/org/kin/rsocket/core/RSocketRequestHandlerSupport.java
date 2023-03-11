@@ -6,7 +6,7 @@ import io.rsocket.exceptions.InvalidException;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.ExceptionUtils;
-import org.kin.rsocket.core.codec.Codecs;
+import org.kin.rsocket.core.codec.ObjectCodecs;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageAcceptMimeTypesMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -90,8 +90,8 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 //composite data for return value
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 return ReactiveObjAdapter.INSTANCE.toMono(result)
-                        .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
-                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
+                        .map(object -> ObjectCodecs.INSTANCE.encodeResult(object, resultEncodingType))
+                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, ObjectCodecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
                 return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
@@ -153,8 +153,8 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 //composite data for return value
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 return ReactiveObjAdapter.INSTANCE.toFlux(result)
-                        .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
-                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
+                        .map(object -> ObjectCodecs.INSTANCE.encodeResult(object, resultEncodingType))
+                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, ObjectCodecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 ReferenceCountUtil.safeRelease(payload);
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
@@ -182,18 +182,18 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {
                     Flux<Object> paramFlux = payloads
-                            .map(payload -> Codecs.INSTANCE.decodeResult(
+                            .map(payload -> ObjectCodecs.INSTANCE.decodeResult(
                                     dataEncodingMetadata.getMessageMimeType(),
                                     payload.data(),
                                     methodInvoker.getInferredClassForParameter(0)));
                     result = methodInvoker.invoke(paramFlux);
                 } else {
-                    Object paramFirst = Codecs.INSTANCE.decodeResult(
+                    Object paramFirst = ObjectCodecs.INSTANCE.decodeResult(
                             dataEncodingMetadata.getMessageMimeType(),
                             signal.data(),
                             methodInvoker.getParameterTypes()[0]);
                     Flux<Object> paramFlux = payloads
-                            .map(payload -> Codecs.INSTANCE.decodeResult(
+                            .map(payload -> ObjectCodecs.INSTANCE.decodeResult(
                                     dataEncodingMetadata.getMessageMimeType(),
                                     payload.data(),
                                     methodInvoker.getInferredClassForParameter(1)));
@@ -203,8 +203,8 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
                 //result return
                 return ReactiveObjAdapter.INSTANCE.toFlux(result)
-                        .map(object -> Codecs.INSTANCE.encodeResult(object, resultEncodingType))
-                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, Codecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
+                        .map(object -> ObjectCodecs.INSTANCE.encodeResult(object, resultEncodingType))
+                        .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, ObjectCodecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
@@ -226,7 +226,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
         Object result = null;
         try {
             if (methodInvoker.getParamCount() > 0) {
-                Object args = Codecs.INSTANCE.decodeParams(dataEncodingMetadata.getMessageMimeType(), payload.data(), methodInvoker.getParameterTypes());
+                Object args = ObjectCodecs.INSTANCE.decodeParams(dataEncodingMetadata.getMessageMimeType(), payload.data(), methodInvoker.getParameterTypes());
                 if (args instanceof Object[]) {
                     result = methodInvoker.invoke((Object[]) args);
                 } else {

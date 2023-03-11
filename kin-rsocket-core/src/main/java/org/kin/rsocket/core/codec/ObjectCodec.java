@@ -9,7 +9,7 @@ import org.kin.rsocket.core.RSocketMimeType;
  * @date 2021/3/26
  */
 @SPI(alias = "codec")
-public interface Codec {
+public interface ObjectCodec {
     /** 默认buffer size */
     int DEFAULT_BUFFER_SIZE = 256;
 
@@ -23,20 +23,20 @@ public interface Codec {
     /**
      * 对服务接口参数进行编码
      */
-    ByteBuf encodeParams(Object[] args) throws CodecException;
+    ByteBuf encodeParams(Object[] args) throws ObjectCodecException;
 
     /**
      * 对服务接口参数进行解码
      */
-    Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws CodecException;
+    Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws ObjectCodecException;
 
     /**
      * 对服务接口返回值进行编码
      */
-    ByteBuf encodeResult(Object result) throws CodecException;
+    ByteBuf encodeResult(Object result) throws ObjectCodecException;
 
     /**
      * 对服务接口返回值进行解码
      */
-    Object decodeResult(ByteBuf data, Class<?> targetClass) throws CodecException;
+    Object decodeResult(ByteBuf data, Class<?> targetClass) throws ObjectCodecException;
 }

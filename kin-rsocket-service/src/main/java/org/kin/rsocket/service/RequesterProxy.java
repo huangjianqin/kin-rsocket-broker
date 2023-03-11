@@ -16,7 +16,7 @@ import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.MethodHandleUtils;
 import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.*;
-import org.kin.rsocket.core.codec.Codecs;
+import org.kin.rsocket.core.codec.ObjectCodecs;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
 import org.kin.rsocket.core.metadata.RSocketCompositeMetadata;
 import org.slf4j.Logger;
@@ -152,7 +152,7 @@ public class RequesterProxy implements InvocationHandler {
                 paramBodys = ReactiveObjAdapter.INSTANCE.toFlux(args[0]);
             } else {
                 //2 params
-                routeBytes = Codecs.INSTANCE.encodeResult(args[0], methodMetadata.getDataEncodingType());
+                routeBytes = ObjectCodecs.INSTANCE.encodeResult(args[0], methodMetadata.getDataEncodingType());
                 paramBodys = ReactiveObjAdapter.INSTANCE.toFlux(args[1]);
             }
 
@@ -162,7 +162,7 @@ public class RequesterProxy implements InvocationHandler {
                     .concatMap(payload -> {
                         try {
                             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-                            return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
+                            return Mono.justOrEmpty(ObjectCodecs.INSTANCE.decodeResult(
                                     extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata1.getAcceptEncodingTypes()[0]),
                                     payload.data(),
                                     finalMethodMetadata1.getInferredClassForReturn()));
@@ -177,7 +177,7 @@ public class RequesterProxy implements InvocationHandler {
             }
         } else {
             //body content
-            ByteBuf paramBodyBytes = Codecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
+            ByteBuf paramBodyBytes = ObjectCodecs.INSTANCE.encodeParams(args, methodMetadata.getDataEncodingType());
             if (methodMetadata.getFrameType() == FrameType.REQUEST_RESPONSE) {
                 //request response
                 metrics(methodMetadata);
@@ -187,7 +187,7 @@ public class RequesterProxy implements InvocationHandler {
                         .handle((payload, sink) -> {
                             try {
                                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-                                Object obj = Codecs.INSTANCE.decodeResult(
+                                Object obj = ObjectCodecs.INSTANCE.decodeResult(
                                         extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
                                         payload.data(),
                                         finalMethodMetadata.getInferredClassForReturn());
@@ -219,7 +219,7 @@ public class RequesterProxy implements InvocationHandler {
                         .concatMap((payload) -> {
                             try {
                                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-                                return Mono.justOrEmpty(Codecs.INSTANCE.decodeResult(
+                                return Mono.justOrEmpty(ObjectCodecs.INSTANCE.decodeResult(
                                         extractPayloadDataMimeType(compositeMetadata, finalMethodMetadata.getAcceptEncodingTypes()[0]),
                                         payload.data(),
                                         finalMethodMetadata.getInferredClassForReturn()));
@@ -284,7 +284,7 @@ public class RequesterProxy implements InvocationHandler {
             }
             //param payload 只要带ReactiveMethodMetadata的CompositeMetadataBytes, 而不用带zipkin信息
             return ByteBufPayload.create(
-                    Codecs.INSTANCE.encodeResult(obj, methodMetadata.getDataEncodingType()),
+                    ObjectCodecs.INSTANCE.encodeResult(obj, methodMetadata.getDataEncodingType()),
                     methodMetadata.getCompositeMetadataBytes());
         });
         return selector.select(serviceId)

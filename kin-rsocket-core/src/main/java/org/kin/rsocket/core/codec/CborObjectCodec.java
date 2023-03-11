@@ -15,7 +15,7 @@ import java.io.OutputStream;
  * @author huangjianqin
  * @date 2021/4/20
  */
-public class CborCodec implements Codec {
+public class CborObjectCodec implements ObjectCodec {
     private static final ObjectMapper MAPPER = new ObjectMapper(new CBORFactory());
 
     @Override
@@ -24,7 +24,7 @@ public class CborCodec implements Codec {
     }
 
     @Override
-    public ByteBuf encodeParams(Object[] args) throws CodecException {
+    public ByteBuf encodeParams(Object[] args) throws ObjectCodecException {
         if (CollectionUtils.isNonEmpty(args)) {
             ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
             try {
@@ -41,7 +41,7 @@ public class CborCodec implements Codec {
     }
 
     @Override
-    public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws CodecException {
+    public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws ObjectCodecException {
         if (data.readableBytes() > 0 && targetClasses != null && targetClasses.length > 0) {
             try {
                 return MAPPER.readValue((InputStream) new ByteBufInputStream(data), Object[].class);
@@ -54,7 +54,7 @@ public class CborCodec implements Codec {
     }
 
     @Override
-    public ByteBuf encodeResult(Object result) throws CodecException {
+    public ByteBuf encodeResult(Object result) throws ObjectCodecException {
         if (result != null) {
             ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
             try {
@@ -70,7 +70,7 @@ public class CborCodec implements Codec {
     }
 
     @Override
-    public Object decodeResult(ByteBuf data, Class<?> targetClass) throws CodecException {
+    public Object decodeResult(ByteBuf data, Class<?> targetClass) throws ObjectCodecException {
         if (data.readableBytes() > 0 && targetClass != null) {
             try {
                 return MAPPER.readValue((InputStream) new ByteBufInputStream(data), targetClass);

@@ -7,8 +7,8 @@ import org.kin.serialization.kryo.KryoSerialization;
  * @author huangjianqin
  * @date 2021/3/26
  */
-public class KryoCodec extends AbstractSerializationCodec {
-    public KryoCodec() {
+public class KryoObjectCodec extends AbstractSerializationObjectCodec {
+    public KryoObjectCodec() {
         super(new KryoSerialization());
     }
 

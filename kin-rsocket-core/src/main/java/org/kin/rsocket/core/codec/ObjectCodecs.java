@@ -19,23 +19,23 @@ import java.util.Map;
  * @author huangjianqin
  * @date 2021/3/25
  */
-public final class Codecs {
+public final class ObjectCodecs {
     /** 单例 */
-    public static final Codecs INSTANCE = new Codecs();
+    public static final ObjectCodecs INSTANCE = new ObjectCodecs();
 
-    /** key -> rsocket mime type, value -> {@link Codec} */
-    private final Map<RSocketMimeType, Codec> mimeType2Codec;
+    /** key -> rsocket mime type, value -> {@link ObjectCodec} */
+    private final Map<RSocketMimeType, ObjectCodec> mimeType2Codec;
     /**
      * default composite metadata ByteBuf for message mime types
      * 可以省去创建mimetype元数据的耗时, 相当于MessageMimeTypeMetadata元数据池
      */
     private final Map<RSocketMimeType, ByteBuf> compositeMetadataForMimeTypes;
 
-    private Codecs() {
-        ImmutableMap.Builder<RSocketMimeType, Codec> codecBuilder = ImmutableMap.builder();
+    private ObjectCodecs() {
+        ImmutableMap.Builder<RSocketMimeType, ObjectCodec> codecBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<RSocketMimeType, ByteBuf> mimeTypeMetadataBytesBuilder = ImmutableMap.builder();
         //通过spi加载codec实现类
-        for (Codec codec : ExtensionLoader.getExtensions(Codec.class)) {
+        for (ObjectCodec codec : ExtensionLoader.getExtensions(ObjectCodec.class)) {
             RSocketMimeType mimeType = codec.mimeType();
             codecBuilder.put(codec.mimeType(), codec);
 
@@ -57,7 +57,7 @@ public final class Codecs {
             return Unpooled.EMPTY_BUFFER;
         }
         try {
-            Codec codec = mimeType2Codec.get(mimeType);
+            ObjectCodec codec = mimeType2Codec.get(mimeType);
             return codec.encodeParams(args);
         } catch (Exception e) {
             handleCodecException(e);
@@ -124,10 +124,10 @@ public final class Codecs {
      * 处理encode和decode期间发生的异常
      */
     private void handleCodecException(Exception e) {
-        if (e instanceof CodecException) {
-            throw (CodecException) e;
+        if (e instanceof ObjectCodecException) {
+            throw (ObjectCodecException) e;
         } else {
-            throw new CodecException("codec encounter error", e);
+            throw new ObjectCodecException("codec encounter error", e);
         }
     }
 }

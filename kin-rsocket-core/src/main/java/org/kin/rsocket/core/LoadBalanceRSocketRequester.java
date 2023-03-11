@@ -17,7 +17,7 @@ import io.rsocket.util.ByteBufPayload;
 import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExtensionLoader;
-import org.kin.rsocket.core.codec.Codecs;
+import org.kin.rsocket.core.codec.ObjectCodecs;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.health.HealthCheck;
@@ -630,7 +630,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
                     /**
                      * 以{@link RSocketMimeType#defaultEncodingType()}编码
                      */
-                    int result = (int) Codecs.INSTANCE.decodeResult(RSocketMimeType.defaultEncodingType(), payload.data(), Integer.class);
+                    int result = (int) ObjectCodecs.INSTANCE.decodeResult(RSocketMimeType.defaultEncodingType(), payload.data(), Integer.class);
                     if (result == HealthCheck.SERVING) {
                         sink.next(true);
                     } else {

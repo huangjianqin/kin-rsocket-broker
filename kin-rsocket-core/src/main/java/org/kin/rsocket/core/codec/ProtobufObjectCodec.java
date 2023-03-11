@@ -7,8 +7,8 @@ import org.kin.serialization.protobuf.ProtobufSerialization;
  * @author huangjianqin
  * @date 2021/3/26
  */
-public class ProtobufCodec extends AbstractSerializationCodec {
-    public ProtobufCodec() {
+public class ProtobufObjectCodec extends AbstractSerializationObjectCodec {
+    public ProtobufObjectCodec() {
         super(new ProtobufSerialization());
     }
 
