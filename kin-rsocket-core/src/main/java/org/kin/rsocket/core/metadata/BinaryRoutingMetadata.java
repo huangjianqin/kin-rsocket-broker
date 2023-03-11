@@ -91,7 +91,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         for (boolean flag : flags) {
             byteBuf.writeBoolean(flag);
         }
-        //write hanlder
+        //write handler
         byte[] handlerBytes = handler.getBytes(StandardCharsets.UTF_8);
         VarIntUtils.writeRawVarInt32(byteBuf, handlerBytes.length);
         byteBuf.writeBytes(handlerBytes);

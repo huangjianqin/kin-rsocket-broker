@@ -244,7 +244,7 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(t -> hanldeCallError(t, methodMetadata));
+                .doOnError(t -> handleCallError(t, methodMetadata));
     }
 
     /**
@@ -256,7 +256,7 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(t -> hanldeCallError(t, methodMetadata));
+                .doOnError(t -> handleCallError(t, methodMetadata));
     }
 
     /**
@@ -268,7 +268,7 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(t -> hanldeCallError(t, methodMetadata));
+                .doOnError(t -> handleCallError(t, methodMetadata));
     }
 
     /**
@@ -292,13 +292,13 @@ public class RequesterProxy implements InvocationHandler {
                 .name(methodMetadata.getHandlerIdStr())
                 .metrics()
                 .timeout(timeout)
-                .doOnError(t -> hanldeCallError(t, methodMetadata));
+                .doOnError(t -> handleCallError(t, methodMetadata));
     }
 
     /**
      * rsocket请求异常统一处理
      */
-    private void hanldeCallError(Throwable throwable, ReactiveMethodMetadata methodMetadata) {
+    private void handleCallError(Throwable throwable, ReactiveMethodMetadata methodMetadata) {
         if (throwable instanceof TimeoutException) {
             metricsTimeout(methodMetadata);
             log.error(String.format("'%s' call timeout after %s seconds", methodMetadata.getHandlerIdStr(), timeout), throwable);

@@ -57,7 +57,7 @@ public class RSocketFunctionRegistrar implements ApplicationListener<Application
         for (String functionName : functionNames) {
             //找到cloud function invoke包装类
             SimpleFunctionRegistry.FunctionInvocationWrapper function = functionRegistry.lookup(functionName);
-            //默认hanlder name
+            //默认handler name
             String handler = functionName.substring(functionName.lastIndexOf(".") + 1);
 
             try {
