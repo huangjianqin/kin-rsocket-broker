@@ -9,6 +9,9 @@ import org.kin.rsocket.core.utils.JSON;
 import java.util.Arrays;
 
 /**
+ * jsonb可以减少序列化后的字节数, 几乎与protobuf相当
+ * 但目前支持http gateway, http body还不支持jsonb, 故暂时先不支持jsonb
+ *
  * @author huangjianqin
  * @date 2021/3/26
  */
