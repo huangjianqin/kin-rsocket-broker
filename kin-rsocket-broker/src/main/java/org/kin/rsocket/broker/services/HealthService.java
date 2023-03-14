@@ -1,5 +1,6 @@
 package org.kin.rsocket.broker.services;
 
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -21,7 +22,7 @@ public class HealthService implements HealthCheck {
     @Override
     public Mono<Integer> check(String service) {
         //health check
-        if (service == null || service.isEmpty()) {
+        if (StringUtils.isBlank(service)) {
             //broker心跳
             return Mono.just(AppStatus.SERVING.getId());
         }
