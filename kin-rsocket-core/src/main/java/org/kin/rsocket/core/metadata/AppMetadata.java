@@ -50,7 +50,7 @@ public final class AppMetadata implements MetadataAware {
     private String sdk = "Kin-RSocket-0.1.0.0";
     /** developers, format as email list: xxx <xxx@foobar.com>, yyy <yyy@foobar.com> */
     private String developers;
-    /** metadata */
+    /** 应用metadata, 相当于应用tag */
     private Map<String, String> metadata;
     /** humans.md from classpath todo 优化:有没有必要将整个文件内容读进内存,可以改为每次都请求服务, 但会增加网络流量 */
     private String humansMd;

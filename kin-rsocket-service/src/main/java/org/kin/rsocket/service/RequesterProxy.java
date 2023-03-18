@@ -168,6 +168,8 @@ public class RequesterProxy implements InvocationHandler {
                                     finalMethodMetadata1.getInferredClassForReturn()));
                         } catch (Exception e) {
                             return Flux.error(e);
+                        } finally {
+                            ReferenceCountUtil.safeRelease(payload);
                         }
                     }).contextWrite(c -> mutableContext.putAll(c.readOnly()));
             if (methodMetadata.isMonoChannel()) {
@@ -197,6 +199,8 @@ public class RequesterProxy implements InvocationHandler {
                                 sink.complete();
                             } catch (Exception e) {
                                 sink.error(e);
+                            } finally {
+                                ReferenceCountUtil.safeRelease(payload);
                             }
                         });
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);
@@ -225,6 +229,8 @@ public class RequesterProxy implements InvocationHandler {
                                         finalMethodMetadata.getInferredClassForReturn()));
                             } catch (Exception e) {
                                 return Mono.error(e);
+                            } finally {
+                                ReferenceCountUtil.safeRelease(payload);
                             }
                         });
                 return ReactiveObjAdapter.INSTANCE.fromPublisher(result, mutableContext);

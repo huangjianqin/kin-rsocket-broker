@@ -4,6 +4,7 @@ import io.cloudevents.CloudEvent;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.Payload;
@@ -53,6 +54,8 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
     private final RSocketServiceMeshInspector serviceMeshInspector;
     /** default消息编码类型 */
     private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
+    /** default消息编码类型元数据{@link ByteBuf}实例 */
+    private final ByteBuf defaultMessageMimeTypeMetadataByteBuf;
     /** 记录请求过的服务id */
     private final Set<String> consumedServices = new NonBlockingHashSet<>();
 
@@ -72,6 +75,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             //如果requester的RSocketConnector没有设置dataMimeType(), 则默认json
             this.defaultMessageMimeTypeMetadata = MessageMimeTypeMetadata.from(RSocketMimeType.defaultEncodingType());
         }
+        defaultMessageMimeTypeMetadataByteBuf = toMimeAndContentBuffersSlices(defaultMessageMimeTypeMetadata);
 
         this.appMetadata = appMetadata;
         this.principal = principal;
@@ -97,7 +101,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
-                    return Mono.error(new InvalidException("no routing metadata"));
+                    throw new InvalidException("no routing metadata");
                 }
                 messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
                 encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
@@ -124,6 +128,11 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 destination = findDestination(gsvRoutingMetadata);
             }
 
+            destination = destination.doOnError(t -> {
+                error(failCallLog(frameType), t);
+                ReferenceCountUtil.safeRelease(payload);
+            });
+
             //call destination
             return destination.flatMap(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
@@ -143,7 +152,11 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
-            return Mono.error(new InvalidException(failCallTips(frameType, e)));
+            if (e instanceof InvalidException) {
+                return Mono.error(e);
+            } else {
+                return Mono.error(new InvalidException(failCallTips(frameType, e)));
+            }
         }
     }
 
@@ -164,7 +177,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
-                    return Mono.error(new InvalidException("no routing metadata"));
+                    throw new InvalidException("no routing metadata");
                 }
                 messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
                 encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
@@ -191,6 +204,11 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 destination = findDestination(gsvRoutingMetadata);
             }
 
+            destination = destination.doOnError(t -> {
+                error(failCallLog(frameType), t);
+                ReferenceCountUtil.safeRelease(payload);
+            });
+
             //call destination
             return destination.flatMap(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
@@ -209,7 +227,11 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
-            return Mono.error(new InvalidException(failCallTips(frameType, e)));
+            if (e instanceof InvalidException) {
+                return Mono.error(e);
+            } else {
+                return Mono.error(new InvalidException(failCallTips(frameType, e)));
+            }
         }
 
     }
@@ -231,7 +253,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
-                    return Flux.error(new InvalidException("no routing metadata"));
+                    throw new InvalidException("no routing metadata");
                 }
                 messageMimeTypeMetadata = compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_MIME_TYPE);
                 encodingMetadataIncluded = Objects.nonNull(messageMimeTypeMetadata);
@@ -257,6 +279,10 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 destination = findDestination(gsvRoutingMetadata);
             }
 
+            destination = destination.doOnError(t -> {
+                error(failCallLog(frameType), t);
+                ReferenceCountUtil.safeRelease(payload);
+            });
             return destination.flatMapMany(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
                 if (Objects.isNull(binaryRoutingMetadata)) {
@@ -274,7 +300,11 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
         } catch (Exception e) {
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
-            return Flux.error(new InvalidException(failCallTips(frameType, e)));
+            if (e instanceof InvalidException) {
+                return Flux.error(e);
+            } else {
+                return Flux.error(new InvalidException(failCallTips(frameType, e)));
+            }
         }
     }
 
@@ -289,13 +319,17 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
                 gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
                 if (Objects.isNull(gsvRoutingMetadata)) {
-                    return Flux.error(new InvalidException("no routing metadata"));
+                    throw new InvalidException("no routing metadata");
                 }
             } else {
                 gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
             }
 
-            Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+            Mono<RSocket> destination = findDestination(gsvRoutingMetadata).doOnError(t -> {
+                error(failCallLog(frameType), t);
+                ReferenceCountUtil.safeRelease(signal);
+                payloads.subscribe(ReferenceCountUtil::safeRelease);
+            });
             return destination.flatMapMany(rsocket -> {
                 recordServiceInvoke(gsvRoutingMetadata.gsv());
                 if (Objects.isNull(binaryRoutingMetadata)) {
@@ -310,7 +344,11 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(signal);
             payloads.subscribe(ReferenceCountUtil::safeRelease);
-            return Flux.error(new InvalidException(failCallTips(frameType, e)));
+            if (e instanceof InvalidException) {
+                return Flux.error(e);
+            } else {
+                return Flux.error(new InvalidException(failCallTips(frameType, e)));
+            }
         }
     }
 
@@ -352,17 +390,24 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
      * 可以减少一点点ByteBuf的内存资源分配和cpu消耗
      */
     private Payload payloadWithDataEncoding(Payload payload) {
-        CompositeByteBuf compositeByteBuf = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true, 2,
-                payload.metadata(), toMimeAndContentBuffersSlices(defaultMessageMimeTypeMetadata));
-        return ByteBufPayload.create(payload.data(), compositeByteBuf);
+        try {
+            CompositeByteBuf compositeByteBuf = new CompositeByteBuf(PooledByteBufAllocator.DEFAULT, true, 2,
+                    payload.metadata(), defaultMessageMimeTypeMetadataByteBuf);
+            return ByteBufPayload.create(payload.data(), compositeByteBuf);
+        } finally {
+            ReferenceCountUtil.safeRelease(payload);
+        }
     }
 
     /**
      * 构建{@link io.rsocket.metadata.CompositeMetadata}entry的bytes
      * 详细编解码过程可以看{@link io.rsocket.metadata.CompositeMetadataCodec#decodeMimeAndContentBuffersSlices}
+     * <p>
+     * 目前仅用于defaultMessageMimeTypeMetadata
+     * 故不用池化
      */
     private static ByteBuf toMimeAndContentBuffersSlices(MessageMimeTypeMetadata metadata) {
-        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer(5, 5);
+        ByteBuf buf = Unpooled.buffer(5, 5);
         //|0x80 代表第一个byte仅仅是mime type
         buf.writeByte((byte) (WellKnownMimeType.MESSAGE_RSOCKET_MIMETYPE.getIdentifier() | 0x80));
         //24bit代表内容长度
@@ -376,6 +421,8 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
 
     /**
      * 寻找目标服务provider instance
+     *
+     * @param routingMetaData 当使用快速路由时, 仅包含{@link GSVRoutingMetadata#serviceId()}, {@link GSVRoutingMetadata#handlerId()}和{@link GSVRoutingMetadata#sticky()}字段
      */
     private Mono<RSocket> findDestination(GSVRoutingMetadata routingMetaData) {
         return Mono.create(sink -> {
@@ -398,7 +445,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             } else {
                 String endpoint = routingMetaData.getEndpoint();
                 if (StringUtils.isNotBlank(endpoint)) {
-                    targetService = findDestinationWithEndpoint(endpoint, serviceId);
+                    targetService = serviceManager.getByEndpoint(endpoint, serviceId);
                     if (targetService == null) {
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", serviceErrorMsg, endpoint));
                     }
@@ -431,22 +478,6 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 }
             }
         });
-    }
-
-    /**
-     * 根据endpoint属性寻找target service instance
-     */
-    private RSocketService findDestinationWithEndpoint(String endpoint, Integer serviceId) {
-        if (endpoint.startsWith("id:")) {
-            return serviceManager.getByUUID(endpoint.substring(3));
-        }
-        int endpointHashCode = endpoint.hashCode();
-        for (RSocketService rsocketService : serviceManager.getAllByServiceId(serviceId)) {
-            if (rsocketService.getAppTagsHashCodeSet().contains(endpointHashCode)) {
-                return rsocketService;
-            }
-        }
-        return null;
     }
 
     /**

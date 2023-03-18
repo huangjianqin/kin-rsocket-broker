@@ -6,6 +6,7 @@ import io.rsocket.Payload;
 import io.rsocket.RSocket;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
+import org.kin.rsocket.core.Endpoints;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.domain.AppStatus;
@@ -68,14 +69,14 @@ public final class RSocketService implements CloudEventRSocket {
         this.appMetadata = appMetadata;
         //app tags hashcode set
         Set<Integer> appTagsHashCodeSet = new HashSet<>(4);
-        appTagsHashCodeSet.add(("instanceId:" + appMetadata.getInstanceId()).hashCode());
-        appTagsHashCodeSet.add(("uuid:" + appMetadata.getUuid()).hashCode());
+        appTagsHashCodeSet.add((Endpoints.INSTANCE_ID + appMetadata.getInstanceId()).hashCode());
+        appTagsHashCodeSet.add((Endpoints.UUID + appMetadata.getUuid()).hashCode());
 
         if (appMetadata.getIp() != null && !appMetadata.getIp().isEmpty()) {
-            appTagsHashCodeSet.add(("ip:" + this.appMetadata.getIp()).hashCode());
+            appTagsHashCodeSet.add((Endpoints.IP + this.appMetadata.getIp()).hashCode());
         }
 
-        if (appMetadata.getMetadata() != null) {
+        if (CollectionUtils.isNonEmpty(appMetadata.getMetadata())) {
             for (Map.Entry<String, String> entry : appMetadata.getMetadata().entrySet()) {
                 appTagsHashCodeSet.add((entry.getKey() + ":" + entry.getValue()).hashCode());
             }

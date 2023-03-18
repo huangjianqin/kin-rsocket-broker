@@ -60,96 +60,113 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
     @Nonnull
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata;
-        if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-        } else {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (gsvRoutingMetadata == null) {
-                return Mono.error(new InvalidException("No Routing metadata"));
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+            GSVRoutingMetadata gsvRoutingMetadata;
+            if (binaryRoutingMetadata != null) {
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+            } else {
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (gsvRoutingMetadata == null) {
+                    throw new InvalidException("No Routing metadata");
+
+                }
             }
-        }
 
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
+            //request filters
+            Mono<RSocket> destination;
+            if (this.filterChain.isFiltersPresent()) {
+                RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_RESPONSE, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
+                //filter可能会改变gsv metadata的数据, 影响路由结果
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+            } else {
+                destination = findDestination(gsvRoutingMetadata);
+            }
 
-        //call destination
-        return destination.flatMap(rsocket -> {
-            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_RESPONSE.name());
-            return rsocket.requestResponse(payload);
-        });
+            //call destination
+            return destination.flatMap(rsocket -> {
+                MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_RESPONSE.name());
+                return rsocket.requestResponse(payload);
+            });
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(payload);
+            return Mono.error(e);
+        }
     }
 
     @Nonnull
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata;
-        if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-        } else {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (gsvRoutingMetadata == null) {
-                return Mono.error(new InvalidException("No Routing metadata"));
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+            GSVRoutingMetadata gsvRoutingMetadata;
+            if (binaryRoutingMetadata != null) {
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+            } else {
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (gsvRoutingMetadata == null) {
+                    throw new InvalidException("No Routing metadata");
+
+                }
             }
-        }
 
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
+            //request filters
+            Mono<RSocket> destination;
+            if (this.filterChain.isFiltersPresent()) {
+                RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_FNF, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
+                //filter可能会改变gsv metadata的数据, 影响路由结果
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+            } else {
+                destination = findDestination(gsvRoutingMetadata);
+            }
 
-        //call destination
-        return destination.flatMap(rsocket -> {
-            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_FNF.name());
-            return rsocket.fireAndForget(payload);
-        });
+            //call destination
+            return destination.flatMap(rsocket -> {
+                MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_FNF.name());
+                return rsocket.fireAndForget(payload);
+            });
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(payload);
+            return Mono.error(e);
+        }
     }
 
     @Nonnull
     @Override
     public Flux<Payload> requestStream(Payload payload) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata;
-        if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-        } else {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (gsvRoutingMetadata == null) {
-                return Flux.error(new InvalidException("No Routing metadata"));
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(payload.metadata());
+            GSVRoutingMetadata gsvRoutingMetadata;
+            if (binaryRoutingMetadata != null) {
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+            } else {
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (gsvRoutingMetadata == null) {
+                    throw new InvalidException("No Routing metadata");
+                }
             }
-        }
 
-        //request filters
-        Mono<RSocket> destination;
-        if (this.filterChain.isFiltersPresent()) {
-            RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
-            //filter可能会改变gsv metadata的数据, 影响路由结果
-            destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
-        } else {
-            destination = findDestination(gsvRoutingMetadata);
-        }
+            //request filters
+            Mono<RSocket> destination;
+            if (this.filterChain.isFiltersPresent()) {
+                RSocketFilterContext filterContext = RSocketFilterContext.of(FrameType.REQUEST_STREAM, gsvRoutingMetadata, this.upstreamBrokerMetadata, payload);
+                //filter可能会改变gsv metadata的数据, 影响路由结果
+                destination = filterChain.filter(filterContext).then(findDestination(gsvRoutingMetadata));
+            } else {
+                destination = findDestination(gsvRoutingMetadata);
+            }
 
-        return destination.flatMapMany(rsocket -> {
-            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_STREAM.name());
-            return rsocket.requestStream(payload);
-        });
+            return destination.flatMapMany(rsocket -> {
+                MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_STREAM.name());
+                return rsocket.requestStream(payload);
+            });
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(payload);
+            return Flux.error(e);
+        }
     }
 
     @Nonnull
@@ -160,24 +177,30 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
         return payloadsWithSignalRouting.switchOnFirst((signal, flux) -> requestChannel(signal.get(), flux));
     }
 
-    private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
-        BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(signal.metadata());
-        GSVRoutingMetadata gsvRoutingMetadata;
-        if (binaryRoutingMetadata != null) {
-            gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
-        } else {
-            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
-            gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
-            if (gsvRoutingMetadata == null) {
-                return Flux.error(new InvalidException("No Routing metadata"));
+    private Flux<Payload> requestChannel(Payload signal, Flux<Payload> payloads) {
+        try {
+            BinaryRoutingMetadata binaryRoutingMetadata = BinaryRoutingMetadata.extract(signal.metadata());
+            GSVRoutingMetadata gsvRoutingMetadata;
+            if (binaryRoutingMetadata != null) {
+                gsvRoutingMetadata = binaryRoutingMetadata.toGSVRoutingMetadata();
+            } else {
+                RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
+                gsvRoutingMetadata = compositeMetadata.getMetadata(RSocketMimeType.ROUTING);
+                if (gsvRoutingMetadata == null) {
+                    throw new InvalidException("No Routing metadata");
+                }
             }
-        }
 
-        Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
-        return destination.flatMapMany(rsocket -> {
-            MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_CHANNEL.name());
-            return rsocket.requestChannel(payloads);
-        });
+            Mono<RSocket> destination = findDestination(gsvRoutingMetadata);
+            return destination.flatMapMany(rsocket -> {
+                MetricsUtils.metrics(gsvRoutingMetadata, FrameType.REQUEST_CHANNEL.name());
+                return rsocket.requestChannel(payloads);
+            });
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(signal);
+            payloads.subscribe(ReferenceCountUtil::safeRelease);
+            return Flux.error(e);
+        }
     }
 
     @Nonnull
@@ -213,7 +236,7 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
 
             String endpoint = routingMetaData.getEndpoint();
             if (StringUtils.isNotBlank(endpoint)) {
-                targetService = findDestinationWithEndpoint(endpoint, serviceId);
+                targetService = serviceManager.getByEndpoint(endpoint, serviceId);
                 if (targetService == null) {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                 }
@@ -233,21 +256,5 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
                 sink.error(new ApplicationErrorException(String.format("Service not found '%s'", gsv), error));
             }
         });
-    }
-
-    /**
-     * 根据endpoint属性寻找target service instance
-     */
-    private RSocketService findDestinationWithEndpoint(String endpoint, Integer serviceId) {
-        if (endpoint.startsWith("id:")) {
-            return serviceManager.getByUUID(endpoint.substring(3));
-        }
-        int endpointHashCode = endpoint.hashCode();
-        for (RSocketService rsocketService : serviceManager.getAllByServiceId(serviceId)) {
-            if (rsocketService.getAppTagsHashCodeSet().contains(endpointHashCode)) {
-                return rsocketService;
-            }
-        }
-        return null;
     }
 }

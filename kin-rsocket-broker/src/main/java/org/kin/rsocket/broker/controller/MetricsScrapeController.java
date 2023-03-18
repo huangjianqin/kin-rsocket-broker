@@ -3,7 +3,6 @@ package org.kin.rsocket.broker.controller;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
-import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
@@ -92,7 +91,13 @@ public class MetricsScrapeController {
         }
         //请求metrics service
         return rsocketService.requestResponse(ByteBufPayload.create(Unpooled.EMPTY_BUFFER, metricsScrapeCompositeByteBuf.retainedDuplicate()))
-                .map(Payload::getDataUtf8);
+                .map(payload -> {
+                    try {
+                        return payload.getDataUtf8();
+                    } finally {
+                        ReferenceCountUtil.safeRelease(payload);
+                    }
+                });
     }
 
     /**

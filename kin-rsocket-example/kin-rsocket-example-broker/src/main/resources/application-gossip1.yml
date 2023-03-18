@@ -1,6 +1,8 @@
 spring:
   application:
     name: rsocket-broker-gossip1
+  netty:
+    leak-detection: paranoid
 server:
   port: 10000
 

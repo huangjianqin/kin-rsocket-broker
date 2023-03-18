@@ -1,5 +1,6 @@
 package org.kin.rsocket.service;
 
+import org.kin.rsocket.core.Endpoints;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.springframework.context.annotation.Bean;
 
@@ -84,11 +85,10 @@ public @interface RSocketServiceReference {
     int callTimeout() default 3000;
 
     /**
-     * endpoint
-     * 形式:
-     * 1. id:XX
-     * 2. uuid:XX
-     * 3. ip:XX
+     * endpoint, 用于直接匹配应用唯一tag
+     * 内置提供的定义请看
+     *
+     * @see Endpoints
      */
     String endpoint() default "";
 

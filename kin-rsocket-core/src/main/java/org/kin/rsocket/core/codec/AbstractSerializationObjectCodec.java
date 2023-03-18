@@ -3,7 +3,9 @@ package org.kin.rsocket.core.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.netty.util.ReferenceCountUtil;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.serialization.Serialization;
 
 /**
@@ -23,7 +25,12 @@ public abstract class AbstractSerializationObjectCodec implements ObjectCodec {
      */
     private ByteBuf encodeObj(Object obj) {
         ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
-        byteBuf.writeBytes(serialization.serialize(obj));
+        try {
+            byteBuf.writeBytes(serialization.serialize(obj));
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(byteBuf);
+            ExceptionUtils.throwExt(e);
+        }
         return byteBuf;
     }
 

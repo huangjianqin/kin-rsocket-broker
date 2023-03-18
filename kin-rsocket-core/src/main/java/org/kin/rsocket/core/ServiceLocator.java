@@ -1,6 +1,7 @@
 package org.kin.rsocket.core;
 
 import org.kin.framework.utils.MurmurHash3;
+import org.kin.framework.utils.StringUtils;
 import org.kin.rsocket.core.utils.Separators;
 
 import java.util.Arrays;
@@ -43,6 +44,12 @@ public class ServiceLocator {
      * @return gsv标识
      */
     public static String gsv(String group, String service, String version) {
+        if (StringUtils.isBlank(group) &&
+                StringUtils.isBlank(service) &&
+                StringUtils.isBlank(version)) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
         //group
         if (group != null && !group.isEmpty()) {
@@ -60,8 +67,8 @@ public class ServiceLocator {
     /**
      * @return 服务唯一标识
      */
-    public static Integer serviceHashCode(String routingKey) {
-        return MurmurHash3.hash32(routingKey);
+    public static Integer serviceId(String gsv) {
+        return MurmurHash3.hash32(gsv);
     }
 
     public static ServiceLocator of(String service) {

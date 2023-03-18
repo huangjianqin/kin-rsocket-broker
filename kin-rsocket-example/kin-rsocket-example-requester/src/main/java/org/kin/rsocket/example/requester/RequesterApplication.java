@@ -28,28 +28,30 @@ public class RequesterApplication {
         RSocketBrokerClient brokerClient = RSocketBrokerClient.builder("MockRequesterApp", properties).buildAndInit();
         UserService userService = RSocketServiceReferenceBuilder.reference(UserService.class).upstreamClusters(brokerClient).build();
         try {
-            userService.findAll().subscribe(r -> System.out.println("findAll result: " + r));
+            while (true) {
+                userService.findAll().subscribe(r -> System.out.println("findAll result: " + r));
 
-            ByteBuf buffer = Unpooled.buffer();
-            buffer.writeBytes("AA".getBytes(StandardCharsets.UTF_8));
-            userService.find1(buffer).subscribe(r -> System.out.println("find1 result: " + r));
+                ByteBuf buffer = Unpooled.buffer();
+                buffer.writeBytes("AA".getBytes(StandardCharsets.UTF_8));
+                userService.find1(buffer).subscribe(r -> System.out.println("find1 result: " + r));
 
-            userService.find2("AA").subscribe(byteBuf -> {
-                byte[] bytes = new byte[byteBuf.readableBytes()];
-                byteBuf.readBytes(bytes);
+                userService.find2("AA").subscribe(byteBuf -> {
+                    byte[] bytes = new byte[byteBuf.readableBytes()];
+                    byteBuf.readBytes(bytes);
 
-                System.out.println("find2 result: " + new String(bytes, StandardCharsets.UTF_8));
-            });
+                    System.out.println("find2 result: " + new String(bytes, StandardCharsets.UTF_8));
+                });
 
-            userService.exception1();
+                userService.exception1();
 
-            userService.exception2().subscribe();
+                userService.exception2().subscribe();
 
-            userService.find3("BB", ThreadLocalRandom.current().nextInt(100)).subscribe(r -> System.out.println("find3 result: " + r));
+                userService.find3("BB", ThreadLocalRandom.current().nextInt(100)).subscribe(r -> System.out.println("find3 result: " + r));
 
-            userService.find4("abc", "ABC".getBytes(StandardCharsets.UTF_8)).subscribe(System.out::println);
+                userService.find4("abc", "ABC".getBytes(StandardCharsets.UTF_8)).subscribe(System.out::println);
 
-            Thread.sleep(1_000);
+                Thread.sleep(1_000);
+            }
         } finally {
             brokerClient.dispose();
         }

@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
  * @author huangjianqin
  * @date 2021/3/26
  */
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({"unchecked"})
 public abstract class RSocketRequestHandlerSupport extends AbstractRSocket implements LoggerOprs {
     /** cloud event source */
     protected volatile String cloudEventSource;
@@ -70,6 +70,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                     result = Mono.create((sink) -> {
                         try {
                             Object resultObj = invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
+
                             if (resultObj == null) {
                                 sink.success();
                             } else if (resultObj instanceof Mono) {
@@ -98,7 +99,6 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
             }
         } catch (Exception e) {
             error(failCallLog(service, handler), e);
-            ReferenceCountUtil.safeRelease(payload);
             return Mono.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
@@ -116,7 +116,6 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 try {
                     return ReactiveObjAdapter.INSTANCE.toMono(invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload));
                 } catch (Exception e) {
-                    ReferenceCountUtil.safeRelease(payload);
                     error(failCallLog(service, handler), e);
                     return Mono.error(e);
                 }
@@ -161,7 +160,6 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
             }
         } catch (Exception e) {
             error(failCallLog(service, handler), e);
-            ReferenceCountUtil.safeRelease(payload);
             return Flux.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
@@ -182,10 +180,16 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 Object result;
                 if (methodInvoker.getParamCount() == 1) {
                     Flux<Object> paramFlux = payloads
-                            .map(payload -> ObjectCodecs.INSTANCE.decodeResult(
-                                    dataEncodingMetadata.getMessageMimeType(),
-                                    payload.data(),
-                                    methodInvoker.getInferredClassForParameter(0)));
+                            .map(payload -> {
+                                try {
+                                    return ObjectCodecs.INSTANCE.decodeResult(
+                                            dataEncodingMetadata.getMessageMimeType(),
+                                            payload.data(),
+                                            methodInvoker.getInferredClassForParameter(0));
+                                } finally {
+                                    ReferenceCountUtil.safeRelease(payload);
+                                }
+                            });
                     result = methodInvoker.invoke(paramFlux);
                 } else {
                     Object paramFirst = ObjectCodecs.INSTANCE.decodeResult(
@@ -193,11 +197,18 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                             signal.data(),
                             methodInvoker.getParameterTypes()[0]);
                     Flux<Object> paramFlux = payloads
-                            .map(payload -> ObjectCodecs.INSTANCE.decodeResult(
-                                    dataEncodingMetadata.getMessageMimeType(),
-                                    payload.data(),
-                                    methodInvoker.getInferredClassForParameter(1)));
+                            .map(payload -> {
+                                try {
+                                    return ObjectCodecs.INSTANCE.decodeResult(
+                                            dataEncodingMetadata.getMessageMimeType(),
+                                            payload.data(),
+                                            methodInvoker.getInferredClassForParameter(1));
+                                } finally {
+                                    ReferenceCountUtil.safeRelease(payload);
+                                }
+                            });
                     result = methodInvoker.invoke(paramFirst, paramFlux);
+                    ReferenceCountUtil.safeRelease(signal);
                 }
                 //composite data for return value
                 RSocketMimeType resultEncodingType = resultEncodingType(acceptMimeTypesMetadata, dataEncodingMetadata.getMessageMimeType(), methodInvoker);
@@ -206,6 +217,9 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                         .map(object -> ObjectCodecs.INSTANCE.encodeResult(object, resultEncodingType))
                         .map(dataByteBuf -> ByteBufPayload.create(dataByteBuf, ObjectCodecs.INSTANCE.getDefaultCompositeMetadataByteBuf(resultEncodingType)));
             } else {
+                //release
+                ReferenceCountUtil.safeRelease(signal);
+                payloads.subscribe(ReferenceCountUtil::safeRelease);
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
@@ -237,6 +251,8 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
             }
         } catch (Exception e) {
             ExceptionUtils.throwExt(e);
+        } finally {
+            ReferenceCountUtil.safeRelease(payload);
         }
         return result;
     }

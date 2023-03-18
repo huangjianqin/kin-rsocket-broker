@@ -2,7 +2,7 @@ package org.kin.rsocket.broker.controller;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.rsocket.Payload;
+import io.netty.util.ReferenceCountUtil;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.RSocketService;
 import org.kin.rsocket.broker.RSocketServiceManager;
@@ -60,14 +60,20 @@ public class RSocketServiceController {
                                                  @RequestParam(name = "version", defaultValue = "") String version) {
         byte[] bytes = ("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8);
         ByteBuf bodyBuf = PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes);
-        RSocketService RSocketService = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
-        if (Objects.nonNull(RSocketService)) {
+        RSocketService rsocketService = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
+        if (Objects.nonNull(rsocketService)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.from("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
             RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(routingMetadata, JSON_ENCODING_METADATA);
-            return RSocketService
+            return rsocketService
                     .requestResponse(ByteBufPayload.create(bodyBuf, compositeMetadata.getContent()))
-                    .map(Payload::getDataUtf8);
+                    .map(payload -> {
+                        try {
+                            return payload.getDataUtf8();
+                        } finally {
+                            ReferenceCountUtil.safeRelease(payload);
+                        }
+                    });
         }
         return Mono.error(new Exception(String.format("Service not found '%s'", service)));
     }

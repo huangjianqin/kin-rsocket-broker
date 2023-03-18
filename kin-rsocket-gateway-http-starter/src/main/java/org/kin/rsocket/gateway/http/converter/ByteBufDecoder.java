@@ -1,7 +1,7 @@
 package org.kin.rsocket.gateway.http.converter;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.codec.AbstractDataBufferDecoder;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -36,6 +36,6 @@ public class ByteBufDecoder extends AbstractDataBufferDecoder<ByteBuf> {
         if (dataBuffer instanceof NettyDataBuffer) {
             return ((NettyDataBuffer) dataBuffer).getNativeBuffer();
         }
-        return PooledByteBufAllocator.DEFAULT.buffer().writeBytes(dataBuffer.asByteBuffer());
+        return Unpooled.wrappedBuffer(dataBuffer.asByteBuffer());
     }
 }
