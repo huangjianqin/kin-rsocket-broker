@@ -55,8 +55,8 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class RSocketServiceManager {
-    private static final Logger log = LoggerFactory.getLogger(RSocketServiceManager.class);
+public final class RSocketServiceRegistry {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRegistry.class);
     private final RSocketFilterChain rsocketFilterChain;
     private final Sinks.Many<String> notificationSink;
     /** 监听p2p服务实例变化 */
@@ -85,15 +85,15 @@ public final class RSocketServiceManager {
     /** consumer订阅p2p服务信息, key -> service id(gsv), value -> app instance UUID list */
     private UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>();
 
-    public RSocketServiceManager(RSocketFilterChain filterChain,
-                                 Sinks.Many<String> notificationSink,
-                                 AuthenticationService authenticationService,
-                                 RSocketBrokerManager brokerManager,
-                                 RSocketServiceMeshInspector serviceMeshInspector,
-                                 boolean authRequired,
-                                 UpstreamCluster upstreamBrokers,
-                                 ProviderRouter router,
-                                 Sinks.Many<String> p2pServiceNotificationSink) {
+    public RSocketServiceRegistry(RSocketFilterChain filterChain,
+                                  Sinks.Many<String> notificationSink,
+                                  AuthenticationService authenticationService,
+                                  RSocketBrokerManager brokerManager,
+                                  RSocketServiceMeshInspector serviceMeshInspector,
+                                  boolean authRequired,
+                                  UpstreamCluster upstreamBrokers,
+                                  ProviderRouter router,
+                                  Sinks.Many<String> p2pServiceNotificationSink) {
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;

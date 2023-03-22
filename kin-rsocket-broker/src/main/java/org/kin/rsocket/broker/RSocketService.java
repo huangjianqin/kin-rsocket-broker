@@ -50,7 +50,7 @@ public final class RSocketService implements CloudEventRSocket {
     private final Set<Integer> appTagsHashCodeSet;
     /** peer requester RSocket */
     private final RSocket requester;
-    private final RSocketServiceManager serviceManager;
+    private final RSocketServiceRegistry serviceRegistry;
     private final Mono<Void> comboOnClose;
     /** remote requester ip */
     private final String remoteIp;
@@ -64,7 +64,7 @@ public final class RSocketService implements CloudEventRSocket {
     public RSocketService(RSocketCompositeMetadata compositeMetadata,
                           AppMetadata appMetadata,
                           RSocket requester,
-                          RSocketServiceManager serviceManager,
+                          RSocketServiceRegistry serviceRegistry,
                           RSocketServiceRequestHandler requestHandler) {
         this.appMetadata = appMetadata;
         //app tags hashcode set
@@ -84,7 +84,7 @@ public final class RSocketService implements CloudEventRSocket {
         this.appTagsHashCodeSet = Collections.unmodifiableSet(appTagsHashCodeSet);
 
         this.requester = requester;
-        this.serviceManager = serviceManager;
+        this.serviceRegistry = serviceRegistry;
 
         //publish services metadata
         this.peerServices = new HashSet<>();
@@ -164,9 +164,9 @@ public final class RSocketService implements CloudEventRSocket {
      */
     public void publishServices() {
         if (CollectionUtils.isNonEmpty(this.peerServices)) {
-            Set<Integer> serviceIds = serviceManager.getServiceIds(appMetadata.getInstanceId());
+            Set<Integer> serviceIds = serviceRegistry.getServiceIds(appMetadata.getInstanceId());
             if (serviceIds.isEmpty()) {
-                this.serviceManager.register(appMetadata.getInstanceId(), appMetadata.getWeight(), peerServices);
+                this.serviceRegistry.register(appMetadata.getInstanceId(), appMetadata.getWeight(), peerServices);
                 this.appStatus = AppStatus.SERVING;
             }
         }
@@ -175,7 +175,7 @@ public final class RSocketService implements CloudEventRSocket {
     /** 注册指定服务 */
     public void registerServices(Collection<ServiceLocator> services) {
         this.peerServices.addAll(services);
-        this.serviceManager.register(appMetadata.getInstanceId(), appMetadata.getWeight(), services);
+        this.serviceRegistry.register(appMetadata.getInstanceId(), appMetadata.getWeight(), services);
         this.appStatus = AppStatus.SERVING;
     }
 
@@ -188,7 +188,7 @@ public final class RSocketService implements CloudEventRSocket {
      * 隐藏peer rsocket的服务, 并修改该app的服务状态
      */
     public void hideServices() {
-        serviceManager.unregister(appMetadata.getInstanceId(), appMetadata.getWeight());
+        serviceRegistry.unregister(appMetadata.getInstanceId(), appMetadata.getWeight());
         this.appStatus = AppStatus.DOWN;
     }
 
@@ -198,7 +198,7 @@ public final class RSocketService implements CloudEventRSocket {
             this.peerServices.removeAll(services);
         }
         for (ServiceLocator service : services) {
-            this.serviceManager.unregister(appMetadata.getInstanceId(), appMetadata.getWeight(), service.getId());
+            this.serviceRegistry.unregister(appMetadata.getInstanceId(), appMetadata.getWeight(), service.getId());
         }
     }
 

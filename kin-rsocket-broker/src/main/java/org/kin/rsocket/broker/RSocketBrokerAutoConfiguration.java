@@ -128,16 +128,16 @@ public class RSocketBrokerAutoConfiguration {
     }
 
     @Bean
-    public RSocketServiceManager serviceManager(@Autowired RSocketBrokerProperties brokerConfig,
-                                                @Autowired RSocketFilterChain chain,
-                                                @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
-                                                @Autowired AuthenticationService authenticationService,
-                                                @Autowired RSocketBrokerManager brokerManager,
-                                                @Autowired RSocketServiceMeshInspector serviceMeshInspector,
-                                                @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
-                                                @Autowired ProviderRouter router,
-                                                @Autowired @Qualifier("p2pServiceNotificationSink") Sinks.Many<String> p2pServiceNotificationSink) {
-        return new RSocketServiceManager(
+    public RSocketServiceRegistry rsocketServiceRegistry(@Autowired RSocketBrokerProperties brokerConfig,
+                                                         @Autowired RSocketFilterChain chain,
+                                                         @Autowired @Qualifier("notificationSink") Sinks.Many<String> notificationSink,
+                                                         @Autowired AuthenticationService authenticationService,
+                                                         @Autowired RSocketBrokerManager brokerManager,
+                                                         @Autowired RSocketServiceMeshInspector serviceMeshInspector,
+                                                         @Autowired(required = false) @Qualifier("upstreamBrokerCluster") UpstreamCluster upstreamBrokerCluster,
+                                                         @Autowired ProviderRouter router,
+                                                         @Autowired @Qualifier("p2pServiceNotificationSink") Sinks.Many<String> p2pServiceNotificationSink) {
+        return new RSocketServiceRegistry(
                 chain,
                 notificationSink,
                 authenticationService,
@@ -159,9 +159,9 @@ public class RSocketBrokerAutoConfiguration {
 
     @Bean
     public RSocketBinderCustomizer rsocketBindCustomizer(@Autowired RSocketBrokerProperties brokerConfig,
-                                                         @Autowired RSocketServiceManager serviceManager) {
+                                                         @Autowired RSocketServiceRegistry serviceRegistry) {
         return builder -> {
-            builder.acceptor(serviceManager.acceptor());
+            builder.acceptor(serviceRegistry.acceptor());
             builder.listen("tcp", brokerConfig.getPort());
         };
     }
@@ -244,10 +244,10 @@ public class RSocketBrokerAutoConfiguration {
     @ConditionalOnProperty(name = "kin.rsocket.broker.upstream-brokers")
     public UpstreamBrokerRequesterSupport upstreamBrokerRequesterSupport(@Autowired Environment env,
                                                                          @Autowired RSocketBrokerProperties brokerConfig,
-                                                                         @Autowired RSocketServiceManager serviceManager,
+                                                                         @Autowired RSocketServiceRegistry serviceRegistry,
                                                                          @Autowired RSocketFilterChain chain) {
         String appName = env.getProperty("spring.application.name", "unknown");
-        return new UpstreamBrokerRequesterSupport(brokerConfig, appName, serviceManager, chain);
+        return new UpstreamBrokerRequesterSupport(brokerConfig, appName, serviceRegistry, chain);
     }
 
     @Bean

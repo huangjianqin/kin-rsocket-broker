@@ -7,8 +7,8 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.RSocketServiceMeshInspector;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.Endpoints;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
@@ -38,7 +38,7 @@ public class RSocketApiController {
     @Autowired
     private RSocketBrokerProperties rsocketBrokerProperties;
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
     @Autowired
     private RSocketServiceMeshInspector serviceMeshInspector;
     @Autowired
@@ -61,9 +61,9 @@ public class RSocketApiController {
             if (endpoint.startsWith(Endpoints.INSTANCE_ID)) {
                 //存在endpoint
                 int instanceId = Integer.parseInt(endpoint.substring(Endpoints.INSTANCE_ID.length()).trim());
-                rsocketService = serviceManager.getByInstanceId(instanceId);
+                rsocketService = serviceRegistry.getByInstanceId(instanceId);
             } else {
-                rsocketService = serviceManager.routeByServiceId(serviceId);
+                rsocketService = serviceRegistry.routeByServiceId(serviceId);
             }
             if (Objects.nonNull(rsocketService)) {
                 if (rsocketBrokerProperties.isAuth()) {

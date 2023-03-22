@@ -35,16 +35,16 @@ import java.util.Objects;
  */
 final class RSocketBrokerRequestHandler extends AbstractRSocket {
     private static final Logger log = LoggerFactory.getLogger(RSocketBrokerRequestHandler.class);
-    private final RSocketServiceManager serviceManager;
+    private final RSocketServiceRegistry serviceRegistry;
     private final RSocketFilterChain filterChain;
     /** broker requester app metadata */
     private final AppMetadata upstreamBrokerMetadata;
 
-    public RSocketBrokerRequestHandler(RSocketServiceManager serviceManager,
+    public RSocketBrokerRequestHandler(RSocketServiceRegistry serviceRegistry,
                                        RSocketFilterChain filterChain,
                                        Payload setupPayload) {
         this.filterChain = filterChain;
-        this.serviceManager = serviceManager;
+        this.serviceRegistry = serviceRegistry;
 
         //解析composite metadata
         RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(setupPayload.metadata());
@@ -236,12 +236,12 @@ final class RSocketBrokerRequestHandler extends AbstractRSocket {
 
             String endpoint = routingMetaData.getEndpoint();
             if (StringUtils.isNotBlank(endpoint)) {
-                targetService = serviceManager.getByEndpoint(endpoint, serviceId);
+                targetService = serviceRegistry.getByEndpoint(endpoint, serviceId);
                 if (targetService == null) {
                     error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", gsv, endpoint));
                 }
             } else {
-                targetService = serviceManager.routeByServiceId(serviceId);
+                targetService = serviceRegistry.routeByServiceId(serviceId);
                 if (Objects.isNull(targetService)) {
                     error = new InvalidException(String.format("Service not found '%s'", gsv));
                 }

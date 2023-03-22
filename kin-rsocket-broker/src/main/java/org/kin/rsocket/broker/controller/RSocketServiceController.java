@@ -5,7 +5,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.ReferenceCountUtil;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.RSocketServiceInfoSupport;
 import org.kin.rsocket.core.ServiceLocator;
@@ -35,15 +35,15 @@ public class RSocketServiceController {
     /** json编码元数据 */
     private static final MessageMimeTypeMetadata JSON_ENCODING_METADATA = MessageMimeTypeMetadata.from(RSocketMimeType.JSON);
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
 
     @GetMapping("/{service}")
     public Flux<Map<String, Object>> queryByService(@PathVariable(name = "service") String service) {
-        return Flux.fromIterable(serviceManager.getAllServices())
+        return Flux.fromIterable(serviceRegistry.getAllServices())
                 .filter(locator -> locator.getService().equals(service))
                 .map(locator -> {
                     Map<String, Object> serviceInfoMap = new HashMap<>();
-                    serviceInfoMap.put("count", serviceManager.countInstanceIds(locator.getId()));
+                    serviceInfoMap.put("count", serviceRegistry.countInstanceIds(locator.getId()));
                     if (locator.getGroup() != null) {
                         serviceInfoMap.put("group", locator.getGroup());
                     }
@@ -60,7 +60,7 @@ public class RSocketServiceController {
                                                  @RequestParam(name = "version", defaultValue = "") String version) {
         byte[] bytes = ("[\"".concat(service).concat("\"]")).getBytes(StandardCharsets.UTF_8);
         ByteBuf bodyBuf = PooledByteBufAllocator.DEFAULT.buffer(bytes.length).writeBytes(bytes);
-        RSocketService rsocketService = serviceManager.routeByServiceId(ServiceLocator.of(group, service, version).getId());
+        RSocketService rsocketService = serviceRegistry.routeByServiceId(ServiceLocator.of(group, service, version).getId());
         if (Objects.nonNull(rsocketService)) {
             GSVRoutingMetadata routingMetadata =
                     GSVRoutingMetadata.from("", RSocketServiceInfoSupport.class.getName() + ".getReactiveServiceInfoByName", "");
@@ -80,6 +80,6 @@ public class RSocketServiceController {
 
     @RequestMapping("/all")
     public Mono<Collection<ServiceLocator>> all() {
-        return Mono.just(serviceManager.getAllServices());
+        return Mono.just(serviceRegistry.getAllServices());
     }
 }

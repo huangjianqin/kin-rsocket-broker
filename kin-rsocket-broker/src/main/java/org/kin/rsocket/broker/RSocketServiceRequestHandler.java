@@ -50,7 +50,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
     private final Map<Integer, Integer> stickyServices = new NonBlockingHashMap<>();
     /** upstream broker */
     private final UpstreamCluster upstreamBrokers;
-    private final RSocketServiceManager serviceManager;
+    private final RSocketServiceRegistry serviceRegistry;
     private final RSocketServiceMeshInspector serviceMeshInspector;
     /** default消息编码类型 */
     private final MessageMimeTypeMetadata defaultMessageMimeTypeMetadata;
@@ -62,7 +62,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
     public RSocketServiceRequestHandler(ConnectionSetupPayload setupPayload,
                                         AppMetadata appMetadata,
                                         RSocketAppPrincipal principal,
-                                        RSocketServiceManager serviceManager,
+                                        RSocketServiceRegistry serviceRegistry,
                                         RSocketServiceMeshInspector serviceMeshInspector,
                                         UpstreamCluster upstreamBrokers,
                                         RSocketFilterChain filterChain) {
@@ -79,7 +79,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
 
         this.appMetadata = appMetadata;
         this.principal = principal;
-        this.serviceManager = serviceManager;
+        this.serviceRegistry = serviceRegistry;
         this.serviceMeshInspector = serviceMeshInspector;
         this.filterChain = filterChain;
     }
@@ -139,7 +139,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    ServiceLocator serviceLocator = serviceRegistry.getServiceLocator(binaryRoutingMetadata.getServiceId());
                     MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
 
@@ -215,7 +215,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    ServiceLocator serviceLocator = serviceRegistry.getServiceLocator(binaryRoutingMetadata.getServiceId());
                     MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
                 if (encodingMetadataIncluded) {
@@ -288,7 +288,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    ServiceLocator serviceLocator = serviceRegistry.getServiceLocator(binaryRoutingMetadata.getServiceId());
                     MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
                 if (encodingMetadataIncluded) {
@@ -335,7 +335,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 if (Objects.isNull(binaryRoutingMetadata)) {
                     MetricsUtils.metrics(gsvRoutingMetadata, frameType);
                 } else {
-                    ServiceLocator serviceLocator = serviceManager.getServiceLocator(binaryRoutingMetadata.getServiceId());
+                    ServiceLocator serviceLocator = serviceRegistry.getServiceLocator(binaryRoutingMetadata.getServiceId());
                     MetricsUtils.metrics(serviceLocator, binaryRoutingMetadata.getHandler(), frameType);
                 }
                 return rsocket.requestChannel(payloads);
@@ -445,12 +445,12 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             } else {
                 String endpoint = routingMetaData.getEndpoint();
                 if (StringUtils.isNotBlank(endpoint)) {
-                    targetService = serviceManager.getByEndpoint(endpoint, serviceId);
+                    targetService = serviceRegistry.getByEndpoint(endpoint, serviceId);
                     if (targetService == null) {
                         error = new InvalidException(String.format("Service not found with endpoint '%s' '%s'", serviceErrorMsg, endpoint));
                     }
                 } else {
-                    targetService = serviceManager.routeByServiceId(serviceId);
+                    targetService = serviceRegistry.routeByServiceId(serviceId);
                     if (Objects.isNull(targetService)) {
                         error = new InvalidException(String.format("Service not found '%s'", serviceErrorMsg));
                     }
@@ -485,7 +485,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
      */
     private RSocketService findStickyServiceInstance(Integer serviceId) {
         if (stickyServices.containsKey(serviceId)) {
-            return serviceManager.getByInstanceId(stickyServices.get(serviceId));
+            return serviceRegistry.getByInstanceId(stickyServices.get(serviceId));
         }
         return null;
     }
