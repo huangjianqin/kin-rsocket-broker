@@ -17,16 +17,16 @@ import java.io.File;
  */
 @ConditionalOnExpression("!'${kin.rsocket.broker.conf.h2}'.isEmpty()")
 @Configuration
-@EnableConfigurationProperties(H2StorageConfProperties.class)
-public class RSocketH2StorageConfAutoConfiguration {
+@EnableConfigurationProperties(H2ConfDiamondProperties.class)
+public class RSocketH2ConfDiamondAutoConfiguration {
     @Autowired
-    private H2StorageConfProperties h2StorageConfProperties;
+    private H2ConfDiamondProperties h2ConfDiamondProperties;
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @ConditionalOnProperty("kin.rsocket.broker.conf.h2.dbPath")
     @Bean
-    public ConfDiamond h2StorageConfDiamond() {
-        String dbPath = h2StorageConfProperties.getDbPath();
+    public ConfDiamond h2ConfDiamond() {
+        String dbPath = h2ConfDiamondProperties.getDbPath();
         if (StringUtils.isBlank(dbPath)) {
             //如果没有配置, 则使用默认路径
             File rsocketRootDir = new File(System.getProperty("user.home"), ".rsocket");
@@ -35,6 +35,6 @@ public class RSocketH2StorageConfAutoConfiguration {
             }
             dbPath = new File(rsocketRootDir, "appsConfig.db").getAbsolutePath();
         }
-        return new H2StorageConfDiamond(dbPath);
+        return new H2ConfDiamond(dbPath);
     }
 }

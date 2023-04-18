@@ -9,12 +9,12 @@ import org.springframework.context.annotation.Configuration;
  * @date 2021/4/2
  */
 @Configuration
-public class RSocketMemoryStorageConfAutoConfiguration {
+public class RSocketMemoryConfDiamondAutoConfiguration {
     /**
      * 默认基于内存的配置中心实现
      */
     @Bean
-    public ConfDiamond memoryStorageConfDiamond() {
-        return new MemoryStorageConfDiamond();
+    public ConfDiamond memoryConfDiamond() {
+        return new MemoryConfDiamond();
     }
 }

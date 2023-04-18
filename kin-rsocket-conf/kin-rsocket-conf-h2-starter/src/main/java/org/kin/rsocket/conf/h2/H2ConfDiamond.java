@@ -21,12 +21,12 @@ import java.util.Properties;
  * @author huangjianqin
  * @date 2021/4/2
  */
-public class H2StorageConfDiamond extends AbstractConfDiamond {
-    private static final Logger log = LoggerFactory.getLogger(H2StorageConfDiamond.class);
+public class H2ConfDiamond extends AbstractConfDiamond {
+    private static final Logger log = LoggerFactory.getLogger(H2ConfDiamond.class);
     /** h2 store */
     private final MVStore mvStore;
 
-    public H2StorageConfDiamond(String dbPath) {
+    public H2ConfDiamond(String dbPath) {
         File dbFile = new File(dbPath);
         if (dbFile.isDirectory() || !dbFile.exists()) {
             throw new IllegalArgumentException("can't load H2 db file");

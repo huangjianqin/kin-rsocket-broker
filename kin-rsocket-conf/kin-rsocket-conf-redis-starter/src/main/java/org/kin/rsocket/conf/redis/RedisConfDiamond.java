@@ -28,8 +28,8 @@ import java.util.Properties;
  * @author huangjianqin
  * @date 2021/8/20
  */
-public class RedisStorageConfDiamond extends AbstractConfDiamond {
-    private static final Logger log = LoggerFactory.getLogger(RedisStorageConfDiamond.class);
+public class RedisConfDiamond extends AbstractConfDiamond {
+    private static final Logger log = LoggerFactory.getLogger(RedisConfDiamond.class);
     /** key前缀, 标识属于kin-rsocket-broker-conf-diamond写入的配置缓存 */
     private static final String KEY_PREFIX = "kin-rsocket-broker-conf-diamond::";
     /** redis stream name */
