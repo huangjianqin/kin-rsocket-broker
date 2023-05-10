@@ -19,7 +19,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "kin.rsocket.broker")
 public class RSocketBrokerProperties {
     /** 监听端口 */
-    private int port = 9999;
+    private int port = 10000;
     /** 是否需要权限校验 */
     private boolean auth = true;
     /** 校验token文件目录 */

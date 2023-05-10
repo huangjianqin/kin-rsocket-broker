@@ -10,12 +10,12 @@ spring:
   netty:
     leak-detection: paranoid
 server:
-  port: 9998
+  port: 10001
 
 kin:
   rsocket:
     broker:
-      port: 9999
+      port: 10000
       auth: true
       router: weightedStats
 

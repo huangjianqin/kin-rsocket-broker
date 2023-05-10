@@ -175,7 +175,7 @@ public final class RSocketServiceDiscoveryRegistry {
     @Nullable
     private RSocketServiceInstance toRSocketServiceInstance(ServiceInstance serviceInstance) {
         //rsocket schema和对应port, 支持设置多个, 但这里仅仅取第一个
-        String rsocketSchemaPorts = serviceInstance.getMetadata().getOrDefault("rsocketSchemaPorts", "tcp:9998");
+        String rsocketSchemaPorts = serviceInstance.getMetadata().getOrDefault("rsocketSchemaPorts", "tcp:10001");
         String[] strings = rsocketSchemaPorts.split(";");
         if (CollectionUtils.isNonEmpty(strings)) {
             //只取第一

@@ -4,17 +4,17 @@ spring:
   netty:
     leak-detection: paranoid
 server:
-  port: 11000
+  port: 10011
 
 kin:
   rsocket:
     broker:
-      port: 11001
+      port: 10010
       auth: false
       gossip:
-        port: 11002
+        port: 10012
         seeds:
-          - 0.0.0.0:11001
+          - 0.0.0.0:10002
 
 # management
 management:
