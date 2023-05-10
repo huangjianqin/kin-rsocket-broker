@@ -50,7 +50,9 @@ public class RequesterApplication {
 
                 userService.find4("abc", "ABC".getBytes(StandardCharsets.UTF_8)).subscribe(System.out::println);
 
-                Thread.sleep(1_000);
+                Thread.sleep(3_000);
+
+                System.out.println("---------------------------------------------------------------------------------------------------------------------------------------------------");
             }
         } finally {
             brokerClient.dispose();
