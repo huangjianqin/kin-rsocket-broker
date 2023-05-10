@@ -7,11 +7,12 @@ import io.scalecube.cluster.ClusterImpl;
 import io.scalecube.cluster.ClusterMessageHandler;
 import io.scalecube.cluster.Member;
 import io.scalecube.cluster.codec.jackson.JacksonMessageCodec;
+import io.scalecube.cluster.codec.jackson.JacksonMetadataCodec;
 import io.scalecube.cluster.membership.MembershipEvent;
 import io.scalecube.cluster.transport.api.Message;
 import io.scalecube.net.Address;
 import io.scalecube.transport.netty.tcp.TcpTransportFactory;
-import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.kin.framework.collection.CopyOnWriteMap;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.cluster.AbstractRSocketBrokerManager;
@@ -29,7 +30,11 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.nio.ByteBuffer;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,8 +46,6 @@ import java.util.stream.Stream;
  */
 public class GossipBrokerManager extends AbstractRSocketBrokerManager implements RSocketBrokerManager, DisposableBean {
     private static final Logger log = LoggerFactory.getLogger(GossipBrokerManager.class);
-    /** 请求新增broker数据(也就是{@link BrokerInfo})的gossip header key */
-    private static final String BROKER_INFO_HEADER = "brokerInfo";
 
     /** broker配置 */
     private final RSocketBrokerProperties brokerConfig;
@@ -54,7 +57,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     /** 本机broker数据 */
     private BrokerInfo localBrokerInfo;
     /** key -> ip address, value -> rsocket brokers数据 */
-    private final Map<String, BrokerInfo> brokers = new UnifiedMap<>();
+    private final Map<String, BrokerInfo> brokers = new CopyOnWriteMap<>();
     /** 集群broker信息变化sink, 使用者可以监听集群变化并作出响应 */
     private final Sinks.Many<Collection<BrokerInfo>> brokersSink = Sinks.many().multicast().onBackpressureBuffer();
 
@@ -67,8 +70,15 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
     public void init() {
         String localIp = NetUtils.getIp();
         int gossipPort = gossipConfig.getPort();
+
+        RSocketBrokerProperties.RSocketSSL sslConfig = brokerConfig.getSsl();
+        this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, Objects.nonNull(sslConfig) && sslConfig.isEnabled() ? "tcps" : "tcp",
+                localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort(), RSocketAppContext.webPort);
+
         cluster = new ClusterImpl()
-                .config(clusterConfig -> clusterConfig.externalHost(localIp).externalPort(gossipPort))
+                .config(clusterConfig -> clusterConfig.externalHost(localIp)
+                        .externalPort(gossipPort)
+                        .metadata(localBrokerInfo))
                 .membership(membershipConfig -> membershipConfig.seedMembers(seedMembers())
                         .namespace(gossipConfig.getNamespace())
                         .syncInterval(5_000))
@@ -81,9 +91,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
                 .start();
         //subscribe and start & join the cluster
         cluster.subscribe();
-        RSocketBrokerProperties.RSocketSSL sslConfig = brokerConfig.getSsl();
-        this.localBrokerInfo = BrokerInfo.of(RSocketAppContext.ID, Objects.nonNull(sslConfig) && sslConfig.isEnabled() ? "tcps" : "tcp",
-                localIp, brokerConfig.getExternalDomain(), brokerConfig.getPort(), RSocketAppContext.webPort);
         brokers.put(localIp, localBrokerInfo);
         log.info("start cluster with Gossip support");
 
@@ -140,16 +147,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
         return cluster.flatMap(cluster -> cluster.spreadGossip(message));
     }
 
-    private Mono<BrokerInfo> requestBrokerMember(Member member) {
-        Message request = Message.builder()
-                //req-resp需要带correlationId
-                .correlationId(UUID.randomUUID().toString())
-                .header(BROKER_INFO_HEADER, "true")
-                .build();
-        return cluster.flatMap(cluster -> cluster.requestResponse(member, request))
-                .map(Message::data);
-    }
-
     @Override
     public void dispose() {
         cluster.subscribe(Cluster::shutdown);
@@ -168,18 +165,6 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
      */
     private class GossipMessageHandler implements ClusterMessageHandler {
         @Override
-        public void onMessage(Message message) {
-            if (message.header(BROKER_INFO_HEADER) != null) {
-                //目前仅支持请求broker信息
-                Message replyMessage = Message.builder()
-                        .correlationId(message.correlationId())
-                        .data(localBrokerInfo)
-                        .build();
-                cluster.flatMap(cluster -> cluster.send(message.sender(), replyMessage)).subscribe();
-            }
-        }
-
-        @Override
         public void onGossip(Message gossip) {
             try {
                 String cloudEventJson = gossip.data();
@@ -195,11 +180,11 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
             String brokerIp = member.address().host();
             int brokerPort = member.address().port();
             if (event.isAdded()) {
-                //req-resp
-                requestBrokerMember(member).subscribe(brokerInfo -> {
-                    brokers.put(brokerIp, brokerInfo);
-                    log.info("Broker '{}:{}' added from cluster", brokerIp, brokerPort);
-                });
+                ByteBuffer newMetadataBuffer = event.newMetadata();
+                BrokerInfo brokerInfo = (BrokerInfo) JacksonMetadataCodec.INSTANCE.deserialize(newMetadataBuffer);
+                brokers.put(brokerIp, brokerInfo);
+                System.out.println(brokerInfo);
+                log.info("Broker '{}:{}' added from cluster", brokerIp, brokerPort);
             } else if (event.isRemoved()) {
                 brokers.remove(brokerIp);
                 log.info("Broker '{}:{}' removed from cluster", brokerIp, brokerPort);

@@ -1,12 +1,16 @@
 package org.kin.rsocket.broker.cluster;
 
+import java.io.Serializable;
+import java.util.Objects;
+
 /**
  * 集群中broker信息
  *
  * @author huangjianqin
  * @date 2021/3/29
  */
-public final class BrokerInfo {
+public final class BrokerInfo implements Serializable {
+    private static final long serialVersionUID = 656484641624777013L;
     /** broker id */
     private String id;
     /** rsocket schema */
@@ -120,5 +124,32 @@ public final class BrokerInfo {
 
     public void setWebPort(int webPort) {
         this.webPort = webPort;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BrokerInfo)) return false;
+        BrokerInfo that = (BrokerInfo) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "BrokerInfo{" +
+                "id='" + id + '\'' +
+                ", schema='" + schema + '\'' +
+                ", ip='" + ip + '\'' +
+                ", externalDomain='" + externalDomain + '\'' +
+                ", port=" + port +
+                ", status=" + status +
+                ", startTime=" + startTime +
+                ", webPort=" + webPort +
+                '}';
     }
 }
