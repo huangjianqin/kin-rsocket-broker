@@ -8,8 +8,6 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
-
 /**
  * 将cloud event通过{@link org.springframework.context.ApplicationListener}广播出去
  *
@@ -27,12 +25,13 @@ public final class CloudEvent2ApplicationEventConsumer implements CloudEventCons
 
     @Override
     public Mono<Void> consume(CloudEvent cloudEvent) {
-        ApplicationEvent applicationEvent = CloudEventSupport.unwrapData(cloudEvent);
-        if (Objects.nonNull(applicationEvent)) {
-            return Mono.fromRunnable(() -> eventPublisher.publishEvent(applicationEvent));
+        Object unwrappedObj = CloudEventSupport.unwrapData(cloudEvent);
+        if (!(unwrappedObj instanceof ApplicationEvent)) {
+            return Mono.empty();
         }
 
-        return Mono.empty();
+        ApplicationEvent applicationEvent = (ApplicationEvent) unwrappedObj;
+        return Mono.fromRunnable(() -> eventPublisher.publishEvent(applicationEvent));
     }
 }
 
