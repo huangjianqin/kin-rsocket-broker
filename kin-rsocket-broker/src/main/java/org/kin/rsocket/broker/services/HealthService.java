@@ -1,6 +1,7 @@
 package org.kin.rsocket.broker.services;
 
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.framework.utils.StringUtils;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.RSocketService;
 import org.kin.rsocket.core.domain.AppStatus;
 import org.kin.rsocket.core.health.HealthCheck;
@@ -16,18 +17,18 @@ import reactor.core.publisher.Mono;
 public class HealthService implements HealthCheck {
     /** 服务实例路由表 */
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
 
     @Override
     public Mono<Integer> check(String service) {
         //health check
-        if (service == null || service.isEmpty()) {
+        if (StringUtils.isBlank(service)) {
             //broker心跳
             return Mono.just(AppStatus.SERVING.getId());
         }
 
         //指定服务的health check
-        return Flux.fromIterable(serviceManager.getAllServices())
+        return Flux.fromIterable(serviceRegistry.getAllServices())
                 .any(serviceLocator -> serviceLocator.getService().equals(service))
                 .map(result -> result ? AppStatus.SERVING.getId() : AppStatus.DOWN.getId());
     }

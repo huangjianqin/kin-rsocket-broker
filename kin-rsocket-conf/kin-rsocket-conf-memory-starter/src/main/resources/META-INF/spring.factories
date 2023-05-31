@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-org.kin.rsocket.conf.memory.RSocketMemoryStorageConfAutoConfiguration
+org.kin.rsocket.conf.memory.RSocketMemoryConfDiamondAutoConfiguration

@@ -3,10 +3,9 @@ package org.kin.rsocket.broker.controller;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.ReferenceCountUtil;
-import io.rsocket.Payload;
 import io.rsocket.util.ByteBufPayload;
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.MetricsService;
@@ -43,7 +42,7 @@ import java.util.stream.Collectors;
 public class MetricsScrapeController {
     private final ByteBuf metricsScrapeCompositeByteBuf;
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
     @Autowired
     private Environment env;
     @Autowired
@@ -67,7 +66,7 @@ public class MetricsScrapeController {
         String port = env.getProperty("server.port");
         List<String> hosts = brokerManager.all().stream().map(BrokerInfo::getIp).collect(Collectors.toList());
         int hostSize = hosts.size();
-        return Mono.just(serviceManager.getAllRSocketServices().stream()
+        return Mono.just(serviceRegistry.getAllRSocketServices().stream()
                 .map(responder -> {
                     //随机抽一个broker的/metrics接口作为访问指定app intances的接口
                     String host = hosts.get(responder.getId() % hostSize);
@@ -86,13 +85,19 @@ public class MetricsScrapeController {
 
     @GetMapping(value = "/{uuid}", produces = MimeTypeUtils.TEXT_PLAIN_VALUE)
     public Mono<String> scrape(@PathVariable(name = "uuid") String uuid) {
-        RSocketService rsocketService = serviceManager.getByUUID(uuid);
+        RSocketService rsocketService = serviceRegistry.getByUUID(uuid);
         if (rsocketService == null) {
             return Mono.error(new IllegalArgumentException(String.format("app instance not found: %s", uuid)));
         }
         //请求metrics service
         return rsocketService.requestResponse(ByteBufPayload.create(Unpooled.EMPTY_BUFFER, metricsScrapeCompositeByteBuf.retainedDuplicate()))
-                .map(Payload::getDataUtf8);
+                .map(payload -> {
+                    try {
+                        return payload.getDataUtf8();
+                    } finally {
+                        ReferenceCountUtil.safeRelease(payload);
+                    }
+                });
     }
 
     /**

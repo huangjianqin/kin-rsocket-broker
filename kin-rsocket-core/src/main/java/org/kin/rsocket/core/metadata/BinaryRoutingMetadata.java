@@ -3,6 +3,7 @@ package org.kin.rsocket.core.metadata;
 import com.google.common.base.Preconditions;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import io.rsocket.metadata.CompositeMetadata;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.util.NumberUtils;
@@ -91,7 +92,7 @@ public final class BinaryRoutingMetadata implements MetadataAware {
         for (boolean flag : flags) {
             byteBuf.writeBoolean(flag);
         }
-        //write hanlder
+        //write handler
         byte[] handlerBytes = handler.getBytes(StandardCharsets.UTF_8);
         VarIntUtils.writeRawVarInt32(byteBuf, handlerBytes.length);
         byteBuf.writeBytes(handlerBytes);
@@ -121,14 +122,20 @@ public final class BinaryRoutingMetadata implements MetadataAware {
      * 该方法主要用于将{@link BinaryRoutingMetadata}放于{@link CompositeMetadata}首部, app可以直接取其首部即可解析serviceId和handlerId
      */
     public ByteBuf getHeaderAndContent() {
+        //池化bytebuf
         ByteBuf content = getContent();
-        int capacity = 4 + content.readableBytes();
+        try {
+            int capacity = 4 + content.readableBytes();
 
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(capacity);
-        byteBuf.writeByte(BINARY_ROUTING_MARK);
-        NumberUtils.encodeUnsignedMedium(byteBuf, capacity - 4);
-        byteBuf.writeBytes(content);
-        return byteBuf;
+            ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(capacity);
+            byteBuf.writeByte(BINARY_ROUTING_MARK);
+            //content长度
+            NumberUtils.encodeUnsignedMedium(byteBuf, capacity - 4);
+            byteBuf.writeBytes(content);
+            return byteBuf;
+        } finally {
+            ReferenceCountUtil.safeRelease(content);
+        }
     }
 
     /**

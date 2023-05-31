@@ -10,7 +10,7 @@
   reference.
     * 引入spring discovery client service
     * naming service上注册的rsocket service实例, 需要配置元数据
-        * `rsocketSchemaPorts`: rsocket service传输层信息, 格式是传输层协议:端口, 比如`tcp:9998`. 支持配置多个,
+        * `rsocketSchemaPorts`: rsocket service传输层信息, 格式是传输层协议:端口, 比如`tcp:10001`. 支持配置多个,
           但目前实现只会取第一个.
         * `rsocketWsPath`: 如果传输层式websocket时, 选择性配置. 格式是websocket path内容, 比如`/rsocket`
     * 基于应用名发现rsocket service, 故说明实现如何识别发现提取应用名.

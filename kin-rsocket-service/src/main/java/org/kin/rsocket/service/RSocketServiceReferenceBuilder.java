@@ -34,11 +34,10 @@ public final class RSocketServiceReferenceBuilder<T> {
     /** call timeout, 默认3s */
     private Duration callTimeout = Duration.ofMillis(3000);
     /**
-     * endpoint
-     * 形式:
-     * 1. id:XX
-     * 2. uuid:XX
-     * 3. ip:XX
+     * endpoint, 用于直接匹配应用唯一tag
+     * 内置提供的定义请看
+     *
+     * @see Endpoints
      */
     private String endpoint = "";
     /**

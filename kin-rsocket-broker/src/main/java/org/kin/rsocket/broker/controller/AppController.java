@@ -2,7 +2,7 @@ package org.kin.rsocket.broker.controller;
 
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.domain.AppVO;
 import org.kin.rsocket.core.metadata.AppMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +28,12 @@ import java.util.Map;
 @RequestMapping("/app")
 public class AppController {
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
 
     @GetMapping("/{appName}")
     public Flux<AppVO> queryByAppName(@PathVariable(name = "appName") String appName) {
         List<AppVO> apps = new ArrayList<>();
-        Collection<RSocketService> rsocketServices = serviceManager.getByAppName(appName);
+        Collection<RSocketService> rsocketServices = serviceRegistry.getByAppName(appName);
         if (CollectionUtils.isEmpty(rsocketServices)) {
             return Flux.empty();
         }
@@ -46,7 +46,7 @@ public class AppController {
 
     @RequestMapping("/all")
     public Mono<Map<String, Collection<String>>> all() {
-        return Flux.fromIterable(serviceManager.getAllRSocketServices())
+        return Flux.fromIterable(serviceRegistry.getAllRSocketServices())
                 .map(RSocketService::getAppMetadata)
                 .collectMultimap(AppMetadata::getName, AppMetadata::getIp);
     }

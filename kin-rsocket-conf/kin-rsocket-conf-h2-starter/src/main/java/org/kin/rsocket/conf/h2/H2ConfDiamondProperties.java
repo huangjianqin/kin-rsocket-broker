@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @date 2022/1/14
  */
 @ConfigurationProperties(prefix = "kin.rsocket.broker.conf.h2")
-public class H2StorageConfProperties {
+public class H2ConfDiamondProperties {
     /** h2 db path */
     private String dbPath;
 

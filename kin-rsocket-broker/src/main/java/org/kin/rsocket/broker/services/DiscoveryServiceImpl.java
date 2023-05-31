@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.services;
 
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.ServiceLocator;
@@ -20,7 +20,7 @@ import reactor.core.publisher.Flux;
 @org.kin.rsocket.core.RSocketService(DiscoveryService.class)
 public class DiscoveryServiceImpl implements DiscoveryService {
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
     @Autowired
     private RSocketBrokerManager rsocketBrokerManager;
 
@@ -46,14 +46,14 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     @Override
     public Flux<String> getAllServices() {
-        return Flux.fromIterable(serviceManager.getAllServices()).map(ServiceLocator::getGsv);
+        return Flux.fromIterable(serviceRegistry.getAllServices()).map(ServiceLocator::getGsv);
     }
 
     /**
      * 通过app name寻找service instances
      */
     private Flux<RSocketServiceInstance> findServicesInstancesByAppName(String appName) {
-        return Flux.fromIterable(serviceManager.getByAppName(appName))
+        return Flux.fromIterable(serviceRegistry.getByAppName(appName))
                 .filter(responder -> responder.getAppStatus().equals(AppStatus.SERVING))
                 .map(this::newServiceInstance);
     }

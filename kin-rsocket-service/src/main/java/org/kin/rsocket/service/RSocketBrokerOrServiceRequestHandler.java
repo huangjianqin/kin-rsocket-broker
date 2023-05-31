@@ -68,103 +68,102 @@ final class RSocketBrokerOrServiceRequestHandler extends RSocketRequestHandlerSu
     }
 
     /**
-     * No Routing metadata异常的{@link Mono}实例
+     * 抛No Routing metadata异常
      */
-    private Mono noRoutingDataErrorMono() {
-        return Mono.error(new InvalidException("No Routing metadata"));
+    private void throwNoRoutingDataError() throws InvalidException {
+        throw new InvalidException("No Routing metadata");
     }
 
     /**
-     * No encoding metadata异常的{@link Mono}实例
+     * 抛No encoding metadata异常
      */
-    private Mono noEncodingDataErrorMono() {
-        return Mono.error(new InvalidException("No encoding metadata"));
-    }
-
-    /**
-     * No Routing metadata异常的{@link Flux}实例
-     */
-    private Flux noRoutingDataErrorFlux() {
-        return Flux.error(new InvalidException("No Routing metadata"));
-    }
-
-    /**
-     * No encoding metadata异常的{@link Flux}实例
-     */
-    private Flux noEncodingDataErrorFlux() {
-        return Flux.error(new InvalidException("No encoding metadata"));
+    private void throwNoEncodingDataError() throws InvalidException {
+        throw new InvalidException("No encoding metadata");
     }
 
     @Nonnull
     @Override
     public Mono<Payload> requestResponse(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-        GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
-        if (routingMetaData == null) {
+        try {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+            GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
+            if (routingMetaData == null) {
+                throwNoRoutingDataError();
+            }
+            MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
+            if (dataEncodingMetadata == null) {
+                throwNoEncodingDataError();
+            }
+            Mono<Payload> payloadMono = localRequestResponse(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
+            return injectTraceContext(payloadMono, compositeMetadata);
+        } catch (Exception e) {
             ReferenceCountUtil.safeRelease(payload);
-            return noRoutingDataErrorMono();
+            return Mono.error(e);
         }
-        MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
-        if (dataEncodingMetadata == null) {
-            ReferenceCountUtil.safeRelease(payload);
-            return noEncodingDataErrorMono();
-        }
-        Mono<Payload> payloadMono = localRequestResponse(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
-        return injectTraceContext(payloadMono, compositeMetadata);
     }
 
     @Nonnull
     @Override
     public Mono<Void> fireAndForget(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-        GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
-        if (routingMetaData == null) {
+        try {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+            GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
+            if (routingMetaData == null) {
+                throwNoRoutingDataError();
+            }
+            MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
+            if (dataEncodingMetadata == null) {
+                throwNoEncodingDataError();
+            }
+            Mono<Void> voidMono = localFireAndForget(routingMetaData, dataEncodingMetadata, payload);
+            return injectTraceContext(voidMono, compositeMetadata);
+        } catch (Exception e) {
             ReferenceCountUtil.safeRelease(payload);
-            return noRoutingDataErrorMono();
+            return Mono.error(e);
         }
-        MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
-        if (dataEncodingMetadata == null) {
-            ReferenceCountUtil.safeRelease(payload);
-            return noEncodingDataErrorMono();
-        }
-        Mono<Void> voidMono = localFireAndForget(routingMetaData, dataEncodingMetadata, payload);
-        return injectTraceContext(voidMono, compositeMetadata);
     }
 
     @Nonnull
     @Override
     public Flux<Payload> requestStream(Payload payload) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
-        GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
-        if (routingMetaData == null) {
+        try {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(payload.metadata());
+            GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
+            if (routingMetaData == null) {
+                throwNoRoutingDataError();
+            }
+            MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
+            if (dataEncodingMetadata == null) {
+                throwNoEncodingDataError();
+            }
+            Flux<Payload> payloadFlux = localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
+            return injectTraceContext(payloadFlux, compositeMetadata);
+        } catch (Exception e) {
             ReferenceCountUtil.safeRelease(payload);
-            return noRoutingDataErrorFlux();
+            return Flux.error(e);
         }
-        MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
-        if (dataEncodingMetadata == null) {
-            ReferenceCountUtil.safeRelease(payload);
-            return noEncodingDataErrorFlux();
-        }
-        Flux<Payload> payloadFlux = localRequestStream(routingMetaData, dataEncodingMetadata, compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), payload);
-        return injectTraceContext(payloadFlux, compositeMetadata);
     }
 
-    private Flux<Payload> requestChannel(Payload signal, Publisher<Payload> payloads) {
-        RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
-        GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
-        if (routingMetaData == null) {
-            ReferenceCountUtil.safeRelease(signal);
-            return noRoutingDataErrorFlux();
-        }
-        MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
-        if (dataEncodingMetadata == null) {
-            ReferenceCountUtil.safeRelease(signal);
-            return noEncodingDataErrorFlux();
-        }
+    private Flux<Payload> requestChannel(Payload signal, Flux<Payload> payloads) {
+        try {
+            RSocketCompositeMetadata compositeMetadata = RSocketCompositeMetadata.from(signal.metadata());
+            GSVRoutingMetadata routingMetaData = getGsvRoutingMetadata(compositeMetadata);
+            if (routingMetaData == null) {
+                throwNoRoutingDataError();
+            }
+            MessageMimeTypeMetadata dataEncodingMetadata = getDataEncodingMetadata(compositeMetadata);
+            if (dataEncodingMetadata == null) {
+                throwNoEncodingDataError();
+            }
 
-        return localRequestChannel(routingMetaData, dataEncodingMetadata,
-                compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), signal,
-                ((Flux<Payload>) payloads).skip(1));
+            return localRequestChannel(routingMetaData, dataEncodingMetadata,
+                    compositeMetadata.getMetadata(RSocketMimeType.MESSAGE_ACCEPT_MIME_TYPES), signal,
+                    payloads.skip(1));
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(signal);
+            payloads.subscribe(ReferenceCountUtil::safeRelease);
+            return Flux.error(e);
+        }
     }
 
     @SuppressWarnings("ConstantConditions")

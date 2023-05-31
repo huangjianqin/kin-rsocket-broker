@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.controller;
 
 import io.cloudevents.CloudEvent;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
 import org.kin.rsocket.core.event.UpstreamClusterChangedEvent;
@@ -26,7 +26,7 @@ import java.util.Collection;
 @RequestMapping("/cluster")
 public class BrokerClusterController {
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
     @Autowired
     private RSocketBrokerManager brokerManager;
 
@@ -43,7 +43,7 @@ public class BrokerClusterController {
 
         CloudEvent cloudEvent = upstreamClusterChangedEvent.toCloudEvent();
 
-        return serviceManager.broadcast(Symbols.BROKER, cloudEvent);
+        return serviceRegistry.broadcast(Symbols.BROKER, cloudEvent);
     }
 
     @PostMapping("/stop")

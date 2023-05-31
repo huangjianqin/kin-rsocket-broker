@@ -82,12 +82,12 @@ Broker会存储所有应用与其暴露的服务的路由信息. 当一个应用
 
 ```yaml
 server:
-  port: 9998
+  port: 10001
 
 kin:
   rsocket:
     broker:
-      port: 9999
+      port: 10000
 ```
 
 创建main class
@@ -119,14 +119,14 @@ public class RSocketBrokerApplication {
 
 ```yaml
 server:
-  port: 9998
+  port: 10001
 
 kin:
   rsocket:
     broker:
-      port: 9999
+      port: 10000
       gossip:
-        port: 10999
+        port: 10002
         seeds: ${other broker node host:port}
 ```
 
@@ -150,7 +150,7 @@ server:
 
 kin:
   rsocket:
-    brokers: tcp://127.0.0.1:9999
+    brokers: tcp://127.0.0.1:10000
 ```
 
 创建接口以及其实现类
@@ -217,7 +217,7 @@ server:
 
 kin:
   rsocket:
-    brokers: tcp://127.0.0.1:9999
+    brokers: tcp://127.0.0.1:10000
 ```
 
 创建服务引用

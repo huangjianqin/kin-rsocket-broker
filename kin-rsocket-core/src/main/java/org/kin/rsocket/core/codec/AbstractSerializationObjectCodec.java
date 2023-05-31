@@ -3,18 +3,20 @@ package org.kin.rsocket.core.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
+import io.netty.util.ReferenceCountUtil;
 import org.kin.framework.utils.CollectionUtils;
+import org.kin.framework.utils.ExceptionUtils;
 import org.kin.serialization.Serialization;
 
 /**
  * @author huangjianqin
  * @date 2021/3/26
  */
-public abstract class AbstractSerializationCodec implements Codec {
+public abstract class AbstractSerializationObjectCodec implements ObjectCodec {
     /** 序列化接口实现类 */
     private final Serialization serialization;
 
-    protected AbstractSerializationCodec(Serialization serialization) {
+    protected AbstractSerializationObjectCodec(Serialization serialization) {
         this.serialization = serialization;
     }
 
@@ -23,7 +25,12 @@ public abstract class AbstractSerializationCodec implements Codec {
      */
     private ByteBuf encodeObj(Object obj) {
         ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.buffer(DEFAULT_BUFFER_SIZE);
-        byteBuf.writeBytes(serialization.serialize(obj));
+        try {
+            byteBuf.writeBytes(serialization.serialize(obj));
+        } catch (Exception e) {
+            ReferenceCountUtil.safeRelease(byteBuf);
+            ExceptionUtils.throwExt(e);
+        }
         return byteBuf;
     }
 
@@ -35,7 +42,7 @@ public abstract class AbstractSerializationCodec implements Codec {
     }
 
     @Override
-    public ByteBuf encodeParams(Object[] args) throws CodecException {
+    public ByteBuf encodeParams(Object[] args) throws ObjectCodecException {
         if (CollectionUtils.isEmpty(args)) {
             return Unpooled.EMPTY_BUFFER;
         } else if (args.length == 1) {
@@ -46,7 +53,7 @@ public abstract class AbstractSerializationCodec implements Codec {
     }
 
     @Override
-    public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws CodecException {
+    public Object decodeParams(ByteBuf data, Class<?>... targetClasses) throws ObjectCodecException {
         int len = targetClasses.length;
         if (len == 0) {
             return null;
@@ -58,12 +65,12 @@ public abstract class AbstractSerializationCodec implements Codec {
     }
 
     @Override
-    public ByteBuf encodeResult(Object result) throws CodecException {
+    public ByteBuf encodeResult(Object result) throws ObjectCodecException {
         return encodeObj(result);
     }
 
     @Override
-    public Object decodeResult(ByteBuf data, Class<?> targetClass) throws CodecException {
+    public Object decodeResult(ByteBuf data, Class<?> targetClass) throws ObjectCodecException {
         return decodeObj(data, targetClass);
     }
 }

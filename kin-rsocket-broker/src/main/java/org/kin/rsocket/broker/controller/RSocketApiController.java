@@ -7,8 +7,9 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.RSocketBrokerProperties;
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
 import org.kin.rsocket.broker.RSocketServiceMeshInspector;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
+import org.kin.rsocket.core.Endpoints;
 import org.kin.rsocket.core.RSocketMimeType;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
@@ -37,7 +38,7 @@ public class RSocketApiController {
     @Autowired
     private RSocketBrokerProperties rsocketBrokerProperties;
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
     @Autowired
     private RSocketServiceMeshInspector serviceMeshInspector;
     @Autowired
@@ -57,12 +58,12 @@ public class RSocketApiController {
 
             ByteBuf bodyBuf = body == null ? EMPTY_BUFFER : PooledByteBufAllocator.DEFAULT.buffer(body.length).writeBytes(body);
             RSocketService rsocketService;
-            if (endpoint.startsWith("id:")) {
+            if (endpoint.startsWith(Endpoints.INSTANCE_ID)) {
                 //存在endpoint
-                int instanceId = Integer.parseInt(endpoint.substring(3).trim());
-                rsocketService = serviceManager.getByInstanceId(instanceId);
+                int instanceId = Integer.parseInt(endpoint.substring(Endpoints.INSTANCE_ID.length()).trim());
+                rsocketService = serviceRegistry.getByInstanceId(instanceId);
             } else {
-                rsocketService = serviceManager.routeByServiceId(serviceId);
+                rsocketService = serviceRegistry.routeByServiceId(serviceId);
             }
             if (Objects.nonNull(rsocketService)) {
                 if (rsocketBrokerProperties.isAuth()) {

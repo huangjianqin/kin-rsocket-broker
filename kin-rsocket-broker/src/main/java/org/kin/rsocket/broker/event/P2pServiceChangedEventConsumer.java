@@ -1,7 +1,7 @@
 package org.kin.rsocket.broker.event;
 
 import io.cloudevents.CloudEvent;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.P2pServiceChangedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public final class P2pServiceChangedEventConsumer extends AbstractCloudEventConsumer<P2pServiceChangedEvent> {
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
 
     @Override
     protected void consume(CloudEvent cloudEvent, P2pServiceChangedEvent event) {
-        serviceManager.updateP2pServiceConsumers(event.getAppId(), event.getP2pServiceIds());
+        serviceRegistry.updateP2pServiceConsumers(event.getAppId(), event.getP2pServiceIds());
     }
 }

@@ -1,6 +1,10 @@
 server:
   port: 9100
 
+spring:
+  netty:
+    leak-detection: paranoid
+
 ### management
 management:
   endpoints:

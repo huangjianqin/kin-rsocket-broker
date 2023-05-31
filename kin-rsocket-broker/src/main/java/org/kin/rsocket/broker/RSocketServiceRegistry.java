@@ -18,10 +18,7 @@ import org.kin.rsocket.auth.AuthenticationService;
 import org.kin.rsocket.auth.RSocketAppPrincipal;
 import org.kin.rsocket.broker.cluster.BrokerInfo;
 import org.kin.rsocket.broker.cluster.RSocketBrokerManager;
-import org.kin.rsocket.core.MetricsNames;
-import org.kin.rsocket.core.RSocketMimeType;
-import org.kin.rsocket.core.ServiceLocator;
-import org.kin.rsocket.core.UpstreamCluster;
+import org.kin.rsocket.core.*;
 import org.kin.rsocket.core.event.AppStatusEvent;
 import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.ServiceInstanceChangedEvent;
@@ -58,8 +55,8 @@ import java.util.stream.Collectors;
  * @author huangjianqin
  * @date 2021/3/30
  */
-public final class RSocketServiceManager {
-    private static final Logger log = LoggerFactory.getLogger(RSocketServiceManager.class);
+public final class RSocketServiceRegistry {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRegistry.class);
     private final RSocketFilterChain rsocketFilterChain;
     private final Sinks.Many<String> notificationSink;
     /** 监听p2p服务实例变化 */
@@ -88,15 +85,15 @@ public final class RSocketServiceManager {
     /** consumer订阅p2p服务信息, key -> service id(gsv), value -> app instance UUID list */
     private UnifiedSetMultimap<String, Integer> p2pServiceConsumers = new UnifiedSetMultimap<>();
 
-    public RSocketServiceManager(RSocketFilterChain filterChain,
-                                 Sinks.Many<String> notificationSink,
-                                 AuthenticationService authenticationService,
-                                 RSocketBrokerManager brokerManager,
-                                 RSocketServiceMeshInspector serviceMeshInspector,
-                                 boolean authRequired,
-                                 UpstreamCluster upstreamBrokers,
-                                 ProviderRouter router,
-                                 Sinks.Many<String> p2pServiceNotificationSink) {
+    public RSocketServiceRegistry(RSocketFilterChain filterChain,
+                                  Sinks.Many<String> notificationSink,
+                                  AuthenticationService authenticationService,
+                                  RSocketBrokerManager brokerManager,
+                                  RSocketServiceMeshInspector serviceMeshInspector,
+                                  boolean authRequired,
+                                  UpstreamCluster upstreamBrokers,
+                                  ProviderRouter router,
+                                  Sinks.Many<String> p2pServiceNotificationSink) {
         this.rsocketFilterChain = filterChain;
         this.notificationSink = notificationSink;
         this.authenticationService = authenticationService;
@@ -336,6 +333,25 @@ public final class RSocketServiceManager {
      */
     public RSocketService getByInstanceId(int instanceId) {
         return instanceId2Service.get(instanceId);
+    }
+
+    /**
+     * 根据endpoint属性寻找target service instance
+     */
+    public RSocketService getByEndpoint(String endpoint, Integer serviceId) {
+        if (endpoint.startsWith(Endpoints.UUID)) {
+            return getByUUID(endpoint.substring(Endpoints.UUID.length()).trim());
+        }
+        if (endpoint.startsWith(Endpoints.INSTANCE_ID)) {
+            return getByInstanceId(Integer.parseInt(endpoint.substring(Endpoints.INSTANCE_ID.length()).trim()));
+        }
+        int endpointHashCode = endpoint.hashCode();
+        for (RSocketService rsocketService : getAllByServiceId(serviceId)) {
+            if (rsocketService.getAppTagsHashCodeSet().contains(endpointHashCode)) {
+                return rsocketService;
+            }
+        }
+        return null;
     }
 
     /**

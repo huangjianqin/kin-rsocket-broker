@@ -7,8 +7,8 @@ import org.kin.serialization.avro.AvroSerialization;
  * @author huangjianqin
  * @date 2021/3/26
  */
-public class AvroCodec extends AbstractSerializationCodec {
-    public AvroCodec() {
+public class AvroObjectCodec extends AbstractSerializationObjectCodec {
+    public AvroObjectCodec() {
         super(new AvroSerialization());
     }
 

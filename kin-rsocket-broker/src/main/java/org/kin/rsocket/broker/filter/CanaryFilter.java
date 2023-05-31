@@ -2,7 +2,7 @@ package org.kin.rsocket.broker.filter;
 
 import org.kin.rsocket.broker.AbstractRSocketFilter;
 import org.kin.rsocket.broker.RSocketFilterContext;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.ServiceLocator;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class CanaryFilter extends AbstractRSocketFilter {
     public static final int DEFAULT_TRAFFIC_RATING = 30;
 
     @Autowired
-    private final RSocketServiceManager serviceManager;
+    private final RSocketServiceRegistry serviceRegistry;
     /** 该filter生效的service name */
     private final List<String> canaryServices;
     /** 金丝雀版本 */
@@ -35,16 +35,16 @@ public class CanaryFilter extends AbstractRSocketFilter {
     /** 当前自增index */
     private int roundRobinIndex = 0;
 
-    public CanaryFilter(RSocketServiceManager serviceManager, List<String> canaryServices) {
-        this(serviceManager, canaryServices, DEFAULT_VERSION, DEFAULT_TRAFFIC_RATING);
+    public CanaryFilter(RSocketServiceRegistry serviceRegistry, List<String> canaryServices) {
+        this(serviceRegistry, canaryServices, DEFAULT_VERSION, DEFAULT_TRAFFIC_RATING);
     }
 
-    public CanaryFilter(RSocketServiceManager serviceManager, List<String> canaryServices, int trafficRating) {
-        this(serviceManager, canaryServices, DEFAULT_VERSION, trafficRating);
+    public CanaryFilter(RSocketServiceRegistry serviceRegistry, List<String> canaryServices, int trafficRating) {
+        this(serviceRegistry, canaryServices, DEFAULT_VERSION, trafficRating);
     }
 
-    public CanaryFilter(RSocketServiceManager serviceManager, List<String> canaryServices, String canaryVersion, int trafficRating) {
-        this.serviceManager = serviceManager;
+    public CanaryFilter(RSocketServiceRegistry serviceRegistry, List<String> canaryServices, String canaryVersion, int trafficRating) {
+        this.serviceRegistry = serviceRegistry;
         this.canaryServices = canaryServices;
         this.canaryVersion = canaryVersion;
         this.trafficRating = trafficRating;
@@ -55,8 +55,8 @@ public class CanaryFilter extends AbstractRSocketFilter {
         GSVRoutingMetadata routingMetadata = exchange.getRoutingMetadata();
         //判断是否是金丝雀服务
         if (canaryServices.contains(routingMetadata.getService())) {
-            String canaryRouting = ServiceLocator.gsv(routingMetadata.getGroup(), routingMetadata.getService(), canaryVersion);
-            if (serviceManager.containsServiceId(ServiceLocator.serviceHashCode(canaryRouting))) {
+            String gsv = ServiceLocator.gsv(routingMetadata.getGroup(), routingMetadata.getService(), canaryVersion);
+            if (serviceRegistry.containsServiceId(ServiceLocator.serviceId(gsv))) {
                 return Mono.just(true);
             }
         }

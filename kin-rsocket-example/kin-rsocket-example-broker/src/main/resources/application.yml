@@ -1,19 +1,21 @@
 spring:
   application:
     name: rsocket-broker
-#  cloud:
-#    nacos:
-#      discovery:
-#        server-addr: 127.0.0.1:8848
-#        metadata:
-#          rsocketSchemaPorts: tcp:${kin.rsocket.broker.port}
+  #  cloud:
+  #    nacos:
+  #      discovery:
+  #        server-addr: 127.0.0.1:8848
+  #        metadata:
+  #          rsocketSchemaPorts: tcp:${kin.rsocket.broker.port}
+  netty:
+    leak-detection: paranoid
 server:
-  port: 9998
+  port: 10001
 
 kin:
   rsocket:
     broker:
-      port: 9999
+      port: 10000
       auth: true
       router: weightedStats
 

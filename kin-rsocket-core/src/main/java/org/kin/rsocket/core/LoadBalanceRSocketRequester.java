@@ -17,7 +17,7 @@ import io.rsocket.util.ByteBufPayload;
 import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExtensionLoader;
-import org.kin.rsocket.core.codec.Codecs;
+import org.kin.rsocket.core.codec.ObjectCodecs;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.health.HealthCheck;
@@ -269,7 +269,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
             return (Mono<Payload>) disposedMono();
         }
         return next(payload.data())
-                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+                .doOnError(ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMap(rsocket -> rsocket.requestResponse(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rsocket, error);
@@ -285,7 +285,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
             return (Mono<Void>) disposedMono();
         }
         return next(payload.data())
-                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+                .doOnError(ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMap(rsocket -> rsocket.fireAndForget(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rsocket, error);
@@ -319,7 +319,10 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         try {
             Payload payload = CloudEventSupport.cloudEvent2Payload(cloudEvent);
             return metadataPush(payload)
-                    .doOnError(throwable -> log.error("Failed to fire event to all upstream nodes", throwable))
+                    .doOnError(throwable -> {
+                        log.error("Failed to fire event to all upstream nodes", throwable);
+                        ReferenceCountUtil.safeRelease(payload);
+                    })
                     .then();
         } catch (Exception e) {
             return Mono.error(e);
@@ -333,7 +336,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
             return (Flux<Payload>) disposedFlux();
         }
         return next(payload.data())
-                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payload))
+                .doOnError(ex -> ReferenceCountUtil.safeRelease(payload))
                 .flatMapMany(rsocket -> rsocket.requestStream(payload)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rsocket, error);
@@ -349,7 +352,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         }
 
         return next(null)
-                .doOnError(NoAvailableConnectionException.class, ex -> ReferenceCountUtil.safeRelease(payloads))
+                .doOnError(ex -> ReferenceCountUtil.safeRelease(payloads))
                 .flatMapMany(rsocket -> rsocket.requestChannel(payloads)
                         .onErrorResume(CONNECTION_ERROR_PREDICATE, error -> {
                             onRSocketClosed(rsocket, error);
@@ -627,14 +630,18 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         return rsocket.requestResponse(ByteBufPayload.create(Unpooled.EMPTY_BUFFER, healthCheckCompositeByteBuf.retainedDuplicate()))
                 .timeout(Duration.ofSeconds(HEALTH_CHECK_INTERVAL_SECONDS))
                 .handle((payload, sink) -> {
-                    /**
-                     * 以{@link RSocketMimeType#defaultEncodingType()}编码
-                     */
-                    int result = (int) Codecs.INSTANCE.decodeResult(RSocketMimeType.defaultEncodingType(), payload.data(), Integer.class);
-                    if (result == HealthCheck.SERVING) {
-                        sink.next(true);
-                    } else {
-                        sink.error(new Exception("upstream health check failed :" + url));
+                    try {
+                        /*
+                         * 以{@link RSocketMimeType#defaultEncodingType()}编码
+                         */
+                        int result = (int) ObjectCodecs.INSTANCE.decodeResult(RSocketMimeType.defaultEncodingType(), payload.data(), Integer.class);
+                        if (result == HealthCheck.SERVING) {
+                            sink.next(true);
+                        } else {
+                            sink.error(new Exception("upstream health check failed :" + url));
+                        }
+                    } finally {
+                        ReferenceCountUtil.safeRelease(payload);
                     }
                 });
     }

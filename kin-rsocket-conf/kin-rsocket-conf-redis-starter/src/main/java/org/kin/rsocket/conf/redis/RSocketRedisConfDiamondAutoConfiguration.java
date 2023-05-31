@@ -13,10 +13,10 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @AutoConfigureAfter(RedisReactiveAutoConfiguration.class)
-public class RSocketRedisStorageConfAutoConfiguration {
+public class RSocketRedisConfDiamondAutoConfiguration {
     @Bean
     @ConditionalOnProperty("spring.redis.port")
-    public ConfDiamond redisStorageConfDiamond() {
-        return new RedisStorageConfDiamond();
+    public ConfDiamond redisConfDiamond() {
+        return new RedisConfDiamond();
     }
 }

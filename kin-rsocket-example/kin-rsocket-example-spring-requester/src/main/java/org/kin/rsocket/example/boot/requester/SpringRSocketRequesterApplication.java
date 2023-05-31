@@ -70,7 +70,7 @@ public class SpringRSocketRequesterApplication {
                 .rsocketStrategies(strategies)
                 .setupMetadata(appMetadata.getContent(), MimeType.valueOf("message/x.rsocket.application+json"))
                 .setupMetadata(bearerTokenMetadata.getContent(), MimeType.valueOf(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString()))
-                .tcp("0.0.0.0", 9999);
+                .tcp("0.0.0.0", 10000);
     }
 
     /** 获取app元数据 */

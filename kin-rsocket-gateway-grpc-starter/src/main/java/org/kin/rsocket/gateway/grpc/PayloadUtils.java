@@ -34,7 +34,7 @@ final class PayloadUtils {
     static {
         ByteBuf byteBuf = RSocketCompositeMetadata.from(MessageMimeTypeMetadata.from(RSocketMimeType.PROTOBUF)).getContent();
         COMPOSITE_METADATA_WITH_ENCODING = Unpooled.copiedBuffer(byteBuf);
-        ReferenceCountUtil.release(byteBuf);
+        ReferenceCountUtil.safeRelease(byteBuf);
     }
 
     /** {@link io.grpc.binarylog.v1.Message#parseDelimitedFrom(InputStream)} lambda代理 */
@@ -53,32 +53,37 @@ final class PayloadUtils {
     @SuppressWarnings("unchecked")
     @Nullable
     static <T> T payloadToResponseObject(Payload payload, Class<T> responseClass) {
-        Function<InputStream, Object> parseFrom = null;
         try {
-            parseFrom = PARSE_FROM_METHOD_CACHE.get(responseClass, () -> {
-                Method method = responseClass.getMethod("parseDelimitedFrom", InputStream.class);
-                MethodHandles.Lookup lookup = MethodHandles.lookup();
-                MethodHandle methodHandle = lookup.unreflect(method);
-                MethodType methodType = methodHandle.type();
-                try {
-                    return (Function<InputStream, Object>) LambdaMetafactory.metafactory(lookup, "apply",
-                                    MethodType.methodType(Function.class), methodType.generic(), methodHandle, methodType)
-                            .getTarget()
-                            .invoke();
-                } catch (Throwable e) {
-                    ExceptionUtils.throwExt(e);
-                }
+            Function<InputStream, Object> parseFrom = null;
+            try {
+                parseFrom = PARSE_FROM_METHOD_CACHE.get(responseClass, () -> {
+                    Method method = responseClass.getMethod("parseDelimitedFrom", InputStream.class);
+                    MethodHandles.Lookup lookup = MethodHandles.lookup();
+                    MethodHandle methodHandle = lookup.unreflect(method);
+                    MethodType methodType = methodHandle.type();
+                    try {
+                        return (Function<InputStream, Object>) LambdaMetafactory.metafactory(lookup, "apply",
+                                        MethodType.methodType(Function.class), methodType.generic(), methodHandle, methodType)
+                                .getTarget()
+                                .invoke();
+                    } catch (Throwable e) {
+                        ExceptionUtils.throwExt(e);
+                    }
+                    //原则上不会到这里
+                    return null;
+                });
+            } catch (ExecutionException e) {
+                ExceptionUtils.throwExt(e);
+            }
+
+            if (Objects.isNull(parseFrom)) {
                 return null;
-            });
-        } catch (ExecutionException e) {
-            ExceptionUtils.throwExt(e);
-        }
+            }
 
-        if (Objects.isNull(parseFrom)) {
-            return null;
+            return (T) parseFrom.apply(new ByteBufferInputStream(payload.data().nioBuffer()));
+        } finally {
+            ReferenceCountUtil.safeRelease(payload);
         }
-
-        return (T) parseFrom.apply(new ByteBufferInputStream(payload.data().nioBuffer()));
     }
 
     private PayloadUtils() {

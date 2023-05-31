@@ -18,8 +18,8 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2021/3/29
  */
-public class MemoryStorageConfDiamond extends AbstractConfDiamond {
-    private static final Logger log = LoggerFactory.getLogger(MemoryStorageConfDiamond.class);
+public class MemoryConfDiamond extends AbstractConfDiamond {
+    private static final Logger log = LoggerFactory.getLogger(MemoryConfDiamond.class);
 
     /** group, 也就是app name */
     private final Set<String> group = new NonBlockingHashSet<>();

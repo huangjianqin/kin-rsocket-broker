@@ -203,7 +203,7 @@ public final class GSVRoutingMetadata implements MetadataAware {
      */
     public int serviceId() {
         if (serviceId <= 0) {
-            serviceId = MurmurHash3.hash32(gsv());
+            serviceId = ServiceLocator.serviceId(gsv());
         }
         return serviceId;
     }

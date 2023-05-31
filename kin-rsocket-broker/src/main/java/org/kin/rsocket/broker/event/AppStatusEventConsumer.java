@@ -2,7 +2,7 @@ package org.kin.rsocket.broker.event;
 
 import io.cloudevents.CloudEvent;
 import org.kin.rsocket.broker.RSocketService;
-import org.kin.rsocket.broker.RSocketServiceManager;
+import org.kin.rsocket.broker.RSocketServiceRegistry;
 import org.kin.rsocket.core.event.AbstractCloudEventConsumer;
 import org.kin.rsocket.core.event.AppStatusEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +15,13 @@ import java.util.Objects;
  */
 public final class AppStatusEventConsumer extends AbstractCloudEventConsumer<AppStatusEvent> {
     @Autowired
-    private RSocketServiceManager serviceManager;
+    private RSocketServiceRegistry serviceRegistry;
 
     @Override
     public void consume(CloudEvent cloudEvent, AppStatusEvent event) {
         //安全验证，确保appStatusEvent的ID和cloud source来源的id一致
         String appId = event.getId();
-        RSocketService rsocketService = serviceManager.getByUUID(appId);
+        RSocketService rsocketService = serviceRegistry.getByUUID(appId);
         if (Objects.isNull(rsocketService)) {
             return;
         }

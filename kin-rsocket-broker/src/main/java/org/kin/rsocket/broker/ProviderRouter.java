@@ -20,19 +20,19 @@ public interface ProviderRouter {
 
     /**
      * app注册完触发
-     * {@link RSocketServiceManager#lock}加锁下完成
+     * {@link RSocketServiceRegistry#lock}加锁下完成
      */
     void onAppRegistered(RSocketService rsocketService, int weight, Collection<ServiceLocator> services);
 
     /**
      * app注销完触发
-     * {@link RSocketServiceManager#lock}加锁下完成
+     * {@link RSocketServiceRegistry#lock}加锁下完成
      */
     void onServiceUnregistered(int instanceId, int weight, Collection<Integer> serviceIds);
 
     /**
      * 获取所有指定服务对应的所有app instance Id
-     * {@link RSocketServiceManager#lock}加锁下完成
+     * {@link RSocketServiceRegistry#lock}加锁下完成
      */
     Collection<Integer> getAllInstanceIds(int serviceId);
 }

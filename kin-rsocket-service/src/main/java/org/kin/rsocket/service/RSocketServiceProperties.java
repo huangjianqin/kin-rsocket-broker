@@ -20,8 +20,8 @@ public class RSocketServiceProperties {
      * 一般来说, rsocket服务不需要暴露, 除非想支持p2p
      */
     private int port;
-    /** broker url, such tcp://127.0.0.1:9999 */
-    private List<String> brokers = Collections.singletonList("tcp://0.0.0.0:9999");
+    /** broker url, such tcp://127.0.0.1:10000 */
+    private List<String> brokers = Collections.singletonList("tcp://0.0.0.0:10000");
     /** topology, intranet or internet */
     private String topology = Topologys.INTRANET;
     /** metadata */

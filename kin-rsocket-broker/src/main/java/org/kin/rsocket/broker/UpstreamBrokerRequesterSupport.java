@@ -30,16 +30,16 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
     /** app name */
     private final String appName;
     /** 服务路由器 */
-    private final RSocketServiceManager serviceManager;
+    private final RSocketServiceRegistry serviceRegistry;
     /** rsocket filter chain */
     private final RSocketFilterChain filterChain;
 
     public UpstreamBrokerRequesterSupport(RSocketBrokerProperties brokerConfig,
                                           String appName,
-                                          RSocketServiceManager serviceManager,
+                                          RSocketServiceRegistry serviceRegistry,
                                           RSocketFilterChain filterChain) {
         this.appName = appName;
-        this.serviceManager = serviceManager;
+        this.serviceRegistry = serviceRegistry;
         this.filterChain = filterChain;
         this.brokerConfig = brokerConfig;
     }
@@ -70,7 +70,7 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
 
     @Override
     public SocketAcceptor socketAcceptor() {
-        return (setupPayload, rsocket) -> Mono.just(new RSocketBrokerRequestHandler(serviceManager, filterChain, setupPayload));
+        return (setupPayload, rsocket) -> Mono.just(new RSocketBrokerRequestHandler(serviceRegistry, filterChain, setupPayload));
     }
 
     private AppMetadata getAppMetadata() {
