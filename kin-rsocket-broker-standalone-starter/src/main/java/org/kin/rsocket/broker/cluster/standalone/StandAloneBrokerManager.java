@@ -38,7 +38,7 @@ public final class StandAloneBrokerManager extends AbstractRSocketBrokerManager 
 
     @PostConstruct
     public void init() {
-        String localIp = NetUtils.getIp();
+        String localIp = NetUtils.getLocalAddressIp();
         String schema = "tcp";
         RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
         if (Objects.nonNull(rsocketSSL) && rsocketSSL.isEnabled()) {

@@ -67,7 +67,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
 
     @Override
     public URI originUri() {
-        return URI.create(rsocketServiceProperties.getSchema() + "://" + NetUtils.getIp() + ":" + rsocketServiceProperties.getPort()
+        return URI.create(rsocketServiceProperties.getSchema() + "://" + NetUtils.getLocalAddressIp() + ":" + rsocketServiceProperties.getPort()
                 + "?appName=" + appName
                 + "&uuid=" + RSocketAppContext.ID);
     }
@@ -101,7 +101,7 @@ public final class RSocketRequesterSupportImpl implements RSocketRequesterSuppor
         AppMetadata.Builder builder = AppMetadata.builder();
         builder.uuid(RSocketAppContext.ID);
         builder.name(appName);
-        builder.ip(NetUtils.getIp());
+        builder.ip(NetUtils.getLocalAddressIp());
         builder.device("JvmApp");
         //brokers
         builder.brokers(rsocketServiceProperties.getBrokers());

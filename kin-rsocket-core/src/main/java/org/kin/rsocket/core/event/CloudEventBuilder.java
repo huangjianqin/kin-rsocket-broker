@@ -22,7 +22,7 @@ import java.util.UUID;
  */
 public class CloudEventBuilder<T> {
     /**  */
-    private static final URI DEFAULT_SOURCE = URI.create("app://" + RSocketAppContext.ID + "?ip=" + NetUtils.getIp());
+    private static final URI DEFAULT_SOURCE = URI.create("app://" + RSocketAppContext.ID + "?ip=" + NetUtils.getLocalAddressIp());
     /** cloud event builder预设 */
     private final io.cloudevents.core.builder.CloudEventBuilder builder =
             io.cloudevents.core.builder.CloudEventBuilder

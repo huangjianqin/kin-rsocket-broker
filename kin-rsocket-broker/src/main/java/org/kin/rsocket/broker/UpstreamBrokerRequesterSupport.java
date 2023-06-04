@@ -46,7 +46,7 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
 
     @Override
     public URI originUri() {
-        return URI.create("tcp://" + NetUtils.getIp() + ":" + brokerConfig.getPort()
+        return URI.create("tcp://" + NetUtils.getLocalAddressIp() + ":" + brokerConfig.getPort()
                 + "?appName=" + appName
                 + "&uuid=" + RSocketAppContext.ID);
     }
@@ -78,7 +78,7 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
         AppMetadata.Builder builder = AppMetadata.builder();
         builder.uuid(RSocketAppContext.ID);
         builder.name(appName);
-        builder.ip(NetUtils.getIp());
+        builder.ip(NetUtils.getLocalAddressIp());
         builder.device("KinRSocketBroker");
         //upstream brokers
         builder.brokers(brokerConfig.getUpstreamBrokers());

@@ -108,7 +108,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
 
     @Override
     public BrokerInfo localBroker() {
-        return brokers.get(NetUtils.getIp());
+        return brokers.get(NetUtils.getLocalAddressIp());
     }
 
     @Override
@@ -140,7 +140,7 @@ public class DiscoveryBrokerManager extends AbstractRSocketBrokerManager impleme
                         .bodyValue(cloudEventJson)
                         .retrieve()
                         .bodyToMono(String.class))
-                .then(Mono.just(NetUtils.getIp()));
+                .then(Mono.just(NetUtils.getLocalAddressIp()));
     }
 
     /**

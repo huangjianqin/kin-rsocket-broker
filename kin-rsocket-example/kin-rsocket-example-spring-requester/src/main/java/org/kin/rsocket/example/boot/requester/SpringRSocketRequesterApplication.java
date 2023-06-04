@@ -79,7 +79,7 @@ public class SpringRSocketRequesterApplication {
         AppMetadata.Builder builder = AppMetadata.builder();
         builder.uuid(RSocketAppContext.ID);
         builder.name(environment.getProperty("spring.application.name"));
-        builder.ip(NetUtils.getIp());
+        builder.ip(NetUtils.getLocalAddressIp());
         builder.device("SpringBoot");
         builder.topology(Topologys.INTRANET);
         //web port

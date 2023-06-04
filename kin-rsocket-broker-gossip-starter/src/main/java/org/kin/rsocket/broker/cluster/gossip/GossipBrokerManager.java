@@ -68,7 +68,7 @@ public class GossipBrokerManager extends AbstractRSocketBrokerManager implements
 
     @PostConstruct
     public void init() {
-        String localIp = NetUtils.getIp();
+        String localIp = NetUtils.getLocalAddressIp();
         int gossipPort = gossipConfig.getPort();
 
         RSocketBrokerProperties.RSocketSSL sslConfig = brokerConfig.getSsl();
