@@ -16,6 +16,8 @@ import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
@@ -32,6 +34,8 @@ import java.util.Objects;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 final class RSocketBrokerOrServiceRequestHandler extends RSocketRequestHandlerSupport {
+    private static final Logger log = LoggerFactory.getLogger(RSocketBrokerOrServiceRequestHandler.class);
+
     /** requester from peer */
     private final RSocket requester;
     /**
@@ -185,7 +189,7 @@ final class RSocketBrokerOrServiceRequestHandler extends RSocketRequestHandlerSu
                 }
             }
         } catch (Exception e) {
-            error("Failed to parse Cloud Event:  " + e.getMessage(), e);
+            log.error("Failed to parse Cloud Event:  " + e.getMessage(), e);
         } finally {
             ReferenceCountUtil.safeRelease(payload);
         }

@@ -24,6 +24,8 @@ import org.kin.rsocket.core.event.CloudEventBus;
 import org.kin.rsocket.core.event.CloudEventSupport;
 import org.kin.rsocket.core.metadata.*;
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -40,6 +42,8 @@ import java.util.Set;
  * @date 2021/4/21
  */
 public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSupport {
+    private static final Logger log = LoggerFactory.getLogger(RSocketServiceRequestHandler.class);
+
     /** rsocket filter for requests */
     private final RSocketFilterChain filterChain;
     /** app metadata */
@@ -129,7 +133,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             }
 
             destination = destination.doOnError(t -> {
-                error(failCallLog(frameType), t);
+                log.error(failCallLog(frameType), t);
                 ReferenceCountUtil.safeRelease(payload);
             });
 
@@ -150,7 +154,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 }
             });
         } catch (Exception e) {
-            error(failCallLog(frameType), e);
+            log.error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
             if (e instanceof InvalidException) {
                 return Mono.error(e);
@@ -205,7 +209,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             }
 
             destination = destination.doOnError(t -> {
-                error(failCallLog(frameType), t);
+                log.error(failCallLog(frameType), t);
                 ReferenceCountUtil.safeRelease(payload);
             });
 
@@ -225,7 +229,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 }
             });
         } catch (Exception e) {
-            error(failCallLog(frameType), e);
+            log.error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
             if (e instanceof InvalidException) {
                 return Mono.error(e);
@@ -280,7 +284,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             }
 
             destination = destination.doOnError(t -> {
-                error(failCallLog(frameType), t);
+                log.error(failCallLog(frameType), t);
                 ReferenceCountUtil.safeRelease(payload);
             });
             return destination.flatMapMany(rsocket -> {
@@ -298,7 +302,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 }
             });
         } catch (Exception e) {
-            error(failCallLog(frameType), e);
+            log.error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(payload);
             if (e instanceof InvalidException) {
                 return Flux.error(e);
@@ -326,7 +330,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
             }
 
             Mono<RSocket> destination = findDestination(gsvRoutingMetadata).doOnError(t -> {
-                error(failCallLog(frameType), t);
+                log.error(failCallLog(frameType), t);
                 ReferenceCountUtil.safeRelease(signal);
                 payloads.subscribe(ReferenceCountUtil::safeRelease);
             });
@@ -341,7 +345,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 return rsocket.requestChannel(payloads);
             });
         } catch (Exception e) {
-            error(failCallLog(frameType), e);
+            log.error(failCallLog(frameType), e);
             ReferenceCountUtil.safeRelease(signal);
             payloads.subscribe(ReferenceCountUtil::safeRelease);
             if (e instanceof InvalidException) {
@@ -377,7 +381,7 @@ public final class RSocketServiceRequestHandler extends RSocketRequestHandlerSup
                 }
             }
         } catch (Exception e) {
-            error(String.format("Failed to parse Cloud Event: %s", e.getMessage()), e);
+            log.error(String.format("Failed to parse Cloud Event: %s", e.getMessage()), e);
         } finally {
             ReferenceCountUtil.safeRelease(payload);
         }

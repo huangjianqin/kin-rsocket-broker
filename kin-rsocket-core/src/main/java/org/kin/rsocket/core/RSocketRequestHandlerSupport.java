@@ -4,12 +4,13 @@ import io.netty.util.ReferenceCountUtil;
 import io.rsocket.Payload;
 import io.rsocket.exceptions.InvalidException;
 import io.rsocket.util.ByteBufPayload;
-import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.rsocket.core.codec.ObjectCodecs;
 import org.kin.rsocket.core.metadata.GSVRoutingMetadata;
 import org.kin.rsocket.core.metadata.MessageAcceptMimeTypesMetadata;
 import org.kin.rsocket.core.metadata.MessageMimeTypeMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -20,7 +21,8 @@ import reactor.core.publisher.Mono;
  * @date 2021/3/26
  */
 @SuppressWarnings({"unchecked"})
-public abstract class RSocketRequestHandlerSupport extends AbstractRSocket implements LoggerOprs {
+public abstract class RSocketRequestHandlerSupport extends AbstractRSocket {
+    private static final Logger log = LoggerFactory.getLogger(RSocketRequestHandlerSupport.class);
     /** cloud event source */
     protected volatile String cloudEventSource;
 
@@ -83,7 +85,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                                 sink.success(resultObj);
                             }
                         } catch (Exception e) {
-                            error(failCallLog(service, handler), e);
+                            log.error(failCallLog(service, handler), e);
                             sink.error(e);
                         }
                     });
@@ -98,7 +100,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 return Mono.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
-            error(failCallLog(service, handler), e);
+            log.error(failCallLog(service, handler), e);
             return Mono.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
@@ -116,7 +118,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 try {
                     return ReactiveObjAdapter.INSTANCE.toMono(invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload));
                 } catch (Exception e) {
-                    error(failCallLog(service, handler), e);
+                    log.error(failCallLog(service, handler), e);
                     return Mono.error(e);
                 }
             } else {
@@ -125,7 +127,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                         invokeServiceMethod(methodInvoker, dataEncodingMetadata, payload);
                         sink.success();
                     } catch (Exception e) {
-                        error(failCallLog(service, handler), e);
+                        log.error(failCallLog(service, handler), e);
                         sink.error(e);
                     }
                 });
@@ -159,7 +161,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
-            error(failCallLog(service, handler), e);
+            log.error(failCallLog(service, handler), e);
             return Flux.error(new InvalidException(failCallTips(service, handler, e)));
         }
     }
@@ -223,7 +225,7 @@ public abstract class RSocketRequestHandlerSupport extends AbstractRSocket imple
                 return Flux.error(new InvalidException(noServiceMethodInvokerFoundTips(service, handler)));
             }
         } catch (Exception e) {
-            error(failCallLog(service, handler), e);
+            log.error(failCallLog(service, handler), e);
             //release
             ReferenceCountUtil.safeRelease(signal);
             payloads.subscribe(ReferenceCountUtil::safeRelease);

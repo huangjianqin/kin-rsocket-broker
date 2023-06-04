@@ -1,9 +1,10 @@
 package org.kin.rsocket.gateway.grpc;
 
 import io.grpc.BindableService;
-import org.kin.framework.log.LoggerOprs;
 import org.kin.framework.utils.ExceptionUtils;
 import org.lognet.springboot.grpc.GRpcService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -22,7 +23,9 @@ import java.util.Set;
  * @author huangjianqin
  * @date 2022/1/12
  */
-public final class GrpcServiceRSocketImplementationScanner extends ClassPathBeanDefinitionScanner implements LoggerOprs {
+public final class GrpcServiceRSocketImplementationScanner extends ClassPathBeanDefinitionScanner {
+    private static final Logger log = LoggerFactory.getLogger(GrpcServiceRSocketImplementationScanner.class);
+
     public GrpcServiceRSocketImplementationScanner(BeanDefinitionRegistry registry) {
         super(registry);
         registerFilters();
@@ -48,7 +51,7 @@ public final class GrpcServiceRSocketImplementationScanner extends ClassPathBean
         Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
 
         if (beanDefinitions.isEmpty()) {
-            info("no rsocket rpc service stub was found in classpath !!!");
+            log.info("no rsocket rpc service stub was found in classpath !!!");
         } else {
             processBeanDefinitions(beanDefinitions);
         }
@@ -81,7 +84,7 @@ public final class GrpcServiceRSocketImplementationScanner extends ClassPathBean
         if (super.checkCandidate(beanName, beanDefinition)) {
             return true;
         } else {
-            warn("skipping GrpcServiceRSocketImplementationFactoryBean with name '" + beanName + "' and '"
+            log.warn("skipping GrpcServiceRSocketImplementationFactoryBean with name '" + beanName + "' and '"
                     + beanDefinition.getBeanClassName() + "' stub" + ". bean already defined with the same name!");
             return false;
         }
