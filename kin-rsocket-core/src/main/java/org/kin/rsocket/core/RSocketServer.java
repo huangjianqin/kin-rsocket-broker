@@ -3,6 +3,7 @@ package org.kin.rsocket.core;
 import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
+import io.rsocket.Closeable;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
 import io.rsocket.SocketAcceptor;
@@ -32,6 +33,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -78,7 +80,7 @@ public class RSocketServer implements Disposable {
     /** 状态 */
     private final AtomicInteger state = new AtomicInteger(STATE_INIT);
     /** 已启动的{@link io.rsocket.core.RSocketServer}对应的{@link Disposable} */
-    private List<Disposable> responders;
+    private List<Disposable> closeableChannels = new CopyOnWriteArrayList<>();
 
     /**
      * bind
@@ -88,7 +90,6 @@ public class RSocketServer implements Disposable {
             return;
         }
 
-        responders = new ArrayList<>(schemas.size());
         for (Map.Entry<Integer, String> entry : schemas.entrySet()) {
             String schema = entry.getValue();
             int port = entry.getKey();
@@ -182,17 +183,31 @@ public class RSocketServer implements Disposable {
                 rsocketServer.interceptors(interceptorRegistry -> interceptorRegistry.forRequestsInResponder(interceptor));
             }
 
-            Disposable disposable = rsocketServer
+            rsocketServer
                     .acceptor(acceptor)
                     //zero copy
                     .payloadDecoder(PayloadDecoder.ZERO_COPY)
                     .bind(transport)
                     .onTerminateDetach()
-                    .subscribe();
-            responders.add(disposable);
-            log.info("succeed to start RSocket on " + schema + "://" + host + ":" + port);
+                    .subscribe(cc -> {
+                        log.info("succeed to start rsocket server on " + schema + "://" + host + ":" + port);
+                        onBound(cc);
+                    });
 
             RSocketAppContext.rsocketPorts = schemas;
+        }
+    }
+
+    /**
+     * process after server bound
+     */
+    private void onBound(Closeable closeableChannel) {
+        if (!isDisposed()) {
+            //未disposed
+            closeableChannels.add(closeableChannel);
+        } else {
+            //已disposed
+            closeableChannel.dispose();
         }
     }
 
@@ -202,8 +217,12 @@ public class RSocketServer implements Disposable {
             return;
         }
 
-        for (Disposable responder : responders) {
-            responder.dispose();
+        for (Disposable disposable : closeableChannels) {
+            if (disposable.isDisposed()) {
+                continue;
+            }
+
+            disposable.dispose();
         }
     }
 
