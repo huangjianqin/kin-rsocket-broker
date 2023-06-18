@@ -175,15 +175,16 @@ public class RSocketBrokerAutoConfiguration {
             if (rsocketSSL != null && rsocketSSL.isEnabled() && StringUtils.isNotBlank(rsocketSSL.getKeyStore())) {
                 try {
                     KeyStore store = KeyStore.getInstance(rsocketSSL.getKeyStoreType());
+                    char[] password = rsocketSSL.getKeyStorePassword().toCharArray();
                     //加载KeyStore
-                    store.load(resourceLoader.getResource(rsocketSSL.getKeyStore()).getInputStream(), rsocketSSL.getKeyStorePassword().toCharArray());
+                    store.load(resourceLoader.getResource(rsocketSSL.getKeyStore()).getInputStream(), password);
                     String alias = store.aliases().nextElement();
-                    //证书
+                    //获取证书
                     Certificate certificate = store.getCertificate(alias);
 
-                    KeyStore.Entry entry = store.getEntry(alias, new KeyStore.PasswordProtection(rsocketSSL.getKeyStorePassword().toCharArray()));
                     //私钥
-                    PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
+                    KeyStore.Entry priKeyEntry = store.getEntry(alias, new KeyStore.PasswordProtection(password));
+                    PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) priKeyEntry).getPrivateKey();
                     builder.sslContext(certificate, privateKey);
                     builder.listen("tcps", brokerConfig.getPort());
                 } catch (Exception e) {

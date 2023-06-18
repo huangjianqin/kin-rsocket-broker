@@ -87,8 +87,8 @@ final class UpstreamBrokerRequesterSupport implements RSocketRequesterSupport {
         builder.webPort(RSocketAppContext.webPort);
         //management port
         builder.managementPort(RSocketAppContext.managementPort);
-        RSocketBrokerProperties.RSocketSSL socketSSL = brokerConfig.getSsl();
-        builder.secure(!Objects.isNull(socketSSL) && socketSSL.isEnabled());
+        RSocketBrokerProperties.RSocketSSL rsocketSSL = brokerConfig.getSsl();
+        builder.secure(!Objects.isNull(rsocketSSL) && rsocketSSL.isEnabled());
 
         //标识app是broker
         builder.addMetadata(BrokerMetadataKeys.BROKER, "true");

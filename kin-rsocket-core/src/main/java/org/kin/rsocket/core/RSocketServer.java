@@ -1,8 +1,6 @@
 package org.kin.rsocket.core;
 
-import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SslProvider;
 import io.rsocket.Closeable;
 import io.rsocket.ConnectionSetupPayload;
 import io.rsocket.RSocket;
@@ -20,6 +18,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.kin.framework.utils.ExceptionUtils;
 import org.kin.framework.utils.NetUtils;
 import org.kin.rsocket.core.utils.Schemas;
+import org.kin.transport.netty.utils.SslUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
@@ -114,7 +113,7 @@ public class RSocketServer implements Disposable {
                                     ssl.sslContext(
                                             SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
                                                     .protocols(PROTOCOLS)
-                                                    .sslProvider(getSslProvider())
+                                                    .sslProvider(SslUtils.getSslProvider())
                                                     .build()
                                     );
                                 } catch (SSLException e) {
@@ -135,7 +134,7 @@ public class RSocketServer implements Disposable {
                                     ssl.sslContext(
                                             SslContextBuilder.forServer(privateKey, (X509Certificate) certificate)
                                                     .protocols(PROTOCOLS)
-                                                    .sslProvider(getSslProvider())
+                                                    .sslProvider(SslUtils.getSslProvider())
                                                     .build()
                                     );
                                 } catch (SSLException e) {
@@ -229,17 +228,6 @@ public class RSocketServer implements Disposable {
     @Override
     public boolean isDisposed() {
         return state.get() == STATE_TERMINATED;
-    }
-
-    /**
-     * 获取ssl provider
-     */
-    private SslProvider getSslProvider() {
-        if (OpenSsl.isAvailable()) {
-            return SslProvider.OPENSSL_REFCNT;
-        } else {
-            return SslProvider.JDK;
-        }
     }
 
     //--------------------------------------------------------builder

@@ -1,5 +1,5 @@
 uri2TransportParser=org.kin.rsocket.core.transport.LocalTransportParser,\
-                                                org.kin.rsocket.core.transport.TcpSslTransportParser,\
+                                                org.kin.rsocket.core.transport.TlsTransportParser,\
                                                 org.kin.rsocket.core.transport.TcpTransportParser,\
                                                 org.kin.rsocket.core.transport.WebsocketTransportParser
 codec=org.kin.rsocket.core.codec.AvroObjectCodec,\

@@ -24,6 +24,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -36,13 +37,13 @@ import java.util.*;
  * <p>
  * server:
  * keyStoreType: key store类型
- * keyStorePassword:   key store私钥密码, 默认{@link TcpSslTransportParser#DEFAULT_PASSWORD}
+ * keyStorePassword:   key store私钥密码, 默认{@link TlsTransportParser#DEFAULT_PASSWORD}
  * keyStore:  key store文件路径, 默认{user.home}/.rsocket/rsocket.p12
  *
  * @author huangjianqin
  * @date 2021/3/27
  */
-public final class TcpSslTransportParser implements Uri2TransportParser {
+public final class TlsTransportParser implements Uri2TransportParser {
     private static final List<String> SCHEMES = Arrays.asList(Schemas.TCPS, Schemas.TPC_TLS, Schemas.TLS);
     /** 使用的协议 */
     private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
@@ -65,7 +66,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
             File fingerPrints = new File(params.getOrDefault("fingerPrints", System.getProperty("user.home") + "/.rsocket/known_finger_prints"));
             if (fingerPrints.exists()) {
                 List<String> fingerPrintsSha256 = new ArrayList<>();
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(fingerPrints), StandardCharsets.UTF_8))) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(fingerPrints.toPath()), StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = br.readLine()) != null) {
                         if (!line.isEmpty()) {
@@ -77,6 +78,7 @@ public final class TcpSslTransportParser implements Uri2TransportParser {
                     //do nothing
                 }
                 if (!fingerPrintsSha256.isEmpty()) {
+                    //构建trust manager
                     trustManagerFactory = new FingerPrintTrustManagerFactory(fingerPrintsSha256);
                 }
             }
