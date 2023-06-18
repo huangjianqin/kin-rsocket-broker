@@ -4,9 +4,9 @@ import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
+import io.netty.handler.ssl.util.FingerprintTrustManagerFactory;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import io.netty.handler.ssl.util.SimpleTrustManagerFactory;
 import io.rsocket.transport.ClientTransport;
 import io.rsocket.transport.ServerTransport;
 import io.rsocket.transport.netty.client.TcpClientTransport;
@@ -16,9 +16,7 @@ import org.kin.rsocket.core.utils.Schemas;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.tcp.TcpServer;
 
-import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.SSLException;
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.*;
 import java.net.URI;
@@ -61,25 +59,29 @@ public final class TlsTransportParser implements Uri2TransportParser {
         try {
             Map<String, String> params = splitQuery(uri);
 
+            //指纹适用于不能联网或者自签名环境, 同样安全
             TrustManagerFactory trustManagerFactory = InsecureTrustManagerFactory.INSTANCE;
             //读取指纹
             File fingerPrints = new File(params.getOrDefault("fingerPrints", System.getProperty("user.home") + "/.rsocket/known_finger_prints"));
             if (fingerPrints.exists()) {
-                List<String> fingerPrintsSha256 = new ArrayList<>();
+                List<String> fingerprintSha256List = new ArrayList<>();
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(Files.newInputStream(fingerPrints.toPath()), StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = br.readLine()) != null) {
                         if (!line.isEmpty()) {
-                            String fingerPrint = line.replaceAll(":", "");
-                            fingerPrintsSha256.add(fingerPrint.trim());
+                            //一行一串SHA-256 hashed fingerprint
+                            fingerprintSha256List.add(line.trim());
                         }
                     }
                 } catch (Exception ignore) {
                     //do nothing
                 }
-                if (!fingerPrintsSha256.isEmpty()) {
+                if (!fingerprintSha256List.isEmpty()) {
                     //构建trust manager
-                    trustManagerFactory = new FingerPrintTrustManagerFactory(fingerPrintsSha256);
+                    //经过sha256加密
+                    trustManagerFactory = FingerprintTrustManagerFactory.builder("SHA-256")
+                            .fingerprints(fingerprintSha256List)
+                            .build();
                 }
             }
 
@@ -115,7 +117,7 @@ public final class TlsTransportParser implements Uri2TransportParser {
             if (keyStore.exists()) {
                 // key store found
                 KeyStore store = KeyStore.getInstance(keyStoreType);
-                try (InputStream is = new FileInputStream(keyStore)) {
+                try (InputStream is = Files.newInputStream(keyStore.toPath())) {
                     store.load(is, password);
                 }
                 String alias = store.aliases().nextElement();
@@ -176,34 +178,5 @@ public final class TlsTransportParser implements Uri2TransportParser {
             }
         }
         return queryPairs;
-    }
-
-
-    //----------------------------------------------------------------------------------------------------
-
-    /**
-     * 指纹管理
-     */
-    private static class FingerPrintTrustManagerFactory extends SimpleTrustManagerFactory {
-        private final TrustManager trustManager;
-
-        public FingerPrintTrustManagerFactory(List<String> fingerPrintsSha256) {
-            this.trustManager = new FingerPrintX509TrustManager(fingerPrintsSha256);
-        }
-
-        @Override
-        protected void engineInit(KeyStore keyStore) {
-
-        }
-
-        @Override
-        protected void engineInit(ManagerFactoryParameters managerFactoryParameters) {
-
-        }
-
-        @Override
-        protected TrustManager[] engineGetTrustManagers() {
-            return new TrustManager[]{trustManager};
-        }
     }
 }
