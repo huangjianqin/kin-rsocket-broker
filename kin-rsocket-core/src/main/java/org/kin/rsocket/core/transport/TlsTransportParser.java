@@ -44,7 +44,7 @@ import java.util.*;
 public final class TlsTransportParser implements Uri2TransportParser {
     private static final List<String> SCHEMES = Arrays.asList(Schemas.TCPS, Schemas.TPC_TLS, Schemas.TLS);
     /** 使用的协议 */
-    private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
+    private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv1.2"};
     /** 默认key store密码 */
     private static final String DEFAULT_PASSWORD = "kin";
 

@@ -45,7 +45,7 @@ import java.util.function.Function;
  */
 public class RSocketServer implements Disposable {
     private static final Logger log = LoggerFactory.getLogger(RSocketServer.class);
-    private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv.1.2"};
+    private static final String[] PROTOCOLS = new String[]{"TLSv1.3", "TLSv1.2"};
 
     //状态-初始
     private static final int STATE_INIT = 0;
