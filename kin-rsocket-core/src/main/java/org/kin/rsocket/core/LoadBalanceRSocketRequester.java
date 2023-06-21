@@ -17,6 +17,7 @@ import io.rsocket.util.ByteBufPayload;
 import org.jctools.maps.NonBlockingHashSet;
 import org.kin.framework.utils.CollectionUtils;
 import org.kin.framework.utils.ExtensionLoader;
+import org.kin.framework.utils.SysUtils;
 import org.kin.rsocket.core.codec.ObjectCodecs;
 import org.kin.rsocket.core.event.CloudEventRSocket;
 import org.kin.rsocket.core.event.CloudEventSupport;
@@ -67,8 +68,8 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
             e -> e instanceof ClosedChannelException || e instanceof ConnectionErrorException || e instanceof ConnectException;
     /** 刷新uri时连接失败, 则1分钟内尝试12重连, 间隔5s */
     private static final int RETRY_COUNT = 12;
-    /** upstream uri刷新逻辑单线程处理 */
-    private static final Scheduler REFRESH_SCHEDULER = Schedulers.newSingle("LoadBalanceRequester-RefreshRSockets");
+    /** requester通用scheduler, 主要负责处理health check和reconnect */
+    private static final Scheduler COMMON_SCHEDULER = Schedulers.newParallel("LoadBalanceRequester-Common", SysUtils.CPU_NUM, true);
 
     /** load balance rule */
     private final UpstreamLoadBalance loadBalance;
@@ -86,6 +87,8 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
     private volatile long lastHealthCheckTimestamp;
     /** requester配置 */
     private final RSocketRequesterSupport requesterSupport;
+    /** upstream uri刷新逻辑单线程处理 */
+    private final Scheduler refreshScheduler = Schedulers.newSingle("LoadBalanceRequester-Refresh", true);
     /** health check 元数据bytes, 避免多次创建bytes */
     private final ByteBuf healthCheckCompositeByteBuf;
     /** 是否是service provider */
@@ -151,6 +154,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         this.lastRefreshTimestamp = System.currentTimeMillis();
         this.lastRefreshRSocketUris = rsocketUris;
         Flux.fromIterable(rsocketUris)
+                .publishOn(refreshScheduler)
                 //多线程connect remote
                 .flatMap(rsocketUri -> {
                     if (activeRSockets.containsKey(rsocketUri)) {
@@ -168,7 +172,6 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
                 })
                 .collectList()
                 //单线程更新有效remote connection
-                .publishOn(REFRESH_SCHEDULER)
                 .subscribe(tupleRSockets -> {
                     if (tupleRSockets.isEmpty()) {
                         return;
@@ -201,6 +204,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
                         //consumer优先移除, 然后再是provider
                         int delaySeconds = this.isServiceProvider ? PROVIDER_REMOVE_DELAY : CONSUMER_REMOVE_DELAY;
                         Flux.fromIterable(staleRSockets.entrySet())
+                                .publishOn(COMMON_SCHEDULER)
                                 .delaySubscription(Duration.ofSeconds(delaySeconds))
                                 .subscribe(entry -> {
                                     log.info(String.format("delay remove invalid rsocket(uri='%s')", entry.getKey()));
@@ -373,6 +377,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
     @Override
     public void dispose() {
         super.dispose();
+        refreshScheduler.dispose();
         healthCheckDisposable.dispose();
         unhealthUrisCheckDisposable.dispose();
         for (RSocket rsocket : activeRSockets.values()) {
@@ -451,7 +456,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
      */
     private void onRSocketConnected(String rsocketUri, RSocket rsocket) {
         rsocket.onClose()
-                .publishOn(REFRESH_SCHEDULER)
+                .publishOn(COMMON_SCHEDULER)
                 .doOnError(error -> {
                     if (CONNECTION_ERROR_PREDICATE.test(error)) {
                         //connection closed
@@ -483,7 +488,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
         }
 
         Flux.range(1, RETRY_COUNT)
-                .delayElements(Duration.ofSeconds(5))
+                .delayElements(Duration.ofSeconds(5), COMMON_SCHEDULER)
                 .filter(id -> activeRSockets.isEmpty() || !activeRSockets.containsKey(rsocketUri))
                 .subscribe(count -> {
                     if (LoadBalanceRSocketRequester.this.isDisposed()) {
@@ -491,7 +496,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
                     }
                     connect(rsocketUri)
                             .flatMap(rsocket -> healthCheck(rsocket, rsocketUri).map(payload -> rsocket))
-                            .publishOn(REFRESH_SCHEDULER)
+                            .publishOn(COMMON_SCHEDULER)
                             .doOnError(e -> {
                                 log.error(String.format("reconnect '%s' error %d times", rsocketUri, count), e);
                                 unhealthyUris.add(rsocketUri);
@@ -586,7 +591,7 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
      */
     private void startHealthCheck() {
         this.lastHealthCheckTimestamp = System.currentTimeMillis();
-        healthCheckDisposable = Flux.interval(Duration.ofSeconds(HEALTH_CHECK_INTERVAL_SECONDS))
+        healthCheckDisposable = Flux.interval(Duration.ofSeconds(HEALTH_CHECK_INTERVAL_SECONDS), COMMON_SCHEDULER)
                 .flatMap(timestamp -> {
                     this.lastHealthCheckTimestamp = System.currentTimeMillis();
                     return Flux.fromIterable(activeRSockets.entrySet());
@@ -605,19 +610,23 @@ public class LoadBalanceRSocketRequester extends AbstractRSocket implements Clou
      * 每{@link LoadBalanceRSocketRequester#UNHEALTH_URIS_RECONNECT_MINS}分钟尝试重连
      */
     private void startUnhealthyUrisCheck() {
-        unhealthUrisCheckDisposable = Flux.interval(Duration.ofMinutes(UNHEALTH_URIS_RECONNECT_MINS))
+        unhealthUrisCheckDisposable = Flux.interval(Duration.ofMinutes(UNHEALTH_URIS_RECONNECT_MINS), COMMON_SCHEDULER)
                 .filter(sequence -> !unhealthyUris.isEmpty())
                 .subscribe(entry -> {
                     for (String unhealthyUri : unhealthyUris) {
                         if (!lastRefreshRSocketUris.contains(unhealthyUri)) {
                             continue;
                         }
-                        if (!activeRSockets.containsKey(unhealthyUri)) {
-                            connect(unhealthyUri)
-                                    .flatMap(rsocket -> healthCheck(rsocket, unhealthyUri).map(payload -> rsocket))
-                                    .publishOn(REFRESH_SCHEDULER)
-                                    .subscribe(rsocket -> onRSocketReconnected(unhealthyUri, rsocket));
+
+                        if (activeRSockets.containsKey(unhealthyUri)) {
+                            continue;
                         }
+
+                        connect(unhealthyUri)
+                                .flatMap(rsocket -> healthCheck(rsocket, unhealthyUri).map(payload -> rsocket))
+                                .publishOn(COMMON_SCHEDULER)
+                                .subscribe(rsocket -> onRSocketReconnected(unhealthyUri, rsocket),
+                                        error -> tryToReconnect(unhealthyUri, error));
                     }
                 });
     }
