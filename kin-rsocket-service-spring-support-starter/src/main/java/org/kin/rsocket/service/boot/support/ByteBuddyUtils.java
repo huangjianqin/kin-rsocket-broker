@@ -28,7 +28,9 @@ final class ByteBuddyUtils {
             proxyClass = (Class<T>) new ByteBuddy(ClassFileVersion.JAVA_V8)
                     .subclass(serviceInterface)
                     .name(serviceInterface.getSimpleName() + "RSocketStub")
-                    .method(ElementMatchers.not(ElementMatchers.isDefaultMethod()))
+                    //过滤默认方法和Object定义的方法
+                    .method(ElementMatchers.not(ElementMatchers.isDefaultMethod())
+                            .and(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class))))
                     .intercept(MethodDelegation.to(proxy))
                     .make()
                     .load(serviceInterface.getClassLoader())
